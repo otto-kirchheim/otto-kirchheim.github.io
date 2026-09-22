@@ -4,12 +4,16 @@
  * Stelle, die Features kennt). Nav-Eintrag, Tab-Pane, Schnellzugriff, Tab-Auswahl in den Einstellungen und Hilfe
  * entstehen danach aus `meta`.
  *
- * Aufruf: `bun run new-feature <slug> [--ordner <Name>] [--label <Anzeigename>] [--icon <db-icon>] [--dry-run]`
+ * Aufruf: `bun run new-feature <slug> [--ordner <Name>] [--label <Anzeigename>] [--icon <db-icon>] [--admin] [--dry-run]`
  *
  * Weitere Teile (`data`, `pdf`, `berechnung`, `einstellungen`, `events`) und Ressourcen (`meta.resources`) kommen von Hand
  * dazu: `features/EA` ist die kleinste vollstaendige Vorlage. Ein neues Datenobjekt braucht zusaetzlich einen Eintrag in
- * `@otto-kirchheim/nebengeld-shared`/Backend (`TResourceKey`), Admin-Eintraege stehen im Admin-Manifest
- * (`features/Admin/adminFeatures.ts`).
+ * `@otto-kirchheim/nebengeld-shared`/Backend (`TResourceKey`).
+ *
+ * `--admin` legt zusaetzlich einen (leeren) Admin-Ordner an (`features/Admin/features/<slug>/{index,katalog}.ts`) und
+ * traegt ihn im Admin-Manifest (`features/Admin/adminFeatures.ts`) ein; Ressourcen, Verweise und PDF-Formular darin
+ * bleiben von Hand zu befuellen (`features/Admin/features/ea` als Vorlage). Ohne `--admin` erscheint das Feature im
+ * Admin-Ressourcenbrowser ueber den generischen Fallback aus `meta.resources`.
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -24,6 +28,8 @@ export interface NewFeatureOptions {
   label?: string;
   /** Icon-Name aus dem DB-UX-Iconset fuer den Schnellzugriff. */
   icon?: string;
+  /** Legt zusaetzlich einen leeren Admin-Ordner an und traegt ihn im Admin-Manifest ein. */
+  admin?: boolean;
 }
 
 /** Datei, die das Skript schreibt (`pfad` relativ zum Frontend-Ordner). */
@@ -36,21 +42,28 @@ export interface FeaturePlan {
   dateien: GeplanteDatei[];
   /** Neuer Inhalt von `src/ts/app/features.ts`. */
   manifest: string;
+  /** Neuer Inhalt von `src/ts/features/Admin/adminFeatures.ts`; nur bei `optionen.admin`. */
+  adminManifest?: string;
 }
 
 const MANIFEST_PFAD = 'src/ts/app/features.ts';
+const ADMIN_MANIFEST_PFAD = 'src/ts/features/Admin/adminFeatures.ts';
 const SLUG_MUSTER = /^[a-z][a-z0-9]*$/;
 
 /**
  * Baut Dateien und Manifest-Eintrag eines neuen Features (rein, ohne Dateizugriff).
  *
- * @param optionen - Slug, Ordner, Label, Icon.
+ * @param optionen - Slug, Ordner, Label, Icon, `admin`.
  * @param manifest - Aktueller Inhalt von `app/features.ts`.
- * @returns Zu schreibende Dateien und neues Manifest.
- * @throws {Error} Bei ungueltigem Slug, doppeltem Feature oder unerwartetem Manifest.
+ * @param adminManifest - Aktueller Inhalt von `features/Admin/adminFeatures.ts`; nur noetig bei `optionen.admin`.
+ * @returns Zu schreibende Dateien und neue Manifeste.
+ * @throws {Error} Bei ungueltigem Slug, doppeltem Feature, unerwartetem Manifest oder `admin: true` ohne `adminManifest`.
  */
-export function planeFeature(optionen: NewFeatureOptions, manifest: string): FeaturePlan {
+export function planeFeature(optionen: NewFeatureOptions, manifest: string, adminManifest?: string): FeaturePlan {
   const { slug } = optionen;
+  if (optionen.admin && adminManifest === undefined) {
+    throw new Error('optionen.admin verlangt den aktuellen Inhalt von adminManifest.');
+  }
   if (!SLUG_MUSTER.test(slug))
     throw new Error(`Ungültiger Slug '${slug}': nur Kleinbuchstaben und Ziffern, mit Buchstabe am Anfang.`);
 
@@ -170,6 +183,46 @@ describe('Feature ${label}', () => {
     },
   ];
 
+  if (optionen.admin) {
+    dateien.push(
+      {
+        pfad: `src/ts/features/Admin/features/${slug}/index.ts`,
+        inhalt: `import type { AdminFeature } from '../../adminFeatures';
+
+/**
+ * Admin-Anteile von ${label}: Ressourcenbrowser, Verweise, PDF-Formular und Dashboard-Statistik von Hand ergaenzen
+ * (\`features/Admin/features/ea\` als vollstaendige Vorlage). Ohne eigene Ressourcen erscheint hier nichts -- der
+ * Ressourcenbrowser faellt dann auf den generischen Fallback aus \`meta.resources\` zurueck.
+ */
+const adminFeature: AdminFeature = {
+  id: '${slug}',
+  resources: [],
+  statsRows: [],
+};
+
+export default adminFeature;
+`,
+      },
+      {
+        pfad: `src/ts/features/Admin/features/${slug}/katalog.ts`,
+        inhalt: `import type { FeatureKatalog } from '../../components/FormularEditor/katalogTypen';
+
+/**
+ * Katalog-Beitrag von ${label} fuer den Formular-Editor -- nur noetig, wenn das Feature ein PDF-Formular bekommt: dann
+ * \`FormularCode\` (\`katalogTypen.ts\`) und \`FEATURE_KATALOGE\` (\`FormularEditor/datenKatalog.ts\`) um '${slug}' ergaenzen.
+ * Sonst kann diese Datei geloescht werden.
+ */
+const katalog: FeatureKatalog = {
+  zeilenFelder: [],
+  zeilenQuellen: [],
+};
+
+export default katalog;
+`,
+      },
+    );
+  }
+
   const importZeile = `import { ${meta} } from '@/features/${ordner}/meta';\n`;
   const letzterImport = [...manifest.matchAll(/^import .*;\n/gm)].at(-1);
   if (!letzterImport) throw new Error(`Manifest ${MANIFEST_PFAD} hat keine Imports: unerwartetes Format.`);
@@ -185,10 +238,23 @@ featureRegistry.define({
 });
 `;
 
-  return {
+  const plan: FeaturePlan = {
     dateien,
     manifest: manifest.slice(0, nachImport) + importZeile + manifest.slice(nachImport).trimEnd() + '\n' + definition,
   };
+
+  if (optionen.admin) {
+    const marker = 'const ADMIN_MANIFEST: AdminManifest = {';
+    const start = adminManifest!.indexOf(marker);
+    const ende = start >= 0 ? adminManifest!.indexOf('\n};', start) : -1;
+    if (start < 0 || ende < 0) throw new Error(`Manifest ${ADMIN_MANIFEST_PFAD}: 'ADMIN_MANIFEST' nicht gefunden.`);
+    // `ende` zeigt auf den Zeilenumbruch vor `};`; die neue Zeile kommt dahinter, damit der letzte bestehende
+    // Eintrag sein eigenes Zeilenende behaelt (sonst landen beide Eintraege in einer Zeile).
+    const zeile = `  ${slug}: () => import('./features/${slug}'),\n`;
+    plan.adminManifest = adminManifest!.slice(0, ende + 1) + zeile + adminManifest!.slice(ende + 1);
+  }
+
+  return plan;
 }
 
 /**
@@ -209,16 +275,25 @@ function main(): void {
   const slug = args[0]?.startsWith('--') ? undefined : args[0];
   if (!slug) {
     console.error(
-      'Aufruf: bun run new-feature <slug> [--ordner <Name>] [--label <Anzeigename>] [--icon <db-icon>] [--dry-run]',
+      'Aufruf: bun run new-feature <slug> [--ordner <Name>] [--label <Anzeigename>] [--icon <db-icon>] [--admin] [--dry-run]',
     );
     process.exit(1);
   }
 
+  const admin = args.includes('--admin');
   const wurzel = resolve(import.meta.dirname, '..');
   const manifestPfad = join(wurzel, MANIFEST_PFAD);
+  const adminManifestPfad = join(wurzel, ADMIN_MANIFEST_PFAD);
   const plan = planeFeature(
-    { slug, ordner: optionWert(args, 'ordner'), label: optionWert(args, 'label'), icon: optionWert(args, 'icon') },
+    {
+      slug,
+      ordner: optionWert(args, 'ordner'),
+      label: optionWert(args, 'label'),
+      icon: optionWert(args, 'icon'),
+      admin,
+    },
     readFileSync(manifestPfad, 'utf8'),
+    admin ? readFileSync(adminManifestPfad, 'utf8') : undefined,
   );
 
   const vorhanden = plan.dateien.filter(datei => existsSync(join(wurzel, datei.pfad)));
@@ -236,9 +311,11 @@ function main(): void {
   }
   console.log(`${dryRun ? 'würde ergänzen' : 'ergänzt'}: ${MANIFEST_PFAD}`);
   if (!dryRun) writeFileSync(manifestPfad, plan.manifest);
-  console.log(
-    'Danach: `bun run format`, Tests und Changelog.',
-  );
+  if (plan.adminManifest !== undefined) {
+    console.log(`${dryRun ? 'würde ergänzen' : 'ergänzt'}: ${ADMIN_MANIFEST_PFAD}`);
+    if (!dryRun) writeFileSync(adminManifestPfad, plan.adminManifest);
+  }
+  console.log('Danach: `bun run format`, Tests und Changelog.');
 }
 
 if (import.meta.main) main();

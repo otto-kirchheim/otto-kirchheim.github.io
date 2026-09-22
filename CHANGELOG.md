@@ -2,6 +2,28 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-22 (177)
+
+### feat (Scaffold: optionaler Admin-Ordner)
+
+- `bun run new-feature <slug> --admin` legt zusaetzlich einen leeren Admin-Ordner an (`features/Admin/features/<slug>/{index,katalog}.ts`) und traegt ihn im Admin-Manifest (`features/Admin/adminFeatures.ts`) ein.
+  `index.ts` ist ein `AdminFeature`-Stub (`resources: []`, `statsRows: []`), `katalog.ts` ein `FeatureKatalog`-Stub (nur relevant, sobald das Feature ein PDF-Formular bekommt); beides bleibt von Hand zu befuellen, `features/Admin/features/ea` dient als vollstaendige Vorlage. Ohne `--admin` bleibt es beim generischen Ressourcenbrowser-Fallback aus `meta.resources`.
+- `planeFeature()` nimmt dafuer optional den aktuellen Inhalt von `adminFeatures.ts` als drittes Argument; ohne `optionen.admin` unveraendertes Verhalten (Ruecksprung getestet).
+- Beim ersten Anlauf fuegte die Manifest-Zeile ohne Zeilenumbruch an die vorherige an (`ea'),  demo: ...`); vor dem Commit im echten `bun run new-feature ... --admin`-Lauf gefunden und behoben (Einfuegepunkt hinter statt vor dem Zeilenumbruch), Test um eine formatgenaue Prüfung ergaenzt, damit das nicht wieder unbemerkt durchrutscht.
+- Test: `test/scripts.newFeature.test.ts` um drei Faelle ergaenzt (mit `admin`, ohne `admin`, `admin: true` ohne `adminManifest`). Testanzahl 2286 -> 2289. Gate: typecheck, lint 0, `lint:fsd` 111 unveraendert, build i.o.
+
+## 2026-09-22 (176)
+
+### refactor (P1i: datenKatalog.ts nach Feature aufgeteilt)
+
+- **Katalog-Beitrag je Formular-Feature** (`features/Admin/features/{ber,ewt,ez,ea}/katalog.ts`, Typ `FeatureKatalog`): Basis-Zusatzfelder (Bereitschaftszulage, nur `ber`), Zeilenfelder, Zeilenquellen und -- nur bei `ez` -- die Zulagen-Listen-Vorlagen samt Kategorie-Zuordnung.
+  Zuvor lagen alle vier Formulare als `Record<FormularCode, ...>` in einer Datei (`ZEILEN_FELDER`, `ZEILEN_QUELLEN`, `LISTEN_VORLAGEN`, `VORLAGEN_KATEGORIE`).
+- **`datenKatalog.ts`** behaelt die Basis (Zeitraum/Person/Dienststelle), Schriftarten, Formate, Helfer (`katalogFelder`, `katalogZeilenFelder`, `werteAuswahl`, `istBooleanFeld`, `gruppiere`, `beispielWert`, `zulagenKurztexte`) und setzt `ZEILEN_QUELLEN`/`LISTEN_VORLAGEN`/`VORLAGEN_KATEGORIE` aus den vier Katalog-Beitraegen zusammen (`FEATURE_KATALOGE`). Oeffentliche API (Namen, Signaturen, `FormularCode`) unveraendert -- keine der 17 FormularEditor-Konsumenten musste angepasst werden.
+- Geteilte Typen (`FormularCode`, `KatalogEintrag`, `BeispielWert`, `ListenVorlage`, `FeatureKatalog`) und Vorschau-Helfer (`tag`, `zeitpunkt`) liegen jetzt in `katalogTypen.ts` (Zyklus vermieden: die Feature-Katalog-Dateien importieren keine `datenKatalog.ts`).
+- Statische Imports der Admin-eigenen Unterordner `features/ewt`/`features/ea` bleiben innerhalb des ohnehin admin-only lazy Chunks (FormularEditor laedt nur fuer Admins); `lint:fsd`-Ratsche auf 111 (+2, dauerhaft): die Boundary-Regel prueft Import-Pfade grosskleinschreibungs-unabhaengig und trifft dabei zufaellig Admins eigene `features/ewt`/`features/ea`-Unterordner (Admin-interne Gliederung, keine echte Grenzverletzung zu den echten Feature-Modulen `EWT`/`EA`) -- kein `eslint-disable`, weil das im Haupt-Lint (`bun run lint`, dort ist die Regel nicht aktiv) als "unused directive" auffiele.
+- Test: `test/features/Admin/FormularEditor/datenKatalog.test.ts` (neu, haelt die Zusammenfuehrung fest: Basis/Zeilenfelder/-quellen je Formular, Bereitschaft BZ/BE-Trennung, Zulagen-Listen nur bei EZ, Beispielwerte). Testanzahl 2272 -> 2286 (14 neu). Gate: typecheck, lint 0, `lint:fsd` 111, build i.o. (113 Precache-Eintraege unveraendert, kein neuer Chunk).
+- Offen (aus dem Plan): "Scaffold um Admin-Ordner erweitern" (`bun run new-feature` legt bislang keinen Admin-/Katalog-Ordner an) ist nicht Teil dieses Commits, siehe `tasks/todo.md`.
+
 ## 2026-09-22 (175)
 
 ### fix (Hilfetexte Einstellungen/Berechnung korrigiert, Berechnung fehlte ganz)

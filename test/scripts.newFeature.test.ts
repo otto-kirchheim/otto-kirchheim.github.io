@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { planeFeature } from '../scripts/new-feature';
 
 const manifest = readFileSync('src/ts/app/features.ts', 'utf8');
+const adminManifest = readFileSync('src/ts/features/Admin/adminFeatures.ts', 'utf8');
 
 describe('scripts/new-feature (planeFeature)', () => {
   it('plant Ordner, Tab, ui- und help-Teil, Test und Manifest-Eintrag', () => {
@@ -42,5 +43,40 @@ describe('scripts/new-feature (planeFeature)', () => {
     expect(() => planeFeature({ slug: '1demo' }, manifest)).toThrow('Ungültiger Slug');
     expect(() => planeFeature({ slug: 'ea' }, manifest)).toThrow('steht schon im Manifest');
     expect(() => planeFeature({ slug: 'neu', ordner: 'EA' }, manifest)).toThrow('steht schon im Manifest');
+  });
+
+  it('legt mit `admin` zusaetzlich einen leeren Admin-Ordner an und traegt ihn im Admin-Manifest ein', () => {
+    const plan = planeFeature({ slug: 'demo', label: 'Demo-Feature', admin: true }, manifest, adminManifest);
+
+    expect(plan.dateien.map(datei => datei.pfad)).toEqual([
+      'src/ts/features/Demo/meta.ts',
+      'src/ts/features/Demo/DemoTab.tsx',
+      'src/ts/features/Demo/parts/ui.tsx',
+      'src/ts/features/Demo/parts/help.ts',
+      'test/Demo.test.ts',
+      'src/ts/features/Admin/features/demo/index.ts',
+      'src/ts/features/Admin/features/demo/katalog.ts',
+    ]);
+    const adminIndex = plan.dateien.find(datei => datei.pfad.endsWith('Admin/features/demo/index.ts'))!.inhalt;
+    expect(adminIndex).toContain("id: 'demo'");
+    expect(adminIndex).toContain('resources: []');
+    expect(adminIndex).toContain("from '../../adminFeatures'");
+    const katalog = plan.dateien.find(datei => datei.pfad.endsWith('Admin/features/demo/katalog.ts'))!.inhalt;
+    expect(katalog).toContain("from '../../components/FormularEditor/katalogTypen'");
+
+    // Eigene Zeile mit Zeilenumbruch davor UND danach (keine verschmolzene Zeile, kein Leerzeilen-Versatz vor `};`).
+    expect(plan.adminManifest).toContain("\n  demo: () => import('./features/demo'),\n};\n");
+    expect(plan.adminManifest?.replace("  demo: () => import('./features/demo'),\n", '')).toBe(adminManifest);
+  });
+
+  it('ohne `admin` bleibt `adminManifest` unveraendert (kein Admin-Ordner)', () => {
+    const plan = planeFeature({ slug: 'demo' }, manifest);
+
+    expect(plan.adminManifest).toBeUndefined();
+    expect(plan.dateien.some(datei => datei.pfad.includes('Admin'))).toBe(false);
+  });
+
+  it('lehnt `admin: true` ohne den aktuellen Admin-Manifest-Inhalt ab', () => {
+    expect(() => planeFeature({ slug: 'demo', admin: true }, manifest)).toThrow('adminManifest');
   });
 });

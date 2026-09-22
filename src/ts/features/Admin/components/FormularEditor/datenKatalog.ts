@@ -1,12 +1,12 @@
-import {
-  LreType,
-  ZULAGEN_CATALOG,
-  ZULAGEN_CATEGORY_MAX_SELECTIONS,
-  ZulageCategory,
-} from '@otto-kirchheim/nebengeld-shared';
-import type { FormatName, ListenGruppe, Schriftfamilie } from '@otto-kirchheim/nebengeld-shared';
+import { LreType, ZULAGEN_CATALOG } from '@otto-kirchheim/nebengeld-shared';
+import type { FormatName, Schriftfamilie, ZulageCategory } from '@otto-kirchheim/nebengeld-shared';
+import berKatalog from '../../features/ber/katalog';
+import ewtKatalog from '../../features/ewt/katalog';
+import eaKatalog from '../../features/ea/katalog';
+import ezKatalog from '../../features/ez/katalog';
+import type { FeatureKatalog, FormularCode, KatalogEintrag, ListenVorlage } from './katalogTypen';
 
-export type FormularCode = 'ez' | 'ewt' | 'bereitschaft' | 'ea';
+export type { BeispielWert, FormularCode, KatalogEintrag, ListenVorlage } from './katalogTypen';
 
 /**
  * Wählbare Schriftfamilien für `Layout.schriftart`. `helvetica`/`times`/`courier` sind die Standard-14
@@ -44,60 +44,17 @@ export const FORMATE: { wert: FormatName | ''; label: string }[] = [
   { wert: 'oe', label: 'Organisationseinheit (V.IW-MI-N-KSL-IL 03)' },
 ];
 
-/**
- * Beispielwert für die Vorschau: Konstante oder, wo die Zeilen variieren müssen (Tage,
- * Auftragsnummern), Funktion über den Zeilenindex.
- */
-export type BeispielWert = string | number | string[] | ((index: number) => string | number);
+// Katalog-Beitrag je Formular-Feature; Felder/Quellen/Listen liegen bei den Features (`features/Admin/features/<key>/katalog.ts`),
+// hier nur die Zusammenfuehrung. Abgeleitet aus `infrastructure/pdf/pdfDaten.ts` (Basis) und `features/<Feature>/utils/pdfDaten.ts`
+// (`IPdf*`-Typen je Ressource): die TS-Typen sind zur Laufzeit weg, daher von Hand gepflegt -- bei Änderungen an den `IPdf*`-Typen mitziehen.
+const FEATURE_KATALOGE: Record<FormularCode, FeatureKatalog> = {
+  bereitschaft: berKatalog,
+  ewt: ewtKatalog,
+  ez: ezKatalog,
+  ea: eaKatalog,
+};
 
-export interface KatalogEintrag {
-  /** Datenpfad, wie ihn `get()` im Renderer auflöst */
-  pfad: string;
-  label: string;
-  gruppe: string;
-  /** Format-Vorschlag, beim Anlegen/Umbenennen vorbelegt (nur ohne eigenes `format`). */
-  format?: FormatName;
-  /**
-   * Beschränkt den Eintrag auf EINE Zeilenquelle (`ZEILEN_QUELLEN[formular][].pfad`, z.B. `'Daten.BZ'`),
-   * wenn ein Feldname (`Beginn`) je Quelle Verschiedenes bedeutet. Ohne Angabe für alle Quellen.
-   */
-  quelle?: string;
-  /** Wert für die Beispieldaten-Vorschau; ohne Angabe greift der generische Platzhalter. */
-  beispiel?: BeispielWert;
-  /**
-   * Beschränkt einen `BASIS`-Eintrag auf bestimmte Formulare (`Bereitschaftszulage.*` gibt es nur im
-   * Bereitschaft-Body). Ohne Angabe für alle.
-   */
-  formulare?: FormularCode[];
-}
-
-/**
- * Datum als ISO-String, `index` Tage nach dem Monatsersten. Beginnt am 1., sonst fehlt in der
- * Tages-Spalte der erste Tag und die Vorschau wirkt, als fehle ein Datensatz.
- *
- * @param index - Tage nach dem Start.
- * @param ab - Starttag im März 2026 (Default: der 1.).
- * @returns ISO-Zeitstempel.
- */
-function tag(index: number, ab = 1): string {
-  return new Date(2026, 2, ab + index).toISOString();
-}
-
-/**
- * Zeitstempel am selben Tagesraster (Bereitschaftszeiträume, Uhrzeit-Spalten).
- *
- * @param index - Tage nach dem Monatsersten.
- * @param stunde - Uhrzeit (volle Stunde).
- * @param plusTage - Zusätzliche Tage, z.B. für ein Zeitraum-Ende.
- * @returns ISO-Zeitstempel.
- */
-function zeitpunkt(index: number, stunde: number, plusTage = 0): string {
-  return new Date(2026, 2, 1 + index + plusTage, stunde).toISOString();
-}
-
-// Abgeleitet aus `infrastructure/pdf/pdfDaten.ts` (Basis) und `features/<Feature>/utils/pdfDaten.ts` (`IPdf*`-Typen je
-// Ressource): die TS-Typen sind zur Laufzeit weg, daher von Hand gepflegt -- bei Änderungen an den `IPdf*`-Typen mitziehen.
-
+/** Felder, die in jedem Formular vorkommen (Zeitraum, Person, Dienststelle); formularspezifische Basis-Felder liegen bei den Features. */
 const BASIS: KatalogEintrag[] = [
   { pfad: 'Jahr', label: 'Jahr', gruppe: 'Zeitraum', beispiel: 2026 },
   { pfad: 'Monat', label: 'Monat', gruppe: 'Zeitraum', beispiel: 3 },
@@ -146,188 +103,23 @@ const BASIS: KatalogEintrag[] = [
   { pfad: 'VorgabenU.Pers.kmArbeitsort', label: 'km zum Arbeitsort', gruppe: 'Dienststelle', beispiel: 23 },
   { pfad: 'VorgabenU.Pers.nBhf', label: 'Nächster Bahnhof', gruppe: 'Dienststelle', beispiel: 'Musterstadt Hbf' },
   { pfad: 'VorgabenU.Pers.kmnBhf', label: 'km zum nächsten Bahnhof', gruppe: 'Dienststelle', beispiel: 4 },
-  // Bereitschaftszulage-Zwischenwerte (`bereitschaftszulageAbgeleiteteWerte`) -- nur bei Bereitschaft
-  // (`formulare`-Filter), sonst liefen sie bei ez/ewt/ea im Picker ins Leere. Nur SummeBeamter3 ist ein
-  // Geldwert (`waehrung`), der Rest Ganzzahlen (Minuten/Stunden/Sätze).
-  {
-    pfad: 'Bereitschaftszulage.TarifBeamter',
-    label: 'Tarifkraft/Beamter',
-    gruppe: 'Bereitschaftszulage',
-    formulare: ['bereitschaft'],
-    beispiel: 'Tarifkraft',
-  },
-  {
-    pfad: 'Bereitschaftszulage.BereitschaftsMinuten',
-    label: 'Bereitschaftszeit abzgl. Einsätze (Minuten)',
-    gruppe: 'Bereitschaftszulage',
-    format: 'ganzzahl',
-    formulare: ['bereitschaft'],
-    beispiel: 6000,
-  },
-  {
-    pfad: 'Bereitschaftszulage.SummeTarif',
-    label: 'Summe Tarif (Std.)',
-    gruppe: 'Bereitschaftszulage',
-    format: 'ganzzahl',
-    formulare: ['bereitschaft'],
-    beispiel: 100,
-  },
-  {
-    pfad: 'Bereitschaftszulage.SummeBeamter1',
-    label: 'Summe 1 Beamter (Minuten)',
-    gruppe: 'Bereitschaftszulage',
-    format: 'ganzzahl',
-    formulare: ['bereitschaft'],
-    beispiel: 5400,
-  },
-  {
-    pfad: 'Bereitschaftszulage.SummeBeamter2',
-    label: 'Summe 2 Beamter (Sätze)',
-    gruppe: 'Bereitschaftszulage',
-    format: 'ganzzahl',
-    formulare: ['bereitschaft'],
-    beispiel: 11,
-  },
-  {
-    pfad: 'Bereitschaftszulage.SummeBeamter3',
-    label: 'Summe 3 Beamter (€)',
-    gruppe: 'Bereitschaftszulage',
-    format: 'waehrung',
-    formulare: ['bereitschaft'],
-    beispiel: 180.07,
-  },
-  {
-    pfad: 'Bereitschaftszulage.GeldwertBeamter',
-    label: 'Geldwert Beamter (Besoldungsgruppe, €)',
-    gruppe: 'Bereitschaftszulage',
-    format: 'waehrung',
-    formulare: ['bereitschaft'],
-    beispiel: 16.37,
-  },
 ];
 
 /**
- * `BASIS`-Einträge, die für `formular` sichtbar sind.
+ * `BASIS`-Einträge fuer `formular`, ergaenzt um dessen eigene (`FEATURE_KATALOGE[formular].basisEintraege`, z. B.
+ * Bereitschaftszulage nur bei Bereitschaft).
  *
  * @param formular - Formularcode.
- * @returns Die für dieses Formular sichtbaren `BASIS`-Einträge.
+ * @returns Die für dieses Formular sichtbaren Basis-Einträge.
  */
 function basisFuer(formular: FormularCode): KatalogEintrag[] {
-  return BASIS.filter(e => !e.formulare || e.formulare.includes(formular));
+  return [...BASIS, ...(FEATURE_KATALOGE[formular].basisEintraege ?? [])];
 }
 
-/** Zeilen-Felder je Ressource -- als `zeilen.spalten[].key` bzw. als `feld` in Summenfeldern nutzbar. */
-const ZEILEN_FELDER: Record<FormularCode, KatalogEintrag[]> = {
-  ez: [
-    { pfad: 'Tag', label: 'Tag', gruppe: 'Zeile', format: 'datum', beispiel: i => tag(i) },
-    { pfad: 'Beginn', label: 'Beginn (HH:mm)', gruppe: 'Zeile', beispiel: '07:00' },
-    { pfad: 'Ende', label: 'Ende (HH:mm)', gruppe: 'Zeile', beispiel: '15:45' },
-    { pfad: 'Auftragsnummer', label: 'Auftragsnummer', gruppe: 'Zeile', beispiel: i => `1234567${23 + i}` },
-    { pfad: 'Zulagen', label: 'Zulagen (Liste)', gruppe: 'Zeile', format: 'liste', beispiel: ['NZ', 'SoZ'] },
-    // Vorberechnet (`ezAbgeleiteteWerte`): `Spalte` kann Beginn/Ende nicht wie `Feld.quellen` verketten.
-    { pfad: 'Arbeitszeit', label: 'Arbeitszeit (HH:mm-HH:mm)', gruppe: 'Berechnet', beispiel: '07:00-15:45' },
-  ],
-  ewt: [
-    { pfad: 'Buchungstag', label: 'Buchungstag', gruppe: 'Zeile', beispiel: i => String(2 + i).padStart(2, '0') },
-    { pfad: 'Einsatzort', label: 'Einsatzort', gruppe: 'Zeile', beispiel: 'Nürnberg Rbf' },
-    { pfad: 'Schicht', label: 'Schicht', gruppe: 'Zeile', beispiel: 'F' },
-    { pfad: 'abWE', label: 'Abfahrt Wohnung', gruppe: 'Zeile', beispiel: '05:15' },
-    { pfad: 'ab1E', label: 'Abfahrt erste Tätigkeitsstätte', gruppe: 'Zeile', beispiel: '05:45' },
-    { pfad: 'anEE', label: 'Ankunft Einsatzort', gruppe: 'Zeile', beispiel: '07:00' },
-    { pfad: 'beginE', label: 'Arbeitsbeginn', gruppe: 'Zeile', beispiel: '07:15' },
-    { pfad: 'endeE', label: 'Arbeitsende', gruppe: 'Zeile', beispiel: '15:45' },
-    { pfad: 'abEE', label: 'Abfahrt Einsatzort', gruppe: 'Zeile', beispiel: '16:00' },
-    { pfad: 'an1E', label: 'Ankunft erste Tätigkeitsstätte', gruppe: 'Zeile', beispiel: '17:15' },
-    { pfad: 'anWE', label: 'Ankunft Wohnung', gruppe: 'Zeile', beispiel: '17:45' },
-    // Vorberechnet (`ewtAbgeleiteteWerte`), eigene Gruppe: der Editor bietet sie ohne Rechnung-Builder als
-    // Spalten-/Ankreuz-Quelle an.
-    { pfad: 'DauerWohnung', label: 'Dauer Wohnung (HH:mm)', gruppe: 'Berechnet', beispiel: '12:30' },
-    { pfad: 'DauerErsteTkgSt', label: 'Dauer erste Tätigkeitsstätte (HH:mm)', gruppe: 'Berechnet', beispiel: '11:30' },
-    { pfad: 'Wohnung8bis14', label: 'Wohnung: 8-14h', gruppe: 'Berechnet', beispiel: 'true' },
-    { pfad: 'Wohnung14bis24', label: 'Wohnung: 14-24h', gruppe: 'Berechnet', beispiel: 'false' },
-    { pfad: 'WohnungUeber24', label: 'Wohnung: über 24h', gruppe: 'Berechnet', beispiel: 'false' },
-    { pfad: 'BeamterUeber8Wohnung', label: 'Beamter, Wohnung über 8h', gruppe: 'Berechnet', beispiel: 'false' },
-    { pfad: 'TkgSt8bis24', label: 'Erste Tätigkeitsstätte: 8-24h', gruppe: 'Berechnet', beispiel: 'true' },
-    { pfad: 'TkgStUeber24', label: 'Erste Tätigkeitsstätte: über 24h', gruppe: 'Berechnet', beispiel: 'false' },
-  ],
-  bereitschaft: [
-    // Bereitschaft hat ZWEI Zeilenquellen (BZ, BE, siehe ZEILEN_QUELLEN). `Beginn`/`Ende` bedeuten dort
-    // Verschiedenes, daher GETRENNTE Einträge mit `quelle`: im Zeitraum (BZ) ein voller Zeitstempel, im
-    // Einsatz (BE) eine `"HH:mm"`-Uhrzeit.
-    {
-      pfad: 'Beginn',
-      label: 'Beginn (Zeitraum)',
-      gruppe: 'Zeile BZ',
-      format: 'datum',
-      quelle: 'Daten.BZ',
-      beispiel: i => zeitpunkt(i, 15.75),
-    },
-    {
-      pfad: 'Ende',
-      label: 'Ende (Zeitraum)',
-      gruppe: 'Zeile BZ',
-      format: 'datum',
-      quelle: 'Daten.BZ',
-      beispiel: i => zeitpunkt(i, 7, 1),
-    },
-    { pfad: 'Pause', label: 'Pause (Minuten)', gruppe: 'Zeile BZ', quelle: 'Daten.BZ', beispiel: 30 },
-    // Kurzer Anruf WÄHREND des Zeitraums, nicht dessen volle Spanne (`createAddModalBereitschaftsEinsatz.tsx`).
-    { pfad: 'Beginn', label: 'Beginn (Einsatz, HH:mm)', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: '01:15' },
-    { pfad: 'Ende', label: 'Ende (Einsatz, HH:mm)', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: '02:00' },
-    { pfad: 'Tag', label: 'Tag', gruppe: 'Zeile BE', format: 'datum', quelle: 'Daten.BE', beispiel: i => tag(i) },
-    {
-      pfad: 'Auftragsnummer',
-      label: 'Auftragsnummer',
-      gruppe: 'Zeile BE',
-      quelle: 'Daten.BE',
-      beispiel: i => `134567${111 + i}`,
-    },
-    {
-      pfad: 'LRE',
-      label: 'LRE',
-      gruppe: 'Zeile BE',
-      quelle: 'Daten.BE',
-      beispiel: i => Object.values(LreType)[i % Object.values(LreType).length],
-    },
-    { pfad: 'PrivatKm', label: 'Privat-km', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: i => 8 + i * 2 },
-    // Vorberechnet (`bzAbgeleiteteWerte`/`beAbgeleiteteWerte`), je Quelle eine eigene Gruppe. Beide heißen
-    // `Dauer` (getrennt über `quelle`), die Labels MÜSSEN sich unterscheiden ("Zeitraum" vs. "Einsatz"),
-    // sonst sind sie ohne Tabellen-Kontext (Kopf-/Fuß-Summenfeld) nicht auseinanderzuhalten. Minuten
-    // (Zahl) statt HH:mm-Text wie bei EWT.
-    { pfad: 'Dauer', label: 'Dauer Zeitraum (Minuten)', gruppe: 'Berechnet', quelle: 'Daten.BZ', beispiel: 450 },
-    { pfad: 'Dauer', label: 'Dauer Einsatz (Minuten)', gruppe: 'Berechnet', quelle: 'Daten.BE', beispiel: 45 },
-    // Euro-Betrag für Privat-km (Satz aus VorgabenGeld je nach Pers.TB, wie `calculateBerechnungRows.ts`);
-    // `format` als Vorschlag, damit neue Spalten/Felder gleich mit Währungsformat starten.
-    {
-      pfad: 'PrivatKmBetrag',
-      label: 'Privat-km Betrag (€)',
-      gruppe: 'Berechnet',
-      quelle: 'Daten.BE',
-      format: 'waehrung',
-      beispiel: 3.24,
-    },
-  ],
-  ea: [
-    { pfad: 'Tag', label: 'Tag', gruppe: 'Zeile', format: 'datum', beispiel: i => tag(i) },
-    { pfad: 'Dauer', label: 'Dauer (HH:mm)', gruppe: 'Zeile', beispiel: '08:15' },
-    { pfad: 'Taetigkeit', label: 'Tätigkeit (Tag)', gruppe: 'Zeile', beispiel: 'Teamleiter' },
-    { pfad: 'Entgeltgruppe', label: 'Entgeltgruppe (Tag)', gruppe: 'Zeile', beispiel: '104' },
-  ],
-};
-
-/**
- * Zeilenlisten im Download-Body, aus denen eine Tabelle gespeist wird. Bereitschaft liefert zwei
- * (Zeiträume, Einsätze); dieselbe Quelle darf mehrere Tabellen speisen, getrennt über den Filter.
- */
-export const ZEILEN_QUELLEN: Record<FormularCode, { pfad: string; label: string }[]> = {
-  ez: [{ pfad: 'Daten.N', label: 'Nebengeld-Einträge' }],
-  ewt: [{ pfad: 'Daten.EWT', label: 'EWT-Buchungen' }],
-  bereitschaft: [
-    { pfad: 'Daten.BZ', label: 'Bereitschaftszeiträume' },
-    { pfad: 'Daten.BE', label: 'Bereitschaftseinsätze' },
-  ],
-  ea: [{ pfad: 'Daten.EA', label: 'Entgeltausgleich-Einträge' }],
-};
+/** Zeilenlisten im Download-Body, aus denen eine Tabelle gespeist wird (Beitrag der Features). */
+export const ZEILEN_QUELLEN: Record<FormularCode, { pfad: string; label: string }[]> = Object.fromEntries(
+  Object.entries(FEATURE_KATALOGE).map(([formular, katalog]) => [formular, katalog.zeilenQuellen]),
+) as Record<FormularCode, { pfad: string; label: string }[]>;
 
 /**
  * Auswahl für Kopf-/Fuß-/Übertrags-Felder: alles außerhalb der Datentabelle.
@@ -352,7 +144,7 @@ export function katalogFelder(formular: FormularCode): KatalogEintrag[] {
  * @returns Die passenden Zeilenfelder.
  */
 export function katalogZeilenFelder(formular: FormularCode, quelle?: string): KatalogEintrag[] {
-  const eintraege = ZEILEN_FELDER[formular];
+  const eintraege = FEATURE_KATALOGE[formular].zeilenFelder;
   return quelle === undefined ? eintraege : eintraege.filter(e => e.quelle === undefined || e.quelle === quelle);
 }
 
@@ -427,32 +219,6 @@ export function beispielWert(formular: FormularCode, pfad: string, index: number
 }
 
 /**
- * Fertige Listen-Gruppen je Formular (nur EZ): die Zulagen einer Zeile sind eine Liste mit festen
- * Spaltenplätzen, welcher Code über welcher Spalte steht, hängt vom Monat ab. Codes und Zahl je
- * Kategorie kommen aus dem gemeinsamen Zulagen-Katalog.
- */
-export interface ListenVorlage {
-  /** Vorschlag für den Gruppen-Key in `TabellenDef.listen` */
-  name: string;
-  label: string;
-  /** Spaltenplätze, die das Formular für diese Gruppe vorsieht */
-  plaetze: number;
-  gruppe: ListenGruppe;
-}
-
-/**
- * Baut die Listen-Gruppe `Zulagen` für eine Zulagen-Kategorie.
- *
- * @param kategorie - Zulagen-Kategorie.
- * @returns Listen-Gruppe mit allen Codes der Kategorie als Auswahl.
- */
-function zulagenGruppe(kategorie: ZulageCategory): ListenGruppe {
-  const codes = ZULAGEN_CATALOG.filter(z => z.category === kategorie).map(z => z.code);
-  // Ohne `beschriftungen` steht der Code selbst über der Spalte, wie auf dem Zettel.
-  return { quelle: 'Zulagen', schluessel: 'Typ', wert: 'Wert', auswahl: [...codes] };
-}
-
-/**
  * Kurztexte der Zulagen-Codes einer Kategorie.
  *
  * @param kategorie - Zulagen-Kategorie.
@@ -462,37 +228,13 @@ export function zulagenKurztexte(kategorie: ZulageCategory): Record<string, stri
   return Object.fromEntries(ZULAGEN_CATALOG.filter(z => z.category === kategorie).map(z => [z.code, z.shortLabel]));
 }
 
-const EZ_LISTEN: ListenVorlage[] = [
-  {
-    name: 'erschwernis',
-    label: 'Erschwerniszulagen',
-    plaetze: ZULAGEN_CATEGORY_MAX_SELECTIONS[ZulageCategory.Erschwerniszulage],
-    gruppe: zulagenGruppe(ZulageCategory.Erschwerniszulage),
-  },
-  {
-    name: 'leistung',
-    label: 'Leistungsprämie / Fahrentschädigung',
-    plaetze: ZULAGEN_CATEGORY_MAX_SELECTIONS[ZulageCategory.LeistungspramieUndFahrentschaedigung],
-    gruppe: zulagenGruppe(ZulageCategory.LeistungspramieUndFahrentschaedigung),
-  },
-  {
-    name: 'gkr',
-    label: 'Ganzkörperreinigung',
-    plaetze: ZULAGEN_CATEGORY_MAX_SELECTIONS[ZulageCategory.Ganzkoerperreinigung],
-    gruppe: zulagenGruppe(ZulageCategory.Ganzkoerperreinigung),
-  },
-];
+/** Fertige Listen-Gruppen je Formular (Beitrag der Features; bisher nur EZ). */
+export const LISTEN_VORLAGEN: Record<FormularCode, ListenVorlage[]> = Object.fromEntries(
+  Object.entries(FEATURE_KATALOGE).map(([formular, katalog]) => [formular, katalog.listenVorlagen ?? []]),
+) as Record<FormularCode, ListenVorlage[]>;
 
-export const LISTEN_VORLAGEN: Record<FormularCode, ListenVorlage[]> = {
-  ez: EZ_LISTEN,
-  ewt: [],
-  bereitschaft: [],
-  ea: [],
-};
-
-/** Kategorie zu einer Vorlage (nur EZ), für die Kurztext-Umschaltung im Editor. */
-export const VORLAGEN_KATEGORIE: Record<string, ZulageCategory> = {
-  erschwernis: ZulageCategory.Erschwerniszulage,
-  leistung: ZulageCategory.LeistungspramieUndFahrentschaedigung,
-  gkr: ZulageCategory.Ganzkoerperreinigung,
-};
+/** Kategorie zu einer Listen-Vorlage (Beitrag der Features; bisher nur EZ), für die Kurztext-Umschaltung im Editor. */
+export const VORLAGEN_KATEGORIE: Record<string, ZulageCategory> = Object.assign(
+  {},
+  ...Object.values(FEATURE_KATALOGE).map(katalog => katalog.vorlagenKategorie ?? {}),
+);
