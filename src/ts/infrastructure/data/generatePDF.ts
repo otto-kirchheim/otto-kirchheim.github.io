@@ -1,13 +1,13 @@
 import { saveAs } from 'file-saver';
-import Storage from '../storage/Storage';
+import Storage from '../../shared/lib/storage/Storage';
 import buttonDisable from '../ui/buttonDisable';
 import clearLoading from '../ui/clearLoading';
 import setLoading from '../ui/setLoading';
 import { createSnackBar } from '../ui/CustomSnackbar';
 import type { IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '@/types';
-import { featureRegistry } from '@/core/hooks';
-import type { FeaturePdfModus } from '@/core/hooks';
-import dayjs from '../date/configDayjs';
+import { featureRegistry } from '@/shared/lib/feature';
+import type { FeaturePdfModus } from '@/shared/lib/feature';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { splitOeInput } from './oeLevels';
 import { ladeUndErzeugePdf } from '../pdf/ladeFormular';
 import { signaturDialog } from '../pdf/signaturDialog';

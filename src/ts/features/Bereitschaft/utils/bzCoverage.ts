@@ -1,6 +1,6 @@
 import type { IDatenBZ } from '@/types';
 import { B_WECHSEL_MINUTE, B_WECHSEL_STUNDE, getBereitschaftsZeitraumDaten } from '.';
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { flushResource } from '@/infrastructure/autoSave/autoSave';
 
 // ─── Grenz-Hilfsfunktion ─────────────────────────────────────────────────────

@@ -16,7 +16,7 @@ const {
   getStoredMonatJahrMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/storage/Storage', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({
   default: {
     compare: storageCompareMock,
     set: storageSetMock,
@@ -35,7 +35,7 @@ vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('@/infrastructure/date/dateStorage', () => ({
+vi.mock('@/shared/lib/date/dateStorage', () => ({
   getStoredMonatJahr: getStoredMonatJahrMock,
 }));
 

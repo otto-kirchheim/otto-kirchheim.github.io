@@ -32,7 +32,7 @@ vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('@/infrastructure/storage/Storage', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({
   default: { get: storageGetMock },
 }));
 

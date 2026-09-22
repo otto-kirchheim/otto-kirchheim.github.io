@@ -1,11 +1,7 @@
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { IEinstellungenBeitrag, IVorgabenU, IVorgabenUPers } from '@/types';
-import {
-  PERS_FIELD_LABELS,
-  setupPersValidation,
-  validatePersInput,
-} from '@/infrastructure/validation/addressValidation';
-import { default as Storage } from '@/infrastructure/storage/Storage';
+import { PERS_FIELD_LABELS, setupPersValidation, validatePersInput } from '@/shared/lib/validation/addressValidation';
+import { default as Storage } from '@/shared/lib/storage/Storage';
 import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
 import { sliderPositionToMs } from './generateEingabeMaskeEinstellungen';
 import { getArbeitszeitPanelState } from '../components/arbeitszeitPanelState';

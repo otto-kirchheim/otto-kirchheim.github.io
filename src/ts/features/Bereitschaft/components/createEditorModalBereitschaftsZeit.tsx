@@ -5,9 +5,9 @@ import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { MyFormModal, MyInput, MyModalBody, schliesseModal, showModal } from '@/components';
 import type { CustomHTMLDivElement, IDatenBZ } from '@/types';
-import { default as Storage } from '@/infrastructure/storage/Storage';
-import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
-import dayjs from '@/infrastructure/date/configDayjs';
+import { default as Storage } from '@/shared/lib/storage/Storage';
+import { default as checkMaxTag } from '@/shared/lib/validation/checkMaxTag';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { getBereitschaftsZeitraumDaten, persistBereitschaftsZeitraumTableData } from '../utils';
 
 /**

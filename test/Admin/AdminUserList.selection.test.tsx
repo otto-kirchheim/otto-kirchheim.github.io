@@ -21,7 +21,7 @@ vi.mock('@/features/Admin/utils/api', () => ({
   issueVerificationLink: vi.fn(),
   issuePasswordResetLink: vi.fn(),
 }));
-vi.mock('@/infrastructure/tokenManagement/decodeAccessToken', () => ({
+vi.mock('@/shared/api/token/decodeAccessToken', () => ({
   getUserCookie: mockGetUserCookie,
 }));
 vi.mock('@/features/Admin/components/createAdminBulkEditModal', () => ({

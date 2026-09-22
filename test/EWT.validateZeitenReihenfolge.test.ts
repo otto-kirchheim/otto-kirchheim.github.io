@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 
-import type { IDatenEWT } from '@/core/types';
+import type { IDatenEWT } from '@/shared/types';
 import validateEwtZeitenReihenfolge from '@/features/EWT/utils/validateEwtZeitenReihenfolge';
 
 function createEWT(overrides: Partial<IDatenEWT> = {}): IDatenEWT {

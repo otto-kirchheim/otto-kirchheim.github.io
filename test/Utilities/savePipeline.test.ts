@@ -3,9 +3,9 @@ import { applyServerRowsToTable, collectRowErrorMatches } from '@/infrastructure
 import '@/app/features';
 import { unlinkEwtRefsForDeletedIds } from '@/infrastructure/data/unlinkEwtRefs';
 import type { CustomTable, CustomTableTypes, Row } from '@/infrastructure/table/CustomTable';
-import type { BulkErrorEntry } from '@/infrastructure/api/apiService';
-import Storage from '@/infrastructure/storage/Storage';
-import type { IDatenEA, IDatenN } from '@/core/types';
+import type { BulkErrorEntry } from '@/shared/api/apiService';
+import Storage from '@/shared/lib/storage/Storage';
+import type { IDatenEA, IDatenN } from '@/shared/types';
 
 const unlinkNebengeldRefsForDeletedEwtIds = (ids: string[]) => unlinkEwtRefsForDeletedIds('N', ids);
 const unlinkEaRefsForDeletedEwtIds = (ids: string[]) => unlinkEwtRefsForDeletedIds('EA', ids);

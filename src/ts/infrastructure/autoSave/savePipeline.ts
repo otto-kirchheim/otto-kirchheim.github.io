@@ -1,6 +1,6 @@
 import type { CustomTable, CustomTableTypes, Row, TableChanges } from '../table/CustomTable';
 import type { CustomHTMLTableElement, TResourceKey } from '@/types';
-import type { BulkErrorEntry, BulkRequest } from '../api/apiService';
+import type { BulkErrorEntry, BulkRequest } from '@/shared/api/apiService';
 import { resourceDef } from '../data/resourceConfig';
 import { buildCreatePayloadWithClientRequestId, mapServerDocToFrontend } from './changeTracking';
 

@@ -1,5 +1,5 @@
-import Storage, { type TStorageData } from '@/infrastructure/storage/Storage';
-import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
+import Storage, { type TStorageData } from '@/shared/lib/storage/Storage';
+import { getStoredMonatJahr } from '@/shared/lib/date/dateStorage';
 import { resourceDefs } from '@/infrastructure/data/resourceConfig';
 import { loadUserDaten } from '@/core/orchestration/auth/utils';
 import { setActAsUser } from './api';

@@ -2,7 +2,7 @@ import { type JSX, useEffect, useRef, useState } from 'react';
 
 import { DbAuswahl, DbFeld } from '@/components';
 import type { IVorgabenUfZ } from '@/types';
-import { normalizeTimeString } from '@/infrastructure/validation/timeString';
+import { normalizeTimeString } from '@/shared/lib/validation/timeString';
 import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { setFahrzeitPanelState } from './fahrzeitPanelState';
 

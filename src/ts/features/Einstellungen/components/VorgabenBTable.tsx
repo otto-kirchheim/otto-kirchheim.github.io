@@ -4,10 +4,10 @@ import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { asAnyTable, useCustomTableState } from '@/infrastructure/table/CustomTable';
 import CustomTableView from '@/infrastructure/table/CustomTableView';
 import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUvorgabenB } from '@/types';
-import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as Storage } from '@/shared/lib/storage/Storage';
 import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
 import { EditorModalVE, ShowModalVE } from '.';
-import { apiFetch } from '@/infrastructure/api/apiFetchHelper';
+import { apiFetch } from '@/shared/api/apiFetchHelper';
 
 type ProfileTemplateVorgabenBResponse = {
   template?: { VorgabenB?: Array<{ key: string; value: Record<string, unknown> }> };

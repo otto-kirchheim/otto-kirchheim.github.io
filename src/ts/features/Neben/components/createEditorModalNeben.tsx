@@ -14,9 +14,9 @@ import {
 } from '@/components';
 import { getEwtDaten } from '../../EWT/utils';
 import type { CustomHTMLDivElement, IDatenEWT, IDatenN } from '@/types';
-import Storage from '@/infrastructure/storage/Storage';
-import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
-import dayjs from '@/infrastructure/date/configDayjs';
+import Storage from '@/shared/lib/storage/Storage';
+import { default as checkMaxTag } from '@/shared/lib/validation/checkMaxTag';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { onEvent } from '@/core';
 import {
   applySelectOptions,

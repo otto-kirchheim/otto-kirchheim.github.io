@@ -3,14 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 import '@/app/features';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
-import type { IDatenEWT, IVorgabenU } from '@/core/types';
+import type { IDatenEWT, IVorgabenU } from '@/shared/types';
 import EditorModalEWT from '@/features/EWT/components/createEditorModalEWT';
-import calculateBuchungstagEwt from '@/infrastructure/date/calculateBuchungstagEwt';
+import calculateBuchungstagEwt from '@/features/EWT/utils/calculateBuchungstagEwt';
 import clearEwtZeiten from '@/features/EWT/utils/clearEwtZeiten';
 import getEwtEditorDate from '@/features/EWT/utils/getEwtEditorDate';
 import getEwtWindow from '@/features/EWT/utils/getEwtWindow';
 import setNaechsterEwtTag from '@/features/EWT/utils/setNaechsterEwtTag';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 
 const { createSnackBarMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   createSnackBarMock: vi.fn(),

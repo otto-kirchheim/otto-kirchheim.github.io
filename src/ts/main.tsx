@@ -3,12 +3,12 @@ import { registerSW } from 'virtual:pwa-register';
 
 import { logoutUser, changeMonatJahr, saveEinstellungen } from '@/features/Einstellungen/utils';
 import { createSnackBar, initPullToRefresh, setVersionOutdated } from '@/infrastructure/ui';
-import { default as Storage } from '@/infrastructure/storage/Storage';
-import { default as compareVersion } from '@/infrastructure/validation/compareVersion';
+import { default as Storage } from '@/shared/lib/storage/Storage';
+import { default as compareVersion } from '@/shared/lib/version/compareVersion';
 import { default as setOffline } from '@/infrastructure/ui/setOffline';
-import { default as storageAvailable } from '@/infrastructure/storage/storageAvailable';
-import { registerHook, featureLifecycleRegistry } from './core/hooks';
-import type { FeatureContext } from './core/hooks';
+import { default as storageAvailable } from '@/shared/lib/storage/storageAvailable';
+import { registerHook, featureLifecycleRegistry } from '@/shared/lib/feature';
+import type { FeatureContext } from '@/shared/lib/feature';
 import { validateAllSequences, markStep } from './core/orchestration/initSequence';
 
 validateAllSequences();

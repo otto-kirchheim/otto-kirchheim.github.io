@@ -5,8 +5,8 @@ import { ladeEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
 import saveEinstellungen from '@/features/Einstellungen/utils/saveEinstellungen';
 import { setArbeitszeitPanelState } from '@/features/Einstellungen/components/arbeitszeitPanelState';
 import { setFahrzeitPanelState } from '@/features/Einstellungen/components/fahrzeitPanelState';
-import type { IVorgabenU } from '@/core/types';
-import Storage from '@/infrastructure/storage/Storage';
+import type { IVorgabenU } from '@/shared/types';
+import Storage from '@/shared/lib/storage/Storage';
 
 // Die Felder der Features (Fahrzeiten, Zulagen, Bereitschafts-Vorgaben) sammeln deren Einstellungen-Slots.
 beforeAll(async () => {

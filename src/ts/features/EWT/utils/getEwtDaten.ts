@@ -1,5 +1,5 @@
 import type { IDatenEWT, IEwtQueryOptions } from '@/types';
-import { isEwtInMonat } from '@/infrastructure/date/getMonatFromItem';
+import { isEwtInMonat } from '@/shared/lib/date/getMonatFromItem';
 import { createDatenGetter } from '@/infrastructure/data/createDatenGetter';
 
 export default createDatenGetter<IDatenEWT, IEwtQueryOptions>({

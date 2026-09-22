@@ -9,11 +9,11 @@ import { classifyBzCoverage, ensureCompleteBzSynced, resolveGap, resolvePartial,
 import { hasConflictingLre1, hasLre12TooClose, hasOverlap } from './bereitschaftsEinsatzPruefungen';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ } from '@/types';
-import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as Storage } from '@/shared/lib/storage/Storage';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
 import { default as setLoading } from '@/infrastructure/ui/setLoading';
-import dayjs from '@/infrastructure/date/configDayjs';
-import { getMonatFromBZ } from '@/infrastructure/date/getMonatFromItem';
+import dayjs from '@/shared/lib/date/configDayjs';
+import { getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
 import { flushResource, scheduleAutoSave } from '@/infrastructure/autoSave/autoSave';
 
 // ─── Submit-Hilfsfunktionen ──────────────────────────────────────────────────

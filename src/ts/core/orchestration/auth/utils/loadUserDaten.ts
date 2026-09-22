@@ -6,14 +6,14 @@ import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
 import { isRowInMonat, resourceDefs } from '@/infrastructure/data/resourceConfig';
 import { cancelAllPending, flushAll, isAutoSaveEnabled, setAutoSaveEnabled } from '@/infrastructure/autoSave/autoSave';
-import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as Storage } from '@/shared/lib/storage/Storage';
 import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
 import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
 import { setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
 import { syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
 import { warmeFormularCaches } from '@/infrastructure/pdf/warmeFormularCaches';
-import { type LoadedYearData, loadAllYearData } from '@/infrastructure/api/apiService';
+import { type LoadedYearData, loadAllYearData } from '@/shared/api/apiService';
 import { hideConflictReviewBanner, showConflictReviewBanner } from '../components';
 import { isSessionErrorMessage } from './loadUserDaten.helpers';
 import {

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 
-import type { IDatenEWT } from '@/core/types';
-import Storage from '@/infrastructure/storage/Storage';
+import type { IDatenEWT } from '@/shared/types';
+import Storage from '@/shared/lib/storage/Storage';
 import { getEwtDaten } from '@/features/EWT/utils';
 
 function createRow(day: string): IDatenEWT {

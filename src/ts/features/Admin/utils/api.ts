@@ -1,5 +1,5 @@
-import { FetchRetry } from '@/infrastructure/api/FetchRetry';
-import Storage from '@/infrastructure/storage/Storage';
+import { FetchRetry } from '@/shared/api/FetchRetry';
+import Storage from '@/shared/lib/storage/Storage';
 import { notifyActAsStateChanged } from '@/infrastructure/ui/actAsStatus';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { TUserRole } from '@/types';

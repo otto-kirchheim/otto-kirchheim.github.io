@@ -2,6 +2,15 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-22 (179)
+
+### refactor (P2: Shared-Leaves nach `shared/`)
+
+- `infrastructure/{api,tokenManagement,storage,validation,date}` und `core/{state,events,hooks,types}` nach `shared/{api,api/token,lib/{storage,validation,version,date,state,events,feature,schicht},types}` verschoben (User in der IDE, Import-Update aktiv). Ausnahmen: `compareVersion.ts` -> `shared/lib/version` (nicht `shared/lib/validation`), `calculateBuchungstagEwt.ts` -> `features/EWT/utils` (nur EWT-Konsumenten, kein Shared-Fall), `resolveSchichtDay.ts`+`mergePerWeekdaySchicht`/`groupBySchedule`/`isOvernightSchicht` -> `shared/lib/schicht` (Bereitschaft UND EWT nutzen es, daher nicht `features/ber/lib`; nicht mehr aus dem `@/types`-Barrel re-exportiert, 8 Konsumenten auf den direkten Pfad umgestellt).
+- Alias `@/types` zeigt jetzt auf `shared/types` (Name bleibt, Ziel wechselt, wie im Plan vorgesehen); neuer Alias `@/shared/*`. `@/infrastructure`-Bare-Alias entfernt (Barrel `infrastructure/index.ts` war ungenutzt, geloescht).
+- Nacharbeit an ~340 Dateien noetig, die der IDE-Move nicht erfasst hat: gebrochene Alias-Importe (`@/core/types`, `@/core/hooks`, `@/core/state`, `@/core/events`, `@/infrastructure/{api,date,tokenManagement,storage,validation}`) per Bulk-Ersetzung; dazu von Hand falsch nachgezogene *relative* Importe innerhalb der verschobenen Dateien selbst (z. B. `shared/api/FetchRetry.ts` importierte nach dem Move noch `../tokenManagement/tokenErneuern`/`../ui/CustomSnackbar`/`../storage/Storage`/`../validation/compareVersion` -- alte Tiefe, falsches Ziel), `core/index.ts`-Barrel auf die neuen Ziele umgehaengt, `mock.module`-Strings in Tests mitgezogen.
+- `lint:fsd`-Ratsche 111 -> 73 (P2 räumt einen Großteil der vorherigen `core`-darf-`infrastructure`-nicht-importieren-Warnungen weg, da `types`/`state`/`events`/`hooks` jetzt in `shared` liegen). Gate: typecheck 0, lint 0, `lint:fsd` 73, Tests 2289 (unveraendert), build i.o. (PWA-Precache weiterhin 113 Eintraege), `lint:css` 87 (unveraendert).
+
 ## 2026-09-22 (178)
 
 ### docs (CLAUDE.md an FSD-Feature-Contract angepasst)

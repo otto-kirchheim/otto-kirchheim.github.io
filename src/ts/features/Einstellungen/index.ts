@@ -1,10 +1,10 @@
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { openHelpModal, registerAppStartTask } from '@/core';
 import { markStep } from '@/core/orchestration/initSequence';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
 import { applyAutoSaveSettings } from '@/infrastructure/autoSave/autoSave';
-import { authApi } from '@/infrastructure/api/apiService';
+import { authApi } from '@/shared/api/apiService';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { ladeEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';

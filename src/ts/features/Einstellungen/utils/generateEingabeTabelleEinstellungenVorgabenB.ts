@@ -1,6 +1,6 @@
 import { CustomTable } from '@/infrastructure/table/CustomTable';
 import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUvorgabenB } from '@/types';
-import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as Storage } from '@/shared/lib/storage/Storage';
 
 /**
  * Lädt `VorgabenB`-Zeilen in die bestehende `#tableVE`-Instanz. Die Instanz konstruiert `VorgabenBTable.tsx`

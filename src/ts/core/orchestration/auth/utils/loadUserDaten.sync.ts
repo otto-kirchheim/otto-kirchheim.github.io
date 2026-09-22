@@ -1,8 +1,8 @@
 import type { UserDatenServer } from '@/types';
-import { default as Storage } from '@/infrastructure/storage/Storage';
-import dayjs from '@/infrastructure/date/configDayjs';
-import type { LoadedYearData } from '@/infrastructure/api/apiService';
-import type { TStorageData } from '@/infrastructure/storage/Storage';
+import { default as Storage } from '@/shared/lib/storage/Storage';
+import dayjs from '@/shared/lib/date/configDayjs';
+import type { LoadedYearData } from '@/shared/api/apiService';
+import type { TStorageData } from '@/shared/lib/storage/Storage';
 import { countByMonth, normalizeRows, shouldRepairMissingIds } from './loadUserDaten.helpers';
 import { hasPendingLocalChanges } from '@/infrastructure/data/metaFields';
 import { type ResourceKind, resourceByStorageKey, resourceDefs } from '@/infrastructure/data/resourceConfig';

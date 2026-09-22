@@ -1,6 +1,6 @@
 import { normalizeAZ } from '@/infrastructure/data/fieldMapper';
 import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
-import { normalizeTimeString } from '@/infrastructure/validation/timeString';
+import { normalizeTimeString } from '@/shared/lib/validation/timeString';
 import type { BereitschaftSchichtTyp } from '@/types';
 import type { BackendProfileTemplate } from '../utils/api';
 import {

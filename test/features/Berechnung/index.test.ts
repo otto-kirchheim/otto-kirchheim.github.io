@@ -30,11 +30,11 @@ vi.mock('@/core/orchestration/initSequence', () => ({
   markStep: markStepMock,
 }));
 
-vi.mock('@/core/events/appEvents', () => ({
+vi.mock('@/shared/lib/events/appEvents', () => ({
   onEvent: onEventMock,
 }));
 
-vi.mock('@/infrastructure/storage/Storage', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({
   default: { check: storageCheckMock, get: storageGetMock },
 }));
 

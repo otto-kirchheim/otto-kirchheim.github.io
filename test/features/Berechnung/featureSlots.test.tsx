@@ -1,11 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'bun:test';
 import '@/app/features';
-import { featureRegistry } from '@/core/hooks';
-import type { FeatureMeta, FeatureParts } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
+import type { FeatureMeta, FeatureParts } from '@/shared/lib/feature';
 import calculateBerechnungRows from '@/features/Berechnung/calculateBerechnungRows';
 import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnung';
 import { type IBerechnungTeil, ladeBerechnungsTeile } from '@/features/Berechnung/ladeBerechnungsTeile';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import type { IVorgabenBerechnung } from '@/types';
 import { VorgabenGeldMock, VorgabenUMock, datenBerechungMock } from '@test/mockData';
 

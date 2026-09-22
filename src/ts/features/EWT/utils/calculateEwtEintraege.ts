@@ -1,9 +1,9 @@
 import type { Duration } from 'dayjs/plugin/duration';
 import type { IDatenEWT, IVorgabenE, IVorgabenU } from '@/types';
-import { resolveSchichtDay } from '@/types';
-import { default as getDurationFromTime } from '@/infrastructure/date/getDurationFromTime';
-import dayjs from '@/infrastructure/date/configDayjs';
-import calculateBuchungstagEwt from '@/infrastructure/date/calculateBuchungstagEwt';
+import { resolveSchichtDay } from '@/shared/lib/schicht/resolveSchichtDay';
+import { default as getDurationFromTime } from '@/shared/lib/date/getDurationFromTime';
+import dayjs from '@/shared/lib/date/configDayjs';
+import calculateBuchungstagEwt from '@/features/EWT/utils/calculateBuchungstagEwt';
 
 // BN ist Legacy-Alias für N (svzA identisch); SP wird als explizite Spätschicht unterstützt
 type SchichtKeys = 'T' | 'SP' | 'N' | 'S';

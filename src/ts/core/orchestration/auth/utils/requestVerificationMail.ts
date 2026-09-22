@@ -1,6 +1,6 @@
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { default as Storage } from '@/infrastructure/storage/Storage';
-import { authApi } from '@/infrastructure/api/apiService';
+import { default as Storage } from '@/shared/lib/storage/Storage';
+import { authApi } from '@/shared/api/apiService';
 
 /**
  * Fordert eine neue Verifizierungs-E-Mail an und bestätigt per Snackbar.

@@ -5,8 +5,8 @@ import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
 import type { IDatenEWT } from '@/types';
 import { type IVorgabenU, type IVorgabenUfZ } from '@/types';
-import { default as Storage } from '@/infrastructure/storage/Storage';
-import dayjs from '@/infrastructure/date/configDayjs';
+import { default as Storage } from '@/shared/lib/storage/Storage';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { addEwtTag, calculateBuchungstagEwt, calculateEwtEintraege, setNaechsterEwtTag } from '../utils';
 
 /**

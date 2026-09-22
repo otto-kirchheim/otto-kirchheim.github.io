@@ -1,4 +1,4 @@
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { adminCrossRef, adminSchemaFields } from '../adminFeatures';
 
 export const IMMUTABLE_FIELDS = new Set(['_id', '__v', 'createdAt']);

@@ -1,6 +1,6 @@
 import type { CustomTable, CustomTableTypes, Row, RowState } from '../table/CustomTable';
-import Storage from '../storage/Storage';
-import { getStoredMonatJahr } from '../date/dateStorage';
+import Storage from '../../shared/lib/storage/Storage';
+import { getStoredMonatJahr } from '@/shared/lib/date/dateStorage';
 import normalizeResourceRows from './normalizeResourceRows';
 import { type ResourceKind, isRowInMonat, resourceDef, storageKeyOf } from './resourceConfig';
 

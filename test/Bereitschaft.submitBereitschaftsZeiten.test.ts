@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import type { IDatenBZ } from '@/core/types';
-import Storage from '@/infrastructure/storage/Storage';
+import type { IDatenBZ } from '@/shared/types';
+import Storage from '@/shared/lib/storage/Storage';
 
 const {
   calculateBereitschaftsZeitenMock,
@@ -30,7 +30,7 @@ vi.mock('@/infrastructure/ui/setLoading', () => ({ default: setLoadingMock }));
 vi.mock('@/infrastructure/ui/clearLoading', () => ({ default: clearLoadingMock }));
 vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
 vi.mock('@/core', () => ({ publishEvent: publishDataChangedMock }));
-vi.mock('@/infrastructure/api/apiService', () => ({
+vi.mock('@/shared/api/apiService', () => ({
   bereitschaftszeitraumApi: { loadYear: apiLoadYearMock, bulk: apiBulkMock },
 }));
 

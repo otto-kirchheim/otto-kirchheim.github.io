@@ -1,5 +1,5 @@
 import { erzeugeDbDialog } from '@/infrastructure/ui/dbDialog';
-import Storage from '../storage/Storage';
+import Storage from '../../shared/lib/storage/Storage';
 import { erstelleSignaturPad, holeSignaturPng, setzeSignaturPng } from './signaturePad';
 
 /** Breite:Höhe der Unterschriftsfläche -- feste Proportion unabhängig von der Bildschirmgröße. */

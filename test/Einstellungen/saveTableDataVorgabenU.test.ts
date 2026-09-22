@@ -8,10 +8,10 @@ vi.mock('@/infrastructure/data/tableToArray', () => ({
   default: tableToArrayMock,
 }));
 
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import saveTableDataVorgabenU from '@/features/Einstellungen/utils/saveTableDataVorgabenU';
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
-import type { IVorgabenUvorgabenB } from '@/core/types';
+import type { IVorgabenUvorgabenB } from '@/shared/types';
 import { VorgabenUMock } from '@test/mockData';
 
 vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({

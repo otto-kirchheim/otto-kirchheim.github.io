@@ -2,7 +2,7 @@ import { createRef, type SubmitEvent } from 'react';
 
 import { MyFormModal, MyInput, MyModalBody, schliesseModal, showModal } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { authApi } from '@/infrastructure/api/apiService';
+import { authApi } from '@/shared/api/apiService';
 
 /**
  * Öffnet den Dialog "Passwort vergessen" (E-Mail auf `@deutschebahn.com` beschränkt).

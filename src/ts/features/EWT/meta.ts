@@ -1,9 +1,9 @@
-import type { FeatureMeta } from '@/core/hooks';
-import { ewtApi } from '@/infrastructure/api/apiService';
-import { createResourceApi } from '@/infrastructure/api/resourceApi';
-import { periodFromDate } from '@/infrastructure/date/periodFromDate';
+import type { FeatureMeta } from '@/shared/lib/feature';
+import { ewtApi } from '@/shared/api/apiService';
+import { createResourceApi } from '@/shared/api/resourceApi';
+import { periodFromDate } from '@/shared/lib/date/periodFromDate';
 import { ewtFromBackend } from '@/infrastructure/data/fieldMapper';
-import { getMonatFromEWT, isEwtInMonat } from '@/infrastructure/date/getMonatFromItem';
+import { getMonatFromEWT, isEwtInMonat } from '@/shared/lib/date/getMonatFromItem';
 import type { IDatenEWT } from '@/types';
 
 /** Eager gehaltene Beschreibung des Features EWT (Einsatzwechseltaetigkeit); kein Feature-Code importieren. */

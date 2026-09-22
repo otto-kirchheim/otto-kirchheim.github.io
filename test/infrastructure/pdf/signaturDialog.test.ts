@@ -14,7 +14,7 @@ vi.mock('@/infrastructure/pdf/signaturePad', () => ({
 const storageGetMock = vi.fn();
 const storageSetMock = vi.fn();
 const storageRemoveMock = vi.fn();
-vi.mock('@/infrastructure/storage/Storage', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({
   default: { get: storageGetMock, set: storageSetMock, remove: storageRemoveMock },
 }));
 

@@ -1,4 +1,4 @@
-import { featureRegistry } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
 import type { IFeatureBerechnung } from '@/types';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 

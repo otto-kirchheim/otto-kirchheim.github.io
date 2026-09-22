@@ -1,4 +1,4 @@
-import type { FeatureParts } from '@/core/hooks';
+import type { FeatureParts } from '@/shared/lib/feature';
 import { baueEwtPdfDaten } from '../utils/pdfDaten';
 
 /** PDF-Teil des Features EWT: baut die Nutzdaten des Formulars (Tabellen des Exportmonats plus vorberechnete Werte). */

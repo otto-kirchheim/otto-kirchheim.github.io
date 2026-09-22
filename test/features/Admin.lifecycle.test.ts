@@ -20,13 +20,13 @@ vi.mock('@/infrastructure/ui/actAsStatus', () => ({
   getActAsState: mockGetActAsState,
 }));
 
-vi.mock('@/infrastructure/api/FetchRetry', () => ({
+vi.mock('@/shared/api/FetchRetry', () => ({
   getServerUrl: mockGetServerUrl,
 }));
 
 import { mountAdminTab, unmountAdminTab } from '@/features/Admin/mountAdminTab';
-import { featureLifecycleRegistry } from '@/core/hooks';
-import type { FeatureContext } from '@/core/hooks';
+import { featureLifecycleRegistry } from '@/shared/lib/feature';
+import type { FeatureContext } from '@/shared/lib/feature';
 
 afterEach(() => {
   featureLifecycleRegistry.clearAll();

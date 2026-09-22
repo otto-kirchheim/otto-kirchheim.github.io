@@ -1,9 +1,9 @@
-import type { FeatureMeta } from '@/core/hooks';
-import { nebengeldApi } from '@/infrastructure/api/apiService';
-import { createResourceApi } from '@/infrastructure/api/resourceApi';
-import { periodFromDate } from '@/infrastructure/date/periodFromDate';
+import type { FeatureMeta } from '@/shared/lib/feature';
+import { nebengeldApi } from '@/shared/api/apiService';
+import { createResourceApi } from '@/shared/api/resourceApi';
+import { periodFromDate } from '@/shared/lib/date/periodFromDate';
 import { nebengeldFromBackend } from '@/infrastructure/data/fieldMapper';
-import { getMonatFromN } from '@/infrastructure/date/getMonatFromItem';
+import { getMonatFromN } from '@/shared/lib/date/getMonatFromItem';
 import type { IDatenN } from '@/types';
 
 /** Eager gehaltene Beschreibung des Features EZ (Erschwerniszulagen, bisher Neben); kein Feature-Code importieren. */

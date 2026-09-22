@@ -1,5 +1,5 @@
 import { mount, unmount } from '@/infrastructure/ui';
-import type { FeatureParts } from '@/core/hooks';
+import type { FeatureParts } from '@/shared/lib/feature';
 import { BereitschaftTab } from '../BereitschaftTab';
 
 /** Tab-Teil des Features Bereitschaft: mountet `BereitschaftTab` in `#bereitschaft-root`; ohne Container passiert nichts. */

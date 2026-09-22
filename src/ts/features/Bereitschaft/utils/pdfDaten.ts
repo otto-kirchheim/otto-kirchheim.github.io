@@ -4,8 +4,8 @@ import type {
   IVorgabeValue,
   TarifBesoldung,
 } from '@otto-kirchheim/nebengeld-shared';
-import type { FeaturePdfContext } from '@/core/hooks';
-import { filterByMonat, getMonatFromBE, getMonatFromBZ } from '@/infrastructure/date/getMonatFromItem';
+import type { FeaturePdfContext } from '@/shared/lib/feature';
+import { filterByMonat, getMonatFromBE, getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
 import tableToArray from '@/infrastructure/data/tableToArray';
 import { tableIdOf } from '@/infrastructure/data/resourceConfig';
 import { alsMinuten, alsZeitstempelMinuten, ZEILEN_OPS } from '@/infrastructure/pdf/aggregatoren';

@@ -1,9 +1,9 @@
-import type { FeatureMeta } from '@/core/hooks';
-import { bereitschaftseinsatzApi, bereitschaftszeitraumApi } from '@/infrastructure/api/apiService';
-import { createResourceApi } from '@/infrastructure/api/resourceApi';
-import { periodFromDate } from '@/infrastructure/date/periodFromDate';
+import type { FeatureMeta } from '@/shared/lib/feature';
+import { bereitschaftseinsatzApi, bereitschaftszeitraumApi } from '@/shared/api/apiService';
+import { createResourceApi } from '@/shared/api/resourceApi';
+import { periodFromDate } from '@/shared/lib/date/periodFromDate';
 import { beFromBackend, bzFromBackend } from '@/infrastructure/data/fieldMapper';
-import { getMonatFromBE, getMonatFromBZ } from '@/infrastructure/date/getMonatFromItem';
+import { getMonatFromBE, getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
 import type { IDatenBE, IDatenBZ } from '@/types';
 
 /** Eager gehaltene Beschreibung des Features Bereitschaft; kein Feature-Code importieren. */

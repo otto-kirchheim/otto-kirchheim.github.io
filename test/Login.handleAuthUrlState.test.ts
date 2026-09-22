@@ -16,7 +16,7 @@ vi.mock('@/core/orchestration/auth/components', () => ({
   createModalResetPassword: createModalResetPasswordMock,
 }));
 
-vi.mock('@/infrastructure/api/FetchRetry', () => ({
+vi.mock('@/shared/api/FetchRetry', () => ({
   FetchRetry: fetchRetryMock,
 }));
 

@@ -4,9 +4,9 @@ const zeigeTabMock = vi.fn(() => true);
 vi.mock('@/infrastructure/ui/tabController', () => ({ zeigeTab: zeigeTabMock }));
 
 import '@/app/features';
-import { featureRegistry } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
 import { resetEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import type { IVorgabenU } from '@/types';
 import {
   openOnboardingGuide,

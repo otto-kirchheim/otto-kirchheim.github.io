@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { triggerAdminHeapSnapshot, type MetricPoint, type HeapData } from '../utils/api';
 import { DBButton, DBCard, DBCheckbox, DBHeadingH6, DBTag, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl } from '@/components';

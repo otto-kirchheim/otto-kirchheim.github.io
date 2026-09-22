@@ -6,8 +6,8 @@ import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, schliesseModal, showModal } from '@/components';
 import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from '@/types';
-import { default as Storage } from '@/infrastructure/storage/Storage';
-import dayjs from '@/infrastructure/date/configDayjs';
+import { default as Storage } from '@/shared/lib/storage/Storage';
+import dayjs from '@/shared/lib/date/configDayjs';
 
 /**
  * Baut die Schicht-Optionen aus den Vorgaben; Früh ist immer vorhanden und vorausgewählt, Spät, Nacht

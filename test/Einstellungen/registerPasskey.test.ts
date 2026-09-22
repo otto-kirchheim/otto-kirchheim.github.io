@@ -4,7 +4,7 @@ const { registerPasskeyWithResultMock } = (vi as typeof vi & { hoisted: <T>(fact
   registerPasskeyWithResultMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/tokenManagement/passkeys', () => ({
+vi.mock('@/shared/api/token/passkeys', () => ({
   registerPasskeyWithResult: registerPasskeyWithResultMock,
 }));
 

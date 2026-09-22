@@ -1,4 +1,4 @@
-import { registerPasskeyWithResult } from '@/infrastructure/tokenManagement/passkeys';
+import { registerPasskeyWithResult } from '@/shared/api/token/passkeys';
 
 /**
  * Richtet einen Passkey für den angemeldeten Benutzer ein.

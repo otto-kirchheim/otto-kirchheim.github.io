@@ -1,10 +1,10 @@
 import './setupBun';
 import { beforeEach, describe, expect, it } from 'bun:test';
 
-import type { IDatenBZ, IVorgabenU, IVorgabenUvorgabenB, ISchichtZeiten } from '@/core/types';
+import type { IDatenBZ, IVorgabenU, IVorgabenUvorgabenB, ISchichtZeiten } from '@/shared/types';
 import calculateBereitschaftsZeiten from '@/features/Bereitschaft/utils/calculateBereitschaftsZeiten';
-import dayjs from '@/infrastructure/date/configDayjs';
-import Storage from '@/infrastructure/storage/Storage';
+import dayjs from '@/shared/lib/date/configDayjs';
+import Storage from '@/shared/lib/storage/Storage';
 
 type SchichtFlags = {
   nacht: boolean;

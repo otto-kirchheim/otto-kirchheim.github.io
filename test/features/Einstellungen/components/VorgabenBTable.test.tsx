@@ -29,11 +29,11 @@ vi.mock('@/infrastructure/ui/buttonDisable', () => ({
   default: buttonDisableMock,
 }));
 
-vi.mock('@/infrastructure/storage/Storage', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({
   default: { check: storageCheckMock, get: storageGetMock },
 }));
 
-vi.mock('@/infrastructure/api/apiFetchHelper', () => ({
+vi.mock('@/shared/api/apiFetchHelper', () => ({
   apiFetch: apiFetchMock,
 }));
 

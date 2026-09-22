@@ -1,0 +1,106 @@
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import {
+  getMonatFromBZ,
+  getMonatFromBE,
+  getMonatFromEWT,
+  getMonatFromEWTBuchungstag,
+  isEwtInMonat,
+  getMonatFromN,
+  filterByMonat,
+} from '@/shared/lib/date/getMonatFromItem';
+import type { IDatenBZ, IDatenBE, IDatenEWT, IDatenN } from '@/shared/types';
+import Storage from '@/shared/lib/storage/Storage';
+
+describe('getMonatFromItem', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+  });
+
+  describe('getMonatFromBZ', () => {
+    it('returns month from ISO date string', () => {
+      expect(getMonatFromBZ({ Beginn: '2026-03-10T10:00:00.000Z' } as IDatenBZ)).toBe(3);
+    });
+
+    it('returns month from different month', () => {
+      expect(getMonatFromBZ({ Beginn: '2026-12-01T00:00:00.000Z' } as IDatenBZ)).toBe(12);
+    });
+  });
+
+  describe('getMonatFromBE', () => {
+    it('parses DD.MM.YYYY format', () => {
+      expect(getMonatFromBE({ Tag: '15.06.2026' } as IDatenBE)).toBe(6);
+    });
+  });
+
+  describe('getMonatFromEWT', () => {
+    it('parses YYYY-MM-DD format from Tag', () => {
+      expect(getMonatFromEWT({ Tag: '2026-04-15' } as IDatenEWT)).toBe(4);
+    });
+  });
+
+  describe('getMonatFromEWTBuchungstag', () => {
+    it('uses Buchungstag when available', () => {
+      expect(getMonatFromEWTBuchungstag({ Tag: '2026-03-31', Buchungstag: '2026-04-01' } as IDatenEWT)).toBe(4);
+    });
+
+    it('falls back to Tag when Buchungstag is empty', () => {
+      expect(getMonatFromEWTBuchungstag({ Tag: '2026-05-15', Buchungstag: '' } as IDatenEWT)).toBe(5);
+    });
+  });
+
+  describe('isEwtInMonat', () => {
+    const ewt = { Tag: '2026-03-31', Buchungstag: '2026-04-01' } as IDatenEWT;
+
+    it('mode starttag: checks Tag only', () => {
+      expect(isEwtInMonat(ewt, 3, 'starttag')).toBe(true);
+      expect(isEwtInMonat(ewt, 4, 'starttag')).toBe(false);
+    });
+
+    it('mode buchungstag: checks Buchungstag only', () => {
+      expect(isEwtInMonat(ewt, 4, 'buchungstag')).toBe(true);
+      expect(isEwtInMonat(ewt, 3, 'buchungstag')).toBe(false);
+    });
+
+    it('mode beide (default): checks both', () => {
+      expect(isEwtInMonat(ewt, 3)).toBe(true);
+      expect(isEwtInMonat(ewt, 4)).toBe(true);
+      expect(isEwtInMonat(ewt, 5)).toBe(false);
+    });
+  });
+
+  describe('getMonatFromN', () => {
+    it('parses DD.MM.YYYY format', () => {
+      expect(getMonatFromN({ Tag: '01.03.2026' } as IDatenN)).toBe(3);
+    });
+
+    it('falls back to Storage Monat for bare digit', () => {
+      Storage.set('Monat', 7);
+      expect(getMonatFromN({ Tag: '15' } as IDatenN)).toBe(7);
+    });
+
+    it('falls back to dayjs parse for other formats', () => {
+      expect(getMonatFromN({ Tag: '2026-08-15' } as IDatenN)).toBe(8);
+    });
+  });
+
+  describe('filterByMonat', () => {
+    it('filters items matching given month', () => {
+      const items = [
+        { Tag: '2026-03-01' } as IDatenEWT,
+        { Tag: '2026-04-01' } as IDatenEWT,
+        { Tag: '2026-03-15' } as IDatenEWT,
+      ];
+      const result = filterByMonat(items, 3, getMonatFromEWT);
+      expect(result).toHaveLength(2);
+    });
+
+    it('returns empty array when no match', () => {
+      const result = filterByMonat([{ Tag: '2026-01-01' } as IDatenEWT], 5, getMonatFromEWT);
+      expect(result).toEqual([]);
+    });
+  });
+});

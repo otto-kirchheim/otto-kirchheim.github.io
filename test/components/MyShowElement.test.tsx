@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { render } from '@test/reactRender';
 
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 import MyShowElement from '@/components/MyShowElement';
 
 function renderMyShowElement(props: Parameters<typeof MyShowElement>[0]): HTMLDivElement {

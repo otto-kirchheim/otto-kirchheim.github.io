@@ -1,6 +1,6 @@
 import { applyBereitschaftsVorgabe } from '.';
 import type { IVorgabenUvorgabenB } from '@/types';
-import type dayjs from '@/infrastructure/date/configDayjs';
+import type dayjs from '@/shared/lib/date/configDayjs';
 
 /**
  * Schalter „Datum & Zeiten manuell anpassen": ent-/sperrt die berechneten Datumsfelder (bE/nA/nE)

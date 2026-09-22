@@ -1,9 +1,9 @@
-import type { FeatureMeta } from '@/core/hooks';
-import { eaApi } from '@/infrastructure/api/apiService';
-import { createResourceApi } from '@/infrastructure/api/resourceApi';
-import { periodFromDate } from '@/infrastructure/date/periodFromDate';
+import type { FeatureMeta } from '@/shared/lib/feature';
+import { eaApi } from '@/shared/api/apiService';
+import { createResourceApi } from '@/shared/api/resourceApi';
+import { periodFromDate } from '@/shared/lib/date/periodFromDate';
 import { eaFromBackend } from '@/infrastructure/data/fieldMapper';
-import { getMonatFromEA } from '@/infrastructure/date/getMonatFromItem';
+import { getMonatFromEA } from '@/shared/lib/date/getMonatFromItem';
 import type { IDatenEA } from '@/types';
 
 /** Eager gehaltene Beschreibung des Features EA (Entgeltausgleich); kein Feature-Code importieren. */

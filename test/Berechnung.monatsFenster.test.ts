@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'bun:test';
 import { VorgabenGeldMock, VorgabenUMock, datenBerechungMock } from '@test/mockData';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import '@/app/features';
 import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnung';
 import { ermittleFensterGroesse, initBerechnungMonatsFensterNav } from '@/features/Berechnung/berechnungMonatsFenster';

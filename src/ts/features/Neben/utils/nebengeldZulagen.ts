@@ -1,5 +1,5 @@
 import type { IDatenN, INebenZulage, IVorgabenU } from '@/types';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import {
   ZULAGEN_CATALOG,
   ZulageEntryUnit,

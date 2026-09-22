@@ -150,7 +150,7 @@ describe('#BerechnungMobileCards', () => {
   });
 
   it('klappt den aktuellen Monat standardmäßig auf', async () => {
-    const { default: Storage } = await import('@/infrastructure/storage/Storage');
+    const { default: Storage } = await import('@/shared/lib/storage/Storage');
     Storage.set('Monat', 2);
 
     const monatsErgebnisse = [leeresErgebnis(1), leeresErgebnis(2), leeresErgebnis(3)];
@@ -165,7 +165,7 @@ describe('#BerechnungMobileCards', () => {
   });
 
   it('klappt per Klick genau eine Monatskarte auf und die vorherige zu', async () => {
-    const { default: Storage } = await import('@/infrastructure/storage/Storage');
+    const { default: Storage } = await import('@/shared/lib/storage/Storage');
     Storage.set('Monat', 2);
     mountBerechnungMobileCards([leeresErgebnis(1), leeresErgebnis(2), leeresErgebnis(3)], [], gruppen);
     const container = document.querySelector('#berechnungMobileCards')!;
@@ -188,7 +188,7 @@ describe('#BerechnungMobileCards', () => {
   });
 
   it('wird über generateTableBerechnung mit gerendert (Integration)', async () => {
-    const { default: Storage } = await import('@/infrastructure/storage/Storage');
+    const { default: Storage } = await import('@/shared/lib/storage/Storage');
     const { VorgabenUMock } = await import('@test/mockData');
     const { default: generateTableBerechnung } = await import('@/features/Berechnung/generateTableBerechnung');
 

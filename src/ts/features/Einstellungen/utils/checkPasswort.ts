@@ -2,8 +2,8 @@ import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { CustomHTMLDivElement } from '@/types';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
 import { default as setLoading } from '@/infrastructure/ui/setLoading';
-import { authApi } from '@/infrastructure/api/apiService';
-import { getPasswordValidationMessage } from '@/infrastructure/validation/passwordValidation';
+import { authApi } from '@/shared/api/apiService';
+import { getPasswordValidationMessage } from '@/shared/lib/validation/passwordValidation';
 import { schliesseModal } from '@/components';
 
 /**

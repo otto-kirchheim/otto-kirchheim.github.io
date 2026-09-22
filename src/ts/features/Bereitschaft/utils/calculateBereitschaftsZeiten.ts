@@ -7,11 +7,11 @@ import type {
   IVorgabenU,
   IVorgabenUvorgabenB,
 } from '@/types';
-import { resolveSchichtDay } from '@/types';
+import { resolveSchichtDay } from '@/shared/lib/schicht/resolveSchichtDay';
 import { default as DatenSortieren } from '@/infrastructure/data/DatenSortieren';
-import { default as Storage } from '@/infrastructure/storage/Storage';
-import dayjs from '@/infrastructure/date/configDayjs';
-import { resolveHolidayRegion } from '@/infrastructure/date/holidayRegion';
+import { default as Storage } from '@/shared/lib/storage/Storage';
+import dayjs from '@/shared/lib/date/configDayjs';
+import { resolveHolidayRegion } from '@/shared/lib/date/holidayRegion';
 import { B_WECHSEL_STUNDE, B_WECHSEL_MINUTE } from './constants';
 
 type Schicht = {

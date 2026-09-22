@@ -1,6 +1,6 @@
 import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
-import { featureRegistry } from '@/core/hooks';
-import { HOLIDAY_REGION_OPTIONS } from '@/infrastructure/date/holidayRegion';
+import { featureRegistry } from '@/shared/lib/feature';
+import { HOLIDAY_REGION_OPTIONS } from '@/shared/lib/date/holidayRegion';
 import type { BereitschaftSchichtTyp, IVorgabenUaZ, IVorgabenUPers } from '@/types';
 
 export type FahrzeitRow = { key: string; text: string; value: string };

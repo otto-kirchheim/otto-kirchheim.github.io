@@ -29,7 +29,7 @@ const {
 
 // --- Mocks ---
 vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
-vi.mock('@/infrastructure/api/apiService', () => ({
+vi.mock('@/shared/api/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
   bereitschaftszeitraumApi: { bulk: mockBzBulk },
   bereitschaftseinsatzApi: { bulk: mockBeBulk },
@@ -37,7 +37,7 @@ vi.mock('@/infrastructure/api/apiService', () => ({
   nebengeldApi: { bulk: mockNBulk },
 }));
 
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import {
   cancelAllPending,
   createOnChangeHandler,
@@ -55,8 +55,8 @@ import {
   setAutoSaveDelay,
   setAutoSaveEnabled,
 } from '@/infrastructure/autoSave/autoSave';
-import { clearAllHooks } from '@/core/hooks';
-import { onEvent, clearAllEventListeners, publishEvent } from '@/core/events/appEvents';
+import { clearAllHooks } from '@/shared/lib/feature';
+import { onEvent, clearAllEventListeners, publishEvent } from '@/shared/lib/events/appEvents';
 import { createClientRequestId } from '@/infrastructure/autoSave/changeTracking';
 
 // --- Hilfsfunktion: Mock-Table im DOM erstellen ---

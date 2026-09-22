@@ -14,12 +14,12 @@ vi.mock('@/features/Admin/utils/api', () => ({
 vi.mock('@/core/orchestration/auth/utils', () => ({
   loadUserDaten: mockLoadUserDaten,
 }));
-vi.mock('@/infrastructure/date/dateStorage', () => ({
+vi.mock('@/shared/lib/date/dateStorage', () => ({
   getStoredMonatJahr: mockGetStoredMonatJahr,
 }));
 
 import '@/app/features';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import {
   clearLoadedUserResourceCache,
   loadUserDataForAdminSelection,

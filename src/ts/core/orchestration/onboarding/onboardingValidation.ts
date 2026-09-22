@@ -1,6 +1,6 @@
 import type { IVorgabenU } from '@/types';
-import Storage from '@/infrastructure/storage/Storage';
-import { PERS_FIELD_LABELS, validatePersInput } from '@/infrastructure/validation/addressValidation';
+import Storage from '@/shared/lib/storage/Storage';
+import { PERS_FIELD_LABELS, validatePersInput } from '@/shared/lib/validation/addressValidation';
 import { zeigeTab } from '@/infrastructure/ui/tabController';
 import { setOffenenAbschnitt } from '@/infrastructure/ui/offenerAbschnittStore';
 import { flushExtern } from '@/infrastructure/ui/reactRoot';

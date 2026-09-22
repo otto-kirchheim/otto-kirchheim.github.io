@@ -1,6 +1,6 @@
 import { Fragment, type ReactNode } from 'react';
 import { DBLoadingButton } from '@/components';
-import { featureRegistry } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
 import {
   DBAccordion,
   DBAccordionItem,

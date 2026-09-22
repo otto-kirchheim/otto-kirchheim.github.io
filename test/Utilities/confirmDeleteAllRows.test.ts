@@ -18,7 +18,7 @@ async function loadConfirmDeleteAllRows(): Promise<ConfirmDeleteAllRows> {
   mock.module('@/infrastructure/ui/buttonDisable', () => ({
     default: buttonDisableMock,
   }));
-  mock.module('@/infrastructure/date/dateStorage', () => ({
+  mock.module('@/shared/lib/date/dateStorage', () => ({
     getStoredMonatJahr: dateStorageMock.getStoredMonatJahr,
   }));
 

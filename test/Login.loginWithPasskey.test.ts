@@ -23,7 +23,7 @@ vi.mock('@/infrastructure/ui/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
-vi.mock('@/infrastructure/api/apiService', () => ({
+vi.mock('@/shared/api/apiService', () => ({
   authApi: {
     beginPasskeyLogin: beginPasskeyLoginMock,
     finishPasskeyLogin: finishPasskeyLoginMock,
@@ -31,7 +31,7 @@ vi.mock('@/infrastructure/api/apiService', () => ({
   },
 }));
 
-vi.mock('@/infrastructure/tokenManagement/tokenErneuern', () => ({
+vi.mock('@/shared/api/token/tokenErneuern', () => ({
   resetTokenState: resetTokenStateMock,
 }));
 

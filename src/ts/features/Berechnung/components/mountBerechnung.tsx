@@ -1,7 +1,7 @@
 import { mount } from '@/infrastructure/ui';
 
-import { default as Storage } from '@/infrastructure/storage/Storage';
-import dayjs from '@/infrastructure/date/configDayjs';
+import { default as Storage } from '@/shared/lib/storage/Storage';
+import dayjs from '@/shared/lib/date/configDayjs';
 import type { IBerechnungMonatsErgebnis } from '@/types';
 import type { IBerechnungGruppe } from '../ladeBerechnungsTeile';
 import BerechnungMobileCards from './BerechnungMobileCards';

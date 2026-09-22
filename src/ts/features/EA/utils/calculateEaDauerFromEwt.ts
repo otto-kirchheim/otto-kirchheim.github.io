@@ -1,5 +1,5 @@
 import type { IDatenEWT } from '@/types';
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 
 /**
  * Berechnet die Dauer eines EA-Eintrags (geleistete höherwertige Arbeit) aus den Arbeitszeiten

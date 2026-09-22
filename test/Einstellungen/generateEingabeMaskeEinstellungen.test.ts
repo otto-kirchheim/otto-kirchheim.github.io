@@ -13,7 +13,7 @@ vi.mock('@/features/Bereitschaft/utils/constants', () => ({
   BereitschaftsEinsatzZeiträume: {},
 }));
 
-vi.mock('@/infrastructure/storage/Storage', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({
   default: { get: vi.fn(), set: vi.fn(), check: vi.fn() },
 }));
 
@@ -27,9 +27,9 @@ import {
 import { ZULAGEN_CATALOG, ZulageCategory } from '@/features/Einstellungen/utils/zulagenCatalog';
 import type { IVorgabenU } from '@/types';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
-import type { IVorgabenUvorgabenB } from '@/core/types';
+import type { IVorgabenUvorgabenB } from '@/shared/types';
 import { default as saveTableDataVorgabenU } from '@/features/Einstellungen/utils/saveTableDataVorgabenU';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 
 afterEach(() => {
   document.body.innerHTML = '';

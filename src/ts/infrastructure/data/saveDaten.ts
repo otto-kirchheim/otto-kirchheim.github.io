@@ -1,4 +1,4 @@
-import Storage from '../storage/Storage';
+import Storage from '../../shared/lib/storage/Storage';
 import buttonDisable from '../ui/buttonDisable';
 import clearLoading from '../ui/clearLoading';
 import setLoading from '../ui/setLoading';
@@ -11,10 +11,10 @@ import {
   hasPendingTableChanges,
   markResourceSaved,
 } from '../autoSave/autoSave';
-import { profileApi } from '../api/apiService';
-import dayjs from '../date/configDayjs';
-import { publishEvent } from '@/core/events/appEvents';
-import { featureRegistry, invokeHook } from '@/core/hooks';
+import { profileApi } from '@/shared/api/apiService';
+import dayjs from '@/shared/lib/date/configDayjs';
+import { publishEvent } from '@/shared/lib/events/appEvents';
+import { featureRegistry, invokeHook } from '@/shared/lib/feature';
 import { resourceKeys } from './resourceConfig';
 import { syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
 

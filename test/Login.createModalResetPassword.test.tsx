@@ -22,7 +22,7 @@ vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('@/infrastructure/api/apiService', () => ({
+vi.mock('@/shared/api/apiService', () => ({
   authApi: {
     resetPassword: resetPasswordMock,
   },

@@ -1,10 +1,10 @@
 import dayjs from 'dayjs';
 import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
-import type { IDaten } from '@/core/types/IDaten';
-import type { IVorgabenBerechnung } from '@/core/types/IVorgabenBerechnungMonat';
-import type { IVorgabenGeld } from '@/core/types/IVorgabenGeldType';
-import type { IVorgabenU } from '@/core/types/IVorgabenU';
+import type { IDaten } from '@/shared/types/IDaten';
+import type { IVorgabenBerechnung } from '@/shared/types/IVorgabenBerechnungMonat';
+import type { IVorgabenGeld } from '@/shared/types/IVorgabenGeldType';
+import type { IVorgabenU } from '@/shared/types/IVorgabenU';
 
 export const VorgabenGeldMock: IVorgabenGeld = {
   1: {

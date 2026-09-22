@@ -32,7 +32,7 @@ vi.mock('@/features/Einstellungen/utils', () => ({
   selectYear: selectYearMock,
 }));
 
-vi.mock('@/infrastructure/storage/Storage', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({
   default: {
     set: storageSetMock,
     remove: storageRemoveMock,
@@ -43,7 +43,7 @@ vi.mock('@/infrastructure/ui/setLoading', () => ({
   default: setLoadingMock,
 }));
 
-vi.mock('@/infrastructure/tokenManagement/decodeAccessToken', () => ({
+vi.mock('@/shared/api/token/decodeAccessToken', () => ({
   isAdmin: isAdminMock,
 }));
 
@@ -52,7 +52,7 @@ vi.mock('@/features/Admin/mountAdminTab', () => ({
 }));
 
 import userLoginSuccess from '@/core/orchestration/auth/utils/userLoginSuccess';
-import { featureLifecycleRegistry } from '@/core/hooks';
+import { featureLifecycleRegistry } from '@/shared/lib/feature';
 import { LOGIN_INIT_SEQUENCE, getSteps, resetSteps } from '@/core/orchestration/initSequence';
 
 describe('userLoginSuccess', () => {

@@ -2,7 +2,7 @@ import type { ChangeEvent } from 'react';
 import type { Column, Row } from '@/infrastructure/table/CustomTable';
 import { MyCheckbox, MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '@/components';
 import type { CustomHTMLDivElement, IDatenEWT } from '@/types';
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { persistEwtTableData } from '../utils';
 import { DBDivider, DBHeadingH5 } from '@db-ux/react-core-components';
 

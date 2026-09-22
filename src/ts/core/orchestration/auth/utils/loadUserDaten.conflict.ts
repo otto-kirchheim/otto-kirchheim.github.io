@@ -1,6 +1,6 @@
 import type { CustomTableTypes } from '@/infrastructure/table/CustomTable';
 import type { CustomHTMLTableElement, UserDatenServer } from '@/types';
-import type { TStorageData } from '@/infrastructure/storage/Storage';
+import type { TStorageData } from '@/shared/lib/storage/Storage';
 import { resourceDefs } from '@/infrastructure/data/resourceConfig';
 import dayjs from 'dayjs';
 import { normalizeRows, rowMatchesMonth } from './loadUserDaten.helpers';

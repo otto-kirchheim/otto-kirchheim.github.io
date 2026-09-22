@@ -22,9 +22,10 @@ const baseConfig: UserConfig = {
     alias: {
       '@/components': path.resolve(import.meta.dirname, 'src/ts/components'),
       '@/core': path.resolve(import.meta.dirname, 'src/ts/core'),
-      '@/types': path.resolve(import.meta.dirname, 'src/ts/core/types'),
-      '@/infrastructure': path.resolve(import.meta.dirname, 'src/ts/infrastructure'),
+      '@/types': path.resolve(import.meta.dirname, 'src/ts/shared/types'),
       '@/features': path.resolve(import.meta.dirname, 'src/ts/features'),
+      '@/shared': path.resolve(import.meta.dirname, 'src/ts/shared'),
+      '@/infrastructure': path.resolve(import.meta.dirname, 'src/ts/infrastructure'),
       // Generischer Alias zuletzt: die spezifischen Aliase oben haben Vorrang (erster Treffer gewinnt).
       '@': path.resolve(import.meta.dirname, 'src/ts'),
     },

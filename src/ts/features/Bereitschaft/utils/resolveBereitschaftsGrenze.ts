@@ -1,5 +1,5 @@
 import type { IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
-import { mergePerWeekdaySchicht, resolveSchichtDay } from '@/types';
+import { mergePerWeekdaySchicht, resolveSchichtDay } from '@/shared/lib/schicht/resolveSchichtDay';
 import { B_WECHSEL_ZEIT } from './constants';
 
 type SchichtenOverrides = IVorgabenUvorgabenB['schichtenOverrides'];

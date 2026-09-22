@@ -14,7 +14,7 @@ vi.mock('@/infrastructure/autoSave/autoSave', () => ({
 }));
 vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 
-import { featureLifecycleRegistry, featureRegistry } from '@/core/hooks';
+import { featureLifecycleRegistry, featureRegistry } from '@/shared/lib/feature';
 import { berMeta } from '@/features/Bereitschaft/meta';
 import { eaMeta } from '@/features/EA/meta';
 import { ewtMeta } from '@/features/EWT/meta';

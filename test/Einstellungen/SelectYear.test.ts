@@ -27,7 +27,7 @@ vi.mock('@/features/Einstellungen/utils/setMonatJahr', () => ({
   default: setMonatJahrMock,
 }));
 
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import selectYear from '@/features/Einstellungen/utils/selectYear';
 
 describe('SelectYear', () => {

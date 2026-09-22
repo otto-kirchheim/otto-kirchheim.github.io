@@ -1,6 +1,6 @@
 import type { IDatenEWT } from '@/types';
-import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
-import dayjs from '@/infrastructure/date/configDayjs';
+import { default as checkMaxTag } from '@/shared/lib/validation/checkMaxTag';
+import dayjs from '@/shared/lib/date/configDayjs';
 
 /**
  * Datum für den EWT-Editor: der Tag der Zeile, sonst (neue Zeile) der heutige Tag im Monat, falls er dort existiert

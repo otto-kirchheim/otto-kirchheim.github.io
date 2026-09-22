@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import {
   ACT_AS_STATUS_EVENT,
   getActAsState,

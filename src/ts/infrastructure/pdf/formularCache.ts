@@ -1,5 +1,5 @@
 import type { Version } from '@otto-kirchheim/nebengeld-shared';
-import Storage from '../storage/Storage';
+import Storage from '../../shared/lib/storage/Storage';
 import { parseVersion } from './configSchema';
 
 /** Deckelt nur die Vorlagen-PDFs (Binärdaten) -- die Version-Cache-Map bleibt unbegrenzt, da JSON

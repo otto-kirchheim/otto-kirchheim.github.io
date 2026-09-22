@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'bun:test';
 import '@/app/features';
-import { featureRegistry } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
 import EinstellungenTab from '@/infrastructure/ui/EinstellungenTab';
 import {
   getEinstellungenTeile,
@@ -8,7 +8,7 @@ import {
   resetEinstellungenTeile,
 } from '@/infrastructure/ui/einstellungenTeile';
 import { CustomTable, createCustomTable } from '@/infrastructure/table/CustomTable';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import { resetFeatureTabsVisible } from '@/infrastructure/ui/featureTabsStore';
 import updateTabVisibility from '@/infrastructure/ui/updateTabVisibility';
 import type { IVorgabenU, IVorgabenUvorgabenB } from '@/types';

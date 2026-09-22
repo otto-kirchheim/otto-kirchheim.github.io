@@ -1,5 +1,5 @@
 import { mount, unmount } from '@/infrastructure/ui';
-import type { FeatureParts } from '@/core/hooks';
+import type { FeatureParts } from '@/shared/lib/feature';
 import { EwtTab } from '../EwtTab';
 
 /** Tab-Teil des Features EWT: mountet `EwtTab` in `#ewt-root`; ohne Container passiert nichts. */

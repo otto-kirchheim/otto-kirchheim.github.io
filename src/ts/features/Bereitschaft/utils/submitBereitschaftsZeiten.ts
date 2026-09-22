@@ -7,13 +7,13 @@ import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IMonatsDat
 import mergeSchichtenOverrides from './mergeSchichtenOverrides';
 import { getBereitschaftRuntimeOverrides } from './bereitschaftRuntimeOverrides';
 import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
-import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as Storage } from '@/shared/lib/storage/Storage';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
 import { default as setLoading } from '@/infrastructure/ui/setLoading';
 import { default as tableToArray } from '@/infrastructure/data/tableToArray';
-import { bereitschaftszeitraumApi } from '@/infrastructure/api/apiService';
-import dayjs from '@/infrastructure/date/configDayjs';
-import { getMonatFromBZ } from '@/infrastructure/date/getMonatFromItem';
+import { bereitschaftszeitraumApi } from '@/shared/api/apiService';
+import dayjs from '@/shared/lib/date/configDayjs';
+import { getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
 
 /**
  * Berechnet aus dem Modal neue Bereitschaftszeiträume und schreibt sie in Storage und Tabelle. Bei Monatswechsel wird der Folgemonat mitberechnet; bei Jahreswechsel wird er sofort per Bulk-API gespeichert (offline nur ohne Wechsel möglich).

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { LreType } from '@otto-kirchheim/nebengeld-shared';
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 import {
   type BackendBereitschaftseinsatz,
   type BackendBereitschaftszeitraum,
@@ -22,7 +22,7 @@ import {
   vorgabenFromBackend,
   vorgabenUFromServer,
 } from '@/infrastructure/data/fieldMapper';
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenU, IVorgabenUServer } from '@/core/types';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenU, IVorgabenUServer } from '@/shared/types';
 
 // ─── bzFromBackend / bzToBackend ─────────────────────────
 

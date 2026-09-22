@@ -1,6 +1,6 @@
 import { createSnackBar } from '../ui/CustomSnackbar';
 import { setDisableButton } from './buttonDisable';
-import { invokeHook } from '@/core/hooks';
+import { invokeHook } from '@/shared/lib/feature';
 
 /**
  * Schaltet die App in den Offline-Zustand: sperrt die Buttons und zeigt eine dauerhafte Meldung. Sobald der Browser

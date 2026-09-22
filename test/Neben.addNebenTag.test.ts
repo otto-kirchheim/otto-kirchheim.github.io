@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, mock, vi } from 'bun:test';
 
-import type { IDatenN } from '@/core/types';
+import type { IDatenN } from '@/shared/types';
 
 const { saveTableDataNMock, createSnackBarMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(
   () => ({

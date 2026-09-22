@@ -6,7 +6,7 @@ import type {
   ZeilenBerechnet,
   ZeilenOpName,
 } from '@otto-kirchheim/nebengeld-shared';
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 
 type Aggregator = (rows: Zeile[], feld?: string) => number;
 

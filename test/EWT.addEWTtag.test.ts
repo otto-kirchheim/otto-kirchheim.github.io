@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-import type { IDatenEWT, IVorgabenU } from '@/core/types';
+import type { IDatenEWT, IVorgabenU } from '@/shared/types';
 
 const {
   setNaechsterEwtTagMock,

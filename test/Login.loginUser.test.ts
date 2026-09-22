@@ -23,7 +23,7 @@ vi.mock('@/infrastructure/ui/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
-vi.mock('@/infrastructure/api/apiService', () => ({
+vi.mock('@/shared/api/apiService', () => ({
   authApi: {
     login: loginMock,
     me: meMock,

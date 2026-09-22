@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import type { IVorgabenU, IVorgabenUPers } from '@/types';
 import { capturePersSnapshot, validatePersoenlicheDaten } from '@/core/orchestration/onboarding/onboardingValidation';
 

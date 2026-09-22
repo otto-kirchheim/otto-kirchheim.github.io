@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
 vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: vi.fn() }));
 
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import { cacheVersion, cacheVorlage, getCachedVersion, getCachedVorlage } from '@/infrastructure/pdf/formularCache';
 
 const gueltigeVersion = {

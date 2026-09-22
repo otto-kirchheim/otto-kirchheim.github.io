@@ -50,11 +50,11 @@ vi.mock('@/infrastructure/ui/actAsStatus', () => ({
   updateActAsBanner: updateActAsBannerMock,
 }));
 
-vi.mock('@/infrastructure/date/dateStorage', () => ({
+vi.mock('@/shared/lib/date/dateStorage', () => ({
   getStoredMonatJahr: getStoredMonatJahrMock,
 }));
 
-vi.mock('@/infrastructure/storage/Storage', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({
   default: {
     check: storageCheckMock,
     get: storageGetMock,
@@ -66,7 +66,7 @@ vi.mock('@/infrastructure/ui/updateTabVisibility', () => ({
   default: updateTabVisibilityMock,
 }));
 
-vi.mock('@/infrastructure/tokenManagement/decodeAccessToken', () => ({
+vi.mock('@/shared/api/token/decodeAccessToken', () => ({
   getUserCookie: getUserCookieMock,
   isAdmin: isAdminMock,
 }));

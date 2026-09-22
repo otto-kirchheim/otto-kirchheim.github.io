@@ -1,7 +1,7 @@
 import type { IDataQueryOptions } from '@/types';
-import { getStoredMonatJahr } from '../date/dateStorage';
+import { getStoredMonatJahr } from '@/shared/lib/date/dateStorage';
 import { default as normalizeResourceRows } from './normalizeResourceRows';
-import { default as Storage, type TStorageData } from '../storage/Storage';
+import { default as Storage, type TStorageData } from '../../shared/lib/storage/Storage';
 
 /**
  * Filterpraedikat: Zeile ist lokal nicht als geloescht (`__localState: 'deleted'`) markiert.

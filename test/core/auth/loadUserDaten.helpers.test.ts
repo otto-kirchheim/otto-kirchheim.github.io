@@ -9,7 +9,7 @@ const { getMonatFromBZMock, getMonatFromBEMock, getMonatFromEWTMock, getMonatFro
   getMonatFromNMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/date/getMonatFromItem', () => ({
+vi.mock('@/shared/lib/date/getMonatFromItem', () => ({
   getMonatFromBZ: getMonatFromBZMock,
   getMonatFromBE: getMonatFromBEMock,
   getMonatFromEWT: getMonatFromEWTMock,

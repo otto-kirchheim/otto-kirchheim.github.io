@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { LreType } from '@otto-kirchheim/nebengeld-shared';
-import type { IDatenBE, IDatenBZ } from '@/core/types';
+import type { IDatenBE, IDatenBZ } from '@/shared/types';
 
 // In-memory storage used by the Storage mock (shared via closure with the vi.mock factory below)
 const storageStore = new Map<string, unknown>();
@@ -59,7 +59,7 @@ vi.mock('@/core', () => ({
   publishEvent: publishDataChangedMock,
 }));
 
-vi.mock('@/infrastructure/storage/Storage', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({
   default: {
     get: <T>(key: string, options?: { default?: T }): T =>
       (storageStore.has(key) ? storageStore.get(key) : options?.default) as T,
@@ -73,7 +73,7 @@ vi.mock('@/infrastructure/storage/Storage', () => ({
   },
 }));
 
-vi.mock('@/infrastructure/date/getMonatFromItem', () => ({
+vi.mock('@/shared/lib/date/getMonatFromItem', () => ({
   getMonatFromBZ: (item: IDatenBZ) => {
     // Return April (4) for our test BZs (2023-04-xx)
     const d = new Date(String(item.Beginn));

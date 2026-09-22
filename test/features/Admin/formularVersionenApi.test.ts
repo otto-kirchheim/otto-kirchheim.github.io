@@ -19,7 +19,7 @@ const { fetchRetryMock, getServerUrlMock, authHeaderMock, holeVorlageAlsDateiMoc
   holeVorlageAlsDateiMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/api/FetchRetry', () => ({
+vi.mock('@/shared/api/FetchRetry', () => ({
   FetchRetry: fetchRetryMock,
   getServerUrl: getServerUrlMock,
 }));

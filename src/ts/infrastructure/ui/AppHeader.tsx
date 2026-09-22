@@ -13,7 +13,7 @@ import {
   DBTooltip,
 } from '@db-ux/react-core-components';
 import { DBLoadingButton } from '@/components';
-import { featureRegistry } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
 import schliesseMobilenDrawer from './schliesseMobilenDrawer';
 import ThemeSwitcher from './ThemeSwitcher';
 import useActiveTab from './useActiveTab';

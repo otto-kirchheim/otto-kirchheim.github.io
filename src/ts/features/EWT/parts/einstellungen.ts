@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import type { FeatureParts } from '@/core/hooks';
+import type { FeatureParts } from '@/shared/lib/feature';
 import FahrzeitenAbschnitt from '../components/FahrzeitenEinstellungenAbschnitt';
 import type { IVorgabenUfZ } from '@/types';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';

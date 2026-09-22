@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { DBHeadingH4 } from '@db-ux/react-core-components';
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { getMonatJahr, subscribeMonatJahr } from './monatJahrStore';
 
 /**

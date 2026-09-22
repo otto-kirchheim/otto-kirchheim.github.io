@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { DBButton, DBFooter, DBFooterMeta } from '@db-ux/react-core-components';
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 import ImpressumDialog from './ImpressumDialog';
 
 /**

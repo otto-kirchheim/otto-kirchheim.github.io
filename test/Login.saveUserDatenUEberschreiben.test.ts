@@ -45,7 +45,7 @@ vi.mock('@/features/Einstellungen/utils', () => ({
   generateEingabeMaskeEinstellungen: generateEingabeMaskeEinstellungenMock,
 }));
 
-vi.mock('@/infrastructure/storage/Storage', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({
   default: {
     get: storageGetMock,
     set: storageSetMock,
@@ -58,7 +58,7 @@ vi.mock('@/infrastructure/autoSave/autoSave', () => ({
 }));
 
 import '@/app/features';
-import { featureRegistry } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
 import overwriteUserDaten from '@/core/orchestration/auth/utils/overwriteUserDaten';
 
 function createTable(id: string, loadSpy: ReturnType<typeof vi.fn>): void {

@@ -14,9 +14,9 @@ import {
   showModal,
 } from '@/components';
 import type { CustomHTMLDivElement, IDatenBE } from '@/types';
-import { default as Storage } from '@/infrastructure/storage/Storage';
-import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
-import dayjs from '@/infrastructure/date/configDayjs';
+import { default as Storage } from '@/shared/lib/storage/Storage';
+import { default as checkMaxTag } from '@/shared/lib/validation/checkMaxTag';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { onEvent } from '@/core';
 import {
   classifyBzCoverage,

@@ -1,10 +1,10 @@
 import './setupBun';
 import { beforeEach, describe, expect, it } from 'bun:test';
 
-import type { IDatenBZ, IVorgabenU } from '@/core/types';
+import type { IDatenBZ, IVorgabenU } from '@/shared/types';
 import calculateBereitschaftsZeiten from '@/features/Bereitschaft/utils/calculateBereitschaftsZeiten';
-import Storage from '@/infrastructure/storage/Storage';
-import dayjs from '@/infrastructure/date/configDayjs';
+import Storage from '@/shared/lib/storage/Storage';
+import dayjs from '@/shared/lib/date/configDayjs';
 
 function setVorgabenU(): void {
   Storage.set('VorgabenU', {

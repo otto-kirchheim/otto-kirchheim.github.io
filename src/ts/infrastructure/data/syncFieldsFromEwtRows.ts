@@ -1,5 +1,5 @@
 import type { CustomHTMLTableElement, IDatenEWT, TResourceKey } from '@/types';
-import { default as Storage, type TStorageData } from '../storage/Storage';
+import { default as Storage, type TStorageData } from '../../shared/lib/storage/Storage';
 import { publishEvent } from '@/core';
 
 /**

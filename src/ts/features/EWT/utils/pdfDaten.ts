@@ -1,7 +1,7 @@
-import type { FeaturePdfContext } from '@/core/hooks';
-import calculateBuchungstagEwt from '@/infrastructure/date/calculateBuchungstagEwt';
-import dayjs from '@/infrastructure/date/configDayjs';
-import { isEwtInMonat } from '@/infrastructure/date/getMonatFromItem';
+import type { FeaturePdfContext } from '@/shared/lib/feature';
+import calculateBuchungstagEwt from '@/features/EWT/utils/calculateBuchungstagEwt';
+import dayjs from '@/shared/lib/date/configDayjs';
+import { isEwtInMonat } from '@/shared/lib/date/getMonatFromItem';
 import tableToArray from '@/infrastructure/data/tableToArray';
 import { tableIdOf } from '@/infrastructure/data/resourceConfig';
 import { alsMinuten, FORMAT, ZEILEN_OPS } from '@/infrastructure/pdf/aggregatoren';

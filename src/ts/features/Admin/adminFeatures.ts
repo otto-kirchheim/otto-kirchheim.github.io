@@ -1,5 +1,5 @@
 import { useEffect, useSyncExternalStore } from 'react';
-import { featureRegistry } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
 import type { AdminStats } from './utils/api';
 import type { FormularCode } from './components/FormularEditor/datenKatalog';
 

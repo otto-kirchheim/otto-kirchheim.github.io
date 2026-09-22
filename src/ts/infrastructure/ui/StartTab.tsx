@@ -8,7 +8,7 @@ import {
   DBStack,
   DBTooltip,
 } from '@db-ux/react-core-components';
-import { featureRegistry } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
 import useFeatureTabsVisible from './useFeatureTabsVisible';
 
 /**

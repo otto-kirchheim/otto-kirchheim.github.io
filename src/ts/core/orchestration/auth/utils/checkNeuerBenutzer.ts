@@ -1,10 +1,10 @@
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
-import { authApi } from '@/infrastructure/api/apiService';
-import { registerPasskeyWithResult } from '@/infrastructure/tokenManagement/passkeys';
-import { getPasswordValidationMessage } from '@/infrastructure/validation/passwordValidation';
-import { resetTokenState } from '@/infrastructure/tokenManagement/tokenErneuern';
+import { authApi } from '@/shared/api/apiService';
+import { registerPasskeyWithResult } from '@/shared/api/token/passkeys';
+import { getPasswordValidationMessage } from '@/shared/lib/validation/passwordValidation';
+import { resetTokenState } from '@/shared/api/token/tokenErneuern';
 import { openOnboardingGuideOnce } from '@/core/orchestration/onboarding/createOnboardingGuideModal';
 import userLoginSuccess from './userLoginSuccess';
 import { schliesseModal } from '@/components';

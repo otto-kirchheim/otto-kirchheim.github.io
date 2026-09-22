@@ -4,7 +4,7 @@
  * Die Import-Position in `main.tsx` legt die Registrierungsreihenfolge fest.
  */
 
-import { featureRegistry } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
 import { berMeta } from '@/features/Bereitschaft/meta';
 import { eaMeta } from '@/features/EA/meta';
 import { ewtMeta } from '@/features/EWT/meta';

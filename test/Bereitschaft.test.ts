@@ -1,4 +1,4 @@
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createAddModalBereitschaftsZeit } from '@/features/Bereitschaft/components';
 import {
@@ -7,9 +7,9 @@ import {
   getBereitschaftsZeitraumDaten,
   submitBereitschaftsZeiten,
 } from '@/features/Bereitschaft/utils';
-import type { CustomHTMLDivElement } from '@/core/types/CustomHTMLElements';
-import type { IDaten, IDatenBZ } from '@/core/types/IDaten';
-import Storage from '@/infrastructure/storage/Storage';
+import type { CustomHTMLDivElement } from '@/shared/types/CustomHTMLElements';
+import type { IDaten, IDatenBZ } from '@/shared/types/IDaten';
+import Storage from '@/shared/lib/storage/Storage';
 import {
   VorgabenGeldMock,
   VorgabenUMock,

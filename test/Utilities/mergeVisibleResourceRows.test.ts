@@ -16,9 +16,9 @@ const {
   getMonatFromNMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/storage/Storage', () => ({ default: { get: storageGetMock } }));
-vi.mock('@/infrastructure/date/dateStorage', () => ({ getStoredMonatJahr: getStoredMonatJahrMock }));
-vi.mock('@/infrastructure/date/getMonatFromItem', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({ default: { get: storageGetMock } }));
+vi.mock('@/shared/lib/date/dateStorage', () => ({ getStoredMonatJahr: getStoredMonatJahrMock }));
+vi.mock('@/shared/lib/date/getMonatFromItem', () => ({
   getMonatFromBZ: getMonatFromBZMock,
   getMonatFromBE: getMonatFromBEMock,
   isEwtInMonat: isEwtInMonatMock,

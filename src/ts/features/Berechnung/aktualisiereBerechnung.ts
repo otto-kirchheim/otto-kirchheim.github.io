@@ -1,8 +1,8 @@
 import type { IVorgabenBerechnung } from '@/types';
 import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
 import { type ResourceKind, resourceDefs } from '@/infrastructure/data/resourceConfig';
-import Storage from '@/infrastructure/storage/Storage';
-import type { TStorageData } from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
+import type { TStorageData } from '@/shared/lib/storage/Storage';
 import generateTableBerechnung from './generateTableBerechnung';
 import { ladeBerechnungsTeile } from './ladeBerechnungsTeile';
 

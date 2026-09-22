@@ -1,5 +1,5 @@
 import type { IDatenEWT } from '@/types';
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 
 /**
  * Bestimmt das Zeitfenster der Arbeitszeit (`beginE`–`endeE`) eines EWT-Eintrags für Überschneidungsprüfungen.

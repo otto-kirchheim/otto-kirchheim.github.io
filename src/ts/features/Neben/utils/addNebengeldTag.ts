@@ -1,5 +1,5 @@
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { persistNebengeldTableData } from '.';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { IDatenN } from '@/types';

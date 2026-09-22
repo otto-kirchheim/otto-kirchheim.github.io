@@ -1,13 +1,13 @@
 import './setupBun';
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-import type { IVorgabenU, IVorgabenUvorgabenB } from '@/core/types';
+import type { IVorgabenU, IVorgabenUvorgabenB } from '@/shared/types';
 import applyBereitschaftsVorgabe from '@/features/Bereitschaft/utils/applyBereitschaftsVorgabe';
 import toggleBereitschaftsEigeneWerte from '@/features/Bereitschaft/utils/toggleBereitschaftsEigeneWerte';
 import updateBereitschaftsDatum from '@/features/Bereitschaft/utils/updateBereitschaftsDatum';
 import { B_WECHSEL_ZEIT } from '@/features/Bereitschaft/utils/constants';
-import Storage from '@/infrastructure/storage/Storage';
-import dayjs from '@/infrastructure/date/configDayjs';
+import Storage from '@/shared/lib/storage/Storage';
+import dayjs from '@/shared/lib/date/configDayjs';
 
 function createVorgabenB(): IVorgabenUvorgabenB {
   return {

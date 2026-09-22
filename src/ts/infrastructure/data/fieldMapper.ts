@@ -25,7 +25,7 @@ import type {
   IVorgabenUvorgabenB,
 } from '@/types';
 import { joinOeLevels, splitOeInput } from './oeLevels';
-import dayjs from '../date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { formatNebengeldZulagen, normalizeNebengeldZulagen } from '@/features/Neben/utils';
 
 // ─── Typen für Backend-Dokumente ─────────────────────────

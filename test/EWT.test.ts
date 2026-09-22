@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'bun:test';
 import { calculateEwtEintraege } from '@/features/EWT/utils';
-import type { IVorgabenU } from '@/core/types/IVorgabenU';
+import type { IVorgabenU } from '@/shared/types/IVorgabenU';
 import { VorgabenUMock } from '@test/mockData';
-import type { IMonatsDaten } from '@/core/types';
+import type { IMonatsDaten } from '@/shared/types';
 
 describe('berechnen', () => {
   it('sollte die richtigen Daten für einen gegebenen Monat berechnen', () => {

@@ -1,5 +1,5 @@
-import { featureLifecycleRegistry, featureRegistry } from '@/core/hooks';
-import type { FeatureContext, FeatureMeta } from '@/core/hooks';
+import { featureLifecycleRegistry, featureRegistry } from '@/shared/lib/feature';
+import type { FeatureContext, FeatureMeta } from '@/shared/lib/feature';
 import { getResourceStatus, hasPendingTableChanges } from '@/infrastructure/autoSave/autoSave';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 

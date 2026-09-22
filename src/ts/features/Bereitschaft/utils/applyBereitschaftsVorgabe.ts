@@ -1,9 +1,9 @@
 import type { IVorgabenU, IVorgabenUvorgabenB } from '@/types';
-import { resolveSchichtDay } from '@/types';
-import { default as Storage } from '@/infrastructure/storage/Storage';
-import dayjs from '@/infrastructure/date/configDayjs';
+import { resolveSchichtDay } from '@/shared/lib/schicht/resolveSchichtDay';
+import { default as Storage } from '@/shared/lib/storage/Storage';
+import dayjs from '@/shared/lib/date/configDayjs';
 import hideBereitschaftsNachtfelder from './hideBereitschaftsNachtfelder';
-import { mergePerWeekdaySchicht } from '@/types';
+import { mergePerWeekdaySchicht } from '@/shared/lib/schicht/resolveSchichtDay';
 import { resolveBzBis, resolveBzVon } from './resolveBereitschaftsGrenze';
 import { B_WECHSEL_ZEIT } from './constants';
 

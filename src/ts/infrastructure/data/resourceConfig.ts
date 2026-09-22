@@ -1,6 +1,6 @@
-import { featureRegistry } from '@/core/hooks';
-import type { FeatureResource, FeatureResourceKey } from '@/core/hooks';
-import type { TStorageData } from '../storage/Storage';
+import { featureRegistry } from '@/shared/lib/feature';
+import type { FeatureResource, FeatureResourceKey } from '@/shared/lib/feature';
+import type { TStorageData } from '../../shared/lib/storage/Storage';
 
 export type ResourceKind = FeatureResourceKey;
 

@@ -2,8 +2,8 @@ import { createRef, type SubmitEvent } from 'react';
 
 import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, schliesseModal, showModal } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { authApi } from '@/infrastructure/api/apiService';
-import { getPasswordValidationMessage, PASSWORD_MIN_LENGTH } from '@/infrastructure/validation/passwordValidation';
+import { authApi } from '@/shared/api/apiService';
+import { getPasswordValidationMessage, PASSWORD_MIN_LENGTH } from '@/shared/lib/validation/passwordValidation';
 
 /**
  * Öffnet den Dialog zum Setzen eines neuen Passworts nach dem Reset-Link.

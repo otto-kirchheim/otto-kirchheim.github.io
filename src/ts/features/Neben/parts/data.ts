@@ -1,4 +1,4 @@
-import type { FeatureParts } from '@/core/hooks';
+import type { FeatureParts } from '@/shared/lib/feature';
 import type { IDatenN } from '@/types';
 import { getNebengeldDaten } from '../utils';
 

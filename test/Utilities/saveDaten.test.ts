@@ -45,16 +45,16 @@ vi.mock('@/infrastructure/autoSave/autoSave', () => ({
   markResourceSaved: mockMarkResourceSaved,
   hasPendingTableChanges: mockHasPendingTableChanges,
 }));
-vi.mock('@/infrastructure/api/apiService', () => ({
+vi.mock('@/shared/api/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
 }));
 vi.mock('@/core/orchestration/syncFeatureTabs', () => ({ syncFeatureTabs: mockSyncFeatureTabs }));
 
 import '@/app/features';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import saveDaten from '@/infrastructure/data/saveDaten';
-import { onEvent, clearAllEventListeners } from '@/core/events/appEvents';
-import { registerHook, clearAllHooks } from '@/core/hooks';
+import { onEvent, clearAllEventListeners } from '@/shared/lib/events/appEvents';
+import { registerHook, clearAllHooks } from '@/shared/lib/feature';
 
 describe('saveDaten', () => {
   let button: HTMLButtonElement;

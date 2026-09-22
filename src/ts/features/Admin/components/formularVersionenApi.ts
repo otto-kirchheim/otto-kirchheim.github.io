@@ -1,4 +1,4 @@
-import { FetchRetry, getServerUrl } from '@/infrastructure/api/FetchRetry';
+import { FetchRetry, getServerUrl } from '@/shared/api/FetchRetry';
 import { ApiFehler, authHeader, holeVorlageAlsDatei } from '@/infrastructure/pdf/ladeFormular';
 import type {
   VersionUebersicht as SharedVersionUebersicht,

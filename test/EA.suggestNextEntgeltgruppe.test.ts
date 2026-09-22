@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 
-import type { IVorgabenU } from '@/core/types';
+import type { IVorgabenU } from '@/shared/types';
 import { suggestNextEntgeltgruppe } from '@/features/EA/components/createAddModalEA';
 
 function createVorgabenU(entgeltgruppe?: string): IVorgabenU {

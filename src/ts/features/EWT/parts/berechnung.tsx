@@ -1,7 +1,7 @@
-import type { FeatureParts } from '@/core/hooks';
+import type { FeatureParts } from '@/shared/lib/feature';
 import type { IBerechnungMonatsErgebnis, IDatenEWT, IVorgabenBerechnungMonat } from '@/types';
-import dayjs from '@/infrastructure/date/configDayjs';
-import { getMonatFromEWTBuchungstag } from '@/infrastructure/date/getMonatFromItem';
+import dayjs from '@/shared/lib/date/configDayjs';
+import { getMonatFromEWTBuchungstag } from '@/shared/lib/date/getMonatFromItem';
 import { anzeige, currency } from '@/infrastructure/data/berechnungWerte';
 import { GruppenTitel, LabelTabelle, SchwellenZeilen } from '@/infrastructure/ui/berechnungBausteine';
 

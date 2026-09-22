@@ -23,7 +23,19 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
 - [x] Hilfetexte inhaltlich gegen die heutige UI abgleichen, Teil 1/2 (User-Hinweis nach Browser-Check P1h, 2026-09-20/22): `tab.einstellungen` neu beschrieben (Sicherheit/Biometrie, Arbeitszeit, Feature-Abschnitte, sichtbare Bereiche, AutoSave, Jahreswechsel statt "Logout"/"Passwort ändern"); `tab.berechnung` fehlte komplett, jetzt Hilfe-Knopf `#btnHelpBerechnung` in `BerechnungTab.tsx` + neuer Kern-Kontext. Siehe CHANGELOG 175.
 - [x] P1i `datenKatalog.ts` nach Feature aufgeteilt (`features/Admin/features/{ber,ewt,ez,ea}/katalog.ts`, Typ `FeatureKatalog`; geteilte Typen/Helfer in `katalogTypen.ts`); `datenKatalog.ts` behaelt Basis/Schriftarten/Formate/Helfer und setzt den Rest zusammen, oeffentliche API unveraendert (keiner der 17 Konsumenten angepasst). Abweichung vom Plan: `FormularCode` bleibt literal (Typsicherheit), nicht aus dem Admin-Manifest abgeleitet. `lint:fsd` 111 (+2 dauerhaft, Boundary-Regel-Falsch-Positiv bei Admins eigenen `ewt`/`ea`-Unterordnern, siehe CHANGELOG 176). Test `test/features/Admin/FormularEditor/datenKatalog.test.ts` neu, Tests 2272 -> 2286.
 - [x] Scaffold um optionalen Admin-Ordner erweitert (`bun run new-feature <slug> --admin`; `index.ts`+`katalog.ts`-Stub, Eintrag im Admin-Manifest). Test `test/scripts.newFeature.test.ts` +3 Faelle, Tests 2286 -> 2289. Siehe CHANGELOG 177.
-- [ ] P2 Shared-Leaves · P3 Shared-UI · P4 Domänen-Shared · P5 Geteilte Features + app/session
+- [x] P2 Shared-Leaves (2026-09-22): `infrastructure/{api,tokenManagement,storage,validation,date}` +
+      `core/{state,events,hooks,types}` → `shared/{api,api/token,lib/{storage,validation,version,date,state,events,
+      feature,schicht},types}` (User-IDE-Move, Zielordner vorher angelegt). Ausnahmen: `compareVersion.ts`→
+      `shared/lib/version`, `calculateBuchungstagEwt.ts`→`features/EWT/utils` (nur EWT), `resolveSchichtDay.ts`+3
+      Helfer→`shared/lib/schicht` (Bereitschaft UND EWT, daher nicht `features/ber/lib`; nicht mehr im `@/types`-
+      Barrel, 8 Konsumenten umgestellt). Alias `@/types`→`shared/types` (Name bleibt), neu `@/shared/*`,
+      `@/infrastructure`-Bare-Alias + ungenutztes `infrastructure/index.ts` entfernt. Nacharbeit: ~340 Dateien mit
+      gebrochenen Alias-Importen per Bulk-Sed, plus von der IDE falsch/gar nicht nachgezogene *relative* Importe
+      *innerhalb* der verschobenen Dateien selbst (`shared/api/FetchRetry.ts` u. a., alte Tiefe/altes Ziel) von
+      Hand, `core/index.ts`-Barrel umgehängt. `lint:fsd` 111 → 73 (Ratsche nachgezogen). Gate: typecheck 0, lint 0,
+      `lint:fsd` 73, Tests 2289 unverändert, build i.o. (Precache weiterhin 113), `lint:css` 87 unverändert.
+      Details CHANGELOG 179.
+- [ ] P3 Shared-UI · P4 Domänen-Shared · P5 Geteilte Features + app/session
 - [ ] P6 Widgets · P7 Module verschieben · P8 Globale Bereiche → Pages · P9 Admin · P10 Abschluss
 
 ---

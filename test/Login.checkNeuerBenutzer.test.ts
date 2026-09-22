@@ -30,7 +30,7 @@ vi.mock('@/infrastructure/ui/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
-vi.mock('@/infrastructure/api/apiService', () => ({
+vi.mock('@/shared/api/apiService', () => ({
   authApi: {
     register: registerMock,
     me: meMock,
@@ -41,11 +41,11 @@ vi.mock('@/core/orchestration/auth/utils/userLoginSuccess', () => ({
   default: userLoginSuccessMock,
 }));
 
-vi.mock('@/infrastructure/tokenManagement/passkeys', () => ({
+vi.mock('@/shared/api/token/passkeys', () => ({
   registerPasskeyWithResult: registerPasskeyWithResultMock,
 }));
 
-vi.mock('@/infrastructure/tokenManagement/tokenErneuern', () => ({
+vi.mock('@/shared/api/token/tokenErneuern', () => ({
   resetTokenState: resetTokenStateMock,
 }));
 

@@ -45,7 +45,7 @@ vi.mock('@/components', () => ({
   MyCheckbox: (props: { id: string; children?: ReactNode }) => h('input', { type: 'checkbox', id: props.id }),
 }));
 
-vi.mock('@/infrastructure/storage/Storage', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({
   default: { get: storageGetMock },
 }));
 

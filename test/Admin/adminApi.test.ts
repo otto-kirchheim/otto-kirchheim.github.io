@@ -9,7 +9,7 @@ const { mockFetchRetry, mockCreateSnackBar, mockNotifyActAsStateChanged } = (
   mockNotifyActAsStateChanged: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/api/FetchRetry', () => ({
+vi.mock('@/shared/api/FetchRetry', () => ({
   FetchRetry: mockFetchRetry,
   getServerUrl: vi.fn(),
 }));
@@ -43,7 +43,7 @@ import {
   updateUserScopes,
   upsertVorgabeByYear,
 } from '@/features/Admin/utils/api';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 
 function mockSuccess<T>(data: T) {
   mockFetchRetry.mockResolvedValueOnce({ success: true, data });

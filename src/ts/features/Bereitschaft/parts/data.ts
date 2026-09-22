@@ -1,4 +1,4 @@
-import type { FeatureParts } from '@/core/hooks';
+import type { FeatureParts } from '@/shared/lib/feature';
 import type { IMonatsDaten } from '@/types';
 import { getBereitschaftsEinsatzDaten, getBereitschaftsZeitraumDaten } from '../utils';
 

@@ -1,6 +1,6 @@
 import { erzeugeDbDialog } from '@/infrastructure/ui/dbDialog';
 import type { CustomTable, CustomTableTypes, Row } from '../table/CustomTable';
-import type { BulkErrorEntry } from '../api/apiService';
+import type { BulkErrorEntry } from '@/shared/api/apiService';
 import type { TResourceKey } from '@/types';
 import type { RowErrorMatch } from './savePipeline';
 

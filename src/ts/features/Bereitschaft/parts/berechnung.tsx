@@ -1,9 +1,9 @@
 import { LreType } from '@otto-kirchheim/nebengeld-shared';
-import type { FeatureParts } from '@/core/hooks';
+import type { FeatureParts } from '@/shared/lib/feature';
 import type { IBerechnungMonatsErgebnis, IDatenBE, IDatenBZ, IVorgabenBerechnungMonat } from '@/types';
 import { currency, formatCurrency, timeConvert } from '@/infrastructure/data/berechnungWerte';
-import dayjs from '@/infrastructure/date/configDayjs';
-import { getMonatFromBE, getMonatFromBZ } from '@/infrastructure/date/getMonatFromItem';
+import dayjs from '@/shared/lib/date/configDayjs';
+import { getMonatFromBE, getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
 import { DetailZeile, GruppenTitel } from '@/infrastructure/ui/berechnungBausteine';
 
 type Bucket = IVorgabenBerechnungMonat['B'];

@@ -11,7 +11,7 @@ import {
 import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
 import { MyCheckbox, MyFormModal, MyInput, MyModalBody, schliesseModal, showModal } from '@/components';
 import type { BereitschaftSchichtTyp, IVorgabenU, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
-import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as Storage } from '@/shared/lib/storage/Storage';
 import { saveTableDataVorgabenU } from '../utils';
 import { DBButton, DBCheckbox, DBDivider } from '@db-ux/react-core-components';
 import { SchichtOverrideEditor } from './SchichtOverrideEditor';

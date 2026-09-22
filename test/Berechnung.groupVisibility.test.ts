@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { VorgabenGeldMock, VorgabenUMock } from '@test/mockData';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import '@/app/features';
 import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnung';
 import { isGroupVisible } from '@/features/Berechnung/berechnungGroupVisibility';

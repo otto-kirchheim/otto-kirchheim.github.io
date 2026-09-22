@@ -3,7 +3,7 @@ import { calculateEwtEintraege, getEwtDaten, persistEwtTableData } from '.';
 import { publishEvent } from '@/core';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { IDatenEWT, IMonatsDaten, IVorgabenU } from '@/types';
-import { isEwtInMonat } from '@/infrastructure/date/getMonatFromItem';
+import { isEwtInMonat } from '@/shared/lib/date/getMonatFromItem';
 
 type ewtBerechnenType = {
   monat: number;

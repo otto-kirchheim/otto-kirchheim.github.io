@@ -8,7 +8,7 @@ const { resendVerificationEmailMock, createSnackBarMock, storageGetMock } = (
   storageGetMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/api/apiService', () => ({
+vi.mock('@/shared/api/apiService', () => ({
   authApi: { resendVerificationEmail: resendVerificationEmailMock },
 }));
 
@@ -16,7 +16,7 @@ vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('@/infrastructure/storage/Storage', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({
   default: { get: storageGetMock },
 }));
 

@@ -1,4 +1,4 @@
-import type { FeatureParts } from '@/core/hooks';
+import type { FeatureParts } from '@/shared/lib/feature';
 import { unlinkEwtRefsForDeletedIds } from '@/infrastructure/data/unlinkEwtRefs';
 import syncEaDurationFromEwtRows from '../utils/syncEwtToEa';
 

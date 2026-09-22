@@ -1,4 +1,4 @@
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 import type { IVorgabenUvorgabenB } from '@/types';
 
 // Wechselzeit 08:00: Bereitschaftszeiträume werden hier getrennt; Rückfall, wenn keine Arbeitszeit vorliegt.

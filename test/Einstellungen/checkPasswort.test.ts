@@ -14,7 +14,7 @@ vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('@/infrastructure/api/apiService', () => ({
+vi.mock('@/shared/api/apiService', () => ({
   authApi: { changePassword: changePasswordMock },
 }));
 
@@ -29,7 +29,7 @@ vi.mock('@/infrastructure/ui/clearLoading', () => ({
 vi.mock('@/components', () => ({ schliesseModal: modalHideMock }));
 
 import checkPasswort from '@/features/Einstellungen/utils/checkPasswort';
-import type { CustomHTMLDivElement } from '@/core/types';
+import type { CustomHTMLDivElement } from '@/shared/types';
 
 function createModal(alt: string, neu: string, neu2: string): CustomHTMLDivElement {
   const modal = document.createElement('div') as CustomHTMLDivElement;

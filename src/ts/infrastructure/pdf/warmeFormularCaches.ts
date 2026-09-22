@@ -1,5 +1,5 @@
-import { featureRegistry } from '@/core/hooks';
-import dayjs from '../date/configDayjs';
+import { featureRegistry } from '@/shared/lib/feature';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { warmeVorlagenCache } from './ladeFormular';
 
 /**

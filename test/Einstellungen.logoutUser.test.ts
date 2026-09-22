@@ -9,14 +9,14 @@ const unmountAdminTabMock = vi.fn();
 const zeigeTabMock = vi.fn(() => true);
 const publishEventMock = vi.fn();
 
-vi.mock('@/infrastructure/storage/Storage', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({
   default: {
     clear: vi.fn(),
     check: vi.fn(),
   },
 }));
 
-vi.mock('@/infrastructure/api/abortController', () => ({
+vi.mock('@/shared/api/abortController', () => ({
   abortController: { reset: resetAbortMock },
 }));
 
@@ -33,7 +33,7 @@ vi.mock('@/infrastructure/ui/updateTabVisibility', () => ({
   hideAllFeatureTabs: hideAllFeatureTabsMock,
 }));
 
-vi.mock('@/infrastructure/api/apiService', () => ({
+vi.mock('@/shared/api/apiService', () => ({
   authApi: {
     logout: logoutMock,
   },
@@ -43,7 +43,7 @@ vi.mock('@/Admin', () => ({
   unmountAdminTab: unmountAdminTabMock,
 }));
 
-vi.mock('@/core/events/appEvents', () => ({
+vi.mock('@/shared/lib/events/appEvents', () => ({
   publishEvent: publishEventMock,
 }));
 
@@ -52,7 +52,7 @@ vi.mock('@/infrastructure/ui/tabController', () => ({
 }));
 
 import logoutUser from '@/features/Einstellungen/utils/logoutUser';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import { isNavigationSichtbar, setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
 
 describe('logoutUser', () => {

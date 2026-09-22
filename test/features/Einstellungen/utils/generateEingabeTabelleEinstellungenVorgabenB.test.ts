@@ -7,7 +7,7 @@ const { storageCheckMock, storageGetMock } = (vi as typeof vi & { hoisted: <T>(f
   }),
 );
 
-vi.mock('@/infrastructure/storage/Storage', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({
   default: { check: storageCheckMock, get: storageGetMock },
 }));
 

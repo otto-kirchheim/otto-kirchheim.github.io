@@ -1,7 +1,7 @@
 import { createRef, type SubmitEvent } from 'react';
 
 import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, showModal } from '@/components';
-import { PASSWORD_MIN_LENGTH } from '@/infrastructure/validation/passwordValidation';
+import { PASSWORD_MIN_LENGTH } from '@/shared/lib/validation/passwordValidation';
 import { checkPasswort } from '../utils';
 
 /**

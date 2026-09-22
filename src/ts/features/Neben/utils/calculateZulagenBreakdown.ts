@@ -1,5 +1,5 @@
 import type { IDatenN } from '@/types';
-import { getMonatFromN } from '@/infrastructure/date/getMonatFromItem';
+import { getMonatFromN } from '@/shared/lib/date/getMonatFromItem';
 import { ZULAGEN_CATALOG, ZulageEntryUnit, type IZulageCatalogItem } from '@otto-kirchheim/nebengeld-shared';
 import getNebengeldDaten from './getNebengeldDaten';
 import { normalizeNebengeldZulagen } from './nebengeldZulagen';

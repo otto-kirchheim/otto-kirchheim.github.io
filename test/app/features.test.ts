@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'bun:test';
 import '@/app/features';
-import { publishEvent } from '@/core/events/appEvents';
-import { featureLifecycleRegistry, featureRegistry } from '@/core/hooks';
-import Storage from '@/infrastructure/storage/Storage';
+import { publishEvent } from '@/shared/lib/events/appEvents';
+import { featureLifecycleRegistry, featureRegistry } from '@/shared/lib/feature';
+import Storage from '@/shared/lib/storage/Storage';
 
 describe('app/features (Manifest)', () => {
   it('definiert ber, ewt, ez, ea in dieser Reihenfolge mit den bisherigen Lifecycle-Namen und Tab-Keys', () => {

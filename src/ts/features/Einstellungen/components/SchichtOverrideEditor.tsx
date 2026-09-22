@@ -1,7 +1,7 @@
 import { type FC } from 'react';
 
 import type { BereitschaftSchichtTyp, IPerWeekdaySchicht, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
-import { mergePerWeekdaySchicht } from '@/types';
+import { mergePerWeekdaySchicht } from '@/shared/lib/schicht/resolveSchichtDay';
 import { DBCheckbox } from '@db-ux/react-core-components';
 import { SchichtSection } from './SchichtSection';
 

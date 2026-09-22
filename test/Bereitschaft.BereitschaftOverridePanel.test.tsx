@@ -2,7 +2,7 @@ import { describe, expect, it, mock } from 'bun:test';
 import { klickeCheckbox, render, setzeWert } from '@test/reactRender';
 
 import { BereitschaftOverridePanel } from '@/features/Bereitschaft/components/BereitschaftOverridePanel';
-import type { IVorgabenUaZ } from '@/core/types';
+import type { IVorgabenUaZ } from '@/shared/types';
 
 function createAz(overrides: Partial<IVorgabenUaZ> = {}): IVorgabenUaZ {
   return {

@@ -2,7 +2,7 @@ import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import { B_WECHSEL_MINUTE, B_WECHSEL_STUNDE, getBereitschaftsEinsatzDaten } from '.';
 import isSameBereitschaftsEinsatz from './isSameBereitschaftsEinsatz';
 import type { IDatenBE } from '@/types';
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 
 // ─── Geteilte Validatoren ────────────────────────────────────────────────────
 

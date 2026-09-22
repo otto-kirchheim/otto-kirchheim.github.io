@@ -19,11 +19,11 @@ import { openHelpModal } from '@/core';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ } from '@/types';
 import { confirmDeleteAllRows } from '@/infrastructure/data/confirmDeleteAllRows';
 import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
-import { getMonatFromBE, getMonatFromBZ } from '@/infrastructure/date/getMonatFromItem';
+import { getMonatFromBE, getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
 import { bindClickHandlers } from '@/infrastructure/ui/bindClickHandlers';
-import Storage from '@/infrastructure/storage/Storage';
-import dayjs from '@/infrastructure/date/configDayjs';
+import Storage from '@/shared/lib/storage/Storage';
+import dayjs from '@/shared/lib/date/configDayjs';
 import generatePDF from '@/infrastructure/data/generatePDF';
 import {
   EditorModalBE,

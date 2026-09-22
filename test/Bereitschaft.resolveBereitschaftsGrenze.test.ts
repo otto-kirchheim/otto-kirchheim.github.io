@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 
-import type { IVorgabenUaZ, IVorgabenUvorgabenB } from '@/core/types';
+import type { IVorgabenUaZ, IVorgabenUvorgabenB } from '@/shared/types';
 import { resolveBzBis, resolveBzVon } from '@/features/Bereitschaft/utils/resolveBereitschaftsGrenze';
 
 function createAZ(): IVorgabenUaZ {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 
-import type { IDatenEWT, IVorgabenU } from '@/core/types';
+import type { IDatenEWT, IVorgabenU } from '@/shared/types';
 
 import calculateEwtEintraege from '@/features/EWT/utils/calculateEwtEintraege';
 

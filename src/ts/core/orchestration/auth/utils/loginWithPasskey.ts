@@ -2,9 +2,9 @@ import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/br
 import { userLoginSuccess } from '.';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
 import { default as setLoading } from '@/infrastructure/ui/setLoading';
-import { authApi } from '@/infrastructure/api/apiService';
-import { getPasskeyErrorMessage } from '@/infrastructure/tokenManagement/passkeys';
-import { resetTokenState } from '@/infrastructure/tokenManagement/tokenErneuern';
+import { authApi } from '@/shared/api/apiService';
+import { getPasskeyErrorMessage } from '@/shared/api/token/passkeys';
+import { resetTokenState } from '@/shared/api/token/tokenErneuern';
 import type { CustomHTMLDivElement } from '@/types';
 import { schliesseModal } from '@/components';
 

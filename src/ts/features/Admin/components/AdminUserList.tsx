@@ -11,7 +11,7 @@ import {
   deleteUser,
   type AdminUserRow,
 } from '../utils/api';
-import { getUserCookie } from '@/infrastructure/tokenManagement/decodeAccessToken';
+import { getUserCookie } from '@/shared/api/token/decodeAccessToken';
 import { loadUserDataForAdminSelection } from '../utils/actAs';
 import { useDebouncedValue, matchesOeQuery } from '../utils/adminUserListHelpers';
 import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';

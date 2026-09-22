@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'bun:test';
 import { getNebengeldDaten } from '@/features/Neben/utils';
-import Storage from '@/infrastructure/storage/Storage';
-import type { IDatenN } from '@/core/types';
+import Storage from '@/shared/lib/storage/Storage';
+import type { IDatenN } from '@/shared/types';
 
 describe('#getNebengeldDaten function', () => {
   it('should return an empty array when no data is provided and there is no data in storage', () => {

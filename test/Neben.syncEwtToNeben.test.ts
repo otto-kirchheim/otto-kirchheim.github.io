@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import type { IDatenEWT, IDatenN } from '@/core/types';
-import Storage from '@/infrastructure/storage/Storage';
+import type { IDatenEWT, IDatenN } from '@/shared/types';
+import Storage from '@/shared/lib/storage/Storage';
 
 const { mockPublishEvent } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   mockPublishEvent: vi.fn(),

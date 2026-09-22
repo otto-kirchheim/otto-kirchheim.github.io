@@ -1,12 +1,12 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, setSystemTime, vi } from 'bun:test';
 import { Role } from '@otto-kirchheim/nebengeld-shared';
 import { default as DatenSortieren } from '@/infrastructure/data/DatenSortieren';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
-import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
+import { default as checkMaxTag } from '@/shared/lib/validation/checkMaxTag';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
 import { default as setLoading } from '@/infrastructure/ui/setLoading';
-import { getUserCookie, isAdmin } from '@/infrastructure/tokenManagement/decodeAccessToken';
+import { getUserCookie, isAdmin } from '@/shared/api/token/decodeAccessToken';
 /* import * as exportBerechnung from "@/Berechnung";
 import * as exportSnackbar from "@/infrastructure/ui/CustomSnackbar";
 import * as exportEinstelllungen from "@/features/Einstellungen/utils"; */

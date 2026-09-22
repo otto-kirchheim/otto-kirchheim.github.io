@@ -13,7 +13,7 @@ vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreat
 vi.mock('@/infrastructure/ui/buttonDisable', () => ({ setDisableButton: mockSetDisableButton }));
 
 import setOffline from '@/infrastructure/ui/setOffline';
-import { registerHook, clearAllHooks } from '@/core/hooks';
+import { registerHook, clearAllHooks } from '@/shared/lib/feature';
 
 describe('setOffline', () => {
   // Cleanup-Tracking: um registrierte Event-Listener nach jedem Test zu entfernen

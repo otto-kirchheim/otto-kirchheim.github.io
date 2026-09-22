@@ -8,14 +8,14 @@
  */
 
 import { publishEvent } from '@/core';
-import { onEvent } from '@/core/events/appEvents';
+import { onEvent } from '@/shared/lib/events/appEvents';
 import type { CustomTable, CustomTableTypes, TableChanges } from '../table/CustomTable';
 import { getRowKey } from '../table/CustomTable';
 import type { IVorgabenU, TResourceKey, TSaveStatus } from '@/types';
-import { profileApi } from '../api/apiService';
-import Storage from '../storage/Storage';
-import type { TStorageData } from '../storage/Storage';
-import dayjs from '../date/configDayjs';
+import { profileApi } from '@/shared/api/apiService';
+import Storage from '../../shared/lib/storage/Storage';
+import type { TStorageData } from '../../shared/lib/storage/Storage';
+import dayjs from '@/shared/lib/date/configDayjs';
 import mergeVisibleResourceRows from '../data/mergeVisibleResourceRows';
 import { resourceKeys, storageKeyOf, tableIdOf } from '../data/resourceConfig';
 import { mapCreatedIdsByClientRequestId, mapCreatedIdsByContent } from './changeTracking';
@@ -28,7 +28,7 @@ import {
   showErrorDialog,
 } from './errorHandling';
 import { findOverlapBlockedRows } from './overlapGuard';
-import type { BulkErrorEntry } from '../api/apiFetchHelper';
+import type { BulkErrorEntry } from '@/shared/api/apiFetchHelper';
 
 // ─── Konfiguration ───────────────────────────────────────
 

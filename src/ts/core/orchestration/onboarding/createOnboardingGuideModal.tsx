@@ -1,6 +1,6 @@
 import { mount, unmount } from '@/infrastructure/ui';
 
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import OnboardingGuidePanel from './OnboardingGuidePanel';
 
 const PANEL_ID = 'onboarding-guide-panel';

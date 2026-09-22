@@ -40,22 +40,22 @@ vi.mock('@simplewebauthn/browser', () => ({
   startAuthentication: startAuthenticationMock,
 }));
 
-vi.mock('@/infrastructure/api/apiService', () => ({
+vi.mock('@/shared/api/apiService', () => ({
   authApi: {
     beginPasskeyLogin: beginPasskeyLoginMock,
     setPasswordWithPasskey: setPasswordWithPasskeyMock,
   },
 }));
 
-vi.mock('@/infrastructure/tokenManagement/decodeAccessToken', () => ({
+vi.mock('@/shared/api/token/decodeAccessToken', () => ({
   getUserCookie: getUserCookieMock,
 }));
 
-vi.mock('@/infrastructure/tokenManagement/passkeys', () => ({
+vi.mock('@/shared/api/token/passkeys', () => ({
   getPasskeyErrorMessage: getPasskeyErrorMessageMock,
 }));
 
-vi.mock('@/infrastructure/tokenManagement/tokenErneuern', () => ({
+vi.mock('@/shared/api/token/tokenErneuern', () => ({
   resetTokenState: resetTokenStateMock,
 }));
 

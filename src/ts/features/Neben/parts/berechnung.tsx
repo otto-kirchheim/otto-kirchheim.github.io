@@ -1,8 +1,8 @@
 import { Fragment } from 'react';
 import { ZULAGEN_CATALOG, type IZulageCatalogItem } from '@otto-kirchheim/nebengeld-shared';
-import type { FeatureParts } from '@/core/hooks';
+import type { FeatureParts } from '@/shared/lib/feature';
 import type { IDatenN, IVorgabenBerechnungMonat, IVorgabenGeldType } from '@/types';
-import { getMonatFromN } from '@/infrastructure/date/getMonatFromItem';
+import { getMonatFromN } from '@/shared/lib/date/getMonatFromItem';
 import { currency } from '@/infrastructure/data/berechnungWerte';
 import { DetailZeile, GruppenTitel, LabelTabelle } from '@/infrastructure/ui/berechnungBausteine';
 import calculateZulagenBreakdown, {

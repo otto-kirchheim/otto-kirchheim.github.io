@@ -1,4 +1,4 @@
-import type { FeatureParts } from '@/core/hooks';
+import type { FeatureParts } from '@/shared/lib/feature';
 
 /** Hilfetexte des Features Erschwerniszulagen (Neben): Tab-Hilfe und Hilfe der Dialoge (Schluessel wie `meta.helpKeys`). */
 const help: FeatureParts['help'] = {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { LreType } from '@otto-kirchheim/nebengeld-shared';
-import type { IDatenBE } from '@/core/types';
+import type { IDatenBE } from '@/shared/types';
 import isSameBereitschaftsEinsatz from '@/features/Bereitschaft/utils/isSameBereitschaftsEinsatz';
 
 function createBereitschaftsEinsatz(overrides: Partial<IDatenBE> = {}): IDatenBE {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-import type { IDatenEWT } from '@/core/types';
+import type { IDatenEWT } from '@/shared/types';
 
 const {
   calculateEwtEintraegeMock,

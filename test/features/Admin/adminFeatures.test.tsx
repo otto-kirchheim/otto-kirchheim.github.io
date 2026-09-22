@@ -14,8 +14,8 @@ vi.mock('@/features/Admin/utils/api', () => ({
 }));
 
 import '@/app/features';
-import { featureRegistry } from '@/core/hooks';
-import type { FeatureDefinition } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
+import type { FeatureDefinition } from '@/shared/lib/feature';
 import {
   adminCrossRef,
   adminFieldEnum,

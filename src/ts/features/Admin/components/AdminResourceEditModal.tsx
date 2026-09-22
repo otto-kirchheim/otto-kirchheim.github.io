@@ -12,7 +12,7 @@ import { createPortal } from 'react-dom';
 
 import { DIALOG_RICHTUNG } from '@/components/showModal';
 
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { JsonEditor } from './JsonEditor';
 import {
   DATE_ONLY_FIELDS,

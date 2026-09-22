@@ -1,6 +1,6 @@
 import type { CustomTable, CustomTableTypes, Row, RowState } from '../table/CustomTable';
 import type { IDatenBZ, IDatenEWT, TResourceKey } from '@/types';
-import dayjs from '../date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 
 interface OverlapWindow {
   start: number;

@@ -9,7 +9,7 @@ const { getMonatFromBZMock, getMonatFromBEMock, getMonatFromEWTMock, getMonatFro
   getMonatFromNMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/date/getMonatFromItem', () => ({
+vi.mock('@/shared/lib/date/getMonatFromItem', () => ({
   getMonatFromBZ: getMonatFromBZMock,
   getMonatFromBE: getMonatFromBEMock,
   getMonatFromEWT: getMonatFromEWTMock,
@@ -22,7 +22,7 @@ vi.mock('@/infrastructure/data/normalizeResourceRows', () => ({
 
 import '@/app/features';
 import { syncLoadedYearResources } from '@/core/orchestration/auth/utils/loadUserDaten.sync';
-import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as Storage } from '@/shared/lib/storage/Storage';
 
 const serverTimestamps = {
   VorgabenU: '2020-01-01T00:00:00.000Z',

@@ -1,5 +1,5 @@
 import type { IVorgabenBerechnung, IVorgabenGeld, IVorgabenU } from '@/types';
-import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as Storage } from '@/shared/lib/storage/Storage';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
 import calculateBerechnungRows from './calculateBerechnungRows';
 import { mountBerechnungMobileCards, mountBerechnungTableRows } from './components/mountBerechnung';

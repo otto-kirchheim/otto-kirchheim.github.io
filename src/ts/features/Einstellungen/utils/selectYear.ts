@@ -1,5 +1,5 @@
-import { default as Storage } from '@/infrastructure/storage/Storage';
-import { getUserCookie } from '@/infrastructure/tokenManagement/decodeAccessToken';
+import { default as Storage } from '@/shared/lib/storage/Storage';
+import { getUserCookie } from '@/shared/api/token/decodeAccessToken';
 import { default as setLoading } from '@/infrastructure/ui/setLoading';
 import { loadUserDaten } from '@/core/orchestration/auth/utils';
 import setMonatJahr from './setMonatJahr';

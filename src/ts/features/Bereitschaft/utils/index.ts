@@ -12,7 +12,7 @@ import updateBereitschaftsDatum from './updateBereitschaftsDatum';
 import toggleBereitschaftsEigeneWerte from './toggleBereitschaftsEigeneWerte';
 import hideBereitschaftsNachtfelder from './hideBereitschaftsNachtfelder';
 import isSameBereitschaftsEinsatz from './isSameBereitschaftsEinsatz';
-import { mergePerWeekdaySchicht } from '@/types';
+import { mergePerWeekdaySchicht } from '@/shared/lib/schicht/resolveSchichtDay';
 import { resolveBzVon, resolveBzBis } from './resolveBereitschaftsGrenze';
 import mergeSchichtenOverrides from './mergeSchichtenOverrides';
 import { setBereitschaftRuntimeOverrides, getBereitschaftRuntimeOverrides } from './bereitschaftRuntimeOverrides';

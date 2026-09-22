@@ -1,4 +1,4 @@
-import { featureRegistry } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
 
 /** Hilfe-Kontexte der globalen Bereiche; die Kontexte der Features stehen in `meta.helpKeys` und im lazy Teil `help`. */
 type CoreHelpKey = 'tab.start' | 'tab.einstellungen' | 'tab.berechnung';

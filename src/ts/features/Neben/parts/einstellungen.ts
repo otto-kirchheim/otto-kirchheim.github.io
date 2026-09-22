@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import type { FeatureParts } from '@/core/hooks';
+import type { FeatureParts } from '@/shared/lib/feature';
 import ZulagenAbschnitt from '../components/ZulagenEinstellungenAbschnitt';
 import { mount } from '@/infrastructure/ui';
 import ZulagenCheckboxList from '@/features/Einstellungen/components/ZulagenCheckboxList';

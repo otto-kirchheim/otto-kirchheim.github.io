@@ -1,11 +1,11 @@
 import { beforeAll, describe, expect, it } from 'bun:test';
 import { VorgabenGeldMock, VorgabenUMock, datenBerechungMock } from '@test/mockData';
-import Storage from '@/infrastructure/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 import '@/app/features';
 import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnung';
-import type { IVorgabenBerechnung } from '@/core/types/IVorgabenBerechnungMonat';
-import type { IVorgabenGeld } from '@/core/types/IVorgabenGeldType';
-import type { IVorgabenU } from '@/core/types';
+import type { IVorgabenBerechnung } from '@/shared/types/IVorgabenBerechnungMonat';
+import type { IVorgabenGeld } from '@/shared/types/IVorgabenGeldType';
+import type { IVorgabenU } from '@/shared/types';
 
 describe('#generateTableBerechnung', () => {
   beforeAll(async () => {

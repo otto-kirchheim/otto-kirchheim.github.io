@@ -1,6 +1,6 @@
 import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
 import { resourceByStorageKey } from '@/infrastructure/data/resourceConfig';
-import type { TStorageData } from '@/infrastructure/storage/Storage';
+import type { TStorageData } from '@/shared/lib/storage/Storage';
 
 /**
  * Erkennt Fehlermeldungen, die auf eine ungültige/abgelaufene Session hindeuten.

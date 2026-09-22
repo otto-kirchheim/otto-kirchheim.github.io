@@ -1,11 +1,11 @@
 import { publishEvent } from '@/core';
-import { featureRegistry } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
 import { generateEingabeMaskeEinstellungen } from '@/features/Einstellungen/utils';
 import { isRowInMonat, resourceDefs } from '@/infrastructure/data/resourceConfig';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { CustomTableTypes } from '@/infrastructure/table/CustomTable';
 import type { CustomHTMLTableElement, UserDatenServer } from '@/types';
-import Storage, { type TStorageData } from '@/infrastructure/storage/Storage';
+import Storage, { type TStorageData } from '@/shared/lib/storage/Storage';
 
 /**
  * Übernimmt die unter `dataServer` gemerkten Serverdaten: schreibt jede vorhandene Ressource in den

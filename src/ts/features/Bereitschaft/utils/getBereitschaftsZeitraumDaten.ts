@@ -1,8 +1,8 @@
 import type { IDatenBZ, IDataQueryOptions, IMonatsDaten } from '@/types';
-import { filterByMonat, getMonatFromBZ } from '@/infrastructure/date/getMonatFromItem';
-import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
+import { filterByMonat, getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
+import { getStoredMonatJahr } from '@/shared/lib/date/dateStorage';
 import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
-import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as Storage } from '@/shared/lib/storage/Storage';
 
 /**
  * Liefert die Bereitschaftszeiträume (BZ) aus `data` bzw. dem Storage, standardmäßig auf den Monat gefiltert.

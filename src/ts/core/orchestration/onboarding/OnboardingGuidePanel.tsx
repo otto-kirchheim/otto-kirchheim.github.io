@@ -3,8 +3,8 @@ import { type FC, useEffect, useMemo, useState } from 'react';
 
 // Direktimporte statt Barrel (@/core, @/components), um den Zyklus createOnboardingGuideModal →
 // OnboardingGuidePanel → openHelpModal → MyHelpModal → createOnboardingGuideModal zu vermeiden.
-import { onEvent } from '@/core/events/appEvents';
-import { featureRegistry } from '@/core/hooks';
+import { onEvent } from '@/shared/lib/events/appEvents';
+import { featureRegistry } from '@/shared/lib/feature';
 import { getHelpContent } from '@/core/help/helpContent';
 import { ladeEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
 import { capturePersSnapshot, springeZu, validatePersoenlicheDaten } from './onboardingValidation';

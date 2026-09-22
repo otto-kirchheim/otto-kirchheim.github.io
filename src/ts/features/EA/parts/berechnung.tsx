@@ -1,7 +1,7 @@
-import type { FeatureParts } from '@/core/hooks';
+import type { FeatureParts } from '@/shared/lib/feature';
 import type { IDatenEA, IVorgabenBerechnungMonat } from '@/types';
 import { parseDauerToMinutes, timeConvert } from '@/infrastructure/data/berechnungWerte';
-import { getMonatFromEA } from '@/infrastructure/date/getMonatFromItem';
+import { getMonatFromEA } from '@/shared/lib/date/getMonatFromItem';
 
 type Bucket = IVorgabenBerechnungMonat['EA'];
 

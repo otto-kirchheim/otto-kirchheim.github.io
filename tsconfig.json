@@ -29,10 +29,10 @@
       "@/core": ["./src/ts/core/index.ts"],
       "@/core/*": ["./src/ts/core/*"],
       "@/features/*": ["./src/ts/features/*"],
-      "@/types": ["./src/ts/core/types/index.ts"],
-      "@/types/*": ["./src/ts/core/types/*"],
-      "@/infrastructure": ["./src/ts/infrastructure/index.ts"],
+      "@/types": ["./src/ts/shared/types/index.ts"],
+      "@/types/*": ["./src/ts/shared/types/*"],
       "@/infrastructure/*": ["./src/ts/infrastructure/*"],
+      "@/shared/*": ["./src/ts/shared/*"],
       "@/*": ["./src/ts/*"],
       "@test/*": ["./test/*"]
     }

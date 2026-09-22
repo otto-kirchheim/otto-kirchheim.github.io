@@ -51,7 +51,7 @@ async function ladeModul(
   } = options;
 
   const aufrufe: FetchAufruf[] = [];
-  mock.module('@/infrastructure/api/FetchRetry', () => ({
+  mock.module('@/shared/api/FetchRetry', () => ({
     FetchRetry: (pfad: string, daten: unknown, methode: string) => {
       aufrufe.push({ pfad, daten, methode });
       if (fetchRetryWirft) return Promise.reject(fetchRetryWirft);
@@ -60,7 +60,7 @@ async function ladeModul(
     getServerUrl: () => Promise.resolve('https://example.test/api/v2'),
   }));
   const storage = macheStorageMock(storageInitial);
-  mock.module('@/infrastructure/storage/Storage', () => ({ default: storage }));
+  mock.module('@/shared/lib/storage/Storage', () => ({ default: storage }));
 
   const buildMock = vi.fn().mockResolvedValue(new Uint8Array([9, 9, 9]));
   mock.module('@/infrastructure/pdf/build', () => ({ build: buildMock }));

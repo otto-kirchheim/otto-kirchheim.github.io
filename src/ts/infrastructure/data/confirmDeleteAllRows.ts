@@ -1,7 +1,7 @@
 import { createSnackBar } from '../ui/CustomSnackbar';
 import type { CustomTable, CustomTableTypes } from '../table/CustomTable';
 import buttonDisable from '../ui/buttonDisable';
-import { getStoredMonatJahr } from '../date/dateStorage';
+import { getStoredMonatJahr } from '@/shared/lib/date/dateStorage';
 
 /**
  * Fragt per Snackbar nach und löscht bei "Ja" alle Zeilen des gespeicherten Monats, aktiviert die Buttons wieder und schreibt die Tabelle über `persist`.

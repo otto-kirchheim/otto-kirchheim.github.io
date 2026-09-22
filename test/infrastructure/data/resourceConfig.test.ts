@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import '@/app/features';
-import { featureRegistry } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
 import {
   isRowInMonat,
   resourceDefs,
@@ -10,7 +10,7 @@ import {
   storageKeyOf,
   tableIdOf,
 } from '@/infrastructure/data/resourceConfig';
-import type { FeatureDefinition } from '@/core/hooks';
+import type { FeatureDefinition } from '@/shared/lib/feature';
 
 describe('resourceConfig (aus meta.resources der Features)', () => {
   beforeEach(() => {

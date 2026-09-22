@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Role } from '@otto-kirchheim/nebengeld-shared';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
-import { getUserCookie } from '@/infrastructure/tokenManagement/decodeAccessToken';
+import { getUserCookie } from '@/shared/api/token/decodeAccessToken';
 import {
   createProfileTemplate,
   deleteProfileTemplate,

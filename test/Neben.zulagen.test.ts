@@ -5,7 +5,7 @@ const { storageGetMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) =
 }));
 
 async function loadNebenZulagenUtils() {
-  mock.module('@/infrastructure/storage/Storage', () => ({
+  mock.module('@/shared/lib/storage/Storage', () => ({
     default: {
       get: storageGetMock,
     },

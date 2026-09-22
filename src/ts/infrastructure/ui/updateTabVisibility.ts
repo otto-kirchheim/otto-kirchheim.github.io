@@ -1,4 +1,4 @@
-import { featureRegistry } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
 import { setFeatureTabsVisible } from './featureTabsStore';
 import { flushExtern } from './reactRoot';
 

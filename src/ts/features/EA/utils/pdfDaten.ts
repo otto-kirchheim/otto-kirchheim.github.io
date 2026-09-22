@@ -1,6 +1,6 @@
 import type { IEntgeltausgleich } from '@otto-kirchheim/nebengeld-shared';
-import type { FeaturePdfContext } from '@/core/hooks';
-import { filterByMonat, getMonatFromEA } from '@/infrastructure/date/getMonatFromItem';
+import type { FeaturePdfContext } from '@/shared/lib/feature';
+import { filterByMonat, getMonatFromEA } from '@/shared/lib/date/getMonatFromItem';
 import tableToArray from '@/infrastructure/data/tableToArray';
 import { tableIdOf } from '@/infrastructure/data/resourceConfig';
 import type { IPdfBase } from '@/infrastructure/pdf/pdfDaten';

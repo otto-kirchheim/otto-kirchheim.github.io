@@ -1,9 +1,9 @@
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { CustomHTMLTableElement } from '@/types';
 import { isRowInMonat, resourceDefs } from '@/infrastructure/data/resourceConfig';
-import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as Storage } from '@/shared/lib/storage/Storage';
 import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
-import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
+import { getStoredMonatJahr } from '@/shared/lib/date/dateStorage';
 import { setMonatJahr } from '.';
 
 /**

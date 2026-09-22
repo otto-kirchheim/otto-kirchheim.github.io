@@ -1,7 +1,7 @@
 import { DBButton } from '@db-ux/react-core-components';
 import { type FC, useState } from 'react';
 
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 
 type Resource = { name: string; months: number[] };
 

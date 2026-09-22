@@ -68,7 +68,7 @@ vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('@/infrastructure/storage/Storage', () => ({
+vi.mock('@/shared/lib/storage/Storage', () => ({
   default: {
     check: storageCheckMock,
     get: storageGetMock,
@@ -91,7 +91,7 @@ vi.mock('@/infrastructure/ui/updateTabVisibility', () => ({
   default: updateTabVisibilityMock,
 }));
 
-vi.mock('@/infrastructure/api/apiService', () => ({
+vi.mock('@/shared/api/apiService', () => ({
   loadAllYearData: loadAllYearDataMock,
 }));
 

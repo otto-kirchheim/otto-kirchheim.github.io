@@ -2,12 +2,12 @@ import { createRef, type SubmitEvent } from 'react';
 
 import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
 import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, schliesseModal, showModal } from '@/components';
-import { authApi } from '@/infrastructure/api/apiService';
-import { getUserCookie } from '@/infrastructure/tokenManagement/decodeAccessToken';
-import { getPasskeyErrorMessage } from '@/infrastructure/tokenManagement/passkeys';
-import { resetTokenState } from '@/infrastructure/tokenManagement/tokenErneuern';
+import { authApi } from '@/shared/api/apiService';
+import { getUserCookie } from '@/shared/api/token/decodeAccessToken';
+import { getPasskeyErrorMessage } from '@/shared/api/token/passkeys';
+import { resetTokenState } from '@/shared/api/token/tokenErneuern';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { PASSWORD_MIN_LENGTH, getPasswordValidationMessage } from '@/infrastructure/validation/passwordValidation';
+import { PASSWORD_MIN_LENGTH, getPasswordValidationMessage } from '@/shared/lib/validation/passwordValidation';
 
 /**
  * Passwort neu setzen ohne altes Passwort: die Identität wird stattdessen

@@ -1,8 +1,8 @@
 import { DBInfotext } from '@db-ux/react-core-components';
 import { Component, type RefObject } from 'react';
 
-import { getPasswordStrength } from '@/infrastructure/validation/passwordStrength';
-import type { PasswordStrengthLevel } from '@/infrastructure/validation/passwordStrength';
+import { getPasswordStrength } from '@/shared/lib/validation/passwordStrength';
+import type { PasswordStrengthLevel } from '@/shared/lib/validation/passwordStrength';
 
 const LEVELS: PasswordStrengthLevel[] = ['tooWeak', 'weak', 'medium', 'strong'];
 

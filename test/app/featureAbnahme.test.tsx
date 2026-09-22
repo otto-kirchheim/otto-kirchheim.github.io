@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeEach, describe, expect, it, spyOn, vi } from 'bun:test';
-import { clearAllEventListeners, publishEvent } from '@/core/events/appEvents';
-import { featureLifecycleRegistry, featureRegistry } from '@/core/hooks';
-import type { FeatureDefinition, FeatureMeta, FeaturePartName, FeatureResourceKey } from '@/core/hooks';
+import { clearAllEventListeners, publishEvent } from '@/shared/lib/events/appEvents';
+import { featureLifecycleRegistry, featureRegistry } from '@/shared/lib/feature';
+import type { FeatureDefinition, FeatureMeta, FeaturePartName, FeatureResourceKey } from '@/shared/lib/feature';
 import { getHelpContent } from '@/core/help/helpContent';
 import { resetFeatureTabSync, syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
 import calculateBerechnungRows from '@/features/Berechnung/calculateBerechnungRows';

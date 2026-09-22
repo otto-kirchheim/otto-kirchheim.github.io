@@ -6,7 +6,7 @@ import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { MyFormModal, MyInput, MyModalBody, MySelect, beiModalSchliessen, showModal } from '@/components';
 import { getEwtDaten } from '../../EWT/utils';
 import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '@/types';
-import dayjs from '@/infrastructure/date/configDayjs';
+import dayjs from '@/shared/lib/date/configDayjs';
 import { onEvent } from '@/core';
 import { addNebengeldTag, applySelectOptions, getConfiguredNebenZulagen, getNebengeldDaten } from '../utils';
 

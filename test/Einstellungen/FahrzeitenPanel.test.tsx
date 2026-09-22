@@ -3,7 +3,7 @@ import { feldMitBeschriftung, render, setzeWert } from '@test/reactRender';
 
 import { FahrzeitenPanel } from '@/features/Einstellungen/components/FahrzeitenPanel';
 import { getFahrzeitPanelState, setFahrzeitPanelState } from '@/features/Einstellungen/components/fahrzeitPanelState';
-import type { IVorgabenUfZ } from '@/core/types';
+import type { IVorgabenUfZ } from '@/shared/types';
 
 function createRows(): IVorgabenUfZ[] {
   return [

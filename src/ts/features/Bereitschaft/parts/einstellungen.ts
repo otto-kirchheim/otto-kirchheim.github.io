@@ -1,4 +1,4 @@
-import type { FeatureParts } from '@/core/hooks';
+import type { FeatureParts } from '@/shared/lib/feature';
 import BereitschaftAbschnitt from '../components/BereitschaftEinstellungenAbschnitt';
 import { CustomTable } from '@/infrastructure/table/CustomTable';
 import type { CustomHTMLTableElement, IVorgabenUvorgabenB } from '@/types';
