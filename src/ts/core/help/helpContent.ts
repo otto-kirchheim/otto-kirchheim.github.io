@@ -1,7 +1,7 @@
 import { featureRegistry } from '@/core/hooks';
 
 /** Hilfe-Kontexte der globalen Bereiche; die Kontexte der Features stehen in `meta.helpKeys` und im lazy Teil `help`. */
-type CoreHelpKey = 'tab.start' | 'tab.einstellungen';
+type CoreHelpKey = 'tab.start' | 'tab.einstellungen' | 'tab.berechnung';
 
 /** Hilfe-Kontext: Kern-Schluessel oder ein Schluessel aus `meta.helpKeys` eines Features (`tab.<tabKey>`, `modal.…`). */
 export type HelpContextKey = CoreHelpKey | (string & Record<never, never>);
@@ -34,23 +34,44 @@ const CORE_HELP_CONTENT: Record<CoreHelpKey, HelpContent> = {
   },
   'tab.einstellungen': {
     title: 'Einstellungen',
-    kurzbeschreibung: 'Persönliche Daten, Arbeitszeitvorgaben und Konto-Verwaltung.',
+    kurzbeschreibung:
+      'Persönliche Daten, Sicherheit, Arbeitszeit sowie die Abschnitte der aktiven Bereiche (z. B. Bereitschaft, Fahrzeiten, Zulagen); dazu sichtbare Bereiche, AutoSave und der Jahreswechsel.',
     wasKannIchHierMachen: [
-      'Passwort ändern',
-      'Verifizierungsstatus der E-Mail prüfen',
-      'Optional Passkey einrichten',
-      'Aus dem Konto abmelden',
+      'Persönliche Daten pflegen und E-Mail-Verifizierung anstoßen',
+      'Biometrie (Passkey) einrichten oder Passwort ändern',
+      'Arbeitszeit, Fahrzeiten und weitere Abschnitte der aktiven Bereiche prüfen',
+      'Sichtbare Bereiche und AutoSave konfigurieren',
+      'Jahr wechseln',
+      'Einstellungen speichern',
     ],
     buttons: [
-      { label: 'Passwort ändern', description: 'Öffnet den Dialog zum Ändern des Passworts' },
-      { label: 'Logout', description: 'Meldet dich aus dem aktuellen Konto ab' },
+      { label: 'Auswählen', description: 'Wechselt zum eingegebenen Jahr (lädt dessen Daten)' },
+      { label: 'Speichern', description: 'Sichert alle Abschnitte dauerhaft' },
+      { label: 'Biometrie einrichten', description: 'Richtet einen Passkey für den passwortlosen Login ein' },
+      { label: 'Passwort Ändern', description: 'Öffnet den Dialog zum Ändern des Passworts (Abschnitt "Sicherheit")' },
     ],
-    eingaberegeln: [
-      'Nacht-Schichten benötigen einen eigenen Beginn/Ende-Zeitraum.',
-      'Nur eine Vorgabe kann Standard sein – eine neue Standard-Markierung ersetzt die bisherige.',
+    haeufigeFehler: [
+      'Offene E-Mail-Verifizierung wird übersehen, wodurch System-Mails nicht zuverlässig ankommen.',
+      'Ein Bereich wird abgewählt, ohne vorher zu speichern – ungesicherte Änderungen im zugehörigen Abschnitt gehen sonst verloren.',
     ],
-    haeufigeFehler: ['Offene E-Mail-Verifizierung wird übersehen, wodurch System-Mails nicht zuverlässig ankommen.'],
-    tipp: 'Ein eingerichteter Passkey ist optional und ersetzt die Passworteingabe beim nächsten Login.',
+    tipp: 'Ein eingerichteter Passkey ist optional und ersetzt die Passworteingabe beim nächsten Login. Ausloggen liegt in der Kopfzeile, nicht in diesem Tab.',
+  },
+  'tab.berechnung': {
+    title: 'Berechnung',
+    kurzbeschreibung: 'Monatsübersicht der berechneten Werte aller aktiven Bereiche für das gewählte Jahr.',
+    wasKannIchHierMachen: [
+      'Berechnete Beträge und Zeiten je Monat und Bereich einsehen',
+      'Zwischen Monatsfenstern blättern',
+      'Monatswerte vergleichen',
+    ],
+    buttons: [
+      { label: 'Frühere Monate anzeigen', description: 'Blättert das Monatsfenster nach vorn' },
+      { label: 'Spätere Monate anzeigen', description: 'Blättert das Monatsfenster nach hinten' },
+    ],
+    haeufigeFehler: [
+      'Ein deaktivierter oder noch leerer Bereich zeigt in seiner Spalte keine Werte, das ist kein Fehler.',
+    ],
+    tipp: 'Auf kleinen Bildschirmen erscheinen die Monate als Karten statt als Tabelle.',
   },
 };
 

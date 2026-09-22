@@ -1,21 +1,40 @@
 import { DBButton, DBHeadingH1, DBSection, DBTooltip } from '@db-ux/react-core-components';
+import { useEffect } from 'react';
+import { openHelpModal } from '@/core';
+import { bindClickHandlers } from '@/infrastructure/ui/bindClickHandlers';
 import MonatUeberschrift from './MonatUeberschrift';
 
 /**
- * Huelle des Berechnung-Tabs (Titel, Monats-Navigation, `db-table`-Geruest), von `App.tsx` direkt in
+ * Huelle des Berechnung-Tabs (Titel, Hilfe, Monats-Navigation, `db-table`-Geruest), von `App.tsx` direkt in
  * die `#Berechnung`-Tab-Pane gesetzt.
  *
- * Rein praesentational, die Verkabelung liegt extern: `#MonatBerechnung`-Text aus `monatJahrStore` (gesetzt von `setMonatJahr.ts`),
- * `#berechnungMonatsNav`/`#btnBerechnungMonate*`/`#berechnungMonatsFensterLabel` in
- * `berechnungMonatsFenster.ts`. `#berechnungMobileCards` und `#tbodyBerechnung` bleiben leere
+ * Bis auf den Hilfe-Knopf rein praesentational, die uebrige Verkabelung liegt extern: `#MonatBerechnung`-Text aus
+ * `monatJahrStore` (gesetzt von `setMonatJahr.ts`), `#berechnungMonatsNav`/`#btnBerechnungMonate*`/`#berechnungMonatsFensterLabel`
+ * in `berechnungMonatsFenster.ts`. `#berechnungMobileCards` und `#tbodyBerechnung` bleiben leere
  * Container: `BerechnungMobileCards`/`BerechnungTableRows` mounten dort als eigene React-Roots bei
  * jeder Datenaenderung (`generateTableBerechnung.ts`).
  */
 export default function BerechnungTab() {
+  useEffect(() => bindClickHandlers([['btnHelpBerechnung', () => openHelpModal('tab.berechnung')]]), []);
+
   return (
     <DBSection width="large" spacing="none" className="text-center mb-3">
       <div>
-        <DBHeadingH1 id="titelBerechnung">Berechnung</DBHeadingH1>
+        <DBHeadingH1 id="titelBerechnung" className="d-inline-flex align-items-center justify-content-center gap-2">
+          Berechnung
+          <DBButton
+            type="button"
+            className="p-0"
+            variant="ghost"
+            size="small"
+            id="btnHelpBerechnung"
+            icon="question_mark_circle"
+            noText
+            aria-label="Hilfe anzeigen"
+          >
+            <DBTooltip>Hilfe anzeigen</DBTooltip>
+          </DBButton>
+        </DBHeadingH1>
         <MonatUeberschrift id="MonatBerechnung" art="jahr" />
       </div>
 

@@ -5,7 +5,7 @@ import { featureRegistry } from '@/core/hooks';
 import { getHelpContent, type HelpContextKey } from '@/core/help/helpContent';
 
 const FEATURE_KEYS: string[] = featureRegistry.metas().flatMap(meta => [...(meta.helpKeys ?? [])]);
-const ALL_KEYS: HelpContextKey[] = ['tab.start', 'tab.einstellungen', ...FEATURE_KEYS];
+const ALL_KEYS: HelpContextKey[] = ['tab.start', 'tab.einstellungen', 'tab.berechnung', ...FEATURE_KEYS];
 
 describe('getHelpContent', () => {
   it.each(ALL_KEYS)('returns non-empty required sections for "%s"', async key => {
@@ -60,7 +60,7 @@ describe('Hilfe-Vertrag der Features', () => {
   );
 
   it('hat keinen Schluessel doppelt (auch nicht gegenueber den Kern-Kontexten)', () => {
-    const alle = ['tab.start', 'tab.einstellungen', ...FEATURE_KEYS];
+    const alle = ['tab.start', 'tab.einstellungen', 'tab.berechnung', ...FEATURE_KEYS];
     expect(new Set(alle).size).toBe(alle.length);
   });
 

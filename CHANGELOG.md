@@ -2,6 +2,18 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-22 (175)
+
+### fix (Hilfetexte Einstellungen/Berechnung korrigiert, Berechnung fehlte ganz)
+
+- **`tab.einstellungen`** (`core/help/helpContent.ts`) war veraltet: nannte "Passwort ändern" und "Logout" als Buttons dieses Tabs, dabei liegt "Passwort Ändern" im Abschnitt "Sicherheit" und Logout in der `AppHeader`-Kopfzeile; die
+  `eingaberegeln` gehoerten inhaltlich zur Arbeitszeitvorgabe (`modal.einstellungen.ve`, dort schon vorhanden) und waren hier eine Dopplung. Neu beschrieben: Persönliche Daten, Sicherheit (Biometrie/Passwort), Arbeitszeit, die
+  Abschnitte der aktiven Bereiche, sichtbare Bereiche, AutoSave, Jahreswechsel (Buttons "Auswählen"/"Speichern"/"Biometrie einrichten"/"Passwort Ändern"), plus ein Hinweis auf ungesicherte Aenderungen beim Abwaehlen eines Bereichs.
+- **`tab.berechnung` fehlte komplett** -- der Berechnung-Tab (`infrastructure/ui/BerechnungTab.tsx`) hatte gar keinen Hilfe-Knopf. Neu: `#btnHelpBerechnung` (gleiches Muster wie die Feature-Tabs) plus neuer Kern-Hilfe-Kontext
+  `tab.berechnung` (Monatsuebersicht, Monatsfenster-Navigation).
+- Tests: `test/ui.BerechnungTab.test.tsx` (neu, haelt den Hilfe-Knopf fest), `help.helpContent.test.ts` um `tab.berechnung` ergaenzt. Testanzahl 2270 -> 2272. Gate: typecheck, lint, `lint:fsd` 109 unveraendert, build i.o.
+- Anlass: User-Hinweis nach dem P1h-Browser-Check ("Fehlerhafte/Unvollständige Hilfen: Einstellungen, Berechnung"); weitere Hilfen (Tabs, Dialoge) sind noch nicht einzeln geprueft, siehe `tasks/todo.md`.
+
 ## 2026-09-20 (174)
 
 ### refactor (FSD-Umbau P1h: Hilfe und Ersteinrichtung ueber Feature-Slots, Scaffold, Abnahmetests)
