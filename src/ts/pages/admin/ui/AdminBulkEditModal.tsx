@@ -1,0 +1,485 @@
+import { useMemo, useState } from 'react';
+
+import { MyDivModal, MyModalBody } from '@/components';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
+import {
+  bulkUpdateUserProfiles,
+  fetchProfileTemplates,
+  type AdminUserRow,
+  type BulkApplyCategory,
+  type BulkApplyResult,
+  type BulkOeTargetField,
+  type BulkUserProfileUpdatePayload,
+  type BackendProfileTemplate,
+} from '../api/api';
+import { computeCommonOeLevels, computeCommonPathLevels, computeMaxOeLevels, FIELD_LABELS } from '../model/bulkEditOe';
+import { BulkEditUserOverview } from './BulkEditUserOverview';
+import { BulkEditOeLevelsEditor } from './BulkEditOeLevelsEditor';
+import { BulkEditSimpleFieldsBlock, type SimpleFieldState } from './BulkEditSimpleFieldsBlock';
+import { MAX_OE_LEVELS, SIMPLE_FIELD_KEYS } from '../model/bulkEditOe';
+import { BulkEditApplySourceBlock, type ApplySource } from './BulkEditApplySourceBlock';
+import { BulkEditAdminOesBlock, type AdminOeActionState } from './BulkEditAdminOesBlock';
+import { BulkEditPreviewTable, type PreviewFieldKey } from './BulkEditPreviewTable';
+import { DBButton, DBTag } from '@db-ux/react-core-components';
+
+type Step = 'form' | 'preview' | 'result';
+
+/**
+ * Entfernt Duplikate und sortiert alphabetisch.
+ *
+ * @param values - Beliebige Strings, ggf. mit Duplikaten.
+ * @returns Duplikatfreie, sortierte Kopie.
+ */
+function uniqueSorted(values: string[]): string[] {
+  return Array.from(new Set(values)).sort();
+}
+
+/**
+ * Massenänderung für mehrere Benutzerprofile: OE-Ersetzen (Pers.OE und/oder
+ * Team-/Org-Admin-OE-Listen), einfache Felder, Team-/Org-Admin-OE Hinzufügen/
+ * Entfernen und Übernahme einzelner Kategorien aus einer Vorlage oder einem
+ * Muster-Benutzer. Vor dem Speichern läuft immer eine Vorschau (dryRun) über
+ * dieselbe API.
+ *
+ * @param props - `selectedUsers` (Startauswahl), `onApplied` (nach erfolgreichem Speichern), `closeModal` (schließt den Dialog).
+ */
+export function AdminBulkEditModal({
+  selectedUsers: initialUsers,
+  onApplied,
+  closeModal,
+}: {
+  selectedUsers: AdminUserRow[];
+  onApplied: () => void;
+  closeModal: () => void;
+}) {
+  const [step, setStep] = useState<Step>('form');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const [selectedUsers, setSelectedUsers] = useState(initialUsers);
+  const maxLevels = useMemo(() => computeMaxOeLevels(selectedUsers), [selectedUsers]);
+  const [oeLevelValues, setOeLevelValues] = useState<string[]>(() => Array.from({ length: maxLevels }, () => ''));
+  const oeLevelPlaceholders = useMemo(
+    () => computeCommonOeLevels(selectedUsers, oeLevelValues.length).map(value => value ?? ''),
+    [selectedUsers, oeLevelValues.length],
+  );
+  const [oeLevelsApplyTo, setOeLevelsApplyTo] = useState<Set<BulkOeTargetField>>(new Set());
+
+  const [simpleFields, setSimpleFields] = useState<Record<string, SimpleFieldState>>(() =>
+    Object.fromEntries(SIMPLE_FIELD_KEYS.map(key => [key, { enabled: false, value: '' }])),
+  );
+
+  const [teamOesAction, setTeamOesAction] = useState<AdminOeActionState>({ mode: 'none', value: '', levels: [] });
+  const [organizationOesAction, setOrganizationOesAction] = useState<AdminOeActionState>({
+    mode: 'none',
+    value: '',
+    levels: [],
+  });
+  const existingTeamOes = useMemo(
+    () => uniqueSorted(selectedUsers.flatMap(user => user.adminForTeamOes)),
+    [selectedUsers],
+  );
+  const existingOrganizationOes = useMemo(
+    () => uniqueSorted(selectedUsers.flatMap(user => user.adminForOrganizationOes)),
+    [selectedUsers],
+  );
+
+  // Ohne eigene Team-/Org-Admin-OEs dient die gemeinsame Pers.OE als Vorlage —
+  // neue Admin-OEs liegen praktisch immer in derselben Hierarchie.
+  const teamOePlaceholders = useMemo(() => {
+    const common = computeCommonPathLevels(existingTeamOes, maxLevels);
+    return common.length > 0 ? common : oeLevelPlaceholders;
+  }, [existingTeamOes, maxLevels, oeLevelPlaceholders]);
+  const organizationOePlaceholders = useMemo(() => {
+    const common = computeCommonPathLevels(existingOrganizationOes, maxLevels);
+    return common.length > 0 ? common : oeLevelPlaceholders;
+  }, [existingOrganizationOes, maxLevels, oeLevelPlaceholders]);
+
+  const [applySource, setApplySource] = useState<ApplySource>('none');
+  const [templates, setTemplates] = useState<BackendProfileTemplate[]>([]);
+  const [templateId, setTemplateId] = useState('');
+  const [sourceUserId, setSourceUserId] = useState('');
+  const [categories, setCategories] = useState<BulkApplyCategory[]>([]);
+
+  const [preview, setPreview] = useState<BulkApplyResult | null>(null);
+  const [previewFields, setPreviewFields] = useState<{ activeFields: PreviewFieldKey[]; showApplyFrom: boolean }>({
+    activeFields: [],
+    showApplyFrom: false,
+  });
+  const [result, setResult] = useState<BulkApplyResult | null>(null);
+
+  /**
+   * Lädt die Profilvorlagen einmalig (nur wenn noch keine geladen sind); Fehler landen in der Dialog-Fehlermeldung.
+   */
+  async function loadTemplates(): Promise<void> {
+    if (templates.length > 0) return;
+    try {
+      setTemplates(await fetchProfileTemplates());
+    } catch {
+      setError('Vorlagen konnten nicht geladen werden');
+    }
+  }
+
+  /**
+   * Schaltet ein Zielfeld für das OE-Ersetzen um.
+   *
+   * @param target - OE-Zielfeld, das ein- bzw. ausgeschaltet wird.
+   */
+  function toggleOeTarget(target: BulkOeTargetField): void {
+    setOeLevelsApplyTo(current => {
+      const next = new Set(current);
+      if (next.has(target)) next.delete(target);
+      else next.add(target);
+      return next;
+    });
+  }
+
+  /**
+   * Setzt den Text einer OE-Ebene.
+   *
+   * @param index - Position der Ebene.
+   * @param value - Neuer Ebenen-Text.
+   */
+  function changeOeLevel(index: number, value: string): void {
+    setOeLevelValues(current => current.map((entry, i) => (i === index ? value : entry)));
+  }
+
+  /**
+   * Fügt eine leere OE-Ebene an (bis `MAX_OE_LEVELS`).
+   */
+  function addOeLevel(): void {
+    setOeLevelValues(current => (current.length < MAX_OE_LEVELS ? [...current, ''] : current));
+  }
+
+  /**
+   * Entfernt die letzte OE-Ebene (mindestens eine bleibt).
+   */
+  function removeOeLevel(): void {
+    setOeLevelValues(current => (current.length > 1 ? current.slice(0, -1) : current));
+  }
+
+  /**
+   * Nimmt einen Benutzer aus der Auswahl (der letzte bleibt); war er Muster-Benutzer, wird die Quelle zurückgesetzt.
+   *
+   * @param userId - Id des zu entfernenden Benutzers.
+   */
+  function removeSelectedUser(userId: string): void {
+    setSelectedUsers(current => (current.length > 1 ? current.filter(user => user._id !== userId) : current));
+    if (sourceUserId === userId) setSourceUserId('');
+  }
+
+  /**
+   * Aktualisiert den Zustand eines Einfachfelds.
+   *
+   * @param key - Schlüssel des Einfachfelds.
+   * @param patch - Teilweise Änderung von Aktivierung/Wert.
+   */
+  function updateSimpleField(key: string, patch: Partial<SimpleFieldState>): void {
+    setSimpleFields(current => ({ ...current, [key]: { ...current[key], ...patch } }));
+  }
+
+  /**
+   * Schaltet eine Übernahme-Kategorie um.
+   *
+   * @param category - Kategorie, die aus der Quelle übernommen wird.
+   */
+  function toggleCategory(category: BulkApplyCategory): void {
+    setCategories(current =>
+      current.includes(category) ? current.filter(entry => entry !== category) : [...current, category],
+    );
+  }
+
+  /**
+   * Ermittelt, welche Felder die aktuelle Eingabe ändert.
+   *
+   * @returns Felder, die die Vorschau-Tabelle als Spalten zeigt.
+   */
+  function computeActiveFields(): PreviewFieldKey[] {
+    const fields: PreviewFieldKey[] = [];
+    if (oeLevelsApplyTo.has('pers')) fields.push('oe');
+    for (const key of SIMPLE_FIELD_KEYS) if (simpleFields[key].enabled) fields.push(key);
+    if (oeLevelsApplyTo.has('teamOes') || teamOesAction.mode !== 'none') fields.push('teamOes');
+    if (oeLevelsApplyTo.has('organizationOes') || organizationOesAction.mode !== 'none') fields.push('organizationOes');
+    return fields;
+  }
+
+  /**
+   * Validiert die Formulareingaben und baut daraus die Bulk-Update-Payload.
+   *
+   * @param dryRun - `true` für die Vorschau, `false` zum Speichern.
+   * @returns Payload für die Bulk-API oder `null` (Fehlermeldung ist dann gesetzt).
+   */
+  function buildPayload(dryRun: boolean): BulkUserProfileUpdatePayload | null {
+    const payload: BulkUserProfileUpdatePayload = {
+      userIds: selectedUsers.map(user => user._id),
+      dryRun,
+    };
+
+    // Das Ziel-Häkchen löst das Ersetzen aus, nicht die (evtl. vorbefüllten) Ebenen-Boxen —
+    // sonst würde schon eine Vorbefüllung (bei einem Benutzer stimmen alle Ebenen überein) ungewollt einen Fehler erzwingen.
+    if (oeLevelsApplyTo.size > 0) {
+      const hasFilledLevel = oeLevelValues.some(value => value.trim());
+      if (!hasFilledLevel) {
+        setError('Bitte mindestens eine Ebene zum Ersetzen ausfüllen');
+        return null;
+      }
+      payload.oeLevels = oeLevelValues.map(value => (value.trim() ? value.trim() : null));
+      payload.oeLevelsApplyTo = Array.from(oeLevelsApplyTo);
+    }
+
+    for (const key of SIMPLE_FIELD_KEYS) {
+      const field = simpleFields[key];
+      if (!field.enabled) continue;
+      if (!field.value.trim()) {
+        setError(`Bitte einen Wert für ${FIELD_LABELS[key]} angeben`);
+        return null;
+      }
+      payload[key] = field.value.trim();
+    }
+
+    if (teamOesAction.mode !== 'none') {
+      if (!teamOesAction.value.trim()) {
+        setError('Bitte einen Pfad für Team-Admin-OEs angeben');
+        return null;
+      }
+      payload.teamOes =
+        teamOesAction.mode === 'add' ? { add: teamOesAction.value.trim() } : { remove: teamOesAction.value.trim() };
+    }
+    if (organizationOesAction.mode !== 'none') {
+      if (!organizationOesAction.value.trim()) {
+        setError('Bitte einen Pfad für Org-Admin-OEs angeben');
+        return null;
+      }
+      payload.organizationOes =
+        organizationOesAction.mode === 'add'
+          ? { add: organizationOesAction.value.trim() }
+          : { remove: organizationOesAction.value.trim() };
+    }
+
+    if (applySource !== 'none') {
+      if (categories.length === 0) {
+        setError('Bitte mindestens eine Kategorie zur Übernahme auswählen');
+        return null;
+      }
+      if (applySource === 'template') {
+        if (!templateId) {
+          setError('Bitte eine Vorlage auswählen');
+          return null;
+        }
+        payload.applyFrom = { type: 'template', templateId, categories };
+      } else {
+        if (!sourceUserId) {
+          setError('Bitte einen Muster-Benutzer auswählen');
+          return null;
+        }
+        payload.applyFrom = { type: 'user', sourceUserId, categories };
+      }
+    }
+
+    const hasSimpleChange = SIMPLE_FIELD_KEYS.some(key => payload[key] !== undefined);
+    const hasAnyChange =
+      payload.oeLevels !== undefined ||
+      hasSimpleChange ||
+      payload.teamOes !== undefined ||
+      payload.organizationOes !== undefined ||
+      payload.applyFrom !== undefined;
+
+    if (!hasAnyChange) {
+      setError('Bitte mindestens eine Änderung auswählen');
+      return null;
+    }
+
+    return payload;
+  }
+
+  /**
+   * Führt die Änderung als Trockenlauf (dryRun) aus und wechselt bei Erfolg zur Vorschau.
+   */
+  async function runPreview(): Promise<void> {
+    setError('');
+    const payload = buildPayload(true);
+    if (!payload) return;
+
+    setBusy(true);
+    try {
+      const activeFields = computeActiveFields();
+      const showApplyFrom = applySource !== 'none';
+      setPreview(await bulkUpdateUserProfiles(payload));
+      setPreviewFields({ activeFields, showApplyFrom });
+      setStep('preview');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /**
+   * Wendet die Änderung an, zeigt das Ergebnis und benachrichtigt den Aufrufer.
+   */
+  async function runApply(): Promise<void> {
+    setError('');
+    const payload = buildPayload(false);
+    if (!payload) return;
+
+    setBusy(true);
+    try {
+      const applied = await bulkUpdateUserProfiles(payload);
+      setResult(applied);
+      setStep('result');
+      onApplied();
+      createSnackBar({
+        message: `${applied.summary.ok} Profile aktualisiert`,
+        status: applied.summary.errors > 0 ? 'warning' : 'success',
+        timeout: 3000,
+      });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const footer = (
+    <div className="dialog-fuss">
+      {step === 'preview' && (
+        <DBButton type="button" variant="outlined" disabled={busy} onClick={() => setStep('form')}>
+          Zurück
+        </DBButton>
+      )}
+      <DBButton type="button" variant="filled" data-dialog-dismiss="modal">
+        {step === 'result' ? 'Schließen' : 'Abbrechen'}
+      </DBButton>
+      {step === 'form' && (
+        <DBButton type="button" variant="brand" disabled={busy} onClick={() => void runPreview()}>
+          {busy && <span className="laedt me-2" data-size="small" aria-hidden="true" />}
+          Vorschau
+        </DBButton>
+      )}
+      {step === 'preview' && (
+        <DBButton type="button" variant="filled" data-color="critical" disabled={busy} onClick={() => void runApply()}>
+          {busy && <span className="laedt me-2" data-size="small" aria-hidden="true" />}
+          {preview ? `${preview.summary.ok} Profile ändern` : 'Änderungen anwenden'}
+        </DBButton>
+      )}
+      {step === 'result' && (
+        <DBButton type="button" variant="brand" onClick={closeModal}>
+          Fertig
+        </DBButton>
+      )}
+    </div>
+  );
+
+  return (
+    <MyDivModal
+      size="xl"
+      title={`Massenänderung: ${selectedUsers.length} Benutzer`}
+      Footer={footer}
+      errorMessage={error}
+    >
+      <MyModalBody>
+        {step === 'form' && (
+          <div className="raster abstand-3">
+            <div className="">
+              <BulkEditUserOverview selectedUsers={selectedUsers} onRemoveUser={removeSelectedUser} />
+            </div>
+
+            <div className="sp-xl-6">
+              <div className="border p-3 h-100 d-flex flex-column gap-3">
+                <div className="fw-semibold">OE ändern</div>
+
+                <BulkEditOeLevelsEditor
+                  levelValues={oeLevelValues}
+                  placeholders={oeLevelPlaceholders}
+                  onChangeLevel={changeOeLevel}
+                  onAddLevel={addOeLevel}
+                  onRemoveLevel={removeOeLevel}
+                  applyTo={oeLevelsApplyTo}
+                  onToggleTarget={toggleOeTarget}
+                />
+
+                <BulkEditAdminOesBlock
+                  field="teamOes"
+                  label="Team-Admin-OEs"
+                  action={teamOesAction}
+                  onChange={patch => setTeamOesAction(current => ({ ...current, ...patch }))}
+                  existingPaths={existingTeamOes}
+                  defaultLevelCount={maxLevels}
+                  placeholders={teamOePlaceholders}
+                />
+                <BulkEditAdminOesBlock
+                  field="organizationOes"
+                  label="Org-Admin-OEs"
+                  action={organizationOesAction}
+                  onChange={patch => setOrganizationOesAction(current => ({ ...current, ...patch }))}
+                  existingPaths={existingOrganizationOes}
+                  defaultLevelCount={maxLevels}
+                  placeholders={organizationOePlaceholders}
+                />
+              </div>
+            </div>
+
+            <div className="sp-xl-6">
+              <BulkEditSimpleFieldsBlock fields={simpleFields} onChange={updateSimpleField} />
+            </div>
+
+            <div className="">
+              <BulkEditApplySourceBlock
+                applySource={applySource}
+                onApplySourceChange={source => {
+                  setApplySource(source);
+                  if (source === 'template') void loadTemplates();
+                }}
+                templates={templates}
+                templateId={templateId}
+                onTemplateIdChange={setTemplateId}
+                sourceUserId={sourceUserId}
+                onSourceUserIdChange={setSourceUserId}
+                selectedUsers={selectedUsers}
+                categories={categories}
+                onToggleCategory={toggleCategory}
+              />
+            </div>
+          </div>
+        )}
+
+        {step === 'preview' && preview && (
+          <div className="">
+            <BulkEditPreviewTable
+              preview={preview}
+              activeFields={previewFields.activeFields}
+              showApplyFrom={previewFields.showApplyFrom}
+            />
+          </div>
+        )}
+
+        {step === 'result' && result && (
+          <div className="">
+            <p className="fw-semibold">
+              {result.summary.ok} aktualisiert, {result.summary.skipped} übersprungen, {result.summary.errors} Fehler
+            </p>
+            {result.results.some(entry => entry.status !== 'ok') && (
+              <ul className="trennliste">
+                {result.results
+                  .filter(entry => entry.status !== 'ok')
+                  .map(entry => (
+                    <li className="trennliste-eintrag px-0" key={entry.userId}>
+                      <DBTag
+                        className="me-2"
+                        semantic={entry.status === 'error' ? 'critical' : 'neutral'}
+                        emphasis="strong"
+                      >
+                        {entry.status === 'error' ? 'Fehler' : 'Übersprungen'}
+                      </DBTag>
+                      {entry.userName}
+                      {entry.message && <span className="text-body-secondary"> — {entry.message}</span>}
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </MyModalBody>
+    </MyDivModal>
+  );
+}

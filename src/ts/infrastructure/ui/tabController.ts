@@ -8,7 +8,7 @@
  *
  * Der aktive Tab jeder Gruppe liegt in einem Store (`activeTabStore` fuer `#tabContent`,
  * `activeAdminTabStore` fuer `#admin-tab-content`; Zuordnung ueber `TAB_GRUPPEN_STORES`). `App.tsx`,
- * `AppHeader.tsx` und `features/Admin/index.tsx` lesen ihn per Hook und berechnen Klassen und
+ * `AppHeader.tsx` und `pages/admin/index.tsx` lesen ihn per Hook und berechnen Klassen und
  * `aria-selected`/`tabindex` selbst; `zeigeTab()` schreibt keine DOM-Klassen.
  *
  * Der Store-Wechsel der Hauptgruppe laeuft durch `flushExtern()` (`reactRoot.ts`): der `tab:shown`-Handler in

@@ -87,11 +87,11 @@ vi.mock('@/features/auth/model', () => ({
   handleAuthUrlState: handleAuthUrlStateMock,
 }));
 
-vi.mock('@/features/Admin/mountAdminTab', () => ({
+vi.mock('@/pages/admin/mountAdminTab', () => ({
   mountAdminTab: mountAdminTabMock,
 }));
 
-vi.mock('@/features/Admin/utils/actAs', () => ({
+vi.mock('@/pages/admin/model/actAs', () => ({
   loadOwnUserData: loadOwnUserDataMock,
 }));
 

@@ -33,13 +33,13 @@ featureLifecycleRegistry.registerFeature({
       // beide Vorkommen anfassen, nicht nur das erste.
       document.querySelectorAll<HTMLDivElement>('#admin').forEach(el => el.classList.remove('d-none'));
       document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
-      const { mountAdminTab } = await import('@/features/Admin/mountAdminTab');
+      const { mountAdminTab } = await import('@/pages/admin/mountAdminTab');
       mountAdminTab(ctx.userName);
     }
   },
   /** Unmountet den Admin-Tab (Modul lazy geladen). */
   async unregister(): Promise<void> {
-    const { unmountAdminTab } = await import('@/features/Admin/mountAdminTab');
+    const { unmountAdminTab } = await import('@/pages/admin/mountAdminTab');
     unmountAdminTab();
   },
 });

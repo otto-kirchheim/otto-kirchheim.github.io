@@ -10,9 +10,9 @@
  * dazu: `features/ea` ist die kleinste vollstaendige Vorlage. Ein neues Datenobjekt braucht zusaetzlich einen Eintrag in
  * `@otto-kirchheim/nebengeld-shared`/Backend (`TResourceKey`).
  *
- * `--admin` legt zusaetzlich einen (leeren) Admin-Ordner an (`features/Admin/features/<slug>/{index,katalog}.ts`) und
- * traegt ihn im Admin-Manifest (`features/Admin/adminFeatures.ts`) ein; Ressourcen, Verweise und PDF-Formular darin
- * bleiben von Hand zu befuellen (`features/Admin/features/ea` als Vorlage). Ohne `--admin` erscheint das Feature im
+ * `--admin` legt zusaetzlich einen (leeren) Admin-Ordner an (`pages/admin/features/<slug>/{index,katalog}.ts`) und
+ * traegt ihn im Admin-Manifest (`pages/admin/adminFeatures.ts`) ein; Ressourcen, Verweise und PDF-Formular darin
+ * bleiben von Hand zu befuellen (`pages/admin/features/ea` als Vorlage). Ohne `--admin` erscheint das Feature im
  * Admin-Ressourcenbrowser ueber den generischen Fallback aus `meta.resources`.
  */
 
@@ -42,12 +42,12 @@ export interface FeaturePlan {
   dateien: GeplanteDatei[];
   /** Neuer Inhalt von `src/ts/app/features.ts`. */
   manifest: string;
-  /** Neuer Inhalt von `src/ts/features/Admin/adminFeatures.ts`; nur bei `optionen.admin`. */
+  /** Neuer Inhalt von `src/ts/pages/admin/adminFeatures.ts`; nur bei `optionen.admin`. */
   adminManifest?: string;
 }
 
 const MANIFEST_PFAD = 'src/ts/app/features.ts';
-const ADMIN_MANIFEST_PFAD = 'src/ts/features/Admin/adminFeatures.ts';
+const ADMIN_MANIFEST_PFAD = 'src/ts/pages/admin/adminFeatures.ts';
 const SLUG_MUSTER = /^[a-z][a-z0-9]*$/;
 
 /**
@@ -55,7 +55,7 @@ const SLUG_MUSTER = /^[a-z][a-z0-9]*$/;
  *
  * @param optionen - Slug, Ordner, Label, Icon, `admin`.
  * @param manifest - Aktueller Inhalt von `app/features.ts`.
- * @param adminManifest - Aktueller Inhalt von `features/Admin/adminFeatures.ts`; nur noetig bei `optionen.admin`.
+ * @param adminManifest - Aktueller Inhalt von `pages/admin/adminFeatures.ts`; nur noetig bei `optionen.admin`.
  * @returns Zu schreibende Dateien und neue Manifeste.
  * @throws {Error} Bei ungueltigem Slug, doppeltem Feature, unerwartetem Manifest oder `admin: true` ohne `adminManifest`.
  */
@@ -187,12 +187,12 @@ describe('Feature ${label}', () => {
   if (optionen.admin) {
     dateien.push(
       {
-        pfad: `src/ts/features/Admin/features/${slug}/index.ts`,
+        pfad: `src/ts/pages/admin/features/${slug}/index.ts`,
         inhalt: `import type { AdminFeature } from '../../adminFeatures';
 
 /**
  * Admin-Anteile von ${label}: Ressourcenbrowser, Verweise, PDF-Formular und Dashboard-Statistik von Hand ergaenzen
- * (\`features/Admin/features/ea\` als vollstaendige Vorlage). Ohne eigene Ressourcen erscheint hier nichts -- der
+ * (\`pages/admin/features/ea\` als vollstaendige Vorlage). Ohne eigene Ressourcen erscheint hier nichts -- der
  * Ressourcenbrowser faellt dann auf den generischen Fallback aus \`meta.resources\` zurueck.
  */
 const adminFeature: AdminFeature = {
@@ -205,8 +205,8 @@ export default adminFeature;
 `,
       },
       {
-        pfad: `src/ts/features/Admin/features/${slug}/katalog.ts`,
-        inhalt: `import type { FeatureKatalog } from '../../components/FormularEditor/katalogTypen';
+        pfad: `src/ts/pages/admin/features/${slug}/katalog.ts`,
+        inhalt: `import type { FeatureKatalog } from '../../ui/FormularEditor/katalogTypen';
 
 /**
  * Katalog-Beitrag von ${label} fuer den Formular-Editor -- nur noetig, wenn das Feature ein PDF-Formular bekommt: dann

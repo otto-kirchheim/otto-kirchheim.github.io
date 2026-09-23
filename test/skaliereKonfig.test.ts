@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import {
-  benenneSonderzeileUm,
-  dreheKonfig,
-  skaliereKonfig,
-} from '@/features/Admin/components/FormularEditor/skaliereKonfig';
-import type { Konfig } from '@/features/Admin/components/FormularEditor/FormularEditor';
+import { benenneSonderzeileUm, dreheKonfig, skaliereKonfig } from '@/pages/admin/ui/FormularEditor/skaliereKonfig';
+import type { Konfig } from '@/pages/admin/ui/FormularEditor/FormularEditor';
 
 function beispielKonfig(): Konfig {
   return {

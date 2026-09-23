@@ -159,7 +159,20 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
   - [ ] Bekannt: `lint:fsd` prüft `app`/`pages`/`widgets` noch nicht (P10). Aufwärts-Importe, die er deshalb nicht
         zählt: `features/ber/ui/VorgabenBTable` → `pages/einstellungen/model` (`saveEinstellungen`),
         `pages/einstellungen` → `app/session/selectYear`, `features/Admin` → `pages/{berechnung,einstellungen}` (P9)
-- [ ] P9 Admin · P10 Abschluss
+- [x] P9 Admin (2026-09-23, bei 97 % Weekly auf User-Wunsch): `features/Admin` → `pages/admin`, darin
+      `components` → `ui` (FormularEditor unverändert mit), `utils` → `model`, `utils/api.ts` + `components/formularVersionenApi.ts`
+      → `api/` (API-Segment laut Plan); `features/<key>/` + `adminFeatures.ts` (Admin-Manifest, Name bleibt) mit.
+  - [x] Ordner `features/Admin/api` angelegt (Claude; liegt im Umbenennungsziel, deshalb vorab innerhalb von Admin)
+  - [x] Moves in der IDE (User); Typecheck danach direkt sauber (IDE zog diesmal alle Importe nach)
+  - [x] 32 Tests nach `test/pages/admin/{ui,model,api,…}` per `git mv` (Claude); `Admin.lifecycle` → `mountAdminTab.lifecycle`,
+        Namensgleichheit `profileTemplates.shared` gelöst (Bundesland-Test → `profileTemplates.shared.felder.test.ts`);
+        Fixture-Pfad in `vorlageFonts.test.ts` eine Ebene tiefer
+  - [x] Nacharbeit (Claude): 44 Stellen `features/Admin…` (`vi.mock`, Kommentare, `scripts/new-feature.ts` inkl. erzeugtem
+        Katalog-Import `../../ui/FormularEditor/katalogTypen`, Scaffold-Test); `eslint.fsd.config.js` ohne Admin und ohne die
+        P7-Ausnahme für Admins Unterordner (nicht mehr unter `features/`)
+  - [x] Gate: typecheck 0, lint 0, `lint:fsd` 4, test 2289/2289, build i.o. (`mountAdminTab` eigener Lazy-Chunk, Precache 115), `format`
+  - [x] Browser-Check durch den User: i.o. (2026-09-23)
+- [ ] P10 Abschluss
 
 ---
 

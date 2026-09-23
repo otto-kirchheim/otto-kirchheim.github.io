@@ -47,7 +47,7 @@ vi.mock('@/shared/api/token/decodeAccessToken', () => ({
   isAdmin: isAdminMock,
 }));
 
-vi.mock('@/features/Admin/mountAdminTab', () => ({
+vi.mock('@/pages/admin/mountAdminTab', () => ({
   mountAdminTab: mountAdminTabMock,
 }));
 

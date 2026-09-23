@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { planeFeature } from '../scripts/new-feature';
 
 const manifest = readFileSync('src/ts/app/features.ts', 'utf8');
-const adminManifest = readFileSync('src/ts/features/Admin/adminFeatures.ts', 'utf8');
+const adminManifest = readFileSync('src/ts/pages/admin/adminFeatures.ts', 'utf8');
 
 describe('scripts/new-feature (planeFeature)', () => {
   it('plant Ordner, Tab, ui- und help-Teil, Test und Manifest-Eintrag', () => {
@@ -54,15 +54,15 @@ describe('scripts/new-feature (planeFeature)', () => {
       'src/ts/features/demo/parts/ui.tsx',
       'src/ts/features/demo/parts/help.ts',
       'test/features/demo/Demo.test.ts',
-      'src/ts/features/Admin/features/demo/index.ts',
-      'src/ts/features/Admin/features/demo/katalog.ts',
+      'src/ts/pages/admin/features/demo/index.ts',
+      'src/ts/pages/admin/features/demo/katalog.ts',
     ]);
-    const adminIndex = plan.dateien.find(datei => datei.pfad.endsWith('Admin/features/demo/index.ts'))!.inhalt;
+    const adminIndex = plan.dateien.find(datei => datei.pfad.endsWith('admin/features/demo/index.ts'))!.inhalt;
     expect(adminIndex).toContain("id: 'demo'");
     expect(adminIndex).toContain('resources: []');
     expect(adminIndex).toContain("from '../../adminFeatures'");
-    const katalog = plan.dateien.find(datei => datei.pfad.endsWith('Admin/features/demo/katalog.ts'))!.inhalt;
-    expect(katalog).toContain("from '../../components/FormularEditor/katalogTypen'");
+    const katalog = plan.dateien.find(datei => datei.pfad.endsWith('admin/features/demo/katalog.ts'))!.inhalt;
+    expect(katalog).toContain("from '../../ui/FormularEditor/katalogTypen'");
 
     // Eigene Zeile mit Zeilenumbruch davor UND danach (keine verschmolzene Zeile, kein Leerzeilen-Versatz vor `};`).
     expect(plan.adminManifest).toContain("\n  demo: () => import('./features/demo'),\n};\n");

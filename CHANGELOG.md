@@ -2,6 +2,17 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-23 (186)
+
+### refactor (P9: Admin als Page)
+
+- `features/Admin` → `pages/admin`: `components` → `ui` (FormularEditor unverändert mit), `utils` → `model`,
+  `utils/api.ts` + `formularVersionenApi.ts` → `api/` (ein API-Segment); Admin-Feature-Ordner `features/<key>/` und
+  Manifest `adminFeatures.ts` ziehen mit. Tests unter `test/pages/admin/…`.
+- `eslint.fsd.config.js` prüft nur noch die vier Module; `bun run new-feature --admin` legt den Admin-Ordner unter
+  `pages/admin/features/<slug>/` an.
+- Gate: typecheck 0, lint 0, `lint:fsd` 4, Tests 2289/2289, build i.o. (Admin weiter eigener Lazy-Chunk).
+
 ## 2026-09-23 (185)
 
 ### refactor (P8: globale Bereiche als Pages)

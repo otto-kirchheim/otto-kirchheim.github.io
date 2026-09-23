@@ -2,7 +2,7 @@
  * Aktiver Tab der Admin-Unternavigation (`admin-pane-*`-Gruppe) als `useSyncExternalStore`-
  * kompatibler Modul-Store, gleiches Muster wie `activeTabStore.ts`, aber ein eigener Store:
  * Haupt- und Admin-Gruppe sind unabhaengige Tab-Zustaende. `tabController.ts`s `zeigeTab()`
- * schreibt hierher; `features/Admin/index.tsx` liest per `useActiveAdminTab()` und berechnet
+ * schreibt hierher; `pages/admin/index.tsx` liest per `useActiveAdminTab()` und berechnet
  * `data-active`/`aria-selected`/`tabIndex`/Pane-Klassen selbst.
  */
 

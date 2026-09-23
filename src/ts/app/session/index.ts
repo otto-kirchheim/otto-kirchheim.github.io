@@ -24,7 +24,7 @@ let adminTabMounted = false;
 /** Mountet den Admin-Tab einmalig per Lazy-Import, sofern der Benutzer Admin ist. */
 async function ensureAdminTabMounted(): Promise<void> {
   if (adminTabMounted || !isAdmin()) return;
-  const { mountAdminTab } = await import('@/features/Admin/mountAdminTab');
+  const { mountAdminTab } = await import('@/pages/admin/mountAdminTab');
   const currentUserName = getUserCookie()?.userName ?? 'admin';
   mountAdminTab(currentUserName);
   adminTabMounted = true;
@@ -83,7 +83,7 @@ registerAppStartTask(() => {
     });
   }
   actAsButtonEl?.addEventListener('click', () => {
-    import('@/features/Admin/utils/actAs').then(({ loadOwnUserData }) => {
+    import('@/pages/admin/model/actAs').then(({ loadOwnUserData }) => {
       void loadOwnUserData();
     });
   });
