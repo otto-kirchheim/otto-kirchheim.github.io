@@ -16,7 +16,7 @@ vi.mock('@/shared/lib/date/getMonatFromItem', () => ({
   getMonatFromN: getMonatFromNMock,
 }));
 
-vi.mock('@/infrastructure/data/normalizeResourceRows', () => ({
+vi.mock('@/shared/lib/ressource/normalizeResourceRows', () => ({
   default: (rows: unknown) => (Array.isArray(rows) ? rows : []),
 }));
 

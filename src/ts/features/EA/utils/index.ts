@@ -1,7 +1,7 @@
 import getEaDaten from './getEaDaten';
 import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { IDatenEA } from '@/types';
-import persistTableData from '@/infrastructure/data/persistTableData';
+import persistTableData from '@/shared/lib/ressource/persistTableData';
 
 /**
  * Schreibt die aktuellen EA-Tabellenzeilen per `persistTableData` in den Storage.

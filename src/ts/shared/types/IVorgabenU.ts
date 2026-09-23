@@ -26,7 +26,7 @@ export interface IVorgabenUServer {
 }
 
 /** Wie shared `IPers`, nur `OE` als EIN Text-Feld statt Ebenen-Array — das Formular pflegt es so;
- *  `joinOeLevels`/`splitOeInput` (`infrastructure/data/oeLevels.ts`, genutzt in `fieldMapper.ts`) wandeln beim Laden/Speichern. */
+ *  `joinOeLevels`/`splitOeInput` (`shared/lib/ressource/oeLevels.ts`, genutzt in `fieldMapper.ts`) wandeln beim Laden/Speichern. */
 export interface IVorgabenUPers extends Omit<IPers, 'OE'> {
   OE: string;
 }

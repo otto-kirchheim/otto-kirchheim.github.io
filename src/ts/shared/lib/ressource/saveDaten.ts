@@ -1,8 +1,8 @@
-import Storage from '../../shared/lib/storage/Storage';
-import buttonDisable from '../../shared/ui/button-loading/buttonDisable';
-import clearLoading from '../../shared/ui/button-loading/clearLoading';
-import setLoading from '../../shared/ui/button-loading/setLoading';
-import { createSnackBar } from '../../shared/ui/snackbar/CustomSnackbar';
+import Storage from '@/shared/lib/storage/Storage';
+import buttonDisable from '@/shared/ui/button-loading/buttonDisable';
+import clearLoading from '@/shared/ui/button-loading/clearLoading';
+import setLoading from '@/shared/ui/button-loading/setLoading';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { IVorgabenU, TResourceKey } from '@/types';
 import {
   applyAutoSaveSettings,
@@ -10,7 +10,7 @@ import {
   getResourceStatus,
   hasPendingTableChanges,
   markResourceSaved,
-} from '../autoSave/autoSave';
+} from '@/infrastructure/autoSave/autoSave';
 import { profileApi } from '@/shared/api/apiService';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { publishEvent } from '@/shared/lib/events/appEvents';

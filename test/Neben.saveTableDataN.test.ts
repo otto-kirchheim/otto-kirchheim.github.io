@@ -11,7 +11,7 @@ const { tableToArrayMock, publishDataChangedMock } = (
   publishDataChangedMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/data/tableToArray', () => ({
+vi.mock('@/shared/lib/ressource/tableToArray', () => ({
   default: tableToArrayMock,
 }));
 

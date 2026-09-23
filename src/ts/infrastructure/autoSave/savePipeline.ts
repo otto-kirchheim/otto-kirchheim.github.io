@@ -1,7 +1,7 @@
 import type { CustomTable, CustomTableTypes, Row, TableChanges } from '../../shared/ui/custom-table/CustomTable';
 import type { CustomHTMLTableElement, TResourceKey } from '@/types';
 import type { BulkErrorEntry, BulkRequest } from '@/shared/api/apiService';
-import { resourceDef } from '../data/resourceConfig';
+import { resourceDef } from '@/shared/lib/ressource/resourceConfig';
 import { buildCreatePayloadWithClientRequestId, mapServerDocToFrontend } from './changeTracking';
 
 export type ErrorSourceState = 'new' | 'modified' | 'deleted';

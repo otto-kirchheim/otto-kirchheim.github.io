@@ -47,7 +47,7 @@ export interface FeatureResourceApi {
 
 /**
  * Eine Datenressource eines Features (rein deklarativ). Ersetzt die frueher ueber die App verstreuten Tabellen
- * (Storage-Key, Tabellen-Id, Monatsermittlung, Jahres-Gates); Lese-Helfer stehen in `infrastructure/data/resourceConfig`.
+ * (Storage-Key, Tabellen-Id, Monatsermittlung, Jahres-Gates); Lese-Helfer stehen in `shared/lib/ressource/resourceConfig`.
  */
 export interface FeatureResource {
   /** Ressourcen-Schluessel (`BZ`, `BE`, `EWT`, `N`, `EA`). */

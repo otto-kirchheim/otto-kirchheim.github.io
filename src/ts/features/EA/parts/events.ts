@@ -1,5 +1,5 @@
 import type { FeatureParts } from '@/shared/lib/feature';
-import { unlinkEwtRefsForDeletedIds } from '@/infrastructure/data/unlinkEwtRefs';
+import { unlinkEwtRefsForDeletedIds } from '@/shared/lib/ressource/unlinkEwtRefs';
 import syncEaDurationFromEwtRows from '../utils/syncEwtToEa';
 
 /**

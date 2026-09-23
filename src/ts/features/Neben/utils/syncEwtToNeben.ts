@@ -1,5 +1,5 @@
 import type { IDatenEWT, IDatenN } from '@/types';
-import { syncFieldsFromEwtRows } from '@/infrastructure/data/syncFieldsFromEwtRows';
+import { syncFieldsFromEwtRows } from '@/shared/lib/ressource/syncFieldsFromEwtRows';
 
 /**
  * Überträgt geänderte EWT-Zeiten (`beginE`/`endeE`) als `Beginn`/`Ende` in die per `EWT`-Referenz verknüpften Neben-Zeilen (Storage und offene Tabelle).

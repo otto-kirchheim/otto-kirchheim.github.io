@@ -1,7 +1,7 @@
 import type { CustomTableTypes } from '@/shared/ui/custom-table/CustomTable';
 import type { CustomHTMLTableElement, UserDatenServer } from '@/types';
 import type { TStorageData } from '@/shared/lib/storage/Storage';
-import { resourceDefs } from '@/infrastructure/data/resourceConfig';
+import { resourceDefs } from '@/shared/lib/ressource/resourceConfig';
 import dayjs from 'dayjs';
 import { normalizeRows, rowMatchesMonth } from './loadUserDaten.helpers';
 import type { UnterschiedNachMonat } from './loadUserDaten.sync';

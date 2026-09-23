@@ -1,6 +1,6 @@
 import type { IDatenBE } from '@/types';
 import { filterByMonat, getMonatFromBE } from '@/shared/lib/date/getMonatFromItem';
-import { createDatenGetter } from '@/infrastructure/data/createDatenGetter';
+import { createDatenGetter } from '@/shared/lib/ressource/createDatenGetter';
 
 /** Liefert die Bereitschaftseinsätze (BE) aus `data` bzw. dem Storage, standardmäßig auf den gewählten Monat gefiltert. */
 export default createDatenGetter<IDatenBE>({

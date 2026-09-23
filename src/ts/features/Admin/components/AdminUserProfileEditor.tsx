@@ -13,7 +13,7 @@ import { createPortal } from 'react-dom';
 import { DIALOG_RICHTUNG } from '@/shared/ui/modal/showModal';
 
 import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
-import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
+import { joinOeLevels, splitOeInput } from '@/shared/lib/ressource/oeLevels';
 import { JsonEditor } from './JsonEditor';
 import { OeLevelBoxes } from './OeLevelBoxes';
 import { TB_OPTIONS } from './profileTemplates.shared';

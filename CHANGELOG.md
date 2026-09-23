@@ -2,6 +2,25 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-23 (181)
+
+### refactor (P4: Domänen-Shared nach `shared/lib/ressource`/`shared/lib/zulagen`)
+
+- `infrastructure/data/*` (13 Dateien mit ≥2 Konsumenten quer über ber/ewt/ez/ea bzw. Admin/core:
+  `berechnungWerte`, `confirmDeleteAllRows`, `createDatenGetter`, `fieldMapper`, `mergeVisibleResourceRows`,
+  `metaFields`, `normalizeResourceRows`, `oeLevels`, `persistTableData`, `resourceConfig`, `saveDaten`,
+  `syncFieldsFromEwtRows`, `tableToArray`) nach `shared/lib/ressource/`; `Einstellungen/utils/zulagenCatalog.ts`
+  (3 Konsumenten: Admin, Einstellungen, Neben) nach `shared/lib/zulagen/`.
+- Einzel-Konsumenten statt shared: `DatenSortieren.ts` nach `features/Bereitschaft/utils/`,
+  `persistEwtTableData.ts` nach `features/EWT/utils/`. `zulagenWerte.ts` (nur 1 Konsument `wert.ts`) und
+  `generatePDF.ts` bewusst nicht verschoben -- beide gehören zum PDF-Formel-Motor, der komplett erst mit
+  `infrastructure/pdf` → `features/pdf-export` in P5 umzieht.
+- **Abweichung vom Prozess:** Move diesmal per `git mv` + manueller Import-Korrektur statt IDE-Move durch den
+  User (wie bei P0/P2/P3) -- auf Rückfrage entschieden, den bereits tsc-sauberen Stand zu behalten. Ab P5
+  wieder strikt nach Plan-Protokoll (Zielordner + Alt→Neu-Liste, User verschiebt in der IDE).
+- `lint:fsd`-Ratsche 47 → 37 (`package.json` nachgezogen). Gate: typecheck 0, lint 0, `lint:fsd` 37,
+  Tests 2289 unverändert, build i.o. (Precache weiterhin 113 Einträge). Details `tasks/todo.md`.
+
 ## 2026-09-22 (180)
 
 ### refactor (P3: Shared-UI nach `shared/ui`/`shared/model`/`shared/lib`)

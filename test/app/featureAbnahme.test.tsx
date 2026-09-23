@@ -6,7 +6,7 @@ import { getHelpContent } from '@/core/help/helpContent';
 import { resetFeatureTabSync, syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
 import calculateBerechnungRows from '@/features/Berechnung/calculateBerechnungRows';
 import { ladeBerechnungsTeile } from '@/features/Berechnung/ladeBerechnungsTeile';
-import { resourceKeys } from '@/infrastructure/data/resourceConfig';
+import { resourceKeys } from '@/shared/lib/ressource/resourceConfig';
 import AppHeader from '@/infrastructure/ui/AppHeader';
 import { ladeEinstellungenTeile, resetEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
 import StartTab from '@/infrastructure/ui/StartTab';

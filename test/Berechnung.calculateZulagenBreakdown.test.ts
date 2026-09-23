@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import calculateZulagenBreakdown from '@/features/Neben/utils/calculateZulagenBreakdown';
-import { ZulageEntryUnit } from '@/features/Einstellungen/utils/zulagenCatalog';
+import { ZulageEntryUnit } from '@/shared/lib/zulagen/zulagenCatalog';
 import type { IDatenN } from '@/types';
 
 const tag = (Tag: string, Zulagen: Array<{ Typ: string; Wert: number }>): IDatenN =>

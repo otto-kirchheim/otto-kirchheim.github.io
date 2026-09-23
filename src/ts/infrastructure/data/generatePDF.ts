@@ -8,7 +8,7 @@ import type { IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '@/types';
 import { featureRegistry } from '@/shared/lib/feature';
 import type { FeaturePdfModus } from '@/shared/lib/feature';
 import dayjs from '@/shared/lib/date/configDayjs';
-import { splitOeInput } from './oeLevels';
+import { splitOeInput } from '@/shared/lib/ressource/oeLevels';
 import { ladeUndErzeugePdf } from '../pdf/ladeFormular';
 import { signaturDialog } from '../pdf/signaturDialog';
 

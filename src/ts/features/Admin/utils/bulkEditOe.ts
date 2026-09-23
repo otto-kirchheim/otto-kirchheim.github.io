@@ -1,4 +1,4 @@
-import { splitOeInput } from '@/infrastructure/data/oeLevels';
+import { splitOeInput } from '@/shared/lib/ressource/oeLevels';
 import type { BulkApplyCategory, BulkOeTargetField } from './api';
 
 export type SimpleFieldKey = 'betrieb' | 'gewerk' | 'ersteTkgSt' | 'ersteTkgStAdresse';

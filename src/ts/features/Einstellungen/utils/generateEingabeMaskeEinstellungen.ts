@@ -3,7 +3,7 @@ import { setupBundeslandAutoFill } from '@/shared/lib/date/holidayRegion';
 import type { IVorgabenU, IVorgabenUPers } from '@/types';
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import { setupPersValidation } from '@/shared/lib/validation/addressValidation';
-import { isLegacyArbeitszeit, migrateArbeitszeit } from '@/infrastructure/data/fieldMapper';
+import { isLegacyArbeitszeit, migrateArbeitszeit } from '@/shared/lib/ressource/fieldMapper';
 import { ladeEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
 import { createElement } from 'react';
 import { mount } from '@/infrastructure/ui';

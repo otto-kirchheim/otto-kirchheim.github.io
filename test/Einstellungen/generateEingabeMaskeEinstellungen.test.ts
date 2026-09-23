@@ -24,7 +24,7 @@ import {
   msToSliderPosition,
   sliderPositionToMs,
 } from '@/features/Einstellungen/utils/generateEingabeMaskeEinstellungen';
-import { ZULAGEN_CATALOG, ZulageCategory } from '@/features/Einstellungen/utils/zulagenCatalog';
+import { ZULAGEN_CATALOG, ZulageCategory } from '@/shared/lib/zulagen/zulagenCatalog';
 import type { IVorgabenU } from '@/types';
 import { createCustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { IVorgabenUvorgabenB } from '@/shared/types';

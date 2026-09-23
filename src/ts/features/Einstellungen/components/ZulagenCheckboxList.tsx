@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { DBCheckbox } from '@db-ux/react-core-components';
-import { ZULAGEN_CATALOG, ZULAGEN_CATEGORY_MAX_SELECTIONS, ZulageCategory } from '../utils/zulagenCatalog';
+import { ZULAGEN_CATALOG, ZULAGEN_CATEGORY_MAX_SELECTIONS, ZulageCategory } from '@/shared/lib/zulagen/zulagenCatalog';
 
 const categoryDisplayOrder: ZulageCategory[] = [
   ZulageCategory.Erschwerniszulage,

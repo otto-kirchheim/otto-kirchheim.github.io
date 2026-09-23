@@ -1,5 +1,5 @@
 import type { IDatenEA, IDatenEWT } from '@/types';
-import { syncFieldsFromEwtRows } from '@/infrastructure/data/syncFieldsFromEwtRows';
+import { syncFieldsFromEwtRows } from '@/shared/lib/ressource/syncFieldsFromEwtRows';
 import calculateEaDauerFromEwt from './calculateEaDauerFromEwt';
 
 /**

@@ -2,7 +2,7 @@ import getNebengeldDaten from './getNebengeldDaten';
 import addNebengeldTag from './addNebengeldTag';
 import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { IDatenN } from '@/types';
-import persistTableData from '@/infrastructure/data/persistTableData';
+import persistTableData from '@/shared/lib/ressource/persistTableData';
 
 /**
  * Schreibt die sichtbaren Zeilen der Neben-Tabelle in den Storage.

@@ -1,5 +1,5 @@
 import type { TUserRole } from '@/types';
-import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
+import { joinOeLevels, splitOeInput } from '@/shared/lib/ressource/oeLevels';
 import type { AdminUserRow } from '../utils/api';
 import createAdminUserLinksModal from './createAdminUserLinksModal';
 import createAdminUserPasswordModal from './createAdminUserPasswordModal';

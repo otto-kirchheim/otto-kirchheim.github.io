@@ -4,7 +4,7 @@ const { tableToArrayMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T)
   tableToArrayMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/data/tableToArray', () => ({
+vi.mock('@/shared/lib/ressource/tableToArray', () => ({
   default: tableToArrayMock,
 }));
 

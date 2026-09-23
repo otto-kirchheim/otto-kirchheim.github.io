@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
+import { joinOeLevels, splitOeInput } from '@/shared/lib/ressource/oeLevels';
 
 describe('oeLevels', () => {
   describe('splitOeInput', () => {

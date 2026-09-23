@@ -5,8 +5,8 @@ import type { IVorgabenGeld, IVorgabenU } from '@/shared/types';
 import Storage from '@/shared/lib/storage/Storage'; // Import Storage directly
 import '@/app/features';
 import generatePDF from '@/infrastructure/data/generatePDF';
-import { splitOeInput } from '@/infrastructure/data/oeLevels';
-import tableToArray from '@/infrastructure/data/tableToArray';
+import { splitOeInput } from '@/shared/lib/ressource/oeLevels';
+import tableToArray from '@/shared/lib/ressource/tableToArray';
 import { VorgabenGeldMock, VorgabenUMock } from '@test/mockData';
 
 // --- Mocks ---
@@ -19,7 +19,7 @@ vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/data/tableToArray', () => ({
+vi.mock('@/shared/lib/ressource/tableToArray', () => ({
   default: vi.fn(),
 }));
 

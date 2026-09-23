@@ -25,7 +25,7 @@ const {
 vi.mock('@/features/Bereitschaft/utils', () => ({
   calculateBereitschaftsZeiten: calculateBereitschaftsZeitenMock,
 }));
-vi.mock('@/infrastructure/data/tableToArray', () => ({ default: tableToArrayMock }));
+vi.mock('@/shared/lib/ressource/tableToArray', () => ({ default: tableToArrayMock }));
 vi.mock('@/shared/ui/button-loading/setLoading', () => ({ default: setLoadingMock }));
 vi.mock('@/shared/ui/button-loading/clearLoading', () => ({ default: clearLoadingMock }));
 vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));

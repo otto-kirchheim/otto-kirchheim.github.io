@@ -1,6 +1,6 @@
 import type { FeatureParts } from '@/shared/lib/feature';
 import type { IDatenEA, IVorgabenBerechnungMonat } from '@/types';
-import { parseDauerToMinutes, timeConvert } from '@/infrastructure/data/berechnungWerte';
+import { parseDauerToMinutes, timeConvert } from '@/shared/lib/ressource/berechnungWerte';
 import { getMonatFromEA } from '@/shared/lib/date/getMonatFromItem';
 
 type Bucket = IVorgabenBerechnungMonat['EA'];

@@ -2,7 +2,7 @@ import type { FeatureMeta } from '@/shared/lib/feature';
 import { eaApi } from '@/shared/api/apiService';
 import { createResourceApi } from '@/shared/api/resourceApi';
 import { periodFromDate } from '@/shared/lib/date/periodFromDate';
-import { eaFromBackend } from '@/infrastructure/data/fieldMapper';
+import { eaFromBackend } from '@/shared/lib/ressource/fieldMapper';
 import { getMonatFromEA } from '@/shared/lib/date/getMonatFromItem';
 import type { IDatenEA } from '@/types';
 

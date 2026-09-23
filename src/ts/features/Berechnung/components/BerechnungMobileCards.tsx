@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { IBerechnungMonatsErgebnis } from '@/types';
 import { DBAccordion, DBAccordionItem } from '@db-ux/react-core-components';
-import { formatCurrency } from '@/infrastructure/data/berechnungWerte';
+import { formatCurrency } from '@/shared/lib/ressource/berechnungWerte';
 import { GruppenTitel } from '@/infrastructure/ui/berechnungBausteine';
 import { isGroupVisible } from '../berechnungGroupVisibility';
 import type { IBerechnungGruppe } from '../ladeBerechnungsTeile';

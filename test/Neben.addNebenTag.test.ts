@@ -12,7 +12,7 @@ const { saveTableDataNMock, createSnackBarMock } = (vi as typeof vi & { hoisted:
 type AddNebengeldTag = (form: HTMLDivElement | HTMLFormElement, tableN: any) => void;
 
 async function loadAddNebengeldTag(): Promise<AddNebengeldTag> {
-  mock.module('@/infrastructure/data/persistTableData', () => ({
+  mock.module('@/shared/lib/ressource/persistTableData', () => ({
     default: saveTableDataNMock,
   }));
   mock.module('@/shared/ui/snackbar/CustomSnackbar', () => ({

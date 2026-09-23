@@ -5,7 +5,7 @@ import {
   ZulageCategory,
   ZulageEntryUnit,
   type IZulageCatalogItem,
-} from '@/features/Einstellungen/utils/zulagenCatalog';
+} from '@/shared/lib/zulagen/zulagenCatalog';
 
 describe('zulagenCatalog', () => {
   it('enthält die erwartete Anzahl an Einträgen', () => {

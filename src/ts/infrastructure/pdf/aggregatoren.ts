@@ -489,7 +489,7 @@ export const FORMAT: Record<FormatName, (value: unknown) => string> = {
   /**
    * Hierarchie-Ebenen einer OE (`Pers.OE`) kanonisch zusammenfügen: erste zwei Ebenen mit `.`, weitere
    * mit `-`, eine numerische letzte Ebene (Teamnummer) mit Leerzeichen, z.B. `V.IW-MI-N-KSL-IL 03`.
-   * Spiegelt `joinOeSegments` (Backend) und `joinOeLevels` (`infrastructure/data/oeLevels.ts`), bewusst
+   * Spiegelt `joinOeSegments` (Backend) und `joinOeLevels` (`shared/lib/ressource/oeLevels.ts`), bewusst
    * dupliziert. `liste` würde die Schreibweise zerstören.
    *
    * @param value - Ebenen der OE (Array); Nicht-Arrays werden als Text durchgereicht.

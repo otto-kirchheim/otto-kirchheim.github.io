@@ -3,7 +3,7 @@ import '@/app/features';
 import { VorgabenGeldMock, datenBerechungMock } from '@test/mockData';
 import calculateBerechnungRows from '@/features/Berechnung/calculateBerechnungRows';
 import { type IBerechnungTeil, ladeBerechnungsTeile } from '@/features/Berechnung/ladeBerechnungsTeile';
-import { formatCurrency } from '@/infrastructure/data/berechnungWerte';
+import { formatCurrency } from '@/shared/lib/ressource/berechnungWerte';
 import type { IVorgabenBerechnung, IVorgabenGeld } from '@/types';
 
 // formatCurrency trennt Betrag und Euro-Zeichen mit geschütztem Leerzeichen (U+00A0)

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import { ZULAGEN_CATALOG } from '../../Einstellungen/utils/zulagenCatalog';
+import { ZULAGEN_CATALOG } from '@/shared/lib/zulagen/zulagenCatalog';
 import { ArbeitszeiteingabePanel } from '../../Einstellungen/components/ArbeitszeiteingabePanel';
 import {
   PERS_FIELDS,

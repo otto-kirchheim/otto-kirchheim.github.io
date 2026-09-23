@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 import '@/app/features';
-import { unlinkEwtRefsForDeletedIds } from '@/infrastructure/data/unlinkEwtRefs';
+import { unlinkEwtRefsForDeletedIds } from '@/shared/lib/ressource/unlinkEwtRefs';
 import { createCustomTable } from '@/shared/ui/custom-table/CustomTable';
 
 const viCompat = vi as typeof vi & {

@@ -3,7 +3,7 @@ import { ZULAGEN_CATALOG, type IZulageCatalogItem } from '@otto-kirchheim/nebeng
 import type { FeatureParts } from '@/shared/lib/feature';
 import type { IDatenN, IVorgabenBerechnungMonat, IVorgabenGeldType } from '@/types';
 import { getMonatFromN } from '@/shared/lib/date/getMonatFromItem';
-import { currency } from '@/infrastructure/data/berechnungWerte';
+import { currency } from '@/shared/lib/ressource/berechnungWerte';
 import { DetailZeile, GruppenTitel, LabelTabelle } from '@/infrastructure/ui/berechnungBausteine';
 import calculateZulagenBreakdown, {
   type IZulagenBreakdown,

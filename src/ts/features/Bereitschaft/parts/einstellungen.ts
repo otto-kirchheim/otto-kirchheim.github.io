@@ -2,7 +2,7 @@ import type { FeatureParts } from '@/shared/lib/feature';
 import BereitschaftAbschnitt from '../components/BereitschaftEinstellungenAbschnitt';
 import { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { CustomHTMLTableElement, IVorgabenUvorgabenB } from '@/types';
-import { default as tableToArray } from '@/infrastructure/data/tableToArray';
+import { default as tableToArray } from '@/shared/lib/ressource/tableToArray';
 import generateEingabeTabelleEinstellungenVorgabenB from '@/features/Einstellungen/utils/generateEingabeTabelleEinstellungenVorgabenB';
 import saveTableDataVorgabenU from '@/features/Einstellungen/utils/saveTableDataVorgabenU';
 import { BereitschaftsEinsatzZeiträume } from '../utils/constants';

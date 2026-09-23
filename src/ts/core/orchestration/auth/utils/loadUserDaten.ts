@@ -4,7 +4,7 @@ import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnu
 import { generateEingabeMaskeEinstellungen } from '@/features/Einstellungen/utils';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
-import { isRowInMonat, resourceDefs } from '@/infrastructure/data/resourceConfig';
+import { isRowInMonat, resourceDefs } from '@/shared/lib/ressource/resourceConfig';
 import { cancelAllPending, flushAll, isAutoSaveEnabled, setAutoSaveEnabled } from '@/infrastructure/autoSave/autoSave';
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import { default as buttonDisable } from '@/shared/ui/button-loading/buttonDisable';

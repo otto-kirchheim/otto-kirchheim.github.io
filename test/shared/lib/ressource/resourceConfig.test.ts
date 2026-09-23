@@ -9,7 +9,7 @@ import {
   resourceKeys,
   storageKeyOf,
   tableIdOf,
-} from '@/infrastructure/data/resourceConfig';
+} from '@/shared/lib/ressource/resourceConfig';
 import type { FeatureDefinition } from '@/shared/lib/feature';
 
 describe('resourceConfig (aus meta.resources der Features)', () => {

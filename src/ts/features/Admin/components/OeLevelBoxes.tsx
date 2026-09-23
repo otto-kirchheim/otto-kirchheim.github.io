@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
+import { joinOeLevels, splitOeInput } from '@/shared/lib/ressource/oeLevels';
 import { MAX_OE_LEVELS } from '../utils/bulkEditOe';
 import { OeLevelInputs } from './OeLevelInputs';
 

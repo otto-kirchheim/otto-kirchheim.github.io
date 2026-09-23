@@ -4,8 +4,8 @@ import dayjs from '@/shared/lib/date/configDayjs';
 import type { LoadedYearData } from '@/shared/api/apiService';
 import type { TStorageData } from '@/shared/lib/storage/Storage';
 import { countByMonth, normalizeRows, shouldRepairMissingIds } from './loadUserDaten.helpers';
-import { hasPendingLocalChanges } from '@/infrastructure/data/metaFields';
-import { type ResourceKind, resourceByStorageKey, resourceDefs } from '@/infrastructure/data/resourceConfig';
+import { hasPendingLocalChanges } from '@/shared/lib/ressource/metaFields';
+import { type ResourceKind, resourceByStorageKey, resourceDefs } from '@/shared/lib/ressource/resourceConfig';
 
 export interface UnterschiedNachMonat {
   beschreibung: string;

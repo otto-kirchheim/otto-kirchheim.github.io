@@ -2,7 +2,7 @@ import type { FeatureParts } from '@/shared/lib/feature';
 import type { IBerechnungMonatsErgebnis, IDatenEWT, IVorgabenBerechnungMonat } from '@/types';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { getMonatFromEWTBuchungstag } from '@/shared/lib/date/getMonatFromItem';
-import { anzeige, currency } from '@/infrastructure/data/berechnungWerte';
+import { anzeige, currency } from '@/shared/lib/ressource/berechnungWerte';
 import { GruppenTitel, LabelTabelle, SchwellenZeilen } from '@/infrastructure/ui/berechnungBausteine';
 
 type Bucket = IVorgabenBerechnungMonat['E'];

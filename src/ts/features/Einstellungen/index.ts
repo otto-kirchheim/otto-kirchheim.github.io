@@ -2,7 +2,7 @@ import dayjs from '@/shared/lib/date/configDayjs';
 import { openHelpModal, registerAppStartTask } from '@/core';
 import { markStep } from '@/core/orchestration/initSequence';
 import Storage from '@/shared/lib/storage/Storage';
-import { default as saveDaten } from '@/infrastructure/data/saveDaten';
+import { default as saveDaten } from '@/shared/lib/ressource/saveDaten';
 import { applyAutoSaveSettings } from '@/infrastructure/autoSave/autoSave';
 import { authApi } from '@/shared/api/apiService';
 import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';

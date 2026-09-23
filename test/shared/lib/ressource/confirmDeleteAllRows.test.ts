@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, mock, vi } from 'bun:test';
 
-import type { confirmDeleteAllRows as ConfirmDeleteAllRowsFn } from '@/infrastructure/data/confirmDeleteAllRows';
+import type { confirmDeleteAllRows as ConfirmDeleteAllRowsFn } from '@/shared/lib/ressource/confirmDeleteAllRows';
 type ConfirmDeleteAllRows = typeof ConfirmDeleteAllRowsFn;
 
 const { createSnackBarMock, buttonDisableMock, dateStorageMock } = (
@@ -22,7 +22,7 @@ async function loadConfirmDeleteAllRows(): Promise<ConfirmDeleteAllRows> {
     getStoredMonatJahr: dateStorageMock.getStoredMonatJahr,
   }));
 
-  const module = await import('@/infrastructure/data/confirmDeleteAllRows');
+  const module = await import('@/shared/lib/ressource/confirmDeleteAllRows');
   return module.confirmDeleteAllRows;
 }
 

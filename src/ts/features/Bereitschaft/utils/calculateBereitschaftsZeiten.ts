@@ -8,7 +8,7 @@ import type {
   IVorgabenUvorgabenB,
 } from '@/types';
 import { resolveSchichtDay } from '@/shared/lib/schicht/resolveSchichtDay';
-import { default as DatenSortieren } from '@/infrastructure/data/DatenSortieren';
+import { default as DatenSortieren } from '@/features/Bereitschaft/utils/DatenSortieren';
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { resolveHolidayRegion } from '@/shared/lib/date/holidayRegion';

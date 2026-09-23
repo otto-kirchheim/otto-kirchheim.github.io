@@ -5,7 +5,7 @@ import {
   ZulageEntryUnit,
   type ZulageCategory,
   type IZulageCatalogItem,
-} from '@/features/Einstellungen/utils/zulagenCatalog';
+} from '@/shared/lib/zulagen/zulagenCatalog';
 
 const zulagenCatalogByCode = new Map<string, IZulageCatalogItem>(ZULAGEN_CATALOG.map(item => [item.code, item]));
 

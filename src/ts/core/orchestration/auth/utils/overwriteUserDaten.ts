@@ -1,7 +1,7 @@
 import { publishEvent } from '@/core';
 import { featureRegistry } from '@/shared/lib/feature';
 import { generateEingabeMaskeEinstellungen } from '@/features/Einstellungen/utils';
-import { isRowInMonat, resourceDefs } from '@/infrastructure/data/resourceConfig';
+import { isRowInMonat, resourceDefs } from '@/shared/lib/ressource/resourceConfig';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { CustomTableTypes } from '@/shared/ui/custom-table/CustomTable';
 import type { CustomHTMLTableElement, UserDatenServer } from '@/types';

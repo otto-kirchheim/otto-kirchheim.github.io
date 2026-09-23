@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { IBerechnungMonatsErgebnis, IBerechnungTabellenZeile } from '@/types';
-import { currency } from '@/infrastructure/data/berechnungWerte';
+import { currency } from '@/shared/lib/ressource/berechnungWerte';
 import { isGroupVisible } from '../berechnungGroupVisibility';
 import type { IBerechnungGruppe } from '../ladeBerechnungsTeile';
 

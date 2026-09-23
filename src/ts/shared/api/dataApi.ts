@@ -1,5 +1,5 @@
 import type { IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenU } from '@/types';
-import { type ResourceKind, resourceDefs } from '@/infrastructure/data/resourceConfig';
+import { type ResourceKind, resourceDefs } from '@/shared/lib/ressource/resourceConfig';
 import {
   type BackendBereitschaftseinsatz,
   type BackendBereitschaftszeitraum,
@@ -21,7 +21,7 @@ import {
   userProfileFromBackend,
   userProfileToBackend,
   vorgabenFromBackend,
-} from '@/infrastructure/data/fieldMapper';
+} from '@/shared/lib/ressource/fieldMapper';
 import { type BulkRequest, type BulkResponse, apiFetch, loadResourceYear, smartSync } from './apiFetchHelper';
 
 // ─── Profile ─────────────────────────────────────────────

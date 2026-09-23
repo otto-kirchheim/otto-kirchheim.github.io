@@ -6,8 +6,8 @@ import type {
 } from '@otto-kirchheim/nebengeld-shared';
 import type { FeaturePdfContext } from '@/shared/lib/feature';
 import { filterByMonat, getMonatFromBE, getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
-import tableToArray from '@/infrastructure/data/tableToArray';
-import { tableIdOf } from '@/infrastructure/data/resourceConfig';
+import tableToArray from '@/shared/lib/ressource/tableToArray';
+import { tableIdOf } from '@/shared/lib/ressource/resourceConfig';
 import { alsMinuten, alsZeitstempelMinuten, ZEILEN_OPS } from '@/infrastructure/pdf/aggregatoren';
 import type { IPdfBase } from '@/infrastructure/pdf/pdfDaten';
 import type { IDatenBE, IDatenBZ } from '@/types';

@@ -10,7 +10,7 @@ import {
   type IBerechnungTeil,
   ladeBerechnungsTeile,
 } from '@/features/Berechnung/ladeBerechnungsTeile';
-import { ZulageEntryUnit } from '@/features/Einstellungen/utils/zulagenCatalog';
+import { ZulageEntryUnit } from '@/shared/lib/zulagen/zulagenCatalog';
 import { VorgabenGeldMock, datenBerechungMock } from '@test/mockData';
 import type { IBerechnungMonatsErgebnis, IVorgabenBerechnung } from '@/types';
 

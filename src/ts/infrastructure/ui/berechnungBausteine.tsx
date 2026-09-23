@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { formatCurrency } from '../data/berechnungWerte';
+import { formatCurrency } from '@/shared/lib/ressource/berechnungWerte';
 
 /*
  * Gemeinsame Darstellungs-Bausteine der Berechnung (Desktop-Tabelle und mobile Monatskarten). Die Features
- * setzen daraus ihre Gruppe im Slot `berechnung` zusammen; Formatter liegen in `infrastructure/data/berechnungWerte`.
+ * setzen daraus ihre Gruppe im Slot `berechnung` zusammen; Formatter liegen in `shared/lib/ressource/berechnungWerte`.
  */
 
 /**

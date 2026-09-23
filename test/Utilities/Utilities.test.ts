@@ -1,6 +1,6 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, setSystemTime, vi } from 'bun:test';
 import { Role } from '@otto-kirchheim/nebengeld-shared';
-import { default as DatenSortieren } from '@/infrastructure/data/DatenSortieren';
+import { default as DatenSortieren } from '@/features/Bereitschaft/utils/DatenSortieren';
 import Storage from '@/shared/lib/storage/Storage';
 import { default as buttonDisable } from '@/shared/ui/button-loading/buttonDisable';
 import { default as checkMaxTag } from '@/shared/lib/validation/checkMaxTag';

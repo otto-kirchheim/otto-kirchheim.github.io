@@ -2,7 +2,7 @@ import type { FeatureMeta } from '@/shared/lib/feature';
 import { bereitschaftseinsatzApi, bereitschaftszeitraumApi } from '@/shared/api/apiService';
 import { createResourceApi } from '@/shared/api/resourceApi';
 import { periodFromDate } from '@/shared/lib/date/periodFromDate';
-import { beFromBackend, bzFromBackend } from '@/infrastructure/data/fieldMapper';
+import { beFromBackend, bzFromBackend } from '@/shared/lib/ressource/fieldMapper';
 import { getMonatFromBE, getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
 import type { IDatenBE, IDatenBZ } from '@/types';
 

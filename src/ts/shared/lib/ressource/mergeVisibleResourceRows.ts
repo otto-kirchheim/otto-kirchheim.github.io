@@ -1,5 +1,5 @@
-import type { CustomTable, CustomTableTypes, Row, RowState } from '../../shared/ui/custom-table/CustomTable';
-import Storage from '../../shared/lib/storage/Storage';
+import type { CustomTable, CustomTableTypes, Row, RowState } from '@/shared/ui/custom-table/CustomTable';
+import Storage from '@/shared/lib/storage/Storage';
 import { getStoredMonatJahr } from '@/shared/lib/date/dateStorage';
 import normalizeResourceRows from './normalizeResourceRows';
 import { type ResourceKind, isRowInMonat, resourceDef, storageKeyOf } from './resourceConfig';

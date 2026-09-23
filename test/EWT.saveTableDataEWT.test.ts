@@ -11,7 +11,7 @@ const { tableToArrayMock, publishDataChangedMock } = (
   publishDataChangedMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/data/tableToArray', () => ({
+vi.mock('@/shared/lib/ressource/tableToArray', () => ({
   default: tableToArrayMock,
 }));
 
@@ -19,7 +19,7 @@ vi.mock('@/core', () => ({
   publishEvent: publishDataChangedMock,
 }));
 
-import persistEwtTableData from '@/infrastructure/data/persistEwtTableData';
+import persistEwtTableData from '@/features/EWT/utils/persistEwtTableData';
 
 function createData(Tag: string): IDatenEWT {
   return {

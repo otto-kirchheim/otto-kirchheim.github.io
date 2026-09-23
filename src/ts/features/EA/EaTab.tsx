@@ -8,11 +8,11 @@ import { asAnyTable, useCustomTableState } from '@/shared/ui/custom-table/Custom
 import CustomTableView from '@/shared/ui/custom-table/CustomTableView';
 import type { CustomHTMLTableElement, IDatenEA } from '@/types';
 import { openHelpModal } from '@/core';
-import { confirmDeleteAllRows } from '@/infrastructure/data/confirmDeleteAllRows';
+import { confirmDeleteAllRows } from '@/shared/lib/ressource/confirmDeleteAllRows';
 import { getMonatFromEA } from '@/shared/lib/date/getMonatFromItem';
 import Storage from '@/shared/lib/storage/Storage';
 import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
-import { default as saveDaten } from '@/infrastructure/data/saveDaten';
+import { default as saveDaten } from '@/shared/lib/ressource/saveDaten';
 import { bindClickHandlers } from '@/shared/lib/dom/bindClickHandlers';
 import dayjs from '@/shared/lib/date/configDayjs';
 import generatePDF from '@/infrastructure/data/generatePDF';

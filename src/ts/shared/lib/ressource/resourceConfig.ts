@@ -1,6 +1,6 @@
 import { featureRegistry } from '@/shared/lib/feature';
 import type { FeatureResource, FeatureResourceKey } from '@/shared/lib/feature';
-import type { TStorageData } from '../../shared/lib/storage/Storage';
+import type { TStorageData } from '@/shared/lib/storage/Storage';
 
 export type ResourceKind = FeatureResourceKey;
 

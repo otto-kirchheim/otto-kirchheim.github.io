@@ -52,7 +52,7 @@ vi.mock('@/core/orchestration/syncFeatureTabs', () => ({ syncFeatureTabs: mockSy
 
 import '@/app/features';
 import Storage from '@/shared/lib/storage/Storage';
-import saveDaten from '@/infrastructure/data/saveDaten';
+import saveDaten from '@/shared/lib/ressource/saveDaten';
 import { onEvent, clearAllEventListeners } from '@/shared/lib/events/appEvents';
 import { registerHook, clearAllHooks } from '@/shared/lib/feature';
 

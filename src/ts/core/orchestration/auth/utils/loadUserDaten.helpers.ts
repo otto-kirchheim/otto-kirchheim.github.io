@@ -1,5 +1,5 @@
-import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
-import { resourceByStorageKey } from '@/infrastructure/data/resourceConfig';
+import { default as normalizeResourceRows } from '@/shared/lib/ressource/normalizeResourceRows';
+import { resourceByStorageKey } from '@/shared/lib/ressource/resourceConfig';
 import type { TStorageData } from '@/shared/lib/storage/Storage';
 
 /**

@@ -2,7 +2,7 @@ import type { FeatureMeta } from '@/shared/lib/feature';
 import { nebengeldApi } from '@/shared/api/apiService';
 import { createResourceApi } from '@/shared/api/resourceApi';
 import { periodFromDate } from '@/shared/lib/date/periodFromDate';
-import { nebengeldFromBackend } from '@/infrastructure/data/fieldMapper';
+import { nebengeldFromBackend } from '@/shared/lib/ressource/fieldMapper';
 import { getMonatFromN } from '@/shared/lib/date/getMonatFromItem';
 import type { IDatenN } from '@/types';
 

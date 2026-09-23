@@ -1,6 +1,6 @@
 import type { IDatenN } from '@/types';
 import { filterByMonat, getMonatFromN } from '@/shared/lib/date/getMonatFromItem';
-import { createDatenGetter } from '@/infrastructure/data/createDatenGetter';
+import { createDatenGetter } from '@/shared/lib/ressource/createDatenGetter';
 import { hydrateNebengeldRows } from './nebengeldZulagen';
 
 /**

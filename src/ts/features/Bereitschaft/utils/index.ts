@@ -18,7 +18,7 @@ import mergeSchichtenOverrides from './mergeSchichtenOverrides';
 import { setBereitschaftRuntimeOverrides, getBereitschaftRuntimeOverrides } from './bereitschaftRuntimeOverrides';
 import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { IDatenBE, IDatenBZ } from '@/types';
-import persistTableData from '@/infrastructure/data/persistTableData';
+import persistTableData from '@/shared/lib/ressource/persistTableData';
 
 /**
  * Schreibt die aktuellen BZ-Tabellenzeilen per `persistTableData` in den Storage.

@@ -1,5 +1,5 @@
-import type { CustomTableTypes, Row } from '../../shared/ui/custom-table/CustomTable';
-import { CustomTable } from '../../shared/ui/custom-table/CustomTable';
+import type { CustomTableTypes, Row } from '@/shared/ui/custom-table/CustomTable';
+import { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { CustomHTMLTableElement } from '@/types';
 
 /**

@@ -1,7 +1,7 @@
 import type { IVorgabenU, IVorgabenUvorgabenB } from '@/types';
 import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import { default as Storage } from '@/shared/lib/storage/Storage';
-import { default as tableToArray } from '@/infrastructure/data/tableToArray';
+import { default as tableToArray } from '@/shared/lib/ressource/tableToArray';
 
 /**
  * Übernimmt die Zeilen der Voreinstellungs-Tabelle als `VorgabenB` in die gespeicherten `VorgabenU`.

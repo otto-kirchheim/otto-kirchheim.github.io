@@ -1,6 +1,6 @@
 import type { IDatenEA, IDatenN } from '@/types';
-import { findTable } from '../autoSave/savePipeline';
-import Storage from '../../shared/lib/storage/Storage';
+import { findTable } from '@/infrastructure/autoSave/savePipeline';
+import Storage from '@/shared/lib/storage/Storage';
 import { storageKeyOf, tableIdOf } from './resourceConfig';
 
 /**

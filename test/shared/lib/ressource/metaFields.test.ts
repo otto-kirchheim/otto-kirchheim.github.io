@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { stripMetaFields, extractMetaFields, hasPendingLocalChanges } from '@/infrastructure/data/metaFields';
+import { stripMetaFields, extractMetaFields, hasPendingLocalChanges } from '@/shared/lib/ressource/metaFields';
 
 describe('stripMetaFields', () => {
   it('entfernt alle __-präfixierten Felder', () => {

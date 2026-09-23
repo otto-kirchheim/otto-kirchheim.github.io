@@ -1,6 +1,6 @@
 import type { IVorgabenBerechnung } from '@/types';
-import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
-import { type ResourceKind, resourceDefs } from '@/infrastructure/data/resourceConfig';
+import { default as normalizeResourceRows } from '@/shared/lib/ressource/normalizeResourceRows';
+import { type ResourceKind, resourceDefs } from '@/shared/lib/ressource/resourceConfig';
 import Storage from '@/shared/lib/storage/Storage';
 import type { TStorageData } from '@/shared/lib/storage/Storage';
 import generateTableBerechnung from './generateTableBerechnung';

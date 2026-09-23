@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { joinOeLevels } from '@/infrastructure/data/oeLevels';
+import { joinOeLevels } from '@/shared/lib/ressource/oeLevels';
 import { useDebouncedValue, matchesOeQuery } from '../utils/adminUserListHelpers';
 import type { AdminUserRow } from '../utils/api';
 import { DBButton, DBTooltip } from '@db-ux/react-core-components';

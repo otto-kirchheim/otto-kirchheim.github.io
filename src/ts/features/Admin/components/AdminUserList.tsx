@@ -14,7 +14,7 @@ import {
 import { getUserCookie } from '@/shared/api/token/decodeAccessToken';
 import { loadUserDataForAdminSelection } from '../utils/actAs';
 import { useDebouncedValue, matchesOeQuery } from '../utils/adminUserListHelpers';
-import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
+import { joinOeLevels, splitOeInput } from '@/shared/lib/ressource/oeLevels';
 import createAdminBulkEditModal from './createAdminBulkEditModal';
 import { AdminUserCard } from './AdminUserCard';
 import type { UserEditState } from './adminUserListTypen';

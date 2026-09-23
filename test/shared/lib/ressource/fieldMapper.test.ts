@@ -21,7 +21,7 @@ import {
   userProfileToBackend,
   vorgabenFromBackend,
   vorgabenUFromServer,
-} from '@/infrastructure/data/fieldMapper';
+} from '@/shared/lib/ressource/fieldMapper';
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenU, IVorgabenUServer } from '@/shared/types';
 
 // ─── bzFromBackend / bzToBackend ─────────────────────────

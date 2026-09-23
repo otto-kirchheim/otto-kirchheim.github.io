@@ -1,5 +1,5 @@
 import type { CustomTable, CustomTableTypes, Row } from '../../shared/ui/custom-table/CustomTable';
-import { resourceDef } from '../data/resourceConfig';
+import { resourceDef } from '@/shared/lib/ressource/resourceConfig';
 import type { TResourceKey } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 

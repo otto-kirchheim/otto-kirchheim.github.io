@@ -16,8 +16,8 @@ import { profileApi } from '@/shared/api/apiService';
 import Storage from '../../shared/lib/storage/Storage';
 import type { TStorageData } from '../../shared/lib/storage/Storage';
 import dayjs from '@/shared/lib/date/configDayjs';
-import mergeVisibleResourceRows from '../data/mergeVisibleResourceRows';
-import { resourceKeys, storageKeyOf, tableIdOf } from '../data/resourceConfig';
+import mergeVisibleResourceRows from '@/shared/lib/ressource/mergeVisibleResourceRows';
+import { resourceKeys, storageKeyOf, tableIdOf } from '@/shared/lib/ressource/resourceConfig';
 import { mapCreatedIdsByClientRequestId, mapCreatedIdsByContent } from './changeTracking';
 import { applyServerRowsToTable, collectRowErrorMatches, findTable, sendBulk } from './savePipeline';
 import {

@@ -13,7 +13,7 @@
  * Shim-Schicht (`Row.ts`/`Rows.ts`).
  */
 import { v4 as uuidv4 } from 'uuid';
-import { stripMetaFields } from '../../../infrastructure/data/metaFields';
+import { stripMetaFields } from '../../lib/ressource/metaFields';
 import { getEffectiveRowState, getRowKey } from './customTableTypes';
 import type {
   CustomTableTypes,

@@ -17,10 +17,10 @@ import { asAnyTable, useCustomTableState } from '@/shared/ui/custom-table/Custom
 import CustomTableView from '@/shared/ui/custom-table/CustomTableView';
 import { openHelpModal } from '@/core';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ } from '@/types';
-import { confirmDeleteAllRows } from '@/infrastructure/data/confirmDeleteAllRows';
+import { confirmDeleteAllRows } from '@/shared/lib/ressource/confirmDeleteAllRows';
 import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
 import { getMonatFromBE, getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
-import { default as saveDaten } from '@/infrastructure/data/saveDaten';
+import { default as saveDaten } from '@/shared/lib/ressource/saveDaten';
 import { bindClickHandlers } from '@/shared/lib/dom/bindClickHandlers';
 import Storage from '@/shared/lib/storage/Storage';
 import dayjs from '@/shared/lib/date/configDayjs';

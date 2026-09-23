@@ -1,4 +1,4 @@
-import { joinOeLevels } from '@/infrastructure/data/oeLevels';
+import { joinOeLevels } from '@/shared/lib/ressource/oeLevels';
 import { OeLevelInputs } from './OeLevelInputs';
 import { DBRadio } from '@db-ux/react-core-components';
 import { DbAuswahl } from '@/components';

@@ -2,7 +2,7 @@ import type { FeatureMeta } from '@/shared/lib/feature';
 import { ewtApi } from '@/shared/api/apiService';
 import { createResourceApi } from '@/shared/api/resourceApi';
 import { periodFromDate } from '@/shared/lib/date/periodFromDate';
-import { ewtFromBackend } from '@/infrastructure/data/fieldMapper';
+import { ewtFromBackend } from '@/shared/lib/ressource/fieldMapper';
 import { getMonatFromEWT, isEwtInMonat } from '@/shared/lib/date/getMonatFromItem';
 import type { IDatenEWT } from '@/types';
 

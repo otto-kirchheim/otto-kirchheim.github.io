@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import tableToArray from '@/infrastructure/data/tableToArray';
+import tableToArray from '@/shared/lib/ressource/tableToArray';
 import type { CustomTable, Row } from '@/shared/ui/custom-table/CustomTable';
 import type { CustomHTMLTableElement } from '@/shared/types';
 

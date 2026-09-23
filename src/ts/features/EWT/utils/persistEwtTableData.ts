@@ -1,11 +1,11 @@
 import type { IDatenEWT } from '@/types';
-import type { CustomTable } from '../../shared/ui/custom-table/CustomTable';
+import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import { publishEvent } from '@/core';
-import Storage from '../../shared/lib/storage/Storage';
-import normalizeResourceRows from './normalizeResourceRows';
-import mergeVisibleResourceRows from './mergeVisibleResourceRows';
-import { default as tableToArray } from './tableToArray';
-import calculateBuchungstagEwt from '../../features/EWT/utils/calculateBuchungstagEwt';
+import Storage from '@/shared/lib/storage/Storage';
+import normalizeResourceRows from '@/shared/lib/ressource/normalizeResourceRows';
+import mergeVisibleResourceRows from '@/shared/lib/ressource/mergeVisibleResourceRows';
+import { default as tableToArray } from '@/shared/lib/ressource/tableToArray';
+import calculateBuchungstagEwt from './calculateBuchungstagEwt';
 
 /**
  * Schreibt die sichtbaren EWT-Zeilen in den Storage. Vorher wird `Buchungstag` neu berechnet und bei Abweichung in die Live-Zeile übernommen (Tabelle wird neu gezeichnet). Danach gehen die Events `ewt:persisted` und `data:changed` raus.

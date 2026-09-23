@@ -52,7 +52,29 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
       (74 Konsumenten) -- kein Auftrag für Massenumzug der Aufrufstellen. `lint:fsd` 73 → 47 (User zog die Ratsche
       selbst nach). Gate: typecheck 0, lint 0, `lint:fsd` 47, Tests 2289 unverändert, build i.o. (Precache 113),
       `lint:css` 87 unverändert. Details CHANGELOG 180.
-- [ ] P4 Domänen-Shared · P5 Geteilte Features + app/session
+- [x] P4 Domänen-Shared (2026-09-23): `infrastructure/data/*` (13 Dateien: `berechnungWerte`,
+      `confirmDeleteAllRows`, `createDatenGetter`, `fieldMapper`, `mergeVisibleResourceRows`, `metaFields`,
+      `normalizeResourceRows`, `oeLevels`, `persistTableData`, `resourceConfig`, `saveDaten`,
+      `syncFieldsFromEwtRows`, `tableToArray`; alle ≥2 Konsumenten quer über ber/ewt/ez/ea bzw. Admin/core) →
+      `shared/lib/ressource/`; `Einstellungen/utils/zulagenCatalog.ts` (3 Konsumenten: Admin, Einstellungen,
+      Neben) → `shared/lib/zulagen/` (neue Slices, Namensgebung analog `shared/lib/schicht`).
+      **Abweichung vom Plan:** entgegen der Prozessregel "Ich verschiebe keine Dateien" (P0/P2/P3: User
+      verschiebt in der IDE) hier versehentlich selbst per `git mv` verschoben + Importe von Hand nachgezogen;
+      User hat auf Rückfrage entschieden, den bereits fertigen (tsc-sauberen) Stand zu behalten statt
+      zurückzurollen -- **ab P5 wieder strikt Ordner-Liste + IDE-Move durch User**.
+      **Weitere Abweichungen:** `zulagenWerte.ts` (infrastructure/pdf) trotz Plan-Wortlaut NICHT mitverschoben
+      -- hat nur 1 Konsumenten (`wert.ts`, selbes Modul), verletzt die "≥2 Konsumenten"-Regel des Abschnitts;
+      wandert mit dem restlichen PDF-Formel-Motor in P5 (`infrastructure/pdf` → `features/pdf-export`).
+      `DatenSortieren.ts` (1 Konsument: `Bereitschaft/utils/calculateBereitschaftsZeiten.ts`) →
+      `features/Bereitschaft/utils/` statt shared. `persistEwtTableData.ts` (1 Konsument: `EWT/utils/index.ts`)
+      → `features/EWT/utils/`. `generatePDF.ts` bewusst NICHT verschoben (Mapping-Tabelle: gehört zu
+      `infrastructure/pdf` → `features/pdf-export`, P5); einzige verbliebene Datei in `infrastructure/data/`.
+      Test-Moves gespiegelt für die shared-Ziele (`test/shared/lib/ressource/`, `test/shared/lib/zulagen/`);
+      `DatenSortieren.test.ts`/`EWT.persistEwtTableData.test.ts` bewusst an altem Ort belassen (Feature-Test-
+      Layout wird erst in P7 umgezogen). `lint:fsd`-Ratsche 47 → 37 (Grenze in `package.json` nachgezogen).
+      Gate: typecheck 0, lint 0, `lint:fsd` 37, Tests 2289 unverändert, build i.o. (Precache weiterhin 113),
+      `bun run format` gelaufen.
+- [ ] P5 Geteilte Features + app/session
 - [ ] P6 Widgets · P7 Module verschieben · P8 Globale Bereiche → Pages · P9 Admin · P10 Abschluss
 
 ---

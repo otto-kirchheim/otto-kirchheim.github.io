@@ -7,7 +7,7 @@ import type {
 } from '@/types';
 import type { IBerechnungTeil } from './ladeBerechnungsTeile';
 
-// Formatter und Typen liegen fuer die Feature-Slots ausserhalb dieser Datei (`infrastructure/data/berechnungWerte`, `core/types/IBerechnung`).
+// Formatter und Typen liegen fuer die Feature-Slots ausserhalb dieser Datei (`shared/lib/ressource/berechnungWerte`, `core/types/IBerechnung`).
 
 /**
  * Merge-Proxy: VorgabenGeld-Einträge späterer Monate überschreiben frühere feldweise. Zugriff auf Monat n

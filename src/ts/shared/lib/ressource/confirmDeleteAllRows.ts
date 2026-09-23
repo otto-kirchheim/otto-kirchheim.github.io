@@ -1,6 +1,6 @@
-import { createSnackBar } from '../../shared/ui/snackbar/CustomSnackbar';
-import type { CustomTable, CustomTableTypes } from '../../shared/ui/custom-table/CustomTable';
-import buttonDisable from '../../shared/ui/button-loading/buttonDisable';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
+import type { CustomTable, CustomTableTypes } from '@/shared/ui/custom-table/CustomTable';
+import buttonDisable from '@/shared/ui/button-loading/buttonDisable';
 import { getStoredMonatJahr } from '@/shared/lib/date/dateStorage';
 
 /**
