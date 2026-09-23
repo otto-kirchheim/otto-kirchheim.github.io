@@ -155,7 +155,7 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
   - [x] Gate: typecheck 0, lint 0, `lint:fsd` 4 (Ratsche 14 → 4; übrig nur ea/ez → `ewt/model`), test 2289/2289,
         build i.o. (Precache 115: neue kleine gemeinsame Chunks `SchichtSection`, `SchichtOverrideEditor`,
         `berechnungBausteine`), `format`
-  - [x] Commit-Freigabe durch den User (2026-09-23; Browser-Check nicht gesondert zurückgemeldet)
+  - [x] Browser-Check durch den User: i.o. (2026-09-23)
   - [ ] Bekannt: `lint:fsd` prüft `app`/`pages`/`widgets` noch nicht (P10). Aufwärts-Importe, die er deshalb nicht
         zählt: `features/ber/ui/VorgabenBTable` → `pages/einstellungen/model` (`saveEinstellungen`),
         `pages/einstellungen` → `app/session/selectYear`, `features/Admin` → `pages/{berechnung,einstellungen}` (P9)
