@@ -1,5 +1,5 @@
 import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
-import userLoginSuccess from '@/app/session/userLoginSuccess';
+import { invokeHook } from '@/shared/lib/feature';
 import { default as clearLoading } from '@/shared/ui/button-loading/clearLoading';
 import { default as setLoading } from '@/shared/ui/button-loading/setLoading';
 import { authApi } from '@/shared/api/apiService';
@@ -46,7 +46,7 @@ export default async function loginWithPasskey(modal: CustomHTMLDivElement): Pro
     const me = await authApi.me().catch(() => null);
     const effectiveUserName = me?.userName ?? userName ?? resolvedUserName ?? '';
     schliesseModal();
-    await userLoginSuccess({
+    await invokeHook('auth:login-success', {
       username: effectiveUserName,
       role: me?.role,
       email: me?.email,

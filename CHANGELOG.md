@@ -2,6 +2,20 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-23 (187)
+
+### refactor (FSD: Aufrufe gegen die Schichtrichtung über Hooks)
+
+- Die vorhandene Hook-Registry (`shared/lib/feature/hookRegistry.ts`) bekommt drei Hooks: `auth:login-success`
+  (`userLoginSuccess`), `session:load-month` (`loadUserDaten`) und `help:open` (`openHelpModal`). `main.tsx`
+  registriert sie beim Start.
+- `features/auth` (Login, Passkey, Registrierung), `pages/admin` (`actAs`), `selectYear`, `MyModalHeader` und die
+  Modul-Tabs rufen jetzt `invokeHook` auf, statt `app/session` bzw. `widgets/help-modal` zu importieren.
+  `VorgabenBTable` (ber) nutzt dafür den bestehenden Hook `pre-save:settings`. Pages importieren
+  `openHelpModal` direkt, weil sie über den Widgets liegen; `core/index.ts` reicht es nicht mehr weiter.
+- In 6 Tests ersetzt `registerHook` die bisherigen `vi.mock` auf die alten Module.
+- Gate: typecheck 0, lint 0, `lint:fsd` 4, Tests 2289/2289.
+
 ## 2026-09-23 (186)
 
 ### refactor (P9: Admin als Page)

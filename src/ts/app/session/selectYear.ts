@@ -1,7 +1,7 @@
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import { getUserCookie } from '@/shared/api/token/decodeAccessToken';
 import { default as setLoading } from '@/shared/ui/button-loading/setLoading';
-import loadUserDaten from '@/app/session/loadUserDaten';
+import { invokeHook } from '@/shared/lib/feature';
 import setMonatJahr from '../../shared/model/period/setMonatJahr';
 
 /**
@@ -38,5 +38,5 @@ export default function selectYear(monat?: number, jahr?: number): void {
 
   setMonatJahr(jahr, monat);
 
-  if (getUserCookie()) void loadUserDaten(monat, jahr);
+  if (getUserCookie()) void invokeHook('session:load-month', monat, jahr);
 }

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
+import { registerHook } from '@/shared/lib/feature';
 import { render } from '@test/reactRender';
 
 const {
@@ -44,9 +45,7 @@ vi.mock('@/features/ber/ui/createShowModalVE', () => ({
   default: showModalVEMock,
 }));
 
-vi.mock('@/pages/einstellungen/model', () => ({
-  saveEinstellungen: saveEinstellungenMock,
-}));
+registerHook('pre-save:settings', saveEinstellungenMock);
 
 vi.mock('@/features/ber/model/constants', () => ({
   BereitschaftsEinsatzZeiträume: {

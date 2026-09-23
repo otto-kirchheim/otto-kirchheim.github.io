@@ -1,4 +1,4 @@
-import userLoginSuccess from '@/app/session/userLoginSuccess';
+import { invokeHook } from '@/shared/lib/feature';
 import { default as clearLoading } from '@/shared/ui/button-loading/clearLoading';
 import { default as setLoading } from '@/shared/ui/button-loading/setLoading';
 import { authApi } from '@/shared/api/apiService';
@@ -47,7 +47,12 @@ export default async function loginUser(
     resetTokenState();
     const me = await authApi.me().catch(() => null);
     schliesseModal();
-    await userLoginSuccess({ username, role: me?.role, email: me?.email, emailVerified: me?.emailVerified });
+    await invokeHook('auth:login-success', {
+      username,
+      role: me?.role,
+      email: me?.email,
+      emailVerified: me?.emailVerified,
+    });
   } catch (err: unknown) {
     if (err instanceof Error) {
       console.log(err.message);

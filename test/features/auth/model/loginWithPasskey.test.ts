@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
+import { registerHook } from '@/shared/lib/feature';
 
 const userLoginSuccessMock = vi.fn();
 const setLoadingMock = vi.fn();
@@ -11,9 +12,7 @@ const startAuthenticationMock = vi.fn();
 const browserSupportsWebAuthnMock = vi.fn();
 const hideMock = vi.fn();
 
-vi.mock('@/app/session/userLoginSuccess', () => ({
-  default: userLoginSuccessMock,
-}));
+registerHook('auth:login-success', userLoginSuccessMock);
 
 vi.mock('@/shared/ui/button-loading/setLoading', () => ({
   default: setLoadingMock,

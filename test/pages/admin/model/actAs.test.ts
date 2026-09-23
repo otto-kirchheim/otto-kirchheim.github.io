@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
+import { registerHook } from '@/shared/lib/feature';
 
 const { mockSetActAsUser, mockLoadUserDaten, mockGetStoredMonatJahr } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
@@ -11,9 +12,7 @@ const { mockSetActAsUser, mockLoadUserDaten, mockGetStoredMonatJahr } = (
 vi.mock('@/pages/admin/api/api', () => ({
   setActAsUser: mockSetActAsUser,
 }));
-vi.mock('@/app/session/loadUserDaten', () => ({
-  default: mockLoadUserDaten,
-}));
+registerHook('session:load-month', mockLoadUserDaten);
 vi.mock('@/shared/lib/date/dateStorage', () => ({
   getStoredMonatJahr: mockGetStoredMonatJahr,
 }));

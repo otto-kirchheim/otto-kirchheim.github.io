@@ -172,6 +172,10 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
         P7-Ausnahme für Admins Unterordner (nicht mehr unter `features/`)
   - [x] Gate: typecheck 0, lint 0, `lint:fsd` 4, test 2289/2289, build i.o. (`mountAdminTab` eigener Lazy-Chunk, Precache 115), `format`
   - [x] Browser-Check durch den User: i.o. (2026-09-23)
+- [x] Inversion vor P10 (2026-09-23, eigener Commit; ersetzt die offenen Punkte bei P5/P6/P8): statt neuer
+      Registry die vorhandene Hook-Registry: `auth:login-success`, `session:load-month`, `help:open` (Registrierung
+      in `main.tsx`), `VorgabenBTable` → bestehender `pre-save:settings`. 6 Tests auf `registerHook` statt
+      `vi.mock`. Gate: typecheck 0, lint 0, `lint:fsd` 4, test 2289/2289
 - [ ] P10 Abschluss
 
 ---

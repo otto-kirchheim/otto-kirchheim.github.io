@@ -7,7 +7,7 @@ import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { asAnyTable, useCustomTableState } from '@/shared/ui/custom-table/CustomTable';
 import CustomTableView from '@/shared/ui/custom-table/CustomTableView';
 import type { CustomHTMLTableElement, IDatenN } from '@/types';
-import { openHelpModal } from '@/core';
+import { invokeHook } from '@/shared/lib/feature';
 import { confirmDeleteAllRows } from '@/shared/lib/ressource/confirmDeleteAllRows';
 import { getMonatFromN } from '@/shared/lib/date/getMonatFromItem';
 import Storage from '@/shared/lib/storage/Storage';
@@ -178,7 +178,7 @@ export function NebenTab() {
           if (checkIfGreater2024(Jahr, true)) generatePDF(btn, 'N');
         },
       ],
-      ['btnHelpNeben', () => openHelpModal('tab.neben')],
+      ['btnHelpNeben', () => invokeHook('help:open', 'tab.neben')],
     ]);
 
     const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });

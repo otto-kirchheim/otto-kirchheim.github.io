@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
+import { registerHook } from '@/shared/lib/feature';
 
 const viCompat = vi as typeof vi & {
   hoisted: <T>(factory: () => T) => T;
@@ -19,9 +20,7 @@ vi.mock('@/shared/ui/button-loading/setLoading', () => ({
   default: setLoadingMock,
 }));
 
-vi.mock('@/app/session/loadUserDaten', () => ({
-  default: loadUserDatenMock,
-}));
+registerHook('session:load-month', loadUserDatenMock);
 
 vi.mock('@/shared/model/period/setMonatJahr', () => ({
   default: setMonatJahrMock,

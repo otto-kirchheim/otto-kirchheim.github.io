@@ -1,5 +1,6 @@
 import dayjs from '@/shared/lib/date/configDayjs';
-import { openHelpModal, registerAppStartTask } from '@/core';
+import { registerAppStartTask } from '@/core';
+import { openHelpModal } from '@/widgets/help-modal/openHelpModal';
 import { markStep } from '@/app/init/initSequence';
 import Storage from '@/shared/lib/storage/Storage';
 import { default as saveDaten } from '@/shared/lib/ressource/saveDaten';

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
+import { registerHook } from '@/shared/lib/feature';
 
 const {
   createSnackBarMock,
@@ -37,9 +38,7 @@ vi.mock('@/shared/api/apiService', () => ({
   },
 }));
 
-vi.mock('@/app/session/userLoginSuccess', () => ({
-  default: userLoginSuccessMock,
-}));
+registerHook('auth:login-success', userLoginSuccessMock);
 
 vi.mock('@/shared/api/token/passkeys', () => ({
   registerPasskeyWithResult: registerPasskeyWithResultMock,

@@ -6,7 +6,7 @@ import { registerPasskeyWithResult } from '@/shared/api/token/passkeys';
 import { getPasswordValidationMessage } from '@/shared/lib/validation/passwordValidation';
 import { resetTokenState } from '@/shared/api/token/tokenErneuern';
 import { openOnboardingGuideOnce } from '@/features/onboarding/ui/createOnboardingGuideModal';
-import userLoginSuccess from '@/app/session/userLoginSuccess';
+import { invokeHook } from '@/shared/lib/feature';
 import { schliesseModal } from '@/components';
 
 /**
@@ -121,7 +121,7 @@ export default async function checkNeuerBenutzer(): Promise<void> {
       fixed: true,
     });
 
-    await userLoginSuccess({
+    await invokeHook('auth:login-success', {
       username: benutzer.value.trim(),
       role: me?.role,
       email: me?.email,

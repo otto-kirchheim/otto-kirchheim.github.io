@@ -1,7 +1,23 @@
 import type { IVorgabenU } from '@/types';
+import type { HelpContextKey } from '@/shared/lib/help/helpContent';
 
+/**
+ * Aufrufe gegen die Schichtrichtung (FSD: Import nur abwärts): untere Schichten rufen per `invokeHook`,
+ * `main.tsx` registriert die Implementierungen aus app, pages und widgets.
+ */
 export interface HookMap {
   'auth:failure': () => void;
+  /** Nachbereitung eines erfolgreichen Logins (`app/session/userLoginSuccess`). */
+  'auth:login-success': (params: {
+    username: string;
+    role?: string;
+    email?: string;
+    emailVerified?: boolean;
+  }) => Promise<void>;
+  /** Lädt die Benutzerdaten eines Monats (`app/session/loadUserDaten`). */
+  'session:load-month': (monat: number, jahr: number) => Promise<void>;
+  /** Öffnet die Hilfe zu einem Kontext (`widgets/help-modal/openHelpModal`). */
+  'help:open': (key: HelpContextKey) => Promise<void>;
   'network:reconnect': () => void;
   'pre-save:settings': () => IVorgabenU;
   'app:version-outdated': () => void;

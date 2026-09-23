@@ -12,10 +12,16 @@ import { default as storageAvailable } from '@/shared/lib/storage/storageAvailab
 import { registerHook, featureLifecycleRegistry } from '@/shared/lib/feature';
 import type { FeatureContext } from '@/shared/lib/feature';
 import { validateAllSequences, markStep } from './app/init/initSequence';
+import loadUserDaten from '@/app/session/loadUserDaten';
+import userLoginSuccess from '@/app/session/userLoginSuccess';
+import { openHelpModal } from '@/widgets/help-modal/openHelpModal';
 
 validateAllSequences();
 
 registerHook('auth:failure', () => logoutUser({ reason: 'token-expired' }));
+registerHook('auth:login-success', userLoginSuccess);
+registerHook('session:load-month', loadUserDaten);
+registerHook('help:open', openHelpModal);
 registerHook('network:reconnect', changeMonatJahr);
 registerHook('pre-save:settings', saveEinstellungen);
 registerHook('app:version-outdated', () => setVersionOutdated(updateSW));

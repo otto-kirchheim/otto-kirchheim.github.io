@@ -7,4 +7,3 @@ export { publishEvent, onEvent, clearAllEventListeners } from '../shared/lib/eve
 export type { EventChannel, EventChannels } from '../shared/lib/events/types';
 export { getHelpContent } from '../shared/lib/help/helpContent';
 export type { HelpContextKey, HelpContent } from '../shared/lib/help/helpContent';
-export { openHelpModal } from '../widgets/help-modal/openHelpModal';

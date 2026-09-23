@@ -2,7 +2,7 @@ import { DBButton, DBHeadingH2, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect, useId, useRef, type FC } from 'react';
 
 import type { HelpContextKey } from '@/shared/lib/help/helpContent';
-import { openHelpModal } from '@/widgets/help-modal/openHelpModal';
+import { invokeHook } from '@/shared/lib/feature';
 
 /**
  * Kopfzeile der Dialoge im DB-Drawer-Aufbau: Titel links, Aktionen rechts. Der
@@ -42,7 +42,7 @@ const MyModalHeader: FC<{ title: string; helpContext?: HelpContextKey }> = ({ ti
           icon="question_mark_circle"
           noText
           aria-label="Hilfe anzeigen"
-          onClick={() => openHelpModal(helpContext)}
+          onClick={() => invokeHook('help:open', helpContext)}
         >
           <DBTooltip>Hilfe anzeigen</DBTooltip>
         </DBButton>

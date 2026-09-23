@@ -6,7 +6,7 @@ import MonatUeberschrift from '@/shared/ui/monat-ueberschrift/MonatUeberschrift'
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { asAnyTable, useCustomTableState } from '@/shared/ui/custom-table/CustomTable';
 import CustomTableView from '@/shared/ui/custom-table/CustomTableView';
-import { openHelpModal } from '@/core';
+import { invokeHook } from '@/shared/lib/feature';
 import type { CustomHTMLTableElement, IDatenEWT, IVorgabenU } from '@/types';
 import { default as buttonDisable } from '@/shared/ui/button-loading/buttonDisable';
 import { confirmDeleteAllRows } from '@/shared/lib/ressource/confirmDeleteAllRows';
@@ -246,7 +246,7 @@ export function EwtTab() {
       ['btnSaveE', btn => saveDaten(btn)],
       ['btnDownloadE', btn => generatePDF(btn, 'E')],
       ['btnESEE', () => createAddModalEWT(ftE)],
-      ['btnHelpEWT', () => openHelpModal('tab.ewt')],
+      ['btnHelpEWT', () => invokeHook('help:open', 'tab.ewt')],
     ]);
 
     const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });

@@ -7,7 +7,7 @@ import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { asAnyTable, useCustomTableState } from '@/shared/ui/custom-table/CustomTable';
 import CustomTableView from '@/shared/ui/custom-table/CustomTableView';
 import type { CustomHTMLTableElement, IDatenEA } from '@/types';
-import { openHelpModal } from '@/core';
+import { invokeHook } from '@/shared/lib/feature';
 import { confirmDeleteAllRows } from '@/shared/lib/ressource/confirmDeleteAllRows';
 import { getMonatFromEA } from '@/shared/lib/date/getMonatFromItem';
 import Storage from '@/shared/lib/storage/Storage';
@@ -136,7 +136,7 @@ export function EaTab() {
           if (checkIfGreater2025(Jahr, true)) generatePDF(btn, 'EA');
         },
       ],
-      ['btnHelpEA', () => openHelpModal('tab.ea')],
+      ['btnHelpEA', () => invokeHook('help:open', 'tab.ea')],
     ]);
 
     const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });

@@ -1,7 +1,7 @@
 import Storage, { type TStorageData } from '@/shared/lib/storage/Storage';
 import { getStoredMonatJahr } from '@/shared/lib/date/dateStorage';
 import { resourceDefs } from '@/shared/lib/ressource/resourceConfig';
-import loadUserDaten from '@/app/session/loadUserDaten';
+import { invokeHook } from '@/shared/lib/feature';
 import { setActAsUser } from '../api/api';
 
 /**
@@ -26,7 +26,7 @@ export async function loadUserDataForAdminSelection(userId: string | null, userN
 
   const { monat, jahr } = getStoredMonatJahr();
 
-  await loadUserDaten(monat, jahr);
+  await invokeHook('session:load-month', monat, jahr);
   window.location.hash = '#start';
 }
 

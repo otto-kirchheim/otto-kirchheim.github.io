@@ -15,7 +15,7 @@ import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import { asAnyTable, useCustomTableState } from '@/shared/ui/custom-table/CustomTable';
 import CustomTableView from '@/shared/ui/custom-table/CustomTableView';
-import { openHelpModal } from '@/core';
+import { invokeHook } from '@/shared/lib/feature';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ } from '@/types';
 import { confirmDeleteAllRows } from '@/shared/lib/ressource/confirmDeleteAllRows';
 import { createOnChangeHandler } from '@/shared/lib/autosave/autoSave';
@@ -317,7 +317,7 @@ export function BereitschaftTab() {
       ['btnESE', createAddModalBereitschaftsEinsatz],
       ['btnSaveB', btn => saveDaten(btn)],
       ['btnDownloadB', btn => generatePDF(btn, 'B')],
-      ['btnHelpBereitschaft', () => openHelpModal('tab.bereitschaft')],
+      ['btnHelpBereitschaft', () => invokeHook('help:open', 'tab.bereitschaft')],
     ]);
 
     const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });

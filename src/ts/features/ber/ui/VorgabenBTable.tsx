@@ -1,4 +1,4 @@
-import { saveEinstellungen } from '@/pages/einstellungen/model';
+import { invokeHook } from '@/shared/lib/feature';
 import { BereitschaftsEinsatzZeiträume } from '../model/constants';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { asAnyTable, useCustomTableState } from '@/shared/ui/custom-table/CustomTable';
@@ -197,7 +197,7 @@ export default function VorgabenBTable() {
             let vorgabenB = code ? await fetchTemplateVorgabenB(code) : null;
             if (!vorgabenB) vorgabenB = await fetchTemplateVorgabenB('muster');
             ftVE.rows.load(vorgabenB ?? Object.values(BereitschaftsEinsatzZeiträume));
-            saveEinstellungen();
+            invokeHook('pre-save:settings');
           },
         },
       ],

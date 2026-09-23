@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
+import { registerHook } from '@/shared/lib/feature';
 
 const { userLoginSuccessMock, setLoadingMock, clearLoadingMock, loginMock, meMock, hideMock } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
@@ -11,9 +12,7 @@ const { userLoginSuccessMock, setLoadingMock, clearLoadingMock, loginMock, meMoc
   hideMock: vi.fn(),
 }));
 
-vi.mock('@/app/session/userLoginSuccess', () => ({
-  default: userLoginSuccessMock,
-}));
+registerHook('auth:login-success', userLoginSuccessMock);
 
 vi.mock('@/shared/ui/button-loading/setLoading', () => ({
   default: setLoadingMock,
