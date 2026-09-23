@@ -1,8 +1,8 @@
 import { DBButton, DBHeadingH2, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect, useId, useRef, type FC } from 'react';
 
-import type { HelpContextKey } from '@/core/help/helpContent';
-import { openHelpModal } from '@/core/help/openHelpModal';
+import type { HelpContextKey } from '@/shared/lib/help/helpContent';
+import { openHelpModal } from '@/widgets/help-modal/openHelpModal';
 
 /**
  * Kopfzeile der Dialoge im DB-Drawer-Aufbau: Titel links, Aktionen rechts. Der

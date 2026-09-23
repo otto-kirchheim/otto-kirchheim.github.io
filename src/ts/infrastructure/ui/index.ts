@@ -6,7 +6,6 @@ export { default as setLoading } from '../../shared/ui/button-loading/setLoading
 export { default as setOffline } from './setOffline';
 export { default as setVersionOutdated } from './setVersionOutdated';
 export { default as updateTabVisibility, hideAllFeatureTabs } from './updateTabVisibility';
-export * from './useColorMode';
 export * from '../../shared/ui/button-loading/loadingButtonState';
 export * from '../../shared/ui/snackbar/CustomSnackbar';
 export * from '../../shared/ui/button-loading/dbButton';

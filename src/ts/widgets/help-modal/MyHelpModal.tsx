@@ -1,9 +1,9 @@
 import { DBButton, DBHeadingH6, DBInfotext } from '@db-ux/react-core-components';
 import { type FC } from 'react';
 
-import type { HelpContent } from '@/core/help/helpContent';
+import type { HelpContent } from '@/shared/lib/help/helpContent';
 import { openOnboardingGuide } from '@/features/onboarding/ui/createOnboardingGuideModal';
-import { MyDivModal, MyModalBody } from '.';
+import { MyDivModal, MyModalBody } from '@/components';
 
 /**
  * Hilfedialog: zeigt Titel, Kurzbeschreibung und die optionalen Abschnitte des `HelpContent`.

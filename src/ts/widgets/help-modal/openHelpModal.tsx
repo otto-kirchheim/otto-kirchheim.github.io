@@ -1,8 +1,9 @@
 import { unmount } from '@/infrastructure/ui';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 
-import { MyHelpModal, oeffneDrawer } from '@/components';
-import { getHelpContent, type HelpContent, type HelpContextKey } from './helpContent';
+import { oeffneDrawer } from '@/components';
+import MyHelpModal from './MyHelpModal';
+import { getHelpContent, type HelpContent, type HelpContextKey } from '@/shared/lib/help/helpContent';
 
 /**
  * Öffnet die Hilfe in einem eigenständigen, gestapelten Dialog statt im geteilten

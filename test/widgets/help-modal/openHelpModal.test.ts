@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 import '@/app/features';
-import { openHelpModal } from '@/core/help/openHelpModal';
+import { openHelpModal } from '@/widgets/help-modal/openHelpModal';
 
 function getModalEl() {
   return document.body.querySelector<HTMLDialogElement>('dialog.db-drawer');

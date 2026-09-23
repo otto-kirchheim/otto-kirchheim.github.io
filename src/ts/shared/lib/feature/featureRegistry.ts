@@ -8,7 +8,7 @@
 
 import { onEvent } from '@/shared/lib/events/appEvents';
 import type { EventChannel, EventChannels } from '@/shared/lib/events/types';
-import type { HelpContent } from '@/core/help/helpContent';
+import type { HelpContent } from '@/shared/lib/help/helpContent';
 import type { IFeatureBerechnung, IFeatureEinstellungen, IVorgabenGeldType, IVorgabenU, TResourceKey } from '@/types';
 import { featureLifecycleRegistry } from './featureLifecycle';
 

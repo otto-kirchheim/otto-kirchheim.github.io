@@ -2,12 +2,12 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, spyOn, vi } from
 import { clearAllEventListeners, publishEvent } from '@/shared/lib/events/appEvents';
 import { featureLifecycleRegistry, featureRegistry } from '@/shared/lib/feature';
 import type { FeatureDefinition, FeatureMeta, FeaturePartName, FeatureResourceKey } from '@/shared/lib/feature';
-import { getHelpContent } from '@/core/help/helpContent';
+import { getHelpContent } from '@/shared/lib/help/helpContent';
 import { resetFeatureTabSync, syncFeatureTabs } from '@/app/init/syncFeatureTabs';
 import calculateBerechnungRows from '@/features/Berechnung/calculateBerechnungRows';
 import { ladeBerechnungsTeile } from '@/features/Berechnung/ladeBerechnungsTeile';
 import { resourceKeys } from '@/shared/lib/ressource/resourceConfig';
-import AppHeader from '@/infrastructure/ui/AppHeader';
+import AppHeader from '@/widgets/app-header/AppHeader';
 import { ladeEinstellungenTeile, resetEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
 import StartTab from '@/infrastructure/ui/StartTab';
 import { VorgabenGeldMock, datenBerechungMock } from '@test/mockData';

@@ -1,5 +1,5 @@
 import type React from 'react';
-import type { HelpContextKey } from '@/core/help/helpContent';
+import type { HelpContextKey } from '@/shared/lib/help/helpContent';
 
 export type TMyModal<T> = {
   myRef: React.RefObject<T | null>;

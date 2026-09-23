@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import '@/app/features';
-import AppHeader from '@/infrastructure/ui/AppHeader';
+import AppHeader from '@/widgets/app-header/AppHeader';
 import StartTab from '@/infrastructure/ui/StartTab';
 import { render } from '@test/reactRender';
 

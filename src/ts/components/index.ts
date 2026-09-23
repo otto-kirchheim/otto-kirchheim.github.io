@@ -4,7 +4,6 @@ import MyCheckbox from '../shared/ui/form/MyCheckbox';
 import MyDivModal from '../shared/ui/modal/MyDivModal';
 import MyEditorFooter from '../shared/ui/modal/MyEditorFooter';
 import MyFormModal from '../shared/ui/modal/MyFormModal';
-import MyHelpModal from './MyHelpModal';
 import MyInput from '../shared/ui/form/MyInput';
 import MyModalBody from '../shared/ui/modal/MyModalBody';
 import MyModalHeader from '../shared/ui/modal/MyModalHeader';
@@ -22,7 +21,6 @@ export {
   MyDivModal,
   MyEditorFooter,
   MyFormModal,
-  MyHelpModal,
   MyInput,
   MyModalBody,
   MyModalHeader,

@@ -5,7 +5,7 @@ import { type FC, useEffect, useMemo, useState } from 'react';
 // OnboardingGuidePanel → openHelpModal → MyHelpModal → createOnboardingGuideModal zu vermeiden.
 import { onEvent } from '@/shared/lib/events/appEvents';
 import { featureRegistry } from '@/shared/lib/feature';
-import { getHelpContent } from '@/core/help/helpContent';
+import { getHelpContent } from '@/shared/lib/help/helpContent';
 import { ladeEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
 import { capturePersSnapshot, springeZu, validatePersoenlicheDaten } from '../model/onboardingValidation';
 

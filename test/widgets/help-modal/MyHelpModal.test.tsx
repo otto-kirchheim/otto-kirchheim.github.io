@@ -11,9 +11,9 @@ vi.mock('@/features/onboarding/ui/createOnboardingGuideModal', () => ({
 // Fuer diesen isolierten Komponententest wird das Modul daher wie in MyShowFooter.test.tsx gemockt.
 
 import '@/app/features';
-import { getHelpContent } from '@/core/help/helpContent';
+import { getHelpContent } from '@/shared/lib/help/helpContent';
 
-const { default: MyHelpModal } = await import('@/components/MyHelpModal');
+const { default: MyHelpModal } = await import('@/widgets/help-modal/MyHelpModal');
 
 function renderMyHelpModal(content: Parameters<typeof MyHelpModal>[0]['content']): HTMLDivElement {
   const container = document.createElement('div');

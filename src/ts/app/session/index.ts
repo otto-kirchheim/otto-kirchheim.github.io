@@ -1,6 +1,6 @@
 import { selectYear } from '@/features/Einstellungen/utils';
 import { registerAppStartTask } from '@/app/init/bootstrap';
-import { openHelpModal } from '@/core/help/openHelpModal';
+import { openHelpModal } from '@/widgets/help-modal/openHelpModal';
 import type { IVorgabenU } from '@/types';
 import { ACT_AS_STATUS_EVENT, updateActAsBanner } from '@/shared/model/session/actAsStatus';
 import { getStoredMonatJahr } from '@/shared/lib/date/dateStorage';

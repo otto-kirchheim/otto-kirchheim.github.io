@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { Glob } from 'bun';
 import '@/app/features';
 import { featureRegistry } from '@/shared/lib/feature';
-import { getHelpContent, type HelpContextKey } from '@/core/help/helpContent';
+import { getHelpContent, type HelpContextKey } from '@/shared/lib/help/helpContent';
 
 const FEATURE_KEYS: string[] = featureRegistry.metas().flatMap(meta => [...(meta.helpKeys ?? [])]);
 const ALL_KEYS: HelpContextKey[] = ['tab.start', 'tab.einstellungen', 'tab.berechnung', ...FEATURE_KEYS];

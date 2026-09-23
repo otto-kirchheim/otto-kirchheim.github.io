@@ -74,7 +74,7 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
       Layout wird erst in P7 umgezogen). `lint:fsd`-Ratsche 47 → 37 (Grenze in `package.json` nachgezogen).
       Gate: typecheck 0, lint 0, `lint:fsd` 37, Tests 2289 unverändert, build i.o. (Precache weiterhin 113),
       `bun run format` gelaufen.
-- [ ] P5 Geteilte Features + app/session (Start 2026-09-23). **Abweichung vom Plan (User-Entscheid):**
+- [x] P5 Geteilte Features + app/session (2026-09-23, Commit `969e349`). **Abweichung vom Plan (User-Entscheid):**
       Autosave und PDF-Export nach `shared/lib/{autosave,pdf}` statt `features/{autosave,pdf-export}` --
       sonst feature→feature (ber/ewt/ea/ez) und shared→features (`saveDaten`, `unlinkEwtRefs`, `AutoSaveBadge`).
   - [x] Zielordner angelegt (Claude)
@@ -95,10 +95,28 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
         Kommentar-/Doku-Pfade; leere Alt-Ordner entfernt (übrig nur Ordner mit gitignoriertem `.claude-flow`)
   - [x] Gate: typecheck 0, lint 0, `lint:fsd` 18 (= Ratsche des Users; neu `components/MyHelpModal` → `features/onboarding`,
         löst sich in P6), test 2289/2289, build i.o. (Precache 113), `format`
-  - [ ] `verify`-Smoke im Browser (Login, Passkey, Monatswechsel, Speichern, PDF je Modus) -- offen
+  - [x] Browser-Check durch den User: i.o. (2026-09-23)
   - [ ] Offen für eigenen Commit (Event-Inversion, nicht Teil des Moves): `features/auth` → `app/session`/`app/init`
         (`loginUser`/`checkNeuerBenutzer` → `userLoginSuccess`, `logoutUser` → `syncFeatureTabs`), `checkNeuerBenutzer` → `features/onboarding`
-- [ ] P6 Widgets · P7 Module verschieben · P8 Globale Bereiche → Pages · P9 Admin · P10 Abschluss
+- [x] P6 Widgets (2026-09-23). **Abweichungen vom Plan (User-Entscheid):** `ThemeSwitcher` (+ `useColorMode`,
+      `useMediaQuery`) in `widgets/app-header` statt eigenem `widgets/theme-switcher` (einziger Konsument `AppHeader`,
+      sonst widget→widget); Hilfe aufgeteilt: `helpContent.ts` → `shared/lib/help` (Typen/Loader, von shared + features
+      genutzt), `openHelpModal` + `MyHelpModal` → `widgets/help-modal`. `AutoSaveBadge` bleibt in `shared/ui/button-loading`, Snackbar-Host in `shared/ui/snackbar` (beide schon in P3 verschoben, kein zweiter Move).
+  - [x] Zielordner angelegt (Claude)
+  - [x] Moves in der IDE (User): `AppHeader`/`ThemeSwitcher`/`useColorMode`/`useMediaQuery` → `widgets/app-header`,
+        `AppFooter`/`ImpressumDialog` → `widgets/app-footer`,
+        `openHelpModal`/`MyHelpModal` → `widgets/help-modal`, `helpContent` → `shared/lib/help`; Tests gespiegelt.
+        Snackbar-Host stand in meiner Liste, obwohl schon in P3 verschoben -- User hat ihn zurückgeschoben (Lesson).
+  - [x] Nacharbeit (Claude): Alias-Importe `@/core/help/*`, `@/components/MyHelpModal` und ein Zwischenstand
+        `@/widgets/app-header/AppFooter` in `App.tsx`; `components/index.ts` ohne `MyHelpModal`, `infrastructure/ui/index.ts`
+        ohne `useColorMode`, `core/index.ts` reicht `openHelpModal` vorerst aus `widgets/help-modal` durch (Legacy-Fassade
+        bis P10); `openHelpModal`/`MyHelpModal` ohne Barrel-Selbstimport; leerer Ordner `core/help` entfernt
+  - [x] Gate: typecheck 0, lint 0, `lint:fsd` 16 (Ratsche 18 → 16), test 2289/2289, build i.o. (Precache 113), `format`
+  - [x] Browser-Check visuell durch den User: i.o. (2026-09-23)
+  - [ ] Offen für eigenen Commit (Inversion): `openHelpModal` wird von `shared/ui/modal/MyModalHeader` und über das
+        `@/core`-Barrel von den Modul-Tabs (ber/ewt/ea/ez), `Einstellungen` und `BerechnungTab` aufgerufen → Öffner-
+        Registrierung in `shared/lib/help`, Widget meldet sich beim Start an
+- [ ] P7 Module verschieben · P8 Globale Bereiche → Pages · P9 Admin · P10 Abschluss
 
 ---
 

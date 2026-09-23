@@ -2,6 +2,22 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-23 (183)
+
+### refactor (P6: Widgets)
+
+- `AppHeader` mit `ThemeSwitcher`, `useColorMode`, `useMediaQuery` nach `widgets/app-header`; `AppFooter` mit
+  `ImpressumDialog` nach `widgets/app-footer`; `openHelpModal` + `MyHelpModal` nach `widgets/help-modal`;
+  `helpContent.ts` (Typen + Loader) nach `shared/lib/help`.
+- **Abweichungen vom Plan (User-Entscheid):** kein eigenes `widgets/theme-switcher` (einziger Konsument ist der Header,
+  sonst widget→widget); Hilfe aufgeteilt, weil `helpContent`-Typen von `shared` und `features/onboarding` gebraucht
+  werden. Snackbar-Host und `AutoSaveBadge` bleiben in `shared/ui` (schon in P3 verschoben).
+- Barrels ohne schichtfremde Re-Exporte (`components` ohne `MyHelpModal`, `infrastructure/ui` ohne `useColorMode`);
+  `core/index.ts` reicht `openHelpModal` bis P10 durch. `lint:fsd` 18 → 16.
+- Bekannt, eigener Commit: Aufrufe von `openHelpModal` aus `shared/ui/modal/MyModalHeader` und den Modul-Tabs über `@/core`
+  sind Aufwärts-Importe → Öffner-Registrierung in `shared/lib/help`. Gate: typecheck 0, lint 0, `lint:fsd` 16,
+  Tests 2289/2289, build i.o. (Precache 113).
+
 ## 2026-09-23 (182)
 
 ### refactor (P5: geteilte Features, `app/session`, `app/init`)

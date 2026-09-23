@@ -1,7 +1,7 @@
 import { DBButton, DBNotification, DBShell, DBShellContent } from '@db-ux/react-core-components';
 import { featureRegistry } from '@/shared/lib/feature';
-import AppHeader from '@/infrastructure/ui/AppHeader';
-import AppFooter from '@/infrastructure/ui/AppFooter';
+import AppHeader from '@/widgets/app-header/AppHeader';
+import AppFooter from '@/widgets/app-footer/AppFooter';
 import SnackbarHost from '@/shared/ui/snackbar/SnackbarHost';
 import StartTab from '@/infrastructure/ui/StartTab';
 import BerechnungTab from '@/infrastructure/ui/BerechnungTab';

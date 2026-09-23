@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import { MyCheckbox } from '@/components';
-import { useColorMode } from './useColorMode';
+import { useColorMode } from './useColorMode.ts';
 
 /**
  * Hell/Dunkel-Schalter. Der Store hinter `useColorMode()` kennt zusaetzlich `'auto'` (Erststart,
