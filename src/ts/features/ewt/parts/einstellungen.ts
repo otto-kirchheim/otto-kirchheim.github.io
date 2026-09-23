@@ -4,8 +4,8 @@ import FahrzeitenAbschnitt from '../ui/FahrzeitenEinstellungenAbschnitt';
 import type { IVorgabenUfZ } from '@/types';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { mount } from '@/infrastructure/ui';
-import { FahrzeitenPanel } from '@/features/Einstellungen/components/FahrzeitenPanel';
-import { getFahrzeitPanelState } from '@/features/Einstellungen/components/fahrzeitPanelState';
+import { FahrzeitenPanel } from '@/features/ewt/ui/FahrzeitenPanel';
+import { getFahrzeitPanelState } from '@/features/ewt/ui/fahrzeitPanelState';
 
 // Zaehlt jeden Aufruf hoch, damit `key` sich aendert und React das Panel neu mountet statt den bestehenden
 // Component-State (inkl. veralteter Fahrzeiten nach Act-as-Wechsel) zu behalten.

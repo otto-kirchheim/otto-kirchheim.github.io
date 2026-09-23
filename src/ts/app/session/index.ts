@@ -1,4 +1,4 @@
-import { selectYear } from '@/features/Einstellungen/utils';
+import selectYear from './selectYear';
 import { registerAppStartTask } from '@/app/init/bootstrap';
 import { openHelpModal } from '@/widgets/help-modal/openHelpModal';
 import type { IVorgabenU } from '@/types';

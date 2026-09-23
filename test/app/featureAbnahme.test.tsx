@@ -4,12 +4,12 @@ import { featureLifecycleRegistry, featureRegistry } from '@/shared/lib/feature'
 import type { FeatureDefinition, FeatureMeta, FeaturePartName, FeatureResourceKey } from '@/shared/lib/feature';
 import { getHelpContent } from '@/shared/lib/help/helpContent';
 import { resetFeatureTabSync, syncFeatureTabs } from '@/app/init/syncFeatureTabs';
-import calculateBerechnungRows from '@/features/Berechnung/calculateBerechnungRows';
-import { ladeBerechnungsTeile } from '@/features/Berechnung/ladeBerechnungsTeile';
+import calculateBerechnungRows from '@/pages/berechnung/calculateBerechnungRows';
+import { ladeBerechnungsTeile } from '@/pages/berechnung/ladeBerechnungsTeile';
 import { resourceKeys } from '@/shared/lib/ressource/resourceConfig';
 import AppHeader from '@/widgets/app-header/AppHeader';
-import { ladeEinstellungenTeile, resetEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
-import StartTab from '@/infrastructure/ui/StartTab';
+import { ladeEinstellungenTeile, resetEinstellungenTeile } from '@/shared/model/einstellungen/einstellungenTeile';
+import StartTab from '@/pages/start/ui/StartTab';
 import { VorgabenGeldMock, datenBerechungMock } from '@test/mockData';
 import { render } from '@test/reactRender';
 

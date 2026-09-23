@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import '@/app/features';
 import AppHeader from '@/widgets/app-header/AppHeader';
-import StartTab from '@/infrastructure/ui/StartTab';
+import StartTab from '@/pages/start/ui/StartTab';
 import { resetFeatureTabsVisible } from '@/shared/model/navigation/featureTabsStore';
 import updateTabVisibility, { hideAllFeatureTabs } from '@/infrastructure/ui/updateTabVisibility';
 import { render } from '@test/reactRender';

@@ -2,6 +2,21 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-23 (185)
+
+### refactor (P8: globale Bereiche als Pages)
+
+- `features/Einstellungen` → `pages/einstellungen/{ui,model}`, `features/Berechnung` → `pages/berechnung` (`ui/`),
+  `StartTab`/`BerechnungTab`/`EinstellungenTab` → `pages/<seite>/ui/`.
+- Vorher herausgelöst, was nur ein Modul nutzt: Bereitschafts-Voreinstellungen (`VorgabenBTable`, VE-Dialoge,
+  `SchichtOverrideEditor`, Tabellen-Helfer) nach `features/ber`, `FahrzeitenPanel` nach `features/ewt`,
+  `ZulagenCheckboxList` nach `features/ez`. Arbeitszeit-Editor nach `shared/ui/arbeitszeit-editor`, `setMonatJahr`/
+  `changeMonatJahr` nach `shared/model/period`, `berechnungBausteine` nach `shared/ui/berechnung`, `MonatUeberschrift`
+  nach `shared/ui/monat-ueberschrift`, `einstellungenTeile` nach `shared/model/einstellungen`, `selectYear` nach
+  `app/session` (lädt Daten, deshalb nicht shared).
+- Barrels der Einstellungen-Seite nur noch mit eigenen Exporten. `lint:fsd` 14 → 4 (übrig: ea/ez → `ewt/model`).
+- Gate: typecheck 0, lint 0, `lint:fsd` 4, Tests 2289/2289, build i.o. (Precache 115, drei neue kleine gemeinsame Chunks).
+
 ## 2026-09-23 (184)
 
 ### refactor (P7: Feature-Module unter ihren Schlüsseln)

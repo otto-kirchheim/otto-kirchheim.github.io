@@ -4,7 +4,7 @@ import type { FeatureParts } from '@/shared/lib/feature';
 import type { IDatenN, IVorgabenBerechnungMonat, IVorgabenGeldType } from '@/types';
 import { getMonatFromN } from '@/shared/lib/date/getMonatFromItem';
 import { currency } from '@/shared/lib/ressource/berechnungWerte';
-import { DetailZeile, GruppenTitel, LabelTabelle } from '@/infrastructure/ui/berechnungBausteine';
+import { DetailZeile, GruppenTitel, LabelTabelle } from '@/shared/ui/berechnung/berechnungBausteine';
 import calculateZulagenBreakdown, {
   type IZulagenBreakdown,
   zulagenEinheitKurz,

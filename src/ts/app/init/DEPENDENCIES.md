@@ -32,7 +32,7 @@ storage:user
 
 | Event Channel | Subscriber | Registered by |
 |---------------|-----------|--------------|
-| `data:changed` | `aktualisiereBerechnung` | `features/Berechnung/index.ts` |
+| `data:changed` | `aktualisiereBerechnung` | `pages/berechnung/index.ts` |
 
 ## Logout Teardown
 

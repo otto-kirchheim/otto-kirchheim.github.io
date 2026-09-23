@@ -133,7 +133,33 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
   - [x] Gate: typecheck 0, lint 0, `lint:fsd` 14 (Ratsche 16 → 14), test 2289/2289, build i.o. (je Modul-Teil ein
         Chunk, Precache 113), `format`
   - [x] Browser-Check durch den User: keine Fehler (2026-09-23)
-- [ ] P8 Globale Bereiche → Pages · P9 Admin · P10 Abschluss
+- [x] P8 Globale Bereiche → Pages (2026-09-23): `features/Einstellungen` → `pages/einstellungen/{ui,model}`,
+      `features/Berechnung` → `pages/berechnung` (`components` → `ui`, lose `.ts` an der Seitenwurzel), `StartTab`/
+      `BerechnungTab`/`EinstellungenTab` → `pages/<seite>/ui/`. Vorher herausgelöst: modulspezifische Einstellungen-Teile
+      in die Module (ber: `VorgabenBTable`, `createEditorModalVE`, `createShowModalVE`, `SchichtOverrideEditor`,
+      `generateEingabeTabelleEinstellungenVorgabenB`, `saveTableDataVorgabenU`; ewt: `FahrzeitenPanel`, `fahrzeitPanelState`;
+      ez: `ZulagenCheckboxList`), Arbeitszeit-Editor (`ArbeitszeiteingabePanel`, `arbeitszeitPanelState`, `SchichtSection`)
+      → `shared/ui/arbeitszeit-editor` (Plan-Zielstruktur), `setMonatJahr`/`changeMonatJahr` → `shared/model/period`,
+      `berechnungBausteine` → `shared/ui/berechnung`, `MonatUeberschrift` → `shared/ui/monat-ueberschrift`,
+      `einstellungenTeile` → `shared/model/einstellungen`. **Abweichung:** `selectYear` → `app/session` (ruft `loadUserDaten`).
+  - [x] Zielordner angelegt (Claude); `pages/{einstellungen,berechnung}` bewusst nicht (Umbenennungsziel)
+  - [x] Moves in der IDE (User)
+  - [x] 27 Tests gespiegelt per `git mv` (Claude): `test/pages/{berechnung,einstellungen}/…`, herausgelöste Teile zu
+        ihrem neuen Ort (`features/{ber,ewt,ez}`, `shared/model/period`, `shared/ui/monat-ueberschrift`,
+        `app/session/selectYear`); `bundeslandAutofill.test.ts` testet `shared/lib/date/holidayRegion` → `test/shared/lib/date/`
+  - [x] Nacharbeit (Claude): Barrels `pages/einstellungen/{model,ui}/index.ts` nur noch mit seiteneigenen Exporten
+        (Konsumenten auf konkrete Dateien umgestellt); Alias-Importe `@/features/{Einstellungen,Berechnung}` und
+        `@/infrastructure/ui/<verschoben>` global; falsch umgeschriebene relative Pfade; 6 Tests mit `vi.mock` auf alte
+        Barrels auf konkrete Module umgestellt (ein veralteter Barrel-Mock ließ den ber-Einstellungen-Teil still
+        ausfallen); `eslint.fsd.config.js` FEATURES ohne Berechnung/Einstellungen; Kommentare
+  - [x] Gate: typecheck 0, lint 0, `lint:fsd` 4 (Ratsche 14 → 4; übrig nur ea/ez → `ewt/model`), test 2289/2289,
+        build i.o. (Precache 115: neue kleine gemeinsame Chunks `SchichtSection`, `SchichtOverrideEditor`,
+        `berechnungBausteine`), `format`
+  - [x] Commit-Freigabe durch den User (2026-09-23; Browser-Check nicht gesondert zurückgemeldet)
+  - [ ] Bekannt: `lint:fsd` prüft `app`/`pages`/`widgets` noch nicht (P10). Aufwärts-Importe, die er deshalb nicht
+        zählt: `features/ber/ui/VorgabenBTable` → `pages/einstellungen/model` (`saveEinstellungen`),
+        `pages/einstellungen` → `app/session/selectYear`, `features/Admin` → `pages/{berechnung,einstellungen}` (P9)
+- [ ] P9 Admin · P10 Abschluss
 
 ---
 

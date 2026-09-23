@@ -2,7 +2,7 @@ import type { IVorgabeValue } from '@otto-kirchheim/nebengeld-shared';
 
 /**
  * Vollständig gemergter Vorgaben-Wert (nach `createDatenGeldProxy`-Merge, siehe
- * `features/Berechnung/calculateBerechnungRows.ts`) — alle Felder garantiert gesetzt,
+ * `pages/berechnung/calculateBerechnungRows.ts`) — alle Felder garantiert gesetzt,
  * anders als der rohe, pro Monat teilweise befüllte Eintrag (`IVorgabeValue` aus shared).
  */
 export type IVorgabenGeldType = Required<IVorgabeValue>;

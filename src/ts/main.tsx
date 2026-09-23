@@ -1,7 +1,8 @@
 import { pwaInfo } from 'virtual:pwa-info';
 import { registerSW } from 'virtual:pwa-register';
 
-import { changeMonatJahr, saveEinstellungen } from '@/features/Einstellungen/utils';
+import { saveEinstellungen } from '@/pages/einstellungen/model';
+import changeMonatJahr from '@/shared/model/period/changeMonatJahr';
 import logoutUser from '@/features/auth/model/logoutUser';
 import { createSnackBar, initPullToRefresh, setVersionOutdated } from '@/infrastructure/ui';
 import { default as Storage } from '@/shared/lib/storage/Storage';
@@ -94,7 +95,7 @@ import { createElement } from 'react';
 import { mount } from '@/infrastructure/ui/reactRoot';
 import App from './App';
 import { initializeAppBootstrap, registerAppStartTask } from './core';
-import { ladeEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
+import { ladeEinstellungenTeile } from '@/shared/model/einstellungen/einstellungenTeile';
 
 console.log('Version:', import.meta.env.APP_VERSION);
 
@@ -157,8 +158,8 @@ registerAppStartTask(() => {
   markStep('boot', 'boot:main-ui');
 });
 
-import '@/features/Berechnung';
-import '@/features/Einstellungen';
+import '@/pages/berechnung';
+import '@/pages/einstellungen';
 import './app/session';
 import '@/app/features';
 

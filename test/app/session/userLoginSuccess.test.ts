@@ -28,8 +28,8 @@ vi.mock('@/features/auth/model/requestVerificationMail', () => ({
   default: requestVerificationMailMock,
 }));
 
-vi.mock('@/features/Einstellungen/utils', () => ({
-  selectYear: selectYearMock,
+vi.mock('@/app/session/selectYear', () => ({
+  default: selectYearMock,
 }));
 
 vi.mock('@/shared/lib/storage/Storage', () => ({

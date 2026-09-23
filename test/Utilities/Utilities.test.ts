@@ -9,7 +9,7 @@ import { default as setLoading } from '@/shared/ui/button-loading/setLoading';
 import { getUserCookie, isAdmin } from '@/shared/api/token/decodeAccessToken';
 /* import * as exportBerechnung from "@/Berechnung";
 import * as exportSnackbar from "@/shared/ui/snackbar/CustomSnackbar";
-import * as exportEinstelllungen from "@/features/Einstellungen/utils"; */
+import * as exportEinstelllungen from "@/pages/einstellungen/model"; */
 /* import { VorgabenUMock, mockBereitschaft, mockEWT, mockNeben } from "./mockData";
  */
 describe('#Storage', () => {

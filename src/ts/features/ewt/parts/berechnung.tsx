@@ -3,7 +3,7 @@ import type { IBerechnungMonatsErgebnis, IDatenEWT, IVorgabenBerechnungMonat } f
 import dayjs from '@/shared/lib/date/configDayjs';
 import { getMonatFromEWTBuchungstag } from '@/shared/lib/date/getMonatFromItem';
 import { anzeige, currency } from '@/shared/lib/ressource/berechnungWerte';
-import { GruppenTitel, LabelTabelle, SchwellenZeilen } from '@/infrastructure/ui/berechnungBausteine';
+import { GruppenTitel, LabelTabelle, SchwellenZeilen } from '@/shared/ui/berechnung/berechnungBausteine';
 
 type Bucket = IVorgabenBerechnungMonat['E'];
 

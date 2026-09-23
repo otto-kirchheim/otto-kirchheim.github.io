@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 
 import { ZULAGEN_CATALOG } from '@/shared/lib/zulagen/zulagenCatalog';
-import { ArbeitszeiteingabePanel } from '../../Einstellungen/components/ArbeitszeiteingabePanel';
+import { ArbeitszeiteingabePanel } from '../../../shared/ui/arbeitszeit-editor/ArbeitszeiteingabePanel';
 import {
   PERS_FIELDS,
   tabOptions,

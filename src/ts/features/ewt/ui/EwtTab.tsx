@@ -2,7 +2,7 @@ import { DBButton, DBDivider, DBHeadingH1, DBSection, DBStack, DBTooltip } from 
 import { useEffect } from 'react';
 
 import { DBLoadingButton } from '@/components';
-import MonatUeberschrift from '@/infrastructure/ui/MonatUeberschrift';
+import MonatUeberschrift from '@/shared/ui/monat-ueberschrift/MonatUeberschrift';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { asAnyTable, useCustomTableState } from '@/shared/ui/custom-table/CustomTable';
 import CustomTableView from '@/shared/ui/custom-table/CustomTableView';

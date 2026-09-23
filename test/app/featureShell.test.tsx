@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import '@/app/features';
 import AppHeader from '@/widgets/app-header/AppHeader';
-import StartTab from '@/infrastructure/ui/StartTab';
+import StartTab from '@/pages/start/ui/StartTab';
 import { render } from '@test/reactRender';
 
 /** Nav, Start-Schnellzugriff und Panes entstehen aus `meta` -- die DOM-Ids bleiben die bisherigen Vertraege. */

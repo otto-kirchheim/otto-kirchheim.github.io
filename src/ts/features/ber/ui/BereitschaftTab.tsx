@@ -10,7 +10,7 @@ import {
 import { useEffect } from 'react';
 
 import { DBLoadingButton } from '@/components';
-import MonatUeberschrift from '@/infrastructure/ui/MonatUeberschrift';
+import MonatUeberschrift from '@/shared/ui/monat-ueberschrift/MonatUeberschrift';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import { asAnyTable, useCustomTableState } from '@/shared/ui/custom-table/CustomTable';

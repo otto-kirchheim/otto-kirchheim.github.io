@@ -1,5 +1,5 @@
 import { Role } from '@otto-kirchheim/nebengeld-shared';
-import { selectYear } from '@/features/Einstellungen/utils';
+import selectYear from './selectYear';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import Storage from '@/shared/lib/storage/Storage';
 import { default as setLoading } from '@/shared/ui/button-loading/setLoading';

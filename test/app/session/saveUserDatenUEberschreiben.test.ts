@@ -41,7 +41,7 @@ vi.mock('@/features/ez/model', () => ({
   getNebengeldDaten: getNebengeldDatenMock,
 }));
 
-vi.mock('@/features/Einstellungen/utils', () => ({
+vi.mock('@/pages/einstellungen/model', () => ({
   generateEingabeMaskeEinstellungen: generateEingabeMaskeEinstellungenMock,
 }));
 

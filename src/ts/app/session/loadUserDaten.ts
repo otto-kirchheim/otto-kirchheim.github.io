@@ -1,7 +1,7 @@
 import overwriteUserDaten from './overwriteUserDaten';
-import { aktualisiereBerechnung } from '@/features/Berechnung';
-import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnung';
-import { generateEingabeMaskeEinstellungen } from '@/features/Einstellungen/utils';
+import { aktualisiereBerechnung } from '@/pages/berechnung';
+import generateTableBerechnung from '@/pages/berechnung/generateTableBerechnung';
+import { generateEingabeMaskeEinstellungen } from '@/pages/einstellungen/model';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
 import { isRowInMonat, resourceDefs } from '@/shared/lib/ressource/resourceConfig';

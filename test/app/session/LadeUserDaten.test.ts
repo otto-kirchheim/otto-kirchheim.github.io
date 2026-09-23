@@ -52,15 +52,15 @@ vi.mock('@/app/session/overwriteUserDaten', () => ({
   default: overwriteUserDatenMock,
 }));
 
-vi.mock('@/features/Berechnung', () => ({
+vi.mock('@/pages/berechnung', () => ({
   aktualisiereBerechnung: aktualisiereBerechnungMock,
 }));
 
-vi.mock('@/features/Berechnung/generateTableBerechnung', () => ({
+vi.mock('@/pages/berechnung/generateTableBerechnung', () => ({
   default: generateTableBerechnungMock,
 }));
 
-vi.mock('@/features/Einstellungen/utils', () => ({
+vi.mock('@/pages/einstellungen/model', () => ({
   generateEingabeMaskeEinstellungen: generateEingabeMaskeEinstellungenMock,
 }));
 

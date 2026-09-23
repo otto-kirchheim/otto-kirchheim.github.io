@@ -37,8 +37,8 @@ vi.mock('@/app/init/bootstrap', () => ({
   initializeAppBootstrap: vi.fn(),
 }));
 
-vi.mock('@/features/Einstellungen/utils', () => ({
-  selectYear: selectYearMock,
+vi.mock('@/app/session/selectYear', () => ({
+  default: selectYearMock,
 }));
 
 vi.mock('@/shared/model/session/actAsStatus', () => ({

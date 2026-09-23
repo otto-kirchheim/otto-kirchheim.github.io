@@ -4,7 +4,7 @@ import type { IBerechnungMonatsErgebnis, IDatenBE, IDatenBZ, IVorgabenBerechnung
 import { currency, formatCurrency, timeConvert } from '@/shared/lib/ressource/berechnungWerte';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { getMonatFromBE, getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
-import { DetailZeile, GruppenTitel } from '@/infrastructure/ui/berechnungBausteine';
+import { DetailZeile, GruppenTitel } from '@/shared/ui/berechnung/berechnungBausteine';
 
 type Bucket = IVorgabenBerechnungMonat['B'];
 

@@ -1,6 +1,6 @@
 import { publishEvent } from '@/core';
 import { featureRegistry } from '@/shared/lib/feature';
-import { generateEingabeMaskeEinstellungen } from '@/features/Einstellungen/utils';
+import { generateEingabeMaskeEinstellungen } from '@/pages/einstellungen/model';
 import { isRowInMonat, resourceDefs } from '@/shared/lib/ressource/resourceConfig';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { CustomTableTypes } from '@/shared/ui/custom-table/CustomTable';

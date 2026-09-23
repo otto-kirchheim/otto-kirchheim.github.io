@@ -22,7 +22,7 @@ vi.mock('@/features/ewt/model', () => ({
   persistEwtTableData: persistEwtTableDataMock,
 }));
 
-vi.mock('@/features/Berechnung', () => ({
+vi.mock('@/pages/berechnung', () => ({
   aktualisiereBerechnung: aktualisiereBerechnungMock,
 }));
 

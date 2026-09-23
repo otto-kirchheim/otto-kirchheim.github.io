@@ -4,7 +4,7 @@ import { type FC, type JSX, useEffect, useState } from 'react';
 import { DbFeld } from '@/components';
 import type { BereitschaftRuntimeOverrides } from '../model/bereitschaftRuntimeOverrides';
 import type { BereitschaftSchichtTyp, ISchichtZeiten, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
-import { SchichtOverrideEditor } from '@/features/Einstellungen/components/SchichtOverrideEditor';
+import { SchichtOverrideEditor } from '@/features/ber/ui/SchichtOverrideEditor';
 
 /**
  * Kompaktes Zeitfeld für Beginn/Ende der Sonderschicht (Label folgt aus der Id: endet sie auf "Ende", "Ende", sonst "Beginn").

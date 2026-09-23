@@ -5,7 +5,7 @@ vi.mock('@/infrastructure/ui/tabController', () => ({ zeigeTab: zeigeTabMock }))
 
 import '@/app/features';
 import { featureRegistry } from '@/shared/lib/feature';
-import { resetEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
+import { resetEinstellungenTeile } from '@/shared/model/einstellungen/einstellungenTeile';
 import Storage from '@/shared/lib/storage/Storage';
 import type { IVorgabenU } from '@/types';
 import { openOnboardingGuide, openOnboardingGuideOnce } from '@/features/onboarding/ui/createOnboardingGuideModal';

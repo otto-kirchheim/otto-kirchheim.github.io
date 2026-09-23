@@ -1,4 +1,4 @@
-import VorgabenBTable from '@/features/Einstellungen/components/VorgabenBTable';
+import VorgabenBTable from '@/features/ber/ui/VorgabenBTable';
 
 /** Inhalt des Abschnitts "Bereitschaft": die Voreinstellungs-Tabelle `#tableVE` (Einsatzzeiträume). */
 export default function BereitschaftAbschnitt() {

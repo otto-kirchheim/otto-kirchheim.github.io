@@ -3,8 +3,8 @@ import BereitschaftAbschnitt from '../ui/BereitschaftEinstellungenAbschnitt';
 import { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { CustomHTMLTableElement, IVorgabenUvorgabenB } from '@/types';
 import { default as tableToArray } from '@/shared/lib/ressource/tableToArray';
-import generateEingabeTabelleEinstellungenVorgabenB from '@/features/Einstellungen/utils/generateEingabeTabelleEinstellungenVorgabenB';
-import saveTableDataVorgabenU from '@/features/Einstellungen/utils/saveTableDataVorgabenU';
+import generateEingabeTabelleEinstellungenVorgabenB from '@/features/ber/model/generateEingabeTabelleEinstellungenVorgabenB';
+import saveTableDataVorgabenU from '@/features/ber/model/saveTableDataVorgabenU';
 import { BereitschaftsEinsatzZeiträume } from '../model/constants';
 
 /**

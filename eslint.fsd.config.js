@@ -12,7 +12,7 @@ import tseslint from 'typescript-eslint';
 import dbUx from '@db-ux/core-eslint-plugin';
 import reactHooks from 'eslint-plugin-react-hooks';
 
-const FEATURES = ['Admin', 'Berechnung', 'ber', 'ea', 'Einstellungen', 'ewt', 'ez'];
+const FEATURES = ['Admin', 'ber', 'ea', 'ewt', 'ez'];
 
 /**
  * @param {string} message - Hinweistext der Regel.

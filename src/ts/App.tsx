@@ -3,9 +3,9 @@ import { featureRegistry } from '@/shared/lib/feature';
 import AppHeader from '@/widgets/app-header/AppHeader';
 import AppFooter from '@/widgets/app-footer/AppFooter';
 import SnackbarHost from '@/shared/ui/snackbar/SnackbarHost';
-import StartTab from '@/infrastructure/ui/StartTab';
-import BerechnungTab from '@/infrastructure/ui/BerechnungTab';
-import EinstellungenTab from '@/infrastructure/ui/EinstellungenTab';
+import StartTab from '@/pages/start/ui/StartTab';
+import BerechnungTab from '@/pages/berechnung/ui/BerechnungTab';
+import EinstellungenTab from '@/pages/einstellungen/ui/EinstellungenTab';
 import useActiveTab from '@/shared/model/navigation/useActiveTab';
 
 /**
