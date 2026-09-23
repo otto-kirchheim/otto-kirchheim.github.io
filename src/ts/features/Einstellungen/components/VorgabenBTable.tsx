@@ -1,5 +1,5 @@
 import { saveEinstellungen } from '../utils';
-import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft/utils/constants';
+import { BereitschaftsEinsatzZeiträume } from '../../ber/model/constants';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { asAnyTable, useCustomTableState } from '@/shared/ui/custom-table/CustomTable';
 import CustomTableView from '@/shared/ui/custom-table/CustomTableView';

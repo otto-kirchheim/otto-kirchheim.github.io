@@ -1,0 +1,98 @@
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
+
+import '@/app/features';
+import type { IDatenEWT } from '@/shared/types';
+import Storage from '@/shared/lib/storage/Storage';
+
+const { tableToArrayMock, publishDataChangedMock } = (
+  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
+).hoisted(() => ({
+  tableToArrayMock: vi.fn(),
+  publishDataChangedMock: vi.fn(),
+}));
+
+vi.mock('@/shared/lib/ressource/tableToArray', () => ({
+  default: tableToArrayMock,
+}));
+
+vi.mock('@/core', () => ({
+  publishEvent: publishDataChangedMock,
+}));
+
+import persistEwtTableData from '@/features/ewt/model/persistEwtTableData';
+
+function createData(Tag: string): IDatenEWT {
+  return {
+    Tag,
+    Buchungstag: Tag,
+    Einsatzort: 'Fulda',
+    Schicht: 'T',
+    abWE: '',
+    ab1E: '',
+    anEE: '',
+    beginE: '',
+    endeE: '',
+    abEE: '',
+    an1E: '',
+    anWE: '',
+    berechnen: true,
+  };
+}
+
+function createTableMock(rows: IDatenEWT[]) {
+  const tableRows = rows.map(row => ({ cells: row, _state: 'unchanged' as const }));
+
+  return {
+    getRows: vi.fn(() => tableRows),
+    drawRows: vi.fn(),
+    rows: {
+      array: tableRows,
+      getFilteredRows: vi.fn(() => tableRows),
+    },
+  } as unknown as Parameters<typeof persistEwtTableData>[0];
+}
+
+describe('persistEwtTableData', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.clearAllMocks();
+  });
+
+  it('aktualisiert dataE aus dem Tabellen-FlatArray und triggert Berechnung', () => {
+    const dataE: IDatenEWT[] = [createData('2026-03-10')];
+    const newRows = [createData('2026-03-11')];
+
+    Storage.set('Monat', 3);
+    Storage.set('dataE', dataE);
+    tableToArrayMock.mockReturnValue(newRows);
+
+    const ftMock = createTableMock(newRows);
+    const result = persistEwtTableData(ftMock);
+
+    expect(tableToArrayMock).toHaveBeenCalledWith(ftMock);
+    expect(result).toEqual(newRows.map(row => ({ ...row, __localState: 'unchanged' })));
+    expect(Storage.get<IDatenEWT[]>('dataE', { check: true })).toEqual(
+      newRows.map(row => ({ ...row, __localState: 'unchanged' })),
+    );
+    expect(publishDataChangedMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('behält andere Monate, wenn nur der ausgewählte Monat neu persistiert wird', () => {
+    const marchEntry = createData('2026-03-10');
+    const aprilEntry = createData('2026-04-10');
+    const updatedAprilRows = [createData('2026-04-20')];
+
+    Storage.set('Monat', 4);
+    Storage.set('dataE', [marchEntry, aprilEntry]);
+    tableToArrayMock.mockReturnValue(updatedAprilRows);
+
+    const ftMock = createTableMock(updatedAprilRows);
+    const result = persistEwtTableData(ftMock);
+
+    // marchEntry ist eine bereits gespeicherte, unveränderte Zeile aus einem anderen Monat (preservedRows) —
+    // wird unverändert übernommen, während die aktive April-Zeile frisch über toStorage serialisiert wird.
+    const expected = [marchEntry, { ...updatedAprilRows[0], __localState: 'unchanged' }];
+    expect(result).toEqual(expected);
+    expect(Storage.get<IDatenEWT[]>('dataE', { check: true })).toEqual(expected);
+  });
+});

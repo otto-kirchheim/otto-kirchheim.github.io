@@ -1,9 +1,9 @@
 import { LreType, ZULAGEN_CATALOG } from '@otto-kirchheim/nebengeld-shared';
 import type { FormatName, Schriftfamilie, ZulageCategory } from '@otto-kirchheim/nebengeld-shared';
-import berKatalog from '../../features/ber/katalog';
-import ewtKatalog from '../../features/ewt/katalog';
-import eaKatalog from '../../features/ea/katalog';
-import ezKatalog from '../../features/ez/katalog';
+import berKatalog from '@/features/Admin/features/ber/katalog';
+import ewtKatalog from '@/features/Admin/features/ewt/katalog';
+import eaKatalog from '@/features/Admin/features/ea/katalog';
+import ezKatalog from '@/features/Admin/features/ez/katalog';
 import type { FeatureKatalog, FormularCode, KatalogEintrag, ListenVorlage } from './katalogTypen';
 
 export type { BeispielWert, FormularCode, KatalogEintrag, ListenVorlage } from './katalogTypen';

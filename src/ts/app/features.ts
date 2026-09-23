@@ -5,56 +5,56 @@
  */
 
 import { featureRegistry } from '@/shared/lib/feature';
-import { berMeta } from '@/features/Bereitschaft/meta';
-import { eaMeta } from '@/features/EA/meta';
-import { ewtMeta } from '@/features/EWT/meta';
-import { ezMeta } from '@/features/Neben/meta';
+import { berMeta } from '@/features/ber/meta';
+import { eaMeta } from '@/features/ea/meta';
+import { ewtMeta } from '@/features/ewt/meta';
+import { ezMeta } from '@/features/ez/meta';
 
 featureRegistry.define({
   meta: berMeta,
   parts: {
-    ui: () => import('@/features/Bereitschaft/parts/ui'),
-    data: () => import('@/features/Bereitschaft/parts/data'),
-    pdf: () => import('@/features/Bereitschaft/parts/pdf'),
-    help: () => import('@/features/Bereitschaft/parts/help'),
-    berechnung: () => import('@/features/Bereitschaft/parts/berechnung'),
-    einstellungen: () => import('@/features/Bereitschaft/parts/einstellungen'),
+    ui: () => import('@/features/ber/parts/ui'),
+    data: () => import('@/features/ber/parts/data'),
+    pdf: () => import('@/features/ber/parts/pdf'),
+    help: () => import('@/features/ber/parts/help'),
+    berechnung: () => import('@/features/ber/parts/berechnung'),
+    einstellungen: () => import('@/features/ber/parts/einstellungen'),
   },
 });
 
 featureRegistry.define({
   meta: ewtMeta,
   parts: {
-    ui: () => import('@/features/EWT/parts/ui'),
-    data: () => import('@/features/EWT/parts/data'),
-    pdf: () => import('@/features/EWT/parts/pdf'),
-    help: () => import('@/features/EWT/parts/help'),
-    berechnung: () => import('@/features/EWT/parts/berechnung'),
-    einstellungen: () => import('@/features/EWT/parts/einstellungen'),
+    ui: () => import('@/features/ewt/parts/ui'),
+    data: () => import('@/features/ewt/parts/data'),
+    pdf: () => import('@/features/ewt/parts/pdf'),
+    help: () => import('@/features/ewt/parts/help'),
+    berechnung: () => import('@/features/ewt/parts/berechnung'),
+    einstellungen: () => import('@/features/ewt/parts/einstellungen'),
   },
 });
 
 featureRegistry.define({
   meta: ezMeta,
   parts: {
-    ui: () => import('@/features/Neben/parts/ui'),
-    data: () => import('@/features/Neben/parts/data'),
-    pdf: () => import('@/features/Neben/parts/pdf'),
-    help: () => import('@/features/Neben/parts/help'),
-    berechnung: () => import('@/features/Neben/parts/berechnung'),
-    einstellungen: () => import('@/features/Neben/parts/einstellungen'),
-    events: () => import('@/features/Neben/parts/events'),
+    ui: () => import('@/features/ez/parts/ui'),
+    data: () => import('@/features/ez/parts/data'),
+    pdf: () => import('@/features/ez/parts/pdf'),
+    help: () => import('@/features/ez/parts/help'),
+    berechnung: () => import('@/features/ez/parts/berechnung'),
+    einstellungen: () => import('@/features/ez/parts/einstellungen'),
+    events: () => import('@/features/ez/parts/events'),
   },
 });
 
 featureRegistry.define({
   meta: eaMeta,
   parts: {
-    ui: () => import('@/features/EA/parts/ui'),
-    data: () => import('@/features/EA/parts/data'),
-    pdf: () => import('@/features/EA/parts/pdf'),
-    help: () => import('@/features/EA/parts/help'),
-    berechnung: () => import('@/features/EA/parts/berechnung'),
-    events: () => import('@/features/EA/parts/events'),
+    ui: () => import('@/features/ea/parts/ui'),
+    data: () => import('@/features/ea/parts/data'),
+    pdf: () => import('@/features/ea/parts/pdf'),
+    help: () => import('@/features/ea/parts/help'),
+    berechnung: () => import('@/features/ea/parts/berechnung'),
+    events: () => import('@/features/ea/parts/events'),
   },
 });

@@ -15,10 +15,10 @@ vi.mock('@/shared/lib/autosave/autoSave', () => ({
 vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 
 import { featureLifecycleRegistry, featureRegistry } from '@/shared/lib/feature';
-import { berMeta } from '@/features/Bereitschaft/meta';
-import { eaMeta } from '@/features/EA/meta';
-import { ewtMeta } from '@/features/EWT/meta';
-import { ezMeta } from '@/features/Neben/meta';
+import { berMeta } from '@/features/ber/meta';
+import { eaMeta } from '@/features/ea/meta';
+import { ewtMeta } from '@/features/ewt/meta';
+import { ezMeta } from '@/features/ez/meta';
 import { resetFeatureTabSync, syncFeatureTabs } from '@/app/init/syncFeatureTabs';
 
 describe('syncFeatureTabs', () => {

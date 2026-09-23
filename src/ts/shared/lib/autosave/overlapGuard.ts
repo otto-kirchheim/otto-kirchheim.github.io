@@ -23,7 +23,7 @@ function getBzWindow(cells: CustomTableTypes): OverlapWindow | null {
 
 /**
  * Zeitfenster einer EWT-Zeile aus `Tag`, `beginE` und `endeE`. Spiegelt `getWindowForOverlap` im
- * Backend (`ewt.service.ts`) und `features/EWT/utils/getEwtWindow.ts`: Endet die Schicht nicht nach
+ * Backend (`ewt.service.ts`) und `features/ewt/model/getEwtWindow.ts`: Endet die Schicht nicht nach
  * dem Beginn (Nachtschicht), rollt das Ende auf den Folgetag, `Tag` bleibt der Starttag. Lokal
  * dupliziert, da `infrastructure/` nicht von `features/` abhaengen darf.
  *

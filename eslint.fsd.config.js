@@ -12,7 +12,7 @@ import tseslint from 'typescript-eslint';
 import dbUx from '@db-ux/core-eslint-plugin';
 import reactHooks from 'eslint-plugin-react-hooks';
 
-const FEATURES = ['Admin', 'Berechnung', 'Bereitschaft', 'EA', 'Einstellungen', 'EWT', 'Neben'];
+const FEATURES = ['Admin', 'Berechnung', 'ber', 'ea', 'Einstellungen', 'ewt', 'ez'];
 
 /**
  * @param {string} message - Hinweistext der Regel.
@@ -77,6 +77,8 @@ export default defineConfig(
             restrict(`${feature} darf ${other} nicht direkt importieren (Ziel: shared oder Feature-Registry).`, [
               `**/${other}`,
               `**/${other}/**`,
+              // Admins eigene Unterordner `features/Admin/features/<key>` heissen wie die Module.
+              ...(feature === 'Admin' ? ['!@/features/Admin/features/**'] : []),
             ]),
           ),
         },

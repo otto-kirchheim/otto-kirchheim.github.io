@@ -1,0 +1,106 @@
+import { beforeEach, describe, expect, it } from 'bun:test';
+
+import type { IDatenEWT } from '@/shared/types';
+import Storage from '@/shared/lib/storage/Storage';
+import { getEwtDaten } from '@/features/ewt/model';
+
+function createRow(day: string): IDatenEWT {
+  return {
+    Tag: day,
+    Buchungstag: day,
+    Einsatzort: 'Fulda',
+    Schicht: 'T',
+    abWE: '',
+    ab1E: '',
+    anEE: '',
+    beginE: '',
+    endeE: '',
+    abEE: '',
+    an1E: '',
+    anWE: '',
+    berechnen: true,
+  };
+}
+
+describe('getEwtDaten', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('gibt [] zurueck wenn kein Benutzer vorhanden ist', () => {
+    expect(getEwtDaten()).toEqual([]);
+  });
+
+  it('gibt uebergebene Daten direkt zurueck wenn Benutzer vorhanden ist', () => {
+    Storage.set('Benutzer', { id: 'u1' });
+    const data = [createRow('2026-03-10')];
+
+    expect(getEwtDaten(data, 3)).toEqual(data);
+  });
+
+  it('gibt [] zurueck wenn weder Monat noch gespeicherter Monat vorhanden ist', () => {
+    Storage.set('Benutzer', { id: 'u1' });
+
+    expect(getEwtDaten()).toEqual([]);
+  });
+
+  it('liest Monat aus Storage und gibt getEwtDaten[Monat] zurueck', () => {
+    Storage.set('Benutzer', { id: 'u1' });
+    Storage.set('Monat', 3);
+
+    const monat3 = [createRow('2026-03-11')];
+    const dataE = {
+      3: monat3,
+    };
+
+    Storage.set('dataE', dataE);
+
+    expect(getEwtDaten()).toEqual(monat3);
+  });
+
+  it('gibt [] zurueck wenn dataE nicht vorhanden ist', () => {
+    Storage.set('Benutzer', { id: 'u1' });
+    Storage.set('Monat', 3);
+
+    expect(getEwtDaten()).toEqual([]);
+  });
+
+  it('nutzt uebergebenen Monat anstelle des Storage-Monats', () => {
+    Storage.set('Benutzer', { id: 'u1' });
+    Storage.set('Monat', 4);
+
+    const monat3 = [createRow('2026-03-15')];
+    const monat4 = [createRow('2026-04-15')];
+    const dataE = {
+      3: monat3,
+      4: monat4,
+    };
+
+    Storage.set('dataE', dataE);
+
+    expect(getEwtDaten(undefined, 3)).toEqual(monat3);
+  });
+
+  it('enthaelt Eintrag auch im Buchungstag-Monat', () => {
+    Storage.set('Benutzer', { id: 'u1' });
+    Storage.set('Monat', 4);
+
+    const row = createRow('2026-03-31');
+    row.Buchungstag = '2026-04-01';
+    Storage.set('dataE', [row]);
+
+    expect(getEwtDaten(undefined, 4)).toEqual([row]);
+    expect(getEwtDaten(undefined, 3)).toEqual([row]);
+  });
+
+  it('excludeDeleted: schliesst lokal geloeschte, ungesynchte Zeilen aus', () => {
+    Storage.set('Benutzer', { id: 'u1' });
+
+    const active = createRow('2026-03-10');
+    const deleted = { ...createRow('2026-03-12'), __localState: 'deleted' } as IDatenEWT;
+    Storage.set('dataE', [active, deleted]);
+
+    expect(getEwtDaten(undefined, 3, { scope: 'all' })).toEqual([active, deleted]);
+    expect(getEwtDaten(undefined, 3, { scope: 'all', excludeDeleted: true })).toEqual([active]);
+  });
+});

@@ -1,13 +1,13 @@
 /**
- * Legt ein neues Feature-Modul an: Ordner `src/ts/features/<Ordner>` (`meta.ts`, `<Ordner>Tab.tsx`, `parts/ui.tsx`,
- * `parts/help.ts`), einen Test unter `test/` und den Eintrag in `src/ts/app/features.ts` (das Manifest ist die einzige
+ * Legt ein neues Feature-Modul an: Ordner `src/ts/features/<slug>` (`meta.ts`, `ui/<Ordner>Tab.tsx`, `parts/ui.tsx`,
+ * `parts/help.ts`), einen Test unter `test/features/<slug>/` und den Eintrag in `src/ts/app/features.ts` (das Manifest ist die einzige
  * Stelle, die Features kennt). Nav-Eintrag, Tab-Pane, Schnellzugriff, Tab-Auswahl in den Einstellungen und Hilfe
  * entstehen danach aus `meta`.
  *
  * Aufruf: `bun run new-feature <slug> [--ordner <Name>] [--label <Anzeigename>] [--icon <db-icon>] [--admin] [--dry-run]`
  *
  * Weitere Teile (`data`, `pdf`, `berechnung`, `einstellungen`, `events`) und Ressourcen (`meta.resources`) kommen von Hand
- * dazu: `features/EA` ist die kleinste vollstaendige Vorlage. Ein neues Datenobjekt braucht zusaetzlich einen Eintrag in
+ * dazu: `features/ea` ist die kleinste vollstaendige Vorlage. Ein neues Datenobjekt braucht zusaetzlich einen Eintrag in
  * `@otto-kirchheim/nebengeld-shared`/Backend (`TResourceKey`).
  *
  * `--admin` legt zusaetzlich einen (leeren) Admin-Ordner an (`features/Admin/features/<slug>/{index,katalog}.ts`) und
@@ -22,7 +22,7 @@ import { dirname, join, resolve } from 'node:path';
 export interface NewFeatureOptions {
   /** Schluessel des Features (`meta.id`, Manifest); nur Kleinbuchstaben und Ziffern, mit Buchstabe am Anfang. */
   slug: string;
-  /** Ordnername unter `features/` und Namensbestandteil der Symbole; Standard: `slug` mit grossem Anfangsbuchstaben. */
+  /** Namensbestandteil der Symbole (Tab-Komponente, Ids); Standard: `slug` mit grossem Anfangsbuchstaben. Der Ordner heisst wie `slug`. */
   ordner?: string;
   /** Anzeigename in Nav, Schnellzugriff und Hilfe; Standard: `ordner`. */
   label?: string;
@@ -75,7 +75,8 @@ export function planeFeature(optionen: NewFeatureOptions, manifest: string, admi
   // Das Manifest kennt Features nur ueber Meta-Symbol und Ordner (die `id` steht in der `meta.ts`); Ordner ohne Beachtung der Gross-/Kleinschreibung.
   if (
     new RegExp(`\\b${meta}\\b`).test(manifest) ||
-    manifest.toLowerCase().includes(`@/features/${ordner.toLowerCase()}/`)
+    manifest.toLowerCase().includes(`@/features/${ordner.toLowerCase()}/`) ||
+    manifest.includes(`@/features/${slug}/`)
   ) {
     throw new Error(`Feature '${slug}' bzw. Ordner '${ordner}' steht schon im Manifest.`);
   }
@@ -85,7 +86,7 @@ export function planeFeature(optionen: NewFeatureOptions, manifest: string, admi
 
   const dateien: GeplanteDatei[] = [
     {
-      pfad: `src/ts/features/${ordner}/meta.ts`,
+      pfad: `src/ts/features/${slug}/meta.ts`,
       inhalt: `import type { FeatureMeta } from '@/core/hooks';
 
 /** Eager gehaltene Beschreibung des Features ${label}; kein Feature-Code importieren. */
@@ -94,10 +95,10 @@ export const ${meta}: FeatureMeta = {
   label: '${label}',
   icon: '${icon}',
   order: ${order},
-  // Ressourcen (Storage-Key, Tabellen-Id, Monatsermittlung, Backend-Adapter): siehe \`features/EA/meta.ts\`.
+  // Ressourcen (Storage-Key, Tabellen-Id, Monatsermittlung, Backend-Adapter): siehe \`features/ea/meta.ts\`.
   resources: [],
   legacyDefaultOn: false,
-  // PDF-Formular: \`pdf: { modus, formular, dateiPraefix }\` plus Teil \`pdf\` (siehe \`features/EA/parts/pdf.ts\`).
+  // PDF-Formular: \`pdf: { modus, formular, dateiPraefix }\` plus Teil \`pdf\` (siehe \`features/ea/parts/pdf.ts\`).
   // Events, die auch ohne gemounteten Tab ankommen muessen: \`wakeOn: [...]\` plus Teil \`events\`.
   legacy: {
     lifecycleName: '${ordner}',
@@ -112,7 +113,7 @@ export const ${meta}: FeatureMeta = {
 `,
     },
     {
-      pfad: `src/ts/features/${ordner}/${ordner}Tab.tsx`,
+      pfad: `src/ts/features/${slug}/ui/${ordner}Tab.tsx`,
       inhalt: `import type { FC } from 'react';
 
 /** Tab-Inhalt des Features ${label}; \`parts/ui.tsx\` mountet ihn in \`#${slug}-root\`. */
@@ -125,10 +126,10 @@ export const ${ordner}Tab: FC = () => (
 `,
     },
     {
-      pfad: `src/ts/features/${ordner}/parts/ui.tsx`,
+      pfad: `src/ts/features/${slug}/parts/ui.tsx`,
       inhalt: `import { mount, unmount } from '@/infrastructure/ui';
 import type { FeatureParts } from '@/core/hooks';
-import { ${ordner}Tab } from '../${ordner}Tab';
+import { ${ordner}Tab } from '../ui/${ordner}Tab';
 
 /** Tab-Teil des Features ${label}: mountet \`${ordner}Tab\` in \`#${slug}-root\`; ohne Container passiert nichts. */
 const ui: FeatureParts['ui'] = {
@@ -150,7 +151,7 @@ export default ui;
 `,
     },
     {
-      pfad: `src/ts/features/${ordner}/parts/help.ts`,
+      pfad: `src/ts/features/${slug}/parts/help.ts`,
       inhalt: `import type { FeatureParts } from '@/core/hooks';
 
 /** Hilfetexte des Features ${label}: Tab-Hilfe und Hilfe der Dialoge (Schluessel wie \`meta.helpKeys\`). */
@@ -166,7 +167,7 @@ export default help;
 `,
     },
     {
-      pfad: `test/${ordner}.test.ts`,
+      pfad: `test/features/${slug}/${ordner}.test.ts`,
       inhalt: `import { describe, expect, it } from 'bun:test';
 import '@/app/features';
 import { featureRegistry } from '@/core/hooks';
@@ -223,7 +224,7 @@ export default katalog;
     );
   }
 
-  const importZeile = `import { ${meta} } from '@/features/${ordner}/meta';\n`;
+  const importZeile = `import { ${meta} } from '@/features/${slug}/meta';\n`;
   const letzterImport = [...manifest.matchAll(/^import .*;\n/gm)].at(-1);
   if (!letzterImport) throw new Error(`Manifest ${MANIFEST_PFAD} hat keine Imports: unerwartetes Format.`);
   const nachImport = letzterImport.index + letzterImport[0].length;
@@ -232,8 +233,8 @@ export default katalog;
 featureRegistry.define({
   meta: ${meta},
   parts: {
-    ui: () => import('@/features/${ordner}/parts/ui'),
-    help: () => import('@/features/${ordner}/parts/help'),
+    ui: () => import('@/features/${slug}/parts/ui'),
+    help: () => import('@/features/${slug}/parts/help'),
   },
 });
 `;

@@ -46,7 +46,7 @@ vi.mock('@/features/Einstellungen/utils', () => ({
   saveEinstellungen: saveEinstellungenMock,
 }));
 
-vi.mock('@/features/Bereitschaft/utils/constants', () => ({
+vi.mock('@/features/ber/model/constants', () => ({
   BereitschaftsEinsatzZeiträume: {
     1: {
       Name: 'Standard',

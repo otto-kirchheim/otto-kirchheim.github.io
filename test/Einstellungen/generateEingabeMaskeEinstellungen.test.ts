@@ -9,7 +9,7 @@ vi.mock('@/features/Einstellungen/utils', () => ({
 vi.mock('@/features/Einstellungen/utils/saveTableDataVorgabenU', () => ({ default: vi.fn() }));
 vi.mock('@/features/Einstellungen/utils/generateEingabeTabelleEinstellungenVorgabenB', () => ({ default: vi.fn() }));
 
-vi.mock('@/features/Bereitschaft/utils/constants', () => ({
+vi.mock('@/features/ber/model/constants', () => ({
   BereitschaftsEinsatzZeiträume: {},
 }));
 

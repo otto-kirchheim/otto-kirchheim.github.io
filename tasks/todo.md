@@ -116,7 +116,24 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
   - [ ] Offen für eigenen Commit (Inversion): `openHelpModal` wird von `shared/ui/modal/MyModalHeader` und über das
         `@/core`-Barrel von den Modul-Tabs (ber/ewt/ea/ez), `Einstellungen` und `BerechnungTab` aufgerufen → Öffner-
         Registrierung in `shared/lib/help`, Widget meldet sich beim Start an
-- [ ] P7 Module verschieben · P8 Globale Bereiche → Pages · P9 Admin · P10 Abschluss
+- [x] P7 Module verschieben (2026-09-23): `features/{EA,Neben,EWT,Bereitschaft}` → `features/{ea,ez,ewt,ber}`,
+      darin `components` → `ui`, `utils` → `model` (ganzer Ordner, keine Einzelaufteilung in `model`/`lib`),
+      `<Tab>.tsx` → `ui/`; `meta.ts` + `parts/` bleiben an der Modulwurzel. Reihenfolge laut Plan ea, ez, ewt, ber.
+  - [x] Test-Zielordner angelegt (Claude); Quell-Zielordner bewusst NICHT (sonst scheitert die Ordner-Umbenennung)
+  - [x] Umbenennungen in der IDE (User)
+  - [x] 39 Tests nach `test/features/<key>/{ui,model}/` per `git mv` (Claude, auf Wunsch des Users), inkl.
+        `Utilities/DatenSortieren.test.ts`; `import './setupBun'` → `@test/setupBun`
+  - [x] Nacharbeit (Claude): Alias-Importe `@/features/<Alt>/…` (Manifest `app/features.ts` mit dynamischen `import()`,
+        Tests, `vi.mock`) und relative `../../<Alt>/utils` von der IDE nicht umgeschrieben → nachgezogen; `EwtTab`/
+        `parts/ui.tsx` (ewt) auf neue Lage; `eslint.fsd.config.js` FEATURES auf `ber/ea/ewt/ez`, Admin-Block nimmt
+        eigenen Ordner `@/features/Admin/features/**` aus (beseitigt die seit P1i mitgezählten 2 Fehlalarme ewt/ea und
+        2 neue für ber/ez; `datenKatalog.ts` dafür auf Alias-Importe); `scripts/new-feature.ts` erzeugt jetzt
+        `features/<slug>/{meta.ts,ui/<Ordner>Tab.tsx,parts/}` und Test unter `test/features/<slug>/` (Test angepasst);
+        Kommentar-Pfade
+  - [x] Gate: typecheck 0, lint 0, `lint:fsd` 14 (Ratsche 16 → 14), test 2289/2289, build i.o. (je Modul-Teil ein
+        Chunk, Precache 113), `format`
+  - [x] Browser-Check durch den User: keine Fehler (2026-09-23)
+- [ ] P8 Globale Bereiche → Pages · P9 Admin · P10 Abschluss
 
 ---
 

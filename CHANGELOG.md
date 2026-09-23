@@ -2,6 +2,18 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-23 (184)
+
+### refactor (P7: Feature-Module unter ihren Schlüsseln)
+
+- `features/{EA,Neben,EWT,Bereitschaft}` → `features/{ea,ez,ewt,ber}` (Ordner = `meta.id`), darin `components` → `ui`,
+  `utils` → `model`, Tab-Komponente → `ui/`; `meta.ts` und `parts/` an der Modulwurzel. Tests gespiegelt unter
+  `test/features/<key>/{ui,model}/`.
+- `eslint.fsd.config.js` auf die neuen Namen; Admins eigene Unterordner `features/Admin/features/<key>` gelten nicht
+  mehr als Modul-Import (vier Fehlalarme weg). `lint:fsd` 16 → 14.
+- `bun run new-feature` legt neue Module im selben Layout an (`features/<slug>/…`, Tab unter `ui/`).
+- Gate: typecheck 0, lint 0, `lint:fsd` 14, Tests 2289/2289, build i.o. (Precache 113).
+
 ## 2026-09-23 (183)
 
 ### refactor (P6: Widgets)

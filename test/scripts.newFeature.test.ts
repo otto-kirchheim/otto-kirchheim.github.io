@@ -10,11 +10,11 @@ describe('scripts/new-feature (planeFeature)', () => {
     const plan = planeFeature({ slug: 'demo', label: 'Demo-Feature' }, manifest);
 
     expect(plan.dateien.map(datei => datei.pfad)).toEqual([
-      'src/ts/features/Demo/meta.ts',
-      'src/ts/features/Demo/DemoTab.tsx',
-      'src/ts/features/Demo/parts/ui.tsx',
-      'src/ts/features/Demo/parts/help.ts',
-      'test/Demo.test.ts',
+      'src/ts/features/demo/meta.ts',
+      'src/ts/features/demo/ui/DemoTab.tsx',
+      'src/ts/features/demo/parts/ui.tsx',
+      'src/ts/features/demo/parts/help.ts',
+      'test/features/demo/Demo.test.ts',
     ]);
     const meta = plan.dateien[0].inhalt;
     expect(meta).toContain("id: 'demo'");
@@ -27,14 +27,14 @@ describe('scripts/new-feature (planeFeature)', () => {
   it('haengt Import und define-Aufruf an das Manifest, ohne Bestehendes zu veraendern', () => {
     const { manifest: neu } = planeFeature({ slug: 'demo' }, manifest);
 
-    expect(neu).toContain("import { demoMeta } from '@/features/Demo/meta';");
-    expect(neu).toContain("ui: () => import('@/features/Demo/parts/ui'),");
-    expect(neu).toContain("help: () => import('@/features/Demo/parts/help'),");
+    expect(neu).toContain("import { demoMeta } from '@/features/demo/meta';");
+    expect(neu).toContain("ui: () => import('@/features/demo/parts/ui'),");
+    expect(neu).toContain("help: () => import('@/features/demo/parts/help'),");
     expect(neu.match(/^featureRegistry\.define\(/gm)?.length).toBe(5);
     // Imports bleiben vor den define-Aufrufen.
     expect(neu.indexOf('import { demoMeta }')).toBeLessThan(neu.indexOf('\nfeatureRegistry.define('));
     expect(
-      neu.replace("import { demoMeta } from '@/features/Demo/meta';\n", '').startsWith(manifest.slice(0, 200)),
+      neu.replace("import { demoMeta } from '@/features/demo/meta';\n", '').startsWith(manifest.slice(0, 200)),
     ).toBe(true);
   });
 
@@ -49,11 +49,11 @@ describe('scripts/new-feature (planeFeature)', () => {
     const plan = planeFeature({ slug: 'demo', label: 'Demo-Feature', admin: true }, manifest, adminManifest);
 
     expect(plan.dateien.map(datei => datei.pfad)).toEqual([
-      'src/ts/features/Demo/meta.ts',
-      'src/ts/features/Demo/DemoTab.tsx',
-      'src/ts/features/Demo/parts/ui.tsx',
-      'src/ts/features/Demo/parts/help.ts',
-      'test/Demo.test.ts',
+      'src/ts/features/demo/meta.ts',
+      'src/ts/features/demo/ui/DemoTab.tsx',
+      'src/ts/features/demo/parts/ui.tsx',
+      'src/ts/features/demo/parts/help.ts',
+      'test/features/demo/Demo.test.ts',
       'src/ts/features/Admin/features/demo/index.ts',
       'src/ts/features/Admin/features/demo/katalog.ts',
     ]);

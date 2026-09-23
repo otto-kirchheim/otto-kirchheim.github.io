@@ -28,16 +28,16 @@ vi.mock('@/core', () => ({
   publishEvent: publishDataChangedMock,
 }));
 
-vi.mock('@/features/Bereitschaft/utils', () => ({
+vi.mock('@/features/ber/model', () => ({
   getBereitschaftsZeitraumDaten: getBereitschaftsZeitraumDatenMock,
   getBereitschaftsEinsatzDaten: getBereitschaftsEinsatzDatenMock,
 }));
 
-vi.mock('@/features/EWT/utils', () => ({
+vi.mock('@/features/ewt/model', () => ({
   getEwtDaten: getEwtDatenMock,
 }));
 
-vi.mock('@/features/Neben/utils', () => ({
+vi.mock('@/features/ez/model', () => ({
   getNebengeldDaten: getNebengeldDatenMock,
 }));
 
