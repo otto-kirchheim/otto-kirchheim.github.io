@@ -1,0 +1,286 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
+
+const zeigeTabMock = vi.fn(() => true);
+vi.mock('@/infrastructure/ui/tabController', () => ({ zeigeTab: zeigeTabMock }));
+
+import '@/app/features';
+import { featureRegistry } from '@/shared/lib/feature';
+import { resetEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
+import Storage from '@/shared/lib/storage/Storage';
+import type { IVorgabenU } from '@/types';
+import { openOnboardingGuide, openOnboardingGuideOnce } from '@/features/onboarding/ui/createOnboardingGuideModal';
+
+const tick = () => new Promise<void>(resolve => setTimeout(resolve, 0));
+
+const vorgabenU = {
+  Pers: {
+    Vorname: 'Jan',
+    Nachname: 'Otto',
+    PNummer: '76543210',
+    Telefon: '0661 / 123456',
+    Adress1: 'Echte Straße 5, 36251 Bad Hersfeld',
+  },
+  Arbeitszeit: {
+    frueh: { aktiv: true, default: { beginn: '07:00', ende: '15:45', pause: 30 } },
+    spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+    nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
+    sonder: { aktiv: false, beginn: '06:00', ende: '14:30', pause: 30 },
+    fahrzeit: '00:20',
+  },
+  Fahrzeit: [{ key: 'KS', text: 'KS', value: '01:00' }],
+  VorgabenB: {},
+  Einstellungen: { aktivierteTabs: [] },
+} as unknown as IVorgabenU;
+
+function getPanel(): HTMLElement | null {
+  return document.querySelector('#onboarding-guide-panel');
+}
+
+function findButton(text: string): HTMLButtonElement | undefined {
+  return Array.from(getPanel()?.querySelectorAll('button') ?? []).find(btn => btn.textContent?.trim() === text);
+}
+
+function renderPersInputs(values: {
+  Vorname: string;
+  Nachname: string;
+  PNummer: string;
+  Telefon: string;
+  Adress1: string;
+}): void {
+  document.body.insertAdjacentHTML(
+    'beforeend',
+    `
+      <input id="Vorname" value="${values.Vorname}" />
+      <input id="Nachname" value="${values.Nachname}" />
+      <input id="PNummer" value="${values.PNummer}" />
+      <input id="Telefon" value="${values.Telefon}" />
+      <input id="Adress1" value="${values.Adress1}" />
+    `,
+  );
+}
+
+describe('createOnboardingGuideModal (Panel)', () => {
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <a id="brand-start-tab" href="#start" data-tab-target="start"></a>
+      <ul>
+        <li><button id="bereitschaft-tab" type="button" data-tab-target="Bereitschaft"></button></li>
+        <li class="d-none"><button id="ewt-tab" type="button" data-tab-target="EWT"></button></li>
+        <li><button id="neben-tab" type="button" data-tab-target="Neben"></button></li>
+        <li><button id="berechnung-tab" type="button" data-tab-target="Berechnung"></button></li>
+        <li><button id="einstellungen-tab" type="button" data-tab-target="Einstellungen"></button></li>
+      </ul>
+      <div id="modal"><form>bestehende Eingaben</form></div>
+      <li class="db-accordion-item"><details id="collapseOne"></details></li>
+    `;
+    vi.clearAllMocks();
+    Storage.remove('OnboardingAbgeschlossen');
+    Storage.remove('OnboardingPersSnapshot');
+    Storage.set('VorgabenU', vorgabenU);
+    renderPersInputs(vorgabenU.Pers);
+  });
+
+  afterEach(() => {
+    getPanel()?.remove();
+  });
+
+  it('renders into its own panel element and leaves the shared #modal untouched', () => {
+    openOnboardingGuide();
+
+    expect(getPanel()).not.toBeNull();
+    expect(document.querySelector('#modal')?.textContent).toBe('bestehende Eingaben');
+  });
+
+  it('does not create a second panel when opened twice', () => {
+    openOnboardingGuide();
+    openOnboardingGuide();
+
+    expect(document.querySelectorAll('#onboarding-guide-panel').length).toBe(1);
+  });
+
+  it('opens automatically exactly once via openOnboardingGuideOnce', () => {
+    openOnboardingGuideOnce();
+    expect(getPanel()).not.toBeNull();
+    expect(Storage.get<boolean>('OnboardingAbgeschlossen', { default: false })).toBe(true);
+
+    getPanel()?.remove();
+    openOnboardingGuideOnce();
+    expect(getPanel()).toBeNull();
+  });
+
+  it('enables "Weiter" on step 1 when personal data is valid and disables it when not', async () => {
+    openOnboardingGuide();
+    expect(findButton('Weiter')?.disabled).toBe(false);
+    getPanel()?.remove();
+
+    document.querySelector<HTMLInputElement>('#PNummer')!.value = '';
+    openOnboardingGuide();
+    await tick();
+
+    expect(getPanel()?.textContent).toContain('Willkommen zur Ersteinrichtung');
+    expect(findButton('Weiter')?.disabled).toBe(false);
+
+    findButton('Weiter')?.click();
+    await tick();
+    expect(getPanel()?.textContent).toContain('Persönliche Daten');
+    expect(getPanel()?.textContent).toContain('Noch offen:');
+    expect(findButton('Weiter')?.disabled).toBe(true);
+  });
+
+  it('confirms check steps via "Passt, weiter" and walks through the tour of visible tabs', async () => {
+    openOnboardingGuide();
+    await tick();
+
+    findButton('Weiter')?.click();
+    await tick();
+    expect(getPanel()?.textContent).toContain('Persönliche Daten');
+    expect(findButton('Weiter')?.disabled).toBe(false);
+
+    findButton('Weiter')?.click();
+    await tick();
+    expect(getPanel()?.textContent).toContain('Arbeitszeit prüfen');
+    // Prüf-Schritt öffnet den zugehörigen Einstellungen-Bereich automatisch; Weiter ist die Bestätigung.
+    expect(zeigeTabMock).toHaveBeenCalled();
+    expect(zeigeTabMock.mock.calls.some(call => (call as unknown as unknown[]).at(0) === 'Einstellungen')).toBe(true);
+
+    expect(findButton('Weiter')?.disabled).toBe(false);
+
+    findButton('Weiter')?.click();
+    await tick();
+    expect(getPanel()?.textContent).toContain('Bereitschaft prüfen');
+
+    findButton('Weiter')?.click();
+    await tick();
+    // EWT ist ausgeblendet: sein Prüf-Schritt (Fahrzeiten) entfällt, es geht direkt in die Tab-Tour.
+    expect(getPanel()?.textContent).not.toContain('Fahrzeiten prüfen');
+
+    // Tab-Tour: EWT ist versteckt (d-none) und darf nicht vorkommen.
+    for (const [titel, _tabSelector] of [
+      ['Tab: Bereitschaft', '#bereitschaft-tab'],
+      ['Tab: Erschwerniszulagen', '#neben-tab'],
+      ['Tab: Berechnung', '#berechnung-tab'],
+    ] as const) {
+      expect(getPanel()?.textContent).toContain(titel);
+      expect(getPanel()?.textContent).not.toContain('Tab: EWT');
+      expect(findButton('Weiter')?.disabled).toBe(false);
+      findButton('Weiter')?.click();
+      await tick();
+    }
+
+    expect(getPanel()?.textContent).toContain('Fertig!');
+
+    findButton('Fertig')?.click();
+    await tick();
+    expect(getPanel()).toBeNull();
+  });
+
+  it('bleibt im Willkommens-Schritt auf dem Start-Tab und oeffnet noch keinen Einstellungen-Abschnitt', async () => {
+    openOnboardingGuide();
+    await tick();
+
+    const tabs = zeigeTabMock.mock.calls.map(call => (call as unknown as unknown[]).at(0));
+    expect(tabs).toContain('start');
+    expect(tabs).not.toContain('Einstellungen');
+    expect(document.querySelector<HTMLDetailsElement>('#collapseOne')?.open).toBe(false);
+    expect(getPanel()?.textContent).toContain('Willkommen zur Ersteinrichtung');
+  });
+
+  it('automatically opens the personal-data accordion on step 2 while keeping the panel', async () => {
+    openOnboardingGuide();
+    await tick();
+    findButton('Weiter')?.click();
+    await tick();
+
+    expect(zeigeTabMock.mock.calls.some(call => (call as unknown as unknown[]).at(0) === 'Einstellungen')).toBe(true);
+    expect(document.querySelector<HTMLDetailsElement>('#collapseOne')?.open).toBe(true);
+    expect(document.querySelector('.db-accordion-item')?.classList.contains('onboarding-focus')).toBe(true);
+    expect(getPanel()).not.toBeNull();
+  });
+
+  it('removes the panel on "Überspringen"', async () => {
+    openOnboardingGuide();
+
+    findButton('Überspringen')?.click();
+    await tick();
+
+    expect(getPanel()).toBeNull();
+  });
+
+  it('überspringt den Prüf-Schritt eines Features, dessen Tab ausgeblendet ist, und zeigt die übrigen', async () => {
+    document.querySelector('#bereitschaft-tab')!.closest('li')!.classList.add('d-none');
+    document.querySelector('#ewt-tab')!.closest('li')!.classList.remove('d-none');
+    openOnboardingGuide();
+    await tick();
+    for (let schritt = 0; schritt < 3; schritt++) {
+      findButton('Weiter')?.click();
+      await tick();
+    }
+
+    expect(getPanel()?.textContent).toContain('Fahrzeiten prüfen');
+    expect(getPanel()?.textContent).not.toContain('Bereitschaft prüfen');
+  });
+
+  it('nimmt den Prüf-Schritt und die Tour-Hilfe eines neu angemeldeten Features ohne weitere Änderung auf', async () => {
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<ul><li><button id="x-tab" type="button" data-tab-target="X"></button></li></ul>',
+    );
+    featureRegistry.define({
+      meta: {
+        id: 'x',
+        label: 'Dummy',
+        icon: 'document',
+        order: 99,
+        resources: [],
+        legacyDefaultOn: false,
+        legacy: {
+          lifecycleName: 'X',
+          tabKey: 'x',
+          paneId: 'X',
+          rootId: 'x-root',
+          navId: 'x-tab',
+          saveButtonId: 'btnSaveX',
+        },
+        helpKeys: ['tab.x'],
+      },
+      parts: {
+        help: async () => ({
+          default: { 'tab.x': { title: 'Dummy', kurzbeschreibung: 'Ein Dummy.', wasKannIchHierMachen: ['Nichts'] } },
+        }),
+        einstellungen: async () => ({
+          default: {
+            sections: [
+              {
+                id: 'collapseX',
+                titel: 'Dummy',
+                order: 90,
+                Component: () => null,
+                onboarding: { titel: 'Dummy prüfen', beschreibung: 'Dummy-Schritt.' },
+              },
+            ],
+            read: () => undefined,
+            collect: () => ({}),
+          },
+        }),
+      },
+    });
+    resetEinstellungenTeile();
+
+    openOnboardingGuide();
+    await tick();
+    // intro, pers, Arbeitszeit, Bereitschaft (EWT ist ausgeblendet), dann der Schritt des neuen Features
+    for (let schritt = 0; schritt < 4; schritt++) {
+      findButton('Weiter')?.click();
+      await tick();
+    }
+    expect(getPanel()?.textContent).toContain('Dummy prüfen');
+
+    findButton('Weiter')?.click();
+    await tick();
+    findButton('Weiter')?.click();
+    await tick();
+    findButton('Weiter')?.click();
+    await tick();
+    expect(getPanel()?.textContent).toContain('Tab: Dummy');
+  });
+});

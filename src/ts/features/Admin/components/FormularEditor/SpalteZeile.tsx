@@ -1,5 +1,5 @@
 import type { ListenGruppe, Spalte, Zeile } from '@otto-kirchheim/nebengeld-shared';
-import { spaltenWert } from '@/infrastructure/pdf/spaltenWert';
+import { spaltenWert } from '@/shared/lib/pdf/spaltenWert';
 import { Rechnung } from './aggregationUndRechnung';
 import { AnkreuzBedingung } from './bedingungEditor';
 import { istBooleanFeld, katalogZeilenFelder, type FormularCode, type KatalogEintrag } from './datenKatalog';
@@ -171,7 +171,7 @@ export function SpalteZeile({
           placeholder="z.B. dauer"
           value={spalte.key}
           // Ein leerer Schlüssel macht die Spalte für `berechneteEintraege()` (Feld-Dropdown in Summenfeldern)
-          // unsichtbar, und `mitBerechnetenSpalten()` (`infrastructure/pdf/tabellenZeilen.ts`) würde ihren Wert
+          // unsichtbar, und `mitBerechnetenSpalten()` (`shared/lib/pdf/tabellenZeilen.ts`) würde ihren Wert
           // unter `zeile['']` ablegen -- deshalb nie speichern: leere Eingaben verwerfen, den Schlüssel nicht löschen.
           onChange={e => {
             const wert = e.target.value;

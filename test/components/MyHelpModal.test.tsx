@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { render } from '@test/reactRender';
 
 const openOnboardingGuideMock = vi.fn();
-vi.mock('@/core/orchestration/onboarding/createOnboardingGuideModal', () => ({
+vi.mock('@/features/onboarding/ui/createOnboardingGuideModal', () => ({
   openOnboardingGuide: openOnboardingGuideMock,
 }));
 

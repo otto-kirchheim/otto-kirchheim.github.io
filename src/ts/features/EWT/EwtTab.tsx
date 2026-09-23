@@ -12,12 +12,12 @@ import { default as buttonDisable } from '@/shared/ui/button-loading/buttonDisab
 import { confirmDeleteAllRows } from '@/shared/lib/ressource/confirmDeleteAllRows';
 import { isEwtInMonat } from '@/shared/lib/date/getMonatFromItem';
 import Storage from '@/shared/lib/storage/Storage';
-import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
+import { createOnChangeHandler } from '@/shared/lib/autosave/autoSave';
 import { default as saveDaten } from '@/shared/lib/ressource/saveDaten';
 import { bindClickHandlers } from '@/shared/lib/dom/bindClickHandlers';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from './components';
-import generatePDF from '@/infrastructure/data/generatePDF';
+import generatePDF from '@/shared/lib/pdf/generatePDF';
 import { attachBerechnenToggleListeners, recalculateEwtMonat, getEwtDaten, persistEwtTableData } from './utils';
 
 /**

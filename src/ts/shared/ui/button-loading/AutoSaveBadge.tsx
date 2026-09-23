@@ -1,7 +1,7 @@
 import { DBBadge, DBIcon, type SemanticType } from '@db-ux/react-core-components';
 import { useEffect, useState, type FC } from 'react';
 
-import useAutoSaveStatus from '@/infrastructure/autoSave/useAutoSaveStatus';
+import useAutoSaveStatus from '@/shared/lib/autosave/useAutoSaveStatus';
 import type { TResourceKey, TSaveStatus } from '@/types';
 
 /** Icon (DB UX, `data-icon`) je Status; `idle` hat keins, das Badge bleibt dann unsichtbar. */

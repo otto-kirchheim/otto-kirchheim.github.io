@@ -15,12 +15,12 @@ const { mockOnAutoSaveStatus } = (vi as typeof vi & { hoisted: <T>(factory: () =
   };
 });
 
-vi.mock('@/infrastructure/autoSave/autoSave', () => ({
+vi.mock('@/shared/lib/autosave/autoSave', () => ({
   onAutoSaveStatus: mockOnAutoSaveStatus,
 }));
 
 import AutoSaveBadge from '@/shared/ui/button-loading/AutoSaveBadge';
-import { resetAutoSaveStatusStore } from '@/infrastructure/autoSave/autoSaveStatusStore';
+import { resetAutoSaveStatusStore } from '@/shared/lib/autosave/autoSaveStatusStore';
 
 /**
  * `useSyncExternalStore`s Re-Render laeuft ausserhalb eines React-Events auf der Sync-Lane,

@@ -38,7 +38,7 @@ vi.mock('@/shared/ui/button-loading/setLoading', () => ({ default: mockSetLoadin
 vi.mock('@/shared/ui/button-loading/clearLoading', () => ({ default: mockClearLoading }));
 vi.mock('@/shared/ui/button-loading/buttonDisable', () => ({ default: mockButtonDisable }));
 vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
-vi.mock('@/infrastructure/autoSave/autoSave', () => ({
+vi.mock('@/shared/lib/autosave/autoSave', () => ({
   flushAll: mockFlushAll,
   getResourceStatus: mockGetResourceStatus,
   markResourcesIdle: mockMarkResourcesIdle,
@@ -48,7 +48,7 @@ vi.mock('@/infrastructure/autoSave/autoSave', () => ({
 vi.mock('@/shared/api/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
 }));
-vi.mock('@/core/orchestration/syncFeatureTabs', () => ({ syncFeatureTabs: mockSyncFeatureTabs }));
+vi.mock('@/app/init/syncFeatureTabs', () => ({ syncFeatureTabs: mockSyncFeatureTabs }));
 
 import '@/app/features';
 import Storage from '@/shared/lib/storage/Storage';

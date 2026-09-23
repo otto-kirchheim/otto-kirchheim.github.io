@@ -26,7 +26,7 @@ vi.mock('@/core', () => ({
   },
 }));
 
-vi.mock('@/core/orchestration/initSequence', () => ({
+vi.mock('@/app/init/initSequence', () => ({
   markStep: markStepMock,
 }));
 

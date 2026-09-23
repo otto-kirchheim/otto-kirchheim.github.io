@@ -8,7 +8,7 @@ import type {
   SonderZeileZelle,
   TabellenDef,
 } from '@otto-kirchheim/nebengeld-shared';
-import { sonderZeileZelleWert, zeilenFuerUeber } from '@/infrastructure/pdf/wert';
+import { sonderZeileZelleWert, zeilenFuerUeber } from '@/shared/lib/pdf/wert';
 import { FORMATE } from './datenKatalog';
 import { WertVorschau } from './WertVorschau';
 import type { Vorschau } from './FeldPanel';

@@ -10,13 +10,13 @@ import {
   getResourceStatus,
   hasPendingTableChanges,
   markResourceSaved,
-} from '@/infrastructure/autoSave/autoSave';
+} from '@/shared/lib/autosave/autoSave';
 import { profileApi } from '@/shared/api/apiService';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { publishEvent } from '@/shared/lib/events/appEvents';
 import { featureRegistry, invokeHook } from '@/shared/lib/feature';
 import { resourceKeys } from './resourceConfig';
-import { syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
+import { syncFeatureTabs } from '@/app/init/syncFeatureTabs';
 
 /**
  * Vergleicht zwei Einstellungsstände per JSON-Serialisierung.

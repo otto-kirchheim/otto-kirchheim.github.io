@@ -1,5 +1,5 @@
 import type { Daten, SeitenDef, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
-import type { Kontext } from '@/infrastructure/pdf/wert';
+import type { Kontext } from '@/shared/lib/pdf/wert';
 import type { FormularCode } from './datenKatalog';
 
 /** Scharf geschaltetes Ziel: das nächste auf dem PDF aufgezogene Rechteck wird dorthin geschrieben. */

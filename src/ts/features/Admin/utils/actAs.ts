@@ -1,7 +1,7 @@
 import Storage, { type TStorageData } from '@/shared/lib/storage/Storage';
 import { getStoredMonatJahr } from '@/shared/lib/date/dateStorage';
 import { resourceDefs } from '@/shared/lib/ressource/resourceConfig';
-import { loadUserDaten } from '@/core/orchestration/auth/utils';
+import loadUserDaten from '@/app/session/loadUserDaten';
 import { setActAsUser } from './api';
 
 /**

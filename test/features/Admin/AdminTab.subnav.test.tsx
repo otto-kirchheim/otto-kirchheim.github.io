@@ -22,7 +22,7 @@ const { mockFetchCurrentAdminCapabilities, mockGetActAsState } = (
 vi.mock('@/features/Admin/utils/api', () => ({
   fetchCurrentAdminCapabilities: mockFetchCurrentAdminCapabilities,
 }));
-vi.mock('@/infrastructure/ui/actAsStatus', () => ({
+vi.mock('@/shared/model/session/actAsStatus', () => ({
   ACT_AS_STATUS_EVENT: 'actAsStatusChanged',
   getActAsState: mockGetActAsState,
 }));

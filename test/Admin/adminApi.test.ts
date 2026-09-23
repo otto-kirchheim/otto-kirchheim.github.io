@@ -18,7 +18,7 @@ vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: mockCreateSnackBar,
 }));
 
-vi.mock('@/infrastructure/ui/actAsStatus', () => ({
+vi.mock('@/shared/model/session/actAsStatus', () => ({
   notifyActAsStateChanged: mockNotifyActAsStateChanged,
 }));
 

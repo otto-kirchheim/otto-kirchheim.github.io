@@ -105,7 +105,7 @@ export type Drehwinkel = 0 | 90 | 180 | 270;
  * mitgezählt, die Referenzgröße (`groesse`) getauscht. Für Datentabellen bleibt die Konfiguration
  * aufrecht -- nur `TabellenDef.drehung` (bzw. `TabellenBereich.drehung`) wird gesetzt; Renderer und
  * Editor-Vorschau drehen jede fertige Tabellenzelle um den Seitenmittelpunkt (siehe
- * `infrastructure/pdf/tabellenDrehung.ts`). Reine Funktion (tiefe Kopie).
+ * `shared/lib/pdf/tabellenDrehung.ts`). Reine Funktion (tiefe Kopie).
  *
  * @param k - Konfiguration vor der Drehung.
  * @param grad - Drehwinkel gegen den Uhrzeigersinn; `0` liefert nur die Kopie.

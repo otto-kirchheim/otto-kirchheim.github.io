@@ -1,7 +1,8 @@
 import { pwaInfo } from 'virtual:pwa-info';
 import { registerSW } from 'virtual:pwa-register';
 
-import { logoutUser, changeMonatJahr, saveEinstellungen } from '@/features/Einstellungen/utils';
+import { changeMonatJahr, saveEinstellungen } from '@/features/Einstellungen/utils';
+import logoutUser from '@/features/auth/model/logoutUser';
 import { createSnackBar, initPullToRefresh, setVersionOutdated } from '@/infrastructure/ui';
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import { default as compareVersion } from '@/shared/lib/version/compareVersion';
@@ -9,7 +10,7 @@ import { default as setOffline } from '@/infrastructure/ui/setOffline';
 import { default as storageAvailable } from '@/shared/lib/storage/storageAvailable';
 import { registerHook, featureLifecycleRegistry } from '@/shared/lib/feature';
 import type { FeatureContext } from '@/shared/lib/feature';
-import { validateAllSequences, markStep } from './core/orchestration/initSequence';
+import { validateAllSequences, markStep } from './app/init/initSequence';
 
 validateAllSequences();
 
@@ -99,7 +100,7 @@ console.log('Version:', import.meta.env.APP_VERSION);
 
 // Root-Render und `initTabController()` laufen bewusst synchron beim Modul-Import, nicht als
 // `registerAppStartTask`-Eintrag: ES-Imports werten VOR dem Top-Level-Code aus, daher steht `auth/index.ts`s
-// Start-Task (`import './core/orchestration/auth'` unten) trotz spaeterer Quelltextposition VOR einem hier
+// Start-Task (`import './app/session'` unten) trotz spaeterer Quelltextposition VOR einem hier
 // registrierten in der Queue. Er greift ueber `selectYear` -> `setMonatJahr` auf `#Monat` zu, das erst
 // `AppHeader`s Mount erzeugt. Gemountet wird ueber `mount()` (per `flushSync`), nicht ueber
 // `createRoot().render()`: nur so laufen auch die `useEffect`-Hooks (z. B. Tabellen-Erzeugung in
@@ -158,7 +159,7 @@ registerAppStartTask(() => {
 
 import '@/features/Berechnung';
 import '@/features/Einstellungen';
-import './core/orchestration/auth';
+import './app/session';
 import '@/app/features';
 
 initializeAppBootstrap();

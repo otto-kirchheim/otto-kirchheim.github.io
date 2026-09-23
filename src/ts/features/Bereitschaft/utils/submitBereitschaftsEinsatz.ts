@@ -14,7 +14,7 @@ import { default as clearLoading } from '@/shared/ui/button-loading/clearLoading
 import { default as setLoading } from '@/shared/ui/button-loading/setLoading';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
-import { flushResource, scheduleAutoSave } from '@/infrastructure/autoSave/autoSave';
+import { flushResource, scheduleAutoSave } from '@/shared/lib/autosave/autoSave';
 
 // ─── Submit-Hilfsfunktionen ──────────────────────────────────────────────────
 

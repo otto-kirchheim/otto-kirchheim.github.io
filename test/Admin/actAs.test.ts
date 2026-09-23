@@ -11,8 +11,8 @@ const { mockSetActAsUser, mockLoadUserDaten, mockGetStoredMonatJahr } = (
 vi.mock('@/features/Admin/utils/api', () => ({
   setActAsUser: mockSetActAsUser,
 }));
-vi.mock('@/core/orchestration/auth/utils', () => ({
-  loadUserDaten: mockLoadUserDaten,
+vi.mock('@/app/session/loadUserDaten', () => ({
+  default: mockLoadUserDaten,
 }));
 vi.mock('@/shared/lib/date/dateStorage', () => ({
   getStoredMonatJahr: mockGetStoredMonatJahr,

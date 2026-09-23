@@ -2,7 +2,7 @@ import type { Spalte, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
 import type { KatalogEintrag } from './datenKatalog';
 
 /**
- * Berechnete/Ankreuz-Spalten als Katalogeinträge. `mitBerechnetenSpalten()` (`infrastructure/pdf/
+ * Berechnete/Ankreuz-Spalten als Katalogeinträge. `mitBerechnetenSpalten()` (`shared/lib/pdf/
  * tabellenZeilen.ts`) trägt ihren Wert schon unter `key` in die Zeile ein, andere Rechnungen können
  * sie also direkt referenzieren. Genutzt von der Feldliste (alle Tabellen) und je einer `TabellenBlock`
  * (nur deren Spalten).

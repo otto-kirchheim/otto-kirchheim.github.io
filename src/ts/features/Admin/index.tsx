@@ -11,7 +11,7 @@ import { AdminResourceBrowser } from './components/AdminResourceBrowser';
 import { AdminUserProfileEditor } from './components/AdminUserProfileEditor';
 import { AdminLogBrowser } from './components/AdminLogBrowser';
 import { FormularUpload } from './components/FormularUpload';
-import { ACT_AS_STATUS_EVENT, getActAsState } from '@/infrastructure/ui/actAsStatus';
+import { ACT_AS_STATUS_EVENT, getActAsState } from '@/shared/model/session/actAsStatus';
 import { fetchCurrentAdminCapabilities } from './utils/api';
 
 type AdminCapabilities = {

@@ -50,7 +50,7 @@ vi.mock('@/shared/ui/button-loading/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
-vi.mock('@/infrastructure/autoSave/autoSave', () => ({
+vi.mock('@/shared/lib/autosave/autoSave', () => ({
   flushResource: flushResourceMock,
   scheduleAutoSave: scheduleAutoSaveMock,
 }));

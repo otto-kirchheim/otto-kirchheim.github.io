@@ -2,7 +2,7 @@ import { DBButton, DBHeadingH6, DBInfotext } from '@db-ux/react-core-components'
 import { type FC } from 'react';
 
 import type { HelpContent } from '@/core/help/helpContent';
-import { openOnboardingGuide } from '@/core/orchestration/onboarding/createOnboardingGuideModal';
+import { openOnboardingGuide } from '@/features/onboarding/ui/createOnboardingGuideModal';
 import { MyDivModal, MyModalBody } from '.';
 
 /**

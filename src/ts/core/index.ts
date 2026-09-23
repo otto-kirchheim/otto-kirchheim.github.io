@@ -2,7 +2,7 @@ export type { BackendEnvelope, ApiHttpResponse, AppResult } from '../shared/type
 export { unwrapEnvelope, ok, err } from '../shared/types/api';
 export type { StateStore } from '../shared/lib/state/stateStore';
 export { StorageStateStore } from '../shared/lib/state/storageStateStore';
-export { registerAppStartTask, initializeAppBootstrap } from './bootstrap';
+export { registerAppStartTask, initializeAppBootstrap } from '../app/init/bootstrap';
 export { publishEvent, onEvent, clearAllEventListeners } from '../shared/lib/events/appEvents';
 export type { EventChannel, EventChannels } from '../shared/lib/events/types';
 export { getHelpContent } from './help/helpContent';

@@ -18,7 +18,7 @@ import useFeatureTabsVisible from '../../shared/model/navigation/useFeatureTabsV
  *
  * Rein praesentational: Die Verkabelung liegt ausserhalb und haengt an den IDs/Klassen hier
  * (`#btnHelpStart`, `#Willkommen`, `#startSchnellzugriff [data-jump-tab]` in
- * `core/orchestration/auth/index.ts`; `#quick-*-tab` in `updateTabVisibility.ts`; `#ladeAnzeige`
+ * `app/session/index.ts`; `#quick-*-tab` in `updateTabVisibility.ts`; `#ladeAnzeige`
  * in `setLoading.ts`/`clearLoading.ts`) -- diese Bezeichner nicht ohne die Gegenstellen aendern.
  */
 export default function StartTab() {

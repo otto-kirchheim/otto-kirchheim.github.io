@@ -3,7 +3,7 @@ import { clearAllEventListeners, publishEvent } from '@/shared/lib/events/appEve
 import { featureLifecycleRegistry, featureRegistry } from '@/shared/lib/feature';
 import type { FeatureDefinition, FeatureMeta, FeaturePartName, FeatureResourceKey } from '@/shared/lib/feature';
 import { getHelpContent } from '@/core/help/helpContent';
-import { resetFeatureTabSync, syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
+import { resetFeatureTabSync, syncFeatureTabs } from '@/app/init/syncFeatureTabs';
 import calculateBerechnungRows from '@/features/Berechnung/calculateBerechnungRows';
 import { ladeBerechnungsTeile } from '@/features/Berechnung/ladeBerechnungsTeile';
 import { resourceKeys } from '@/shared/lib/ressource/resourceConfig';

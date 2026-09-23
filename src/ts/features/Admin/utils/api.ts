@@ -1,6 +1,6 @@
 import { FetchRetry } from '@/shared/api/FetchRetry';
 import Storage from '@/shared/lib/storage/Storage';
-import { notifyActAsStateChanged } from '@/infrastructure/ui/actAsStatus';
+import { notifyActAsStateChanged } from '@/shared/model/session/actAsStatus';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { TUserRole } from '@/types';
 import {

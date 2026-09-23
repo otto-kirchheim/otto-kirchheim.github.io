@@ -2,6 +2,25 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-23 (182)
+
+### refactor (P5: geteilte Features, `app/session`, `app/init`)
+
+- `core/orchestration/auth` aufgeteilt: Modals + `ConflictReviewBanner` nach `features/auth/ui`, Login-Utils
+  (`loginUser`, `loginWithPasskey`, `checkNeuerBenutzer`, `handleAuthUrlState`, `requestVerificationMail`) und
+  `logoutUser` (aus `Einstellungen/utils`) nach `features/auth/model`; `loadUserDaten.*`, `overwriteUserDaten`,
+  `userLoginSuccess` und die Start-Verdrahtung (`auth/index.ts`) nach `app/session`. `syncFeatureTabs`, `initSequence`,
+  `bootstrap` (+ `DEPENDENCIES.md`) nach `app/init`; Onboarding nach `features/onboarding/{ui,model}`.
+- **Abweichung vom Plan (User-Entscheid):** `infrastructure/autoSave` nach `shared/lib/autosave` und `infrastructure/pdf`
+  + `generatePDF.ts` nach `shared/lib/pdf` statt `features/{autosave,pdf-export}` -- beide werden von den Modulen
+  ber/ewt/ea/ez und von `shared` (`saveDaten`, `unlinkEwtRefs`, `AutoSaveBadge`) genutzt, als Feature wären das
+  Same-Layer- bzw. Aufwärts-Importe. `actAsStatus` → `shared/model/session`, `monatJahrStore` → `shared/model/period`.
+- Moves durch den User in der IDE (Tests auf Wunsch per `git mv`); nachgezogen: nicht aktualisierte Alias-Importe und
+  `vi.mock`-Strings, Barrel-Mocks auf konkrete Dateien, Barrels ohne schichtfremde Re-Exporte, `main.tsx`,
+  Fixture-Pfade (`dbFonts.test.ts` lief vorher wegen falschem Asset-Pfad still als übersprungen).
+- Bekannt, eigener Commit (Event-Inversion): `features/auth` ruft noch aufwärts `app/session` (`userLoginSuccess`) und
+  `app/init` (`syncFeatureTabs`). Gate: typecheck 0, lint 0, `lint:fsd` 18, Tests 2289/2289, build i.o. (Precache 113).
+
 ## 2026-09-23 (181)
 
 ### refactor (P4: Domänen-Shared nach `shared/lib/ressource`/`shared/lib/zulagen`)

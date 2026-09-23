@@ -1,4 +1,3 @@
-export * from './actAsStatus';
 export * from '../../shared/ui/custom-table/breakpoints';
 export { default as buttonDisable } from '../../shared/ui/button-loading/buttonDisable';
 export { default as clearLoading } from '../../shared/ui/button-loading/clearLoading';

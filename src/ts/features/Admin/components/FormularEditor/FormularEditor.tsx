@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 
-import { hoeheFuer, maxZeilenFuer, spaltenFuer, startYFuer } from '@/infrastructure/pdf/spaltenFuer';
+import { hoeheFuer, maxZeilenFuer, spaltenFuer, startYFuer } from '@/shared/lib/pdf/spaltenFuer';
 import type { Feld, Schriftart, SeitenDef, Spalte, Version } from '@otto-kirchheim/nebengeld-shared';
-import { build } from '@/infrastructure/pdf/build';
-import { konfigSchema } from '@/infrastructure/pdf/configSchema';
+import { build } from '@/shared/lib/pdf/build';
+import { konfigSchema } from '@/shared/lib/pdf/configSchema';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { PdfCanvas, type Achse, type Messung, type RasterMarke, type Rechteck } from './PdfCanvas';
 import { FeldPanel, type Armed } from './FeldPanel';
@@ -17,7 +17,7 @@ import {
   type Drehwinkel,
   type SkalierFaktoren,
 } from './skaliereKonfig';
-import { dreheTabellenZelle, entdrehePunkt } from '@/infrastructure/pdf/tabellenDrehung';
+import { dreheTabellenZelle, entdrehePunkt } from '@/shared/lib/pdf/tabellenDrehung';
 import { SkalierLeiste } from './SkalierLeiste';
 import { vorlageFontFamilien, type VorlageFontFamilie } from './vorlageFonts';
 import { schriftKurz } from './schriftartHelfer';

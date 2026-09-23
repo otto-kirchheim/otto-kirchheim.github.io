@@ -9,7 +9,7 @@ import { SonderZeilen } from './SonderZeilen';
 import { UEBER_OPTIONEN } from './sonderZeilenOptionen';
 import { SpalteZeile } from './SpalteZeile';
 import { WertVorschau } from './WertVorschau';
-import { sonderZeileZelleWert, zeilenFuerUeber } from '@/infrastructure/pdf/wert';
+import { sonderZeileZelleWert, zeilenFuerUeber } from '@/shared/lib/pdf/wert';
 import { DBButton, DBCheckbox, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
@@ -17,7 +17,7 @@ import { DbAuswahl, DbFeld } from '@/components';
  * Schlüssel für eine neu angelegte Spalte, ohne eine bestehende Spalte derselben Tabelle zu überschreiben.
  * Sonst bekäme eine zweite frische Spalte denselben Default-Schlüssel (immer `zeilenFelder[0]?.pfad`) und
  * würde in Bedingungen/Summen die erste stillschweigend verdrängen (`mitBerechnetenSpalten()` in
- * `infrastructure/pdf/tabellenZeilen.ts`: gleicher Schlüssel = überschrieben).
+ * `shared/lib/pdf/tabellenZeilen.ts`: gleicher Schlüssel = überschrieben).
  *
  * @param basis - Wunschschlüssel.
  * @param spalten - Bestehende Spalten der Tabelle.
@@ -65,7 +65,7 @@ export function TabellenBlock({
   const zeilenFelder = katalogZeilenFelder(formular, tabelle.quelle);
   // Bereits konfigurierte berechnete UND Ankreuz-Spalten dieser Tabelle: der Renderer trägt ihren Wert (Rechen-
   // ergebnis bzw. gedrucktes Zeichen, sonst leer) schon unter `key` in die Zeile ein (`mitBerechnetenSpalten()`
-  // in `infrastructure/pdf/tabellenZeilen.ts`), eine Ankreuz-Bedingung kann sie also per `feld` direkt
+  // in `shared/lib/pdf/tabellenZeilen.ts`), eine Ankreuz-Bedingung kann sie also per `feld` direkt
   // wiederverwenden. Bewusst aus `tabelle.spalten`, nicht aus dem seitenspezifischen `spalten` unten:
   // `mitBerechnetenSpalten()` kennt nur die Tabellen-Spalten, eine NUR auf einer Seite gesetzte Spalte würde
   // nie befüllt.

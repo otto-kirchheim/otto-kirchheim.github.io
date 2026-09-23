@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { DBHeadingH4 } from '@db-ux/react-core-components';
 import dayjs from '@/shared/lib/date/configDayjs';
-import { getMonatJahr, subscribeMonatJahr } from './monatJahrStore';
+import { getMonatJahr, subscribeMonatJahr } from '../../shared/model/period/monatJahrStore';
 
 /**
  * Ueberschrift mit gewaehltem Monat/Jahr, gespeist aus `monatJahrStore` (gesetzt von `setMonatJahr.ts`). Jeder Tab

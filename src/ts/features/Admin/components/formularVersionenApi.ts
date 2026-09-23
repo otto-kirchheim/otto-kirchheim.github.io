@@ -1,5 +1,5 @@
 import { FetchRetry, getServerUrl } from '@/shared/api/FetchRetry';
-import { ApiFehler, authHeader, holeVorlageAlsDatei } from '@/infrastructure/pdf/ladeFormular';
+import { ApiFehler, authHeader, holeVorlageAlsDatei } from '@/shared/lib/pdf/ladeFormular';
 import type {
   VersionUebersicht as SharedVersionUebersicht,
   VersionNutzdaten as SharedVersionNutzdaten,
@@ -7,7 +7,7 @@ import type {
 import type { Konfig } from './FormularEditor/FormularEditor';
 import type { FormularCode } from './FormularEditor/datenKatalog';
 
-// Definiert in `infrastructure/pdf/ladeFormular.ts` (auch vom Download-Pfad der Ressourcen-Tabs
+// Definiert in `shared/lib/pdf/ladeFormular.ts` (auch vom Download-Pfad der Ressourcen-Tabs
 // genutzt) und hier re-exportiert, damit Importe wie in `FormularUpload.tsx` unverändert bleiben.
 export { ApiFehler, holeVorlageAlsDatei };
 

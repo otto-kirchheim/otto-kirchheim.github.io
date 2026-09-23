@@ -1,4 +1,4 @@
-import { setMonatJahrStore } from '@/infrastructure/ui/monatJahrStore';
+import { setMonatJahrStore } from '@/shared/model/period/monatJahrStore';
 import { flushExtern } from '@/infrastructure/ui/reactRoot';
 
 /**

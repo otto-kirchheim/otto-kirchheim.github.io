@@ -1,9 +1,9 @@
 import dayjs from '@/shared/lib/date/configDayjs';
 import { openHelpModal, registerAppStartTask } from '@/core';
-import { markStep } from '@/core/orchestration/initSequence';
+import { markStep } from '@/app/init/initSequence';
 import Storage from '@/shared/lib/storage/Storage';
 import { default as saveDaten } from '@/shared/lib/ressource/saveDaten';
-import { applyAutoSaveSettings } from '@/infrastructure/autoSave/autoSave';
+import { applyAutoSaveSettings } from '@/shared/lib/autosave/autoSave';
 import { authApi } from '@/shared/api/apiService';
 import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
@@ -11,7 +11,8 @@ import { ladeEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
 import { createModalChangePassword, createModalPasskeySetPassword } from './components';
 import { setEmailStatus } from './utils/emailStatusStore';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
-import { logoutUser, selectYear, changeMonatJahr, generateEingabeMaskeEinstellungen, registerPasskey } from './utils';
+import { selectYear, changeMonatJahr, generateEingabeMaskeEinstellungen, registerPasskey } from './utils';
+import logoutUser from '@/features/auth/model/logoutUser';
 
 type PasskeyListItem = Awaited<ReturnType<typeof authApi.getPasskeys>>[number];
 

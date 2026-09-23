@@ -24,7 +24,7 @@ vi.mock('@/shared/api/FetchRetry', () => ({
   getServerUrl: getServerUrlMock,
 }));
 
-vi.mock('@/infrastructure/pdf/ladeFormular', () => ({
+vi.mock('@/shared/lib/pdf/ladeFormular', () => ({
   ApiFehler: TestApiFehler,
   authHeader: authHeaderMock,
   holeVorlageAlsDatei: holeVorlageAlsDateiMock,

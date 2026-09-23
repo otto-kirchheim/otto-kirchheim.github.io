@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import setMonatJahr, { setMonatsUeberschriften } from '@/features/Einstellungen/utils/setMonatJahr';
-import { getMonatJahr, resetMonatJahr } from '@/infrastructure/ui/monatJahrStore';
+import { getMonatJahr, resetMonatJahr } from '@/shared/model/period/monatJahrStore';
 
 describe('setMonatJahr', () => {
   let container: HTMLDivElement;

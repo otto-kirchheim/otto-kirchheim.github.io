@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import type { SeitenDef, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
 import { erzeugeVorschau } from '@/features/Admin/components/FormularEditor/dummyDaten';
-import { sonderZeileZelleWert, wert, zeilenFuerUeber } from '@/infrastructure/pdf/wert';
+import { sonderZeileZelleWert, wert, zeilenFuerUeber } from '@/shared/lib/pdf/wert';
 
 const tabellen: Record<string, TabellenDef> = {
   haupt: {

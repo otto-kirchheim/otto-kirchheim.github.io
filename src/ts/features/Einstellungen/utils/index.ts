@@ -1,4 +1,3 @@
-import logoutUser from './logoutUser';
 import selectYear from './selectYear';
 import changeMonatJahr from './changeMonatJahr';
 import checkPasswort from './checkPasswort';
@@ -10,7 +9,6 @@ import setMonatJahr from './setMonatJahr';
 import registerPasskey from './registerPasskey';
 
 export {
-  logoutUser,
   selectYear,
   changeMonatJahr,
   checkPasswort,

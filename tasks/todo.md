@@ -74,7 +74,30 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
       Layout wird erst in P7 umgezogen). `lint:fsd`-Ratsche 47 → 37 (Grenze in `package.json` nachgezogen).
       Gate: typecheck 0, lint 0, `lint:fsd` 37, Tests 2289 unverändert, build i.o. (Precache weiterhin 113),
       `bun run format` gelaufen.
-- [ ] P5 Geteilte Features + app/session
+- [ ] P5 Geteilte Features + app/session (Start 2026-09-23). **Abweichung vom Plan (User-Entscheid):**
+      Autosave und PDF-Export nach `shared/lib/{autosave,pdf}` statt `features/{autosave,pdf-export}` --
+      sonst feature→feature (ber/ewt/ea/ez) und shared→features (`saveDaten`, `unlinkEwtRefs`, `AutoSaveBadge`).
+  - [x] Zielordner angelegt (Claude)
+  - [x] Moves in der IDE (User; die 49+1 Testdateien auf Wunsch des Users per `git mv` durch Claude): `core/orchestration/auth/{components→features/auth/ui, Login-Utils→features/auth/model}`,
+        `loadUserDaten.*`/`overwriteUserDaten`/`userLoginSuccess`/`auth/index.ts` → `app/session`,
+        `syncFeatureTabs`/`initSequence`/`bootstrap`/`DEPENDENCIES.md` → `app/init`, `onboarding` → `features/onboarding/{ui,model}`,
+        `logoutUser` → `features/auth/model`, `infrastructure/autoSave` → `shared/lib/autosave`,
+        `infrastructure/pdf` + `generatePDF` → `shared/lib/pdf`, `actAsStatus` → `shared/model/session`,
+        `monatJahrStore` → `shared/model/period`; Tests gespiegelt
+  - [x] Nacharbeit (Claude): IDE zog `@/infrastructure/pdf/*`-Aliase (Admin-FormularEditor, `pdfDaten.ts` je Feature) und
+        ~40 `vi.mock`-Strings nicht nach → per Präfix-Ersetzung; 9 `vi.mock`s auf das alte Barrel `auth/utils` auf die
+        konkrete Datei umgestellt (`@/app/session/{loadUserDaten,overwriteUserDaten,userLoginSuccess}` mit `default`,
+        `@/features/auth/model`); falsch umgeschriebene relative Pfade (`../../core/orchestration/...`, `../../shared/...`
+        in `shared/lib/pdf`) korrigiert; Barrel `features/auth/model/index.ts` ohne Session-Dateien, `Einstellungen/utils`
+        ohne `logoutUser`, `infrastructure/ui/index.ts` ohne `actAsStatus`; `main.tsx` → `import './app/session'`;
+        `test/pdf.warmeFormularCaches.test.ts` (in der Liste vergessen) → `test/shared/lib/pdf/`; Fixture-/Asset-Pfade
+        in `build.test.ts`/`dbFonts.test.ts` um eine Ebene vertieft (`dbFonts` war dadurch still übersprungen);
+        Kommentar-/Doku-Pfade; leere Alt-Ordner entfernt (übrig nur Ordner mit gitignoriertem `.claude-flow`)
+  - [x] Gate: typecheck 0, lint 0, `lint:fsd` 18 (= Ratsche des Users; neu `components/MyHelpModal` → `features/onboarding`,
+        löst sich in P6), test 2289/2289, build i.o. (Precache 113), `format`
+  - [ ] `verify`-Smoke im Browser (Login, Passkey, Monatswechsel, Speichern, PDF je Modus) -- offen
+  - [ ] Offen für eigenen Commit (Event-Inversion, nicht Teil des Moves): `features/auth` → `app/session`/`app/init`
+        (`loginUser`/`checkNeuerBenutzer` → `userLoginSuccess`, `logoutUser` → `syncFeatureTabs`), `checkNeuerBenutzer` → `features/onboarding`
 - [ ] P6 Widgets · P7 Module verschieben · P8 Globale Bereiche → Pages · P9 Admin · P10 Abschluss
 
 ---

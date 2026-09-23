@@ -45,7 +45,7 @@ export const FORMATE: { wert: FormatName | ''; label: string }[] = [
 ];
 
 // Katalog-Beitrag je Formular-Feature; Felder/Quellen/Listen liegen bei den Features (`features/Admin/features/<key>/katalog.ts`),
-// hier nur die Zusammenfuehrung. Abgeleitet aus `infrastructure/pdf/pdfDaten.ts` (Basis) und `features/<Feature>/utils/pdfDaten.ts`
+// hier nur die Zusammenfuehrung. Abgeleitet aus `shared/lib/pdf/pdfDaten.ts` (Basis) und `features/<Feature>/utils/pdfDaten.ts`
 // (`IPdf*`-Typen je Ressource): die TS-Typen sind zur Laufzeit weg, daher von Hand gepflegt -- bei Änderungen an den `IPdf*`-Typen mitziehen.
 const FEATURE_KATALOGE: Record<FormularCode, FeatureKatalog> = {
   bereitschaft: berKatalog,

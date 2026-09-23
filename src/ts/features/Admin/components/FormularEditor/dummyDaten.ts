@@ -1,8 +1,8 @@
-import { alsVergleichswert, operandenFelder } from '@/infrastructure/pdf/aggregatoren';
-import { loeseListenAuf } from '@/infrastructure/pdf/listen';
-import type { ListenAufloesung } from '@/infrastructure/pdf/listen';
-import { maxZeilenFuer } from '@/infrastructure/pdf/spaltenFuer';
-import { tabellenZeilen } from '@/infrastructure/pdf/tabellenZeilen';
+import { alsVergleichswert, operandenFelder } from '@/shared/lib/pdf/aggregatoren';
+import { loeseListenAuf } from '@/shared/lib/pdf/listen';
+import type { ListenAufloesung } from '@/shared/lib/pdf/listen';
+import { maxZeilenFuer } from '@/shared/lib/pdf/spaltenFuer';
+import { tabellenZeilen } from '@/shared/lib/pdf/tabellenZeilen';
 import type {
   Daten,
   Feld,
@@ -13,9 +13,9 @@ import type {
   ZeilenBerechnet,
   ZeilenOpName,
 } from '@otto-kirchheim/nebengeld-shared';
-import { datenPlatzhalter, type Kontext, type TabellenZeilen } from '@/infrastructure/pdf/wert';
+import { datenPlatzhalter, type Kontext, type TabellenZeilen } from '@/shared/lib/pdf/wert';
 import { beispielWert, type FormularCode } from './datenKatalog';
-import { verteile } from '@/infrastructure/pdf/verteile';
+import { verteile } from '@/shared/lib/pdf/verteile';
 
 /**
  * Schreibt einen Wert an einen Punkt-Pfad im Datenobjekt.

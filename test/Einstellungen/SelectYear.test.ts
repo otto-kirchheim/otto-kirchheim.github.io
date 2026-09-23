@@ -19,8 +19,8 @@ vi.mock('@/shared/ui/button-loading/setLoading', () => ({
   default: setLoadingMock,
 }));
 
-vi.mock('@/core/orchestration/auth/utils', () => ({
-  loadUserDaten: loadUserDatenMock,
+vi.mock('@/app/session/loadUserDaten', () => ({
+  default: loadUserDatenMock,
 }));
 
 vi.mock('@/features/Einstellungen/utils/setMonatJahr', () => ({

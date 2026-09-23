@@ -1,6 +1,6 @@
 import type { IVorgabenBerechnung, IVorgabenGeld } from '@/types';
 import { registerAppStartTask } from '@/core';
-import { markStep } from '@/core/orchestration/initSequence';
+import { markStep } from '@/app/init/initSequence';
 import { onEvent } from '@/shared/lib/events/appEvents';
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import aktualisiereBerechnung from './aktualisiereBerechnung';

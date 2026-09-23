@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 
 import type { Feld, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
-import { wert } from '@/infrastructure/pdf/wert';
+import { wert } from '@/shared/lib/pdf/wert';
 import { AggregationEditor } from './aggregationUndRechnung';
 import { FeldAnkreuzBedingung } from './bedingungEditor';
 import { istBooleanFeld, katalogFelder, type FormularCode } from './datenKatalog';

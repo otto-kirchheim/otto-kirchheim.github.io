@@ -1,0 +1,125 @@
+import { DBButton, DBDivider } from '@db-ux/react-core-components';
+import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
+import { createRef, type SubmitEvent } from 'react';
+
+import { loginUser, loginWithPasskey } from '../model';
+import { DBLoadingButton, MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
+import { createModalForgotPassword, createModalNewUser } from '.';
+import type { CustomHTMLDivElement } from '@/types';
+
+/**
+ * Öffnet den Login-Dialog mit Benutzer/Passwort sowie Links zu "Passwort vergessen" und "Registrieren".
+ * Wenn der Browser WebAuthn unterstützt, gibt es "Mit Passkey" (Benutzername darf dann leer bleiben). Das Modal-Element gibt es erst nach `showModal`, daher hält `currentModal` es für den Passkey-Button vor.
+ */
+export default function createModalLogin(): void {
+  let currentModal: CustomHTMLDivElement | null = null;
+
+  const ref = createRef<HTMLFormElement>();
+  const supportsPasskeys = browserSupportsWebAuthn();
+
+  const footer = (
+    <div className="dialog-fuss flex-column align-items-stretch gap-0 p-0">
+      <div className="d-flex justify-content-center gap-2 w-100 px-3 pt-3">
+        <DBLoadingButton variant="brand" type="submit" id="btnLoginModal">
+          Einloggen
+        </DBLoadingButton>
+      </div>
+
+      {supportsPasskeys && (
+        <div className="w-100 px-3 p-3">
+          <div className="border px-3 py-2 bg-body-tertiary">
+            <div className="small fw-semibold text-uppercase text-body-secondary mb-1">Alternative Anmeldung</div>
+            <p className="small text-body-secondary mb-2">
+              Mit einem gespeicherten Passkey kann der Benutzername leer bleiben – der Browser zeigt dann passende
+              Geräte an.
+            </p>
+            <div className="d-flex justify-content-center gap-2">
+              <DBButton
+                variant="outlined"
+                type="button"
+                onClick={() => {
+                  if (currentModal) void loginWithPasskey(currentModal);
+                }}
+              >
+                Mit Passkey
+              </DBButton>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!supportsPasskeys && <DBDivider width="full" />}
+
+      <div className="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 w-100 px-3 pb-3">
+        <span className="small text-body-secondary">Weitere Optionen</span>
+        <div className="d-grid d-sm-flex gap-2">
+          <DBButton
+            variant="outlined"
+            type="button"
+            data-dialog-dismiss="modal"
+            onClick={() => createModalForgotPassword()}
+          >
+            Passwort vergessen
+          </DBButton>
+          <DBButton
+            variant="outlined"
+            data-color="informational"
+            type="button"
+            data-dialog-dismiss="modal"
+            onClick={() => createModalNewUser()}
+          >
+            Registrieren
+          </DBButton>
+          <DBButton variant="filled" type="button" data-dialog-dismiss="modal">
+            Abbrechen
+          </DBButton>
+        </div>
+      </div>
+    </div>
+  );
+
+  const modal = showModal(
+    <MyFormModal myRef={ref} title="Einloggen" submitText="Einloggen" onSubmit={onSubmit()} Footer={footer}>
+      <MyModalBody>
+        <MyInput
+          divClass="sp-12"
+          required
+          type="text"
+          id="Benutzer"
+          name="benutzer"
+          pattern={new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source}
+          autoComplete="username webauthn"
+        >
+          Benutzer
+        </MyInput>
+        <MyInput
+          divClass="sp-12"
+          required
+          type="password"
+          id="Passwort"
+          name="Passwort"
+          autoComplete="current-password"
+        >
+          Passwort
+        </MyInput>
+      </MyModalBody>
+    </MyFormModal>,
+  );
+
+  currentModal = modal;
+
+  if (ref.current === null) throw new Error('referenz nicht gesetzt');
+  const form = ref.current;
+
+  /**
+   * Baut den Submit-Handler: bei gültigem Formular wird der Standard-Submit verhindert und `loginUser` mit dem Modal aufgerufen.
+   */
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
+    return (event: SubmitEvent<HTMLFormElement>): void => {
+      if (!(form instanceof HTMLFormElement)) return;
+      if (form.checkValidity && !form.checkValidity()) return;
+      event.preventDefault();
+      loginUser(modal);
+    };
+  }
+}

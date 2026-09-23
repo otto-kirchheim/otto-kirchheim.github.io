@@ -11,11 +11,11 @@ import { openHelpModal } from '@/core';
 import { confirmDeleteAllRows } from '@/shared/lib/ressource/confirmDeleteAllRows';
 import { getMonatFromEA } from '@/shared/lib/date/getMonatFromItem';
 import Storage from '@/shared/lib/storage/Storage';
-import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
+import { createOnChangeHandler } from '@/shared/lib/autosave/autoSave';
 import { default as saveDaten } from '@/shared/lib/ressource/saveDaten';
 import { bindClickHandlers } from '@/shared/lib/dom/bindClickHandlers';
 import dayjs from '@/shared/lib/date/configDayjs';
-import generatePDF from '@/infrastructure/data/generatePDF';
+import generatePDF from '@/shared/lib/pdf/generatePDF';
 import { EditorModalEA, ShowModalEA, createAddModalEA } from './components';
 import { getEaDaten, persistEaTableData } from './utils';
 

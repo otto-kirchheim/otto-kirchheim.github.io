@@ -3,7 +3,7 @@ import type { FeaturePdfContext } from '@/shared/lib/feature';
 import { filterByMonat, getMonatFromN } from '@/shared/lib/date/getMonatFromItem';
 import tableToArray from '@/shared/lib/ressource/tableToArray';
 import { tableIdOf } from '@/shared/lib/ressource/resourceConfig';
-import type { IPdfBase } from '@/infrastructure/pdf/pdfDaten';
+import type { IPdfBase } from '@/shared/lib/pdf/pdfDaten';
 import type { IDatenN } from '@/types';
 
 // `Arbeitszeit` wird erst durch `ezAbgeleiteteWerte()` (`features/Neben/utils/pdfDaten.ts`) berechnet, deshalb
