@@ -1,5 +1,5 @@
 import { createElement, type ReactNode } from 'react';
-import { mount, unmount } from '@/infrastructure/ui/reactRoot';
+import { mount, unmount } from '@/shared/lib/react-root/reactRoot';
 
 /**
  * Preact-kompatible Render-Signatur fuer die Tests: `render(<X />, container)` bzw.

@@ -22,7 +22,7 @@ import {
   type TemplateEditState,
 } from './adminProfileTemplatesManagerGemeinsam';
 import { DBButton, DBHeadingH5, DBTag } from '@db-ux/react-core-components';
-import { DbFeld } from '@/components';
+import { DbFeld } from '@/shared/ui/form/DbFeld';
 
 /**
  * Verwaltung der Profil-Templates: Liste mit aufklappbarem Editor, Anlegen, Kopieren, Inhalt übernehmen, (De-)Aktivieren und Löschen (nur Super-Admin).

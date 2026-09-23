@@ -2,7 +2,12 @@ import { DBTag, DBTooltip } from '@db-ux/react-core-components';
 import { createRef, type CSSProperties, type SubmitEvent, type ReactElement } from 'react';
 
 import { BereitschaftsEinsatzZeiträume } from '../model/constants';
-import { DbFeld, MyCheckbox, MyFormModal, MyModalBody, MySelect, schliesseModal, showModal } from '@/components';
+import { DbFeld } from '@/shared/ui/form/DbFeld';
+import MyCheckbox from '@/shared/ui/form/MyCheckbox';
+import MyFormModal from '@/shared/ui/modal/MyFormModal';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import MySelect from '@/shared/ui/form/MySelect';
+import showModal, { schliesseModal } from '@/shared/ui/modal/showModal';
 import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IVorgabenU, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import { default as checkMaxTag } from '@/shared/lib/validation/checkMaxTag';

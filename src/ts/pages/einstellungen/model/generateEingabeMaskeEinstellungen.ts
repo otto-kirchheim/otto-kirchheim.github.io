@@ -6,7 +6,7 @@ import { setupPersValidation } from '@/shared/lib/validation/addressValidation';
 import { isLegacyArbeitszeit, migrateArbeitszeit } from '@/shared/lib/ressource/fieldMapper';
 import { ladeEinstellungenTeile } from '@/shared/model/einstellungen/einstellungenTeile';
 import { createElement } from 'react';
-import { mount } from '@/infrastructure/ui';
+import { mount } from '@/shared/lib/react-root/reactRoot';
 
 /**
  * Befüllt die Einstellungen-Maske aus den Benutzer-Vorgaben: persönliche Daten, Arbeitszeit, Tabs, AutoSave und -- über den Einstellungen-Slot jedes

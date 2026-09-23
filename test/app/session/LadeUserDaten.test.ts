@@ -87,7 +87,7 @@ vi.mock('@/shared/ui/button-loading/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
-vi.mock('@/infrastructure/ui/updateTabVisibility', () => ({
+vi.mock('@/shared/model/navigation/updateTabVisibility', () => ({
   default: updateTabVisibilityMock,
 }));
 
@@ -95,10 +95,8 @@ vi.mock('@/shared/api/apiService', () => ({
   loadAllYearData: loadAllYearDataMock,
 }));
 
-vi.mock('@/core', () => ({
-  publishEvent: publishEventMock,
-  unwrapEnvelope: vi.fn(),
-}));
+vi.mock('@/shared/lib/events/appEvents', () => ({ publishEvent: publishEventMock }));
+vi.mock('@/shared/types/api', () => ({ unwrapEnvelope: vi.fn() }));
 
 vi.mock('@/shared/lib/autosave/autoSave', () => ({
   flushAll: flushAllMock,

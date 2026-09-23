@@ -4,17 +4,20 @@ import { registerSW } from 'virtual:pwa-register';
 import { saveEinstellungen } from '@/pages/einstellungen/model';
 import changeMonatJahr from '@/shared/model/period/changeMonatJahr';
 import logoutUser from '@/features/auth/model/logoutUser';
-import { createSnackBar, initPullToRefresh, setVersionOutdated } from '@/infrastructure/ui';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
+import initPullToRefresh from '@/app/shell/pullToRefresh';
+import setVersionOutdated from '@/app/shell/setVersionOutdated';
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import { default as compareVersion } from '@/shared/lib/version/compareVersion';
-import { default as setOffline } from '@/infrastructure/ui/setOffline';
+import { default as setOffline } from '@/app/shell/setOffline';
 import { default as storageAvailable } from '@/shared/lib/storage/storageAvailable';
 import { registerHook, featureLifecycleRegistry } from '@/shared/lib/feature';
 import type { FeatureContext } from '@/shared/lib/feature';
-import { validateAllSequences, markStep } from './app/init/initSequence';
+import { validateAllSequences, markStep } from '@/shared/lib/lifecycle/initSequence';
 import loadUserDaten from '@/app/session/loadUserDaten';
 import userLoginSuccess from '@/app/session/userLoginSuccess';
 import { openHelpModal } from '@/widgets/help-modal/openHelpModal';
+import { openOnboardingGuideOnce } from '@/features/onboarding/ui/createOnboardingGuideModal';
 
 validateAllSequences();
 
@@ -22,6 +25,7 @@ registerHook('auth:failure', () => logoutUser({ reason: 'token-expired' }));
 registerHook('auth:login-success', userLoginSuccess);
 registerHook('session:load-month', loadUserDaten);
 registerHook('help:open', openHelpModal);
+registerHook('onboarding:open-once', openOnboardingGuideOnce);
 registerHook('network:reconnect', changeMonatJahr);
 registerHook('pre-save:settings', saveEinstellungen);
 registerHook('app:version-outdated', () => setVersionOutdated(updateSW));
@@ -96,11 +100,11 @@ const updateSW = registerSW({
 });
 if (import.meta.env.DEV) console.log(pwaInfo ?? 'No PWA info available.');
 
-import { initTabController, zeigeTabAusHash } from '@/infrastructure/ui/tabController';
+import { initTabController, zeigeTabAusHash } from '@/shared/model/navigation/tabController';
 import { createElement } from 'react';
-import { mount } from '@/infrastructure/ui/reactRoot';
+import { mount } from '@/shared/lib/react-root/reactRoot';
 import App from './App';
-import { initializeAppBootstrap, registerAppStartTask } from './core';
+import { initializeAppBootstrap, registerAppStartTask } from '@/shared/lib/lifecycle/bootstrap';
 import { ladeEinstellungenTeile } from '@/shared/model/einstellungen/einstellungenTeile';
 
 console.log('Version:', import.meta.env.APP_VERSION);
@@ -166,13 +170,13 @@ registerAppStartTask(() => {
 
 import '@/pages/berechnung';
 import '@/pages/einstellungen';
-import './app/session';
+import './session';
 import '@/app/features';
 
 initializeAppBootstrap();
 
 // Reihenfolge ist bedeutsam: erst die Layer-Deklaration, dann DB UX, dann die App-Styles.
-import '../scss/layers.scss';
-import '../scss/db-ux.css';
-import '../scss/utilities.scss';
-import '../scss/styles.scss';
+import '../../scss/layers.scss';
+import '../../scss/db-ux.css';
+import '../../scss/utilities.scss';
+import '../../scss/styles.scss';

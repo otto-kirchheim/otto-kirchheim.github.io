@@ -7,7 +7,7 @@
  * - Einstellungen (UserProfile) werden ebenfalls automatisch gespeichert
  */
 
-import { publishEvent } from '@/core';
+import { publishEvent } from '@/shared/lib/events/appEvents';
 import { onEvent } from '@/shared/lib/events/appEvents';
 import type { CustomTable, CustomTableTypes, TableChanges } from '../../ui/custom-table/CustomTable';
 import { getRowKey } from '../../ui/custom-table/CustomTable';

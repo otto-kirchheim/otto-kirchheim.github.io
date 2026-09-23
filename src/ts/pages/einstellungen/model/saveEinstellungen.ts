@@ -2,9 +2,9 @@ import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { IEinstellungenBeitrag, IVorgabenU, IVorgabenUPers } from '@/types';
 import { PERS_FIELD_LABELS, setupPersValidation, validatePersInput } from '@/shared/lib/validation/addressValidation';
 import { default as Storage } from '@/shared/lib/storage/Storage';
-import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
+import { default as updateTabVisibility } from '@/shared/model/navigation/updateTabVisibility';
 import { sliderPositionToMs } from './generateEingabeMaskeEinstellungen';
-import { getArbeitszeitPanelState } from '../../../shared/ui/arbeitszeit-editor/arbeitszeitPanelState';
+import { getArbeitszeitPanelState } from '@/shared/ui/arbeitszeit-editor/arbeitszeitPanelState';
 import { getEinstellungenTeile } from '@/shared/model/einstellungen/einstellungenTeile';
 
 /**

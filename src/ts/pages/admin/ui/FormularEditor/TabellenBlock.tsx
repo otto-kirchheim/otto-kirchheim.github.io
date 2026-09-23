@@ -11,7 +11,7 @@ import { SpalteZeile } from './SpalteZeile';
 import { WertVorschau } from './WertVorschau';
 import { sonderZeileZelleWert, zeilenFuerUeber } from '@/shared/lib/pdf/wert';
 import { DBButton, DBCheckbox, DBTooltip } from '@db-ux/react-core-components';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 /**
  * Schlüssel für eine neu angelegte Spalte, ohne eine bestehende Spalte derselben Tabelle zu überschreiben.

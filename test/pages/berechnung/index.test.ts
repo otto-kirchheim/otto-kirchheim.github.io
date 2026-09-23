@@ -20,13 +20,13 @@ const {
   storageGetMock: vi.fn(),
 }));
 
-vi.mock('@/core', () => ({
+vi.mock('@/shared/lib/lifecycle/bootstrap', () => ({
   registerAppStartTask: (task: () => void | Promise<void>) => {
     taskRef.fn = task;
   },
 }));
 
-vi.mock('@/app/init/initSequence', () => ({
+vi.mock('@/shared/lib/lifecycle/initSequence', () => ({
   markStep: markStepMock,
 }));
 

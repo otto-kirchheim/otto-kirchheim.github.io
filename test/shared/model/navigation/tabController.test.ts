@@ -9,7 +9,7 @@ import {
   setzeTabSichtbar,
   zeigeTab,
   zeigeTabAusHash,
-} from '@/infrastructure/ui/tabController';
+} from '@/shared/model/navigation/tabController';
 
 let abbauen: (() => void) | null = null;
 

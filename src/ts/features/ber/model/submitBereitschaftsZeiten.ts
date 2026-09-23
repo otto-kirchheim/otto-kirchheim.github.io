@@ -1,7 +1,7 @@
 import type { Dayjs } from 'dayjs';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateBereitschaftsZeiten } from '.';
-import { publishEvent } from '@/core';
+import { publishEvent } from '@/shared/lib/events/appEvents';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IMonatsDaten, IVorgabenU } from '@/types';
 import mergeSchichtenOverrides from './mergeSchichtenOverrides';

@@ -4,7 +4,7 @@ import { Fragment, useEffect, useState } from 'react';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { fetchAdminLogs, fetchAdminUserNameMap, type AdminPage } from '../api/api';
 import { DBButton, DBNotification, DBStack, DBTooltip } from '@db-ux/react-core-components';
-import { DbFeld } from '@/components';
+import { DbFeld } from '@/shared/ui/form/DbFeld';
 
 const ITEMS_PER_PAGE = 25;
 

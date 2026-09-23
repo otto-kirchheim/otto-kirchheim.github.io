@@ -27,7 +27,7 @@ import {
   type AdminPage,
   type AdminPasskey,
 } from '../api/api';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 const BUNDESLAND_OPTIONS = [
   { value: 'BW', label: 'Baden-Württemberg' },

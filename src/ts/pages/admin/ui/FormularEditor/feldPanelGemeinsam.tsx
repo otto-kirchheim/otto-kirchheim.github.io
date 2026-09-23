@@ -3,7 +3,7 @@ import { useState, type ReactNode } from 'react';
 import type { Ausrichtung, Drehung, FormatName } from '@otto-kirchheim/nebengeld-shared';
 import { FORMATE } from './datenKatalog';
 import { DBButton, DBCheckbox, DBTooltip } from '@db-ux/react-core-components';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 /**
  * Ausklappbarer Abschnitt (natives `<details>`, kein State) -- hält die lange Editor-Spalte

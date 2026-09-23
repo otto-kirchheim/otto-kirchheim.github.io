@@ -1,6 +1,10 @@
 import { createRef, type SubmitEvent } from 'react';
 
-import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, schliesseModal, showModal } from '@/components';
+import MyFormModal from '@/shared/ui/modal/MyFormModal';
+import MyInput from '@/shared/ui/form/MyInput';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import PasswordStrengthMeter from '@/shared/ui/form/PasswordStrengthMeter';
+import showModal, { schliesseModal } from '@/shared/ui/modal/showModal';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { authApi } from '@/shared/api/apiService';
 import { getPasswordValidationMessage, PASSWORD_MIN_LENGTH } from '@/shared/lib/validation/passwordValidation';

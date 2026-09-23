@@ -6,9 +6,7 @@ const { mockPublishEvent } = (vi as typeof vi & { hoisted: <T>(factory: () => T)
   mockPublishEvent: vi.fn(),
 }));
 
-vi.mock('@/core', () => ({
-  publishEvent: mockPublishEvent,
-}));
+vi.mock('@/shared/lib/events/appEvents', () => ({ publishEvent: mockPublishEvent }));
 
 import syncNebengeldTimesFromEwtRows from '@/features/ez/model/syncEwtToNeben';
 

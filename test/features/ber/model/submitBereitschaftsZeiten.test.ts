@@ -29,7 +29,7 @@ vi.mock('@/shared/lib/ressource/tableToArray', () => ({ default: tableToArrayMoc
 vi.mock('@/shared/ui/button-loading/setLoading', () => ({ default: setLoadingMock }));
 vi.mock('@/shared/ui/button-loading/clearLoading', () => ({ default: clearLoadingMock }));
 vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
-vi.mock('@/core', () => ({ publishEvent: publishDataChangedMock }));
+vi.mock('@/shared/lib/events/appEvents', () => ({ publishEvent: publishDataChangedMock }));
 vi.mock('@/shared/api/apiService', () => ({
   bereitschaftszeitraumApi: { loadYear: apiLoadYearMock, bulk: apiBulkMock },
 }));

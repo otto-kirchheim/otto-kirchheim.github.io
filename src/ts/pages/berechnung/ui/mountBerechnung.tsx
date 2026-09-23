@@ -1,4 +1,4 @@
-import { mount } from '@/infrastructure/ui';
+import { mount } from '@/shared/lib/react-root/reactRoot';
 
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import dayjs from '@/shared/lib/date/configDayjs';

@@ -87,7 +87,7 @@ export function planeFeature(optionen: NewFeatureOptions, manifest: string, admi
   const dateien: GeplanteDatei[] = [
     {
       pfad: `src/ts/features/${slug}/meta.ts`,
-      inhalt: `import type { FeatureMeta } from '@/core/hooks';
+      inhalt: `import type { FeatureMeta } from '@/shared/lib/feature';
 
 /** Eager gehaltene Beschreibung des Features ${label}; kein Feature-Code importieren. */
 export const ${meta}: FeatureMeta = {
@@ -127,8 +127,8 @@ export const ${ordner}Tab: FC = () => (
     },
     {
       pfad: `src/ts/features/${slug}/parts/ui.tsx`,
-      inhalt: `import { mount, unmount } from '@/infrastructure/ui';
-import type { FeatureParts } from '@/core/hooks';
+      inhalt: `import { mount, unmount } from '@/shared/lib/react-root/reactRoot';
+import type { FeatureParts } from '@/shared/lib/feature';
 import { ${ordner}Tab } from '../ui/${ordner}Tab';
 
 /** Tab-Teil des Features ${label}: mountet \`${ordner}Tab\` in \`#${slug}-root\`; ohne Container passiert nichts. */
@@ -152,7 +152,7 @@ export default ui;
     },
     {
       pfad: `src/ts/features/${slug}/parts/help.ts`,
-      inhalt: `import type { FeatureParts } from '@/core/hooks';
+      inhalt: `import type { FeatureParts } from '@/shared/lib/feature';
 
 /** Hilfetexte des Features ${label}: Tab-Hilfe und Hilfe der Dialoge (Schluessel wie \`meta.helpKeys\`). */
 const help: FeatureParts['help'] = {
@@ -170,7 +170,7 @@ export default help;
       pfad: `test/features/${slug}/${ordner}.test.ts`,
       inhalt: `import { describe, expect, it } from 'bun:test';
 import '@/app/features';
-import { featureRegistry } from '@/core/hooks';
+import { featureRegistry } from '@/shared/lib/feature';
 
 describe('Feature ${label}', () => {
   it('ist im Manifest angemeldet und laedt seine Teile', async () => {

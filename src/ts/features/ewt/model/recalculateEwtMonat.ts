@@ -1,6 +1,6 @@
 import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import { calculateEwtEintraege, getEwtDaten, persistEwtTableData } from '.';
-import { publishEvent } from '@/core';
+import { publishEvent } from '@/shared/lib/events/appEvents';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { IDatenEWT, IMonatsDaten, IVorgabenU } from '@/types';
 import { isEwtInMonat } from '@/shared/lib/date/getMonatFromItem';

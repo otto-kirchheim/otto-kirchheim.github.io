@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { DBButton, DBTooltip } from '@db-ux/react-core-components';
-import { DbFeld } from '@/components';
+import { DbFeld } from '@/shared/ui/form/DbFeld';
 import { MAX_OE_LEVELS } from '../model/bulkEditOe';
 
 type OeLevelInputsProps = {

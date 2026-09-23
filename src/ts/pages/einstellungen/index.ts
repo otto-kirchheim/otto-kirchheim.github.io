@@ -1,7 +1,7 @@
 import dayjs from '@/shared/lib/date/configDayjs';
-import { registerAppStartTask } from '@/core';
+import { registerAppStartTask } from '@/shared/lib/lifecycle/bootstrap';
 import { openHelpModal } from '@/widgets/help-modal/openHelpModal';
-import { markStep } from '@/app/init/initSequence';
+import { markStep } from '@/shared/lib/lifecycle/initSequence';
 import Storage from '@/shared/lib/storage/Storage';
 import { default as saveDaten } from '@/shared/lib/ressource/saveDaten';
 import { applyAutoSaveSettings } from '@/shared/lib/autosave/autoSave';
@@ -13,7 +13,7 @@ import { createModalChangePassword, createModalPasskeySetPassword } from './ui';
 import { setEmailStatus } from './model/emailStatusStore';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import { generateEingabeMaskeEinstellungen, registerPasskey } from './model';
-import selectYear from '@/app/session/selectYear';
+import selectYear from '@/pages/einstellungen/model/selectYear';
 import changeMonatJahr from '@/shared/model/period/changeMonatJahr';
 import logoutUser from '@/features/auth/model/logoutUser';
 

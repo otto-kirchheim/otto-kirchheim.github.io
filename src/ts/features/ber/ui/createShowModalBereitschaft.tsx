@@ -1,5 +1,8 @@
 import type { Column, CustomTableTypes, Row } from '@/shared/ui/custom-table/CustomTable';
-import { MyDivModal, MyModalBody, MyShowFooter, showModal } from '@/components';
+import MyDivModal from '@/shared/ui/modal/MyDivModal';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import MyShowFooter from '@/shared/ui/modal/MyShowFooter';
+import showModal from '@/shared/ui/modal/showModal';
 import type { CustomHTMLDivElement, IDatenBE, IDatenBZ } from '@/types';
 
 /**

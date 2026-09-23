@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { LOGIN_INIT_SEQUENCE, validateAllSequences, validateInitSequence } from '@/app/init/initSequence';
+import { LOGIN_INIT_SEQUENCE, validateAllSequences, validateInitSequence } from '@/shared/lib/lifecycle/initSequence';
 
 describe('initSequence', () => {
   it('LOGIN_INIT_SEQUENCE has no dangling dependencies', () => {

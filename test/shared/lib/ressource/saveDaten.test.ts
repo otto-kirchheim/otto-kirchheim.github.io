@@ -48,7 +48,7 @@ vi.mock('@/shared/lib/autosave/autoSave', () => ({
 vi.mock('@/shared/api/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
 }));
-vi.mock('@/app/init/syncFeatureTabs', () => ({ syncFeatureTabs: mockSyncFeatureTabs }));
+vi.mock('@/shared/lib/feature/syncFeatureTabs', () => ({ syncFeatureTabs: mockSyncFeatureTabs }));
 
 import '@/app/features';
 import Storage from '@/shared/lib/storage/Storage';

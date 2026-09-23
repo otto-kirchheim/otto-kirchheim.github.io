@@ -1,4 +1,4 @@
-import { publishEvent } from '@/core';
+import { publishEvent } from '@/shared/lib/events/appEvents';
 import { featureRegistry } from '@/shared/lib/feature';
 import { generateEingabeMaskeEinstellungen } from '@/pages/einstellungen/model';
 import { isRowInMonat, resourceDefs } from '@/shared/lib/ressource/resourceConfig';

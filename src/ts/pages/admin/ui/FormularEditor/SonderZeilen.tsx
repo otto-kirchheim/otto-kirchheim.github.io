@@ -13,7 +13,7 @@ import { FORMATE } from './datenKatalog';
 import { WertVorschau } from './WertVorschau';
 import type { Vorschau } from './FeldPanel';
 import { DBButton, DBCheckbox, DBTooltip } from '@db-ux/react-core-components';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 type Props = {
   tabelle: TabellenDef;

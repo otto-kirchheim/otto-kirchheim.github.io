@@ -1,15 +1,15 @@
 import { default as Storage } from '@/shared/lib/storage/Storage';
-import { zeigeTab } from '@/infrastructure/ui/tabController';
+import { zeigeTab } from '@/shared/model/navigation/tabController';
 import { setNavigationSichtbar } from '@/shared/model/navigation/navigationVisibleStore';
 import { abortController } from '@/shared/api/abortController';
 import { cancelAllPending } from '@/shared/lib/autosave/autoSave';
 import { default as clearLoading } from '@/shared/ui/button-loading/clearLoading';
-import { hideAllFeatureTabs } from '@/infrastructure/ui/updateTabVisibility';
+import { hideAllFeatureTabs } from '@/shared/model/navigation/updateTabVisibility';
 import { updateActAsBanner } from '@/shared/model/session/actAsStatus';
 import { resetAutoSaveStatusStore } from '@/shared/lib/autosave/autoSaveStatusStore';
 import { authApi } from '@/shared/api/apiService';
 import { featureLifecycleRegistry } from '@/shared/lib/feature';
-import { resetFeatureTabSync } from '@/app/init/syncFeatureTabs';
+import { resetFeatureTabSync } from '@/shared/lib/feature/syncFeatureTabs';
 import { publishEvent } from '@/shared/lib/events/appEvents';
 
 type LogoutReason = 'manual' | 'token-expired' | 'version-mismatch';

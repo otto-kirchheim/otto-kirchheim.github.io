@@ -25,7 +25,7 @@ import { leereSeite, zeilenHoeheAus } from './seitenHelfer';
 import { SchriftartDialog } from './SchriftartDialog';
 import type { FormularCode } from './datenKatalog';
 import { DBButton, DBCheckbox, DBStack, DBTextarea } from '@db-ux/react-core-components';
-import { DbAuswahl } from '@/components';
+import { DbAuswahl } from '@/shared/ui/form/DbFeld';
 
 type Masse = { w: number; h: number };
 type SkalierState = {

@@ -1,6 +1,6 @@
 import type { CustomTable, CustomTableTypes } from '@/shared/ui/custom-table/CustomTable';
 import type { TResourceKey } from '@/types';
-import { publishEvent } from '@/core';
+import { publishEvent } from '@/shared/lib/events/appEvents';
 import Storage from '@/shared/lib/storage/Storage';
 import mergeVisibleResourceRows from './mergeVisibleResourceRows';
 import { storageKeyOf } from './resourceConfig';

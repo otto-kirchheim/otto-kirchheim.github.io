@@ -15,7 +15,7 @@ import { featureLifecycleRegistry } from './featureLifecycle';
 /** Ressourcen-Schluessel der Features (alle ausser den Einstellungen). */
 export type FeatureResourceKey = Exclude<TResourceKey, 'settings'>;
 
-/** Antwort eines Bulk-Requests (Form wie `BulkResponse` in `infrastructure/api`, hier ohne Import aus der Infrastruktur). */
+/** Antwort eines Bulk-Requests (Form wie `BulkResponse` in `shared/api`, hier ohne Import aus der API-Schicht). */
 export interface FeatureBulkResult {
   created: unknown[];
   updated: unknown[];

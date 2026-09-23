@@ -139,7 +139,7 @@ th.customtable-sortable:hover > span.customtableIcon {
 /* Spaltenstufen: eine Spalte mit `data-breakpoints="md"` verschwindet unterhalb der Stufe `md`,
    und der Aufklapp-Knopf der Bearbeiten-Spalte (`customtable-toggle-md`) bekommt dort sein "+".
    Die Schwellen kommen aus `scss/_breakpoints.scss`; `BREAKPOINTS` in
-   `infrastructure/ui/breakpoints.ts` spiegelt dieselben Werte fuer die Spaltenlogik in
+   `shared/ui/custom-table/breakpoints.ts` spiegelt dieselben Werte fuer die Spaltenlogik in
    `CustomTable.ts`. Da `max-width`-Abfragen sich ueberlagern, traegt bei schmalem Fenster
    automatisch jede groessere Stufe ihr "+" bei -- eine Sammelregel ist nicht noetig. */
 @each $name, $px in $stufen {

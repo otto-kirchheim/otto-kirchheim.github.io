@@ -7,7 +7,7 @@ import { OeLevelBoxes } from './OeLevelBoxes';
 import { OeTagInput } from './OeTagInput';
 import { ROLE_LABELS, type UserEditState } from './adminUserListTypen';
 import { DBButton, DBCheckbox, DBTag, DBTooltip } from '@db-ux/react-core-components';
-import { DbAuswahl } from '@/components';
+import { DbAuswahl } from '@/shared/ui/form/DbFeld';
 
 type Props = {
   currentUser: AdminUserRow;

@@ -1,7 +1,8 @@
 import { type FC } from 'react';
 
 import type { TMyModal } from '@/types';
-import { MyModalHeader, MyEditorFooter } from '../../../components';
+import MyModalHeader from '@/shared/ui/modal/MyModalHeader';
+import MyEditorFooter from '@/shared/ui/modal/MyEditorFooter';
 import { DBNotification } from '@db-ux/react-core-components';
 
 /**

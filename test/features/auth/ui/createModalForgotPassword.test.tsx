@@ -10,13 +10,10 @@ const { showModalMock, createSnackBarMock, forgotPasswordMock, hideMock } = (
   hideMock: vi.fn(),
 }));
 
-vi.mock('@/components', () => ({
-  schliesseModal: hideMock,
-  showModal: showModalMock,
-  MyFormModal: huelleMock,
-  MyModalBody: huelleMock,
-  MyInput: inputMock,
-}));
+vi.mock('@/shared/ui/modal/showModal', () => ({ schliesseModal: hideMock, default: showModalMock }));
+vi.mock('@/shared/ui/modal/MyFormModal', () => ({ default: huelleMock }));
+vi.mock('@/shared/ui/modal/MyModalBody', () => ({ default: huelleMock }));
+vi.mock('@/shared/ui/form/MyInput', () => ({ default: inputMock }));
 
 vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,

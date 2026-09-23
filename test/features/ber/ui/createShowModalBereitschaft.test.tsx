@@ -10,9 +10,9 @@ const { showModalMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) =>
 
 type StubProps = { children?: ReactNode; Footer?: ReactNode; errorMessage?: string };
 
-vi.mock('@/components', () => ({
-  showModal: showModalMock,
-  MyDivModal: (props: StubProps) =>
+vi.mock('@/shared/ui/modal/showModal', () => ({ default: showModalMock }));
+vi.mock('@/shared/ui/modal/MyDivModal', () => ({
+  default: (props: StubProps) =>
     h(
       'div',
       { className: 'modal-stub' },
@@ -20,9 +20,11 @@ vi.mock('@/components', () => ({
       props.Footer,
       props.children,
     ),
-  MyModalBody: (props: StubProps) => h('div', { className: 'modal-body-stub' }, props.children),
-  MyShowFooter: () => h('div', { className: 'show-footer' }),
 }));
+vi.mock('@/shared/ui/modal/MyModalBody', () => ({
+  default: (props: StubProps) => h('div', { className: 'modal-body-stub' }, props.children),
+}));
+vi.mock('@/shared/ui/modal/MyShowFooter', () => ({ default: () => h('div', { className: 'show-footer' }) }));
 
 import ShowModalBereitschaft from '@/features/ber/ui/createShowModalBereitschaft';
 

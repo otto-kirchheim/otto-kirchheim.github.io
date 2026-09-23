@@ -11,7 +11,7 @@ async function loadNebenZulagenUtils() {
     },
   }));
 
-  return import('@/features/ez/model/nebengeldZulagen');
+  return import('@/shared/lib/zulagen/nebengeldZulagen');
 }
 
 describe('nebengeldZulagen', () => {

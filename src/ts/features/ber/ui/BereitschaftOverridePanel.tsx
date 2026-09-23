@@ -1,7 +1,7 @@
 import { DBButton, DBCheckbox, DBHeadingH6 } from '@db-ux/react-core-components';
 import { type FC, type JSX, useEffect, useState } from 'react';
 
-import { DbFeld } from '@/components';
+import { DbFeld } from '@/shared/ui/form/DbFeld';
 import type { BereitschaftRuntimeOverrides } from '../model/bereitschaftRuntimeOverrides';
 import type { BereitschaftSchichtTyp, ISchichtZeiten, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { SchichtOverrideEditor } from '@/features/ber/ui/SchichtOverrideEditor';

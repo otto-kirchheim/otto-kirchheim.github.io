@@ -12,9 +12,11 @@ const { showModalMock, createSnackBarMock, issueVerificationLinkMock, issuePassw
   writeTextMock: vi.fn(),
 }));
 
-vi.mock('@/components', () => ({
-  showModal: showModalMock,
-  MyModalHeader: (props: { title: string }) => h('div', { className: 'modal-header-stub' }, props.title),
+vi.mock('@/shared/ui/modal/showModal', () => ({ default: showModalMock }));
+vi.mock('@/shared/ui/modal/MyModalHeader', () => ({
+  default: (props: { title: string }) => h('div', { className: 'modal-header-stub' }, props.title),
+}));
+vi.mock('@/shared/ui/form/DbFeld', () => ({
   // Der Dialog zeigt den erzeugten Link in einem DB-Feld -- als schlichtes `input` genuegt das hier.
   DbFeld: (props: { beschriftung: string; value?: string }) =>
     h('input', { type: 'text', 'aria-label': props.beschriftung, value: props.value, readOnly: true }),

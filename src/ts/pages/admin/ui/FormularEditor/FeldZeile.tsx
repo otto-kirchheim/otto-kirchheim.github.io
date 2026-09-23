@@ -12,7 +12,7 @@ import { istGleich, naechsterFreierSchluessel } from './feldPanelHelfer';
 import type { Armed, Vorschau } from './feldPanelTypen';
 import { WertVorschau } from './WertVorschau';
 import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 /**
  * Aufklappbare Zeile für ein Feld der Seite: Position, Art des Inhalts (Datenfeld, Text, Mehrere, Summe, Ankreuzen, Überschrift), Anzeigename, Darstellung und Beispielwert.

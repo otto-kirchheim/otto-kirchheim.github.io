@@ -3,7 +3,7 @@ import type { FeatureParts } from '@/shared/lib/feature';
 import FahrzeitenAbschnitt from '../ui/FahrzeitenEinstellungenAbschnitt';
 import type { IVorgabenUfZ } from '@/types';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
-import { mount } from '@/infrastructure/ui';
+import { mount } from '@/shared/lib/react-root/reactRoot';
 import { FahrzeitenPanel } from '@/features/ewt/ui/FahrzeitenPanel';
 import { getFahrzeitPanelState } from '@/features/ewt/ui/fahrzeitPanelState';
 

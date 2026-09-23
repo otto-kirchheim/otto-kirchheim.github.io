@@ -19,7 +19,7 @@ import { berMeta } from '@/features/ber/meta';
 import { eaMeta } from '@/features/ea/meta';
 import { ewtMeta } from '@/features/ewt/meta';
 import { ezMeta } from '@/features/ez/meta';
-import { resetFeatureTabSync, syncFeatureTabs } from '@/app/init/syncFeatureTabs';
+import { resetFeatureTabSync, syncFeatureTabs } from '@/shared/lib/feature/syncFeatureTabs';
 
 describe('syncFeatureTabs', () => {
   let registerBereitschaft: ReturnType<typeof vi.fn>;

@@ -5,77 +5,66 @@ description: 'Use when: frontend topic architektur'
 
 # Architektur & Komponenten-Patterns
 
-## 3-Schichten-Architektur
+## FSD-Schichten (Feature-Sliced Design)
 
 ```
 src/ts/
-├── components/      # Generische React-Bausteine (DBLoadingButton, MyInput, MyFormModal, showModal, ...)
-├── core/            # Contracts, Events, Hooks, Lifecycle-Registry, Auth-Orchestrierung
-│   ├── types/       # Alle geteilten TS-Interfaces
-│   ├── hooks/       # registerHook/invokeHook, featureLifecycleRegistry
-│   ├── events/      # publishEvent/onEvent, EventChannels
-│   └── orchestration/
-│       ├── auth/           # Login/Register/Reset-Modals + Auth-Lifecycle (kein Feature-Modul!)
-│       ├── onboarding/
-│       └── syncFeatureTabs.ts  # Tab-übergreifende Synchronisation
-├── infrastructure/  # api/, autoSave/, data/, date/, pdf/, storage/, table/, tokenManagement/, ui/, validation/
-└── features/        # Admin, Berechnung, Bereitschaft, EA, Einstellungen, EWT, Neben
+├── app/        # main.tsx (Hook-Registrierung, Root-Mount, Init), App.tsx (Shell), features.ts (Feature-Manifest),
+│               # session/ (userLoginSuccess, loadUserDaten), shell/ (pullToRefresh, setOffline, setVersionOutdated)
+├── pages/      # start, berechnung, einstellungen, admin (ui/, model/; admin: api/, features/<id>/, adminFeatures.ts)
+├── widgets/    # app-header (inkl. ThemeSwitcher), app-footer, help-modal
+├── features/   # Module ber, ewt, ez, ea (meta.ts, parts/, ui/, model/) + Nicht-Module auth, onboarding
+└── shared/     # api/, lib/ (feature: Registry + registerHook/invokeHook, lifecycle, ressource, pdf, date, storage, …),
+                # model/ (navigation inkl. tabController, period, …), ui/ (form, modal, custom-table, snackbar, …), types/
 ```
 
-`features/` darf `core/` + `infrastructure/` nutzen, `infrastructure/` darf `core/` nutzen, nie
-umgekehrt. Details siehe `frontend/CLAUDE.md`.
+Import nur abwärts (app → pages → widgets → features → shared), keine Importe zwischen Slices derselben
+Schicht. Pages und Widgets erreichen die Module nur über die Feature-Registry. Aufrufe gegen die
+Richtung laufen über `invokeHook` (`shared/lib/feature/hookRegistry.ts`), `app/main.tsx` registriert die
+Implementierungen. ESLint (`no-restricted-imports`, `error`) setzt das durch. Details: `frontend/CLAUDE.md`.
 
 ## App-Einstiegspunkte
 
 ### `src/index.html`
 
-- Einzige HTML-Datei (SPA), >1000 Zeilen für den statischen Rest (Tab-Panel-Inhalte:
-  `#start`, `#Berechnung`, `#Einstellungen`, ...)
-- Kopf-/Fußzeile sind seit Phase K (App-Shell) React: `<div id="appHeaderRoot">`/
-  `<div id="appFooterRoot">` werden in `main.ts` gemountet, siehe `AppHeader.tsx`/`AppFooter.tsx`
+- Nur `<noscript>` + `<div id="app">`; lädt `ts/app/main.tsx`
 
-### `src/ts/main.ts`
+### `src/ts/app/main.tsx`
 
-- Import der Feature-Module (statisch: Berechnung, Bereitschaft, EWT, Einstellungen, Neben, EA,
-  `core/orchestration/auth`; Admin läuft separat über einen Lazy-Import)
-- `initializeAppBootstrap()`/`registerAppStartTask()` (`core/`) für die Init-Reihenfolge
-- PWA Service Worker Registrierung
-- Version-Check (API vs. lokal)
-- `AppHeader`/`AppFooter` mounten + `initTabController()` -- bewusst SYNCHRON beim Modul-Import,
-  nicht in `registerAppStartTask()` (ES-Module-Import-Hoisting-Falle, siehe Kommentar in
-  `main.ts`). `navDrawer.ts`/`DBColorToggler.ts` sind seit Phase K gelöscht (`DBHeader` bringt
-  die mobile Schublade eingebaut mit, `useColorMode`-Hook ersetzt den Controller); `dbDialog.ts`
-  bleibt für `confirmDialog`/`signaturDialog`/`errorHandling` bestehen.
+- Registriert die Hooks (`auth:login-success`, `session:load-month`, `help:open`, `pre-save:settings`, …)
+- `initializeAppBootstrap()`/`registerAppStartTask()` (`shared/lib/lifecycle/bootstrap.ts`) für die Init-Reihenfolge
+- PWA Service Worker Registrierung, Version-Check (API vs. lokal)
+- Root-Mount von `App.tsx` per `mount()` + `initTabController()` -- bewusst SYNCHRON beim Modul-Import,
+  nicht in `registerAppStartTask()` (ES-Module-Import-Hoisting-Falle, siehe Kommentar in `main.tsx`)
 
 ---
 
 ## Feature-Modul-Pattern
 
-Jedes Feature-Modul unter `features/` folgt dieser Struktur:
+Jedes steckbare Modul unter `features/<id>/` folgt dem Feature-Contract:
 
 ```
-features/Feature/
-├── index.ts          # window.addEventListener("load", ...) → Init
-├── components/       # React TSX-Komponenten (Modals)
-│   └── index.ts      # Re-Exports
-└── utils/            # Business-Logik & Daten-Handling
-    └── index.ts      # Re-Exports
+features/ber/
+├── meta.ts           # FeatureMeta (eager, kein Chunk)
+├── parts/            # lazy Teile je Slot (ui, data, berechnung, einstellungen, pdf, help, events)
+├── ui/               # React TSX (Tab, Modals)
+└── model/            # Business-Logik & Daten-Handling
 ```
 
-Login/Register/Reset ist **kein** Feature-Modul, sondern Teil der Auth-Orchestrierung unter
-`core/orchestration/auth/`.
+Login/Register/Reset (`features/auth`) und die Ersteinrichtung (`features/onboarding`) sind keine
+steckbaren Module. Neues Modul: `bun run new-feature <slug> --label "..." [--admin]`.
 
-### Vorhandene Feature-Module
+### Vorhandene Bereiche
 
-| Modul            | Beschreibung                                         |
-| ---------------- | ---------------------------------------------------- |
-| `Admin/`         | Admin-Panel (React), separat lazy-geladen            |
-| `Bereitschaft/`  | Bereitschaftsdienst-Verwaltung (Zeiträume, Einsätze) |
-| `EWT/`           | Einsatzwechseltätigkeit                              |
-| `Neben/`         | Nebenbezüge (Zulagen, Zuschüsse)                     |
-| `EA/`            | Entgeltausgleich                                     |
-| `Berechnung/`    | Gesamtberechnung & Zusammenfassung                   |
-| `Einstellungen/` | Benutzerprofil, Vorgaben, Templates                  |
+| Ordner                | Beschreibung                                         |
+| --------------------- | ---------------------------------------------------- |
+| `features/ber/`       | Bereitschaftsdienst (Zeiträume, Einsätze)            |
+| `features/ewt/`       | Einsatzwechseltätigkeit                              |
+| `features/ez/`        | Nebenbezüge (Erschwerniszulagen)                     |
+| `features/ea/`        | Entgeltausgleich                                     |
+| `pages/berechnung/`   | Gesamtberechnung & Zusammenfassung                   |
+| `pages/einstellungen/`| Benutzerprofil, Vorgaben, Templates                  |
+| `pages/admin/`        | Admin-Panel, separat lazy geladen                    |
 
 ---
 
@@ -128,7 +117,7 @@ entfernt wird. **Nicht** `modal.addEventListener('hide.bs.modal', …)** verwend
 Bootstrap-Event und feuert seit Phase H nie mehr (Listener leaken sonst pro Öffnung).
 
 ```ts
-import { mount } from "@/infrastructure/ui";
+import { mount } from "@/shared/lib/react-root/reactRoot";
 mount(modalElement, <MyFormModal {...props} />);
 ```
 
@@ -141,14 +130,14 @@ seit Phase M über `CustomTableView.tsx` als React-Komponente gerendert, direkt 
 (`savePipeline.ts`/`overlapGuard.ts`/`changeTracking.ts` finden die Tabelle über
 `tableElement.instance`) bleibt dadurch unberührt.
 
-- Definiert in `src/ts/infrastructure/table/CustomTable.ts` (Klasse) + `CustomTableView.tsx`
+- Definiert in `src/ts/shared/ui/custom-table/CustomTable.ts` (Klasse) + `CustomTableView.tsx`
   (Rendering)
 
 ### 5. CustomSnackbar (Vanilla-DOM)
 
 Toast/Snackbar-System, ebenfalls Vanilla-DOM:
 
-- Definiert in `src/ts/infrastructure/ui/CustomSnackbar.ts`
+- Definiert in `src/ts/shared/ui/snackbar/CustomSnackbar.ts`
 
 ---
 
@@ -161,20 +150,20 @@ gemeinsam sehen müssen (z. B. weil `DBHeader` seine `children` doppelt rendert,
 Drawer-Kopie), gibt es einen schlanken, handgeschriebenen `useSyncExternalStore`-Modul-Store
 pro Zustand -- kein generisches Store-Framework, jeder Store ist eine eigene Datei mit
 `get*()`/`subscribe*()`/`set*()` plus einem `use*()`-Hook, der Konsument-Komponenten daran
-anschließt. Beispiele: `infrastructure/ui/navigationVisibleStore.ts` +
-`useNavigationVisible.ts` (Nav-Sichtbarkeit bei Login/Logout), `infrastructure/ui/
+anschließt. Beispiele: `shared/model/navigation/navigationVisibleStore.ts` +
+`useNavigationVisible.ts` (Nav-Sichtbarkeit bei Login/Logout), `shared/model/navigation/
 activeTabStore.ts` + `useActiveTab.ts` (aktiver Tab der Hauptnavigation, Phase K6),
-`infrastructure/ui/useColorMode.ts` (Theme, Storage-rückgekoppelt).
+`widgets/app-header/useColorMode.ts` (Theme, Storage-rückgekoppelt).
 
 ```ts
-import Storage from "@/infrastructure/storage/Storage";
+import Storage from "@/shared/lib/storage/Storage";
 
 // Typsicherer Zugriff
 const daten = Storage.get("dataN");
 Storage.set("dataN", neuerWert);
 ```
 
-- Keys definiert via `TStorageData` (`keyof typeof StorageData`, `infrastructure/storage/Storage.ts`)
+- Keys definiert via `TStorageData` (`keyof typeof StorageData`, `shared/lib/storage/Storage.ts`)
 - Überladene `get<T>()` mit Default-Werten
 - Daten werden bei Monatswechsel vom Server geladen und in localStorage gepersistet
 
@@ -183,7 +172,7 @@ Storage.set("dataN", neuerWert);
 ## Navigation
 
 **Kein Client-Side-Router.** Navigation über `AppHeader.tsx` (`DBHeader`/`DBNavigation`/
-`DBNavigationItem`) und `infrastructure/ui/tabController.ts`:
+`DBNavigationItem`) und `shared/model/navigation/tabController.ts`:
 
 ```tsx
 <DBNavigationItem role="presentation" active={aktiverTab === 'Bereitschaft'} backButtonText="Zurück">
@@ -204,7 +193,7 @@ DOM -- `querySelector('#id')` liefert nur die erste Kopie; Code, der beide Kopie
 verwendet `querySelectorAll` (z. B. `updateTabVisibility.ts`). `aria-selected`/`tabIndex`/die
 `active`-Markierung der Hauptnav-Einträge kommen seit Phase K6 reaktiv aus `useActiveTab()`
 (`activeTabStore.ts`) statt aus DOM-Handschrieb in `tabController.ts` -- das betrifft nur die
-Hauptgruppe (`#tabContent`); Admins Unternavigation (`features/Admin/index.tsx`, eigene,
+Hauptgruppe (`#tabContent`); Admins Unternavigation (`pages/admin/index.tsx`, eigene,
 unabhängige Tab-Gruppe) bleibt am alten, DOM-schreibenden Mechanismus.
 
 ---
@@ -214,7 +203,7 @@ unabhängige Tab-Gruppe) bleibt am alten, DOM-schreibenden Mechanismus.
 ### `FetchRetry` (Custom Fetch-Wrapper)
 
 ```ts
-import { FetchRetry } from "@/infrastructure/api/FetchRetry";
+import { FetchRetry } from "@/shared/api/FetchRetry";
 
 const response = await FetchRetry<RequestBody, ResponseData>(urlPath, data, "POST");
 ```

@@ -3,11 +3,15 @@ import { createRef, type SubmitEvent } from 'react';
 
 import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
-import { MyFormModal, MyInput, MyModalBody, MySelect, beiModalSchliessen, showModal } from '@/components';
-import { getEwtDaten } from '../../ewt/model';
+import MyFormModal from '@/shared/ui/modal/MyFormModal';
+import MyInput from '@/shared/ui/form/MyInput';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import MySelect from '@/shared/ui/form/MySelect';
+import showModal, { beiModalSchliessen } from '@/shared/ui/modal/showModal';
+import getEwtDaten from '@/shared/lib/ressource/getEwtDaten';
 import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '@/types';
 import dayjs from '@/shared/lib/date/configDayjs';
-import { onEvent } from '@/core';
+import { onEvent } from '@/shared/lib/events/appEvents';
 import { addNebengeldTag, applySelectOptions, getConfiguredNebenZulagen, getNebengeldDaten } from '../model';
 
 type ReturnTypeTagOptions = {

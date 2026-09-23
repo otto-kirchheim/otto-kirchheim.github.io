@@ -3,7 +3,7 @@ import '@/app/features';
 import AppHeader from '@/widgets/app-header/AppHeader';
 import StartTab from '@/pages/start/ui/StartTab';
 import { resetFeatureTabsVisible } from '@/shared/model/navigation/featureTabsStore';
-import updateTabVisibility, { hideAllFeatureTabs } from '@/infrastructure/ui/updateTabVisibility';
+import updateTabVisibility, { hideAllFeatureTabs } from '@/shared/model/navigation/updateTabVisibility';
 import { render } from '@test/reactRender';
 
 /** Nav-Eintrag ausgeblendet? (`<li>` des Nav-Knopfs; `DBHeader` rendert die Nav zweimal: Desktop + Drawer.) */

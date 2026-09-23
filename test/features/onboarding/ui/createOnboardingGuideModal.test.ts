@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
 const zeigeTabMock = vi.fn(() => true);
-vi.mock('@/infrastructure/ui/tabController', () => ({ zeigeTab: zeigeTabMock }));
+vi.mock('@/shared/model/navigation/tabController', () => ({ zeigeTab: zeigeTabMock }));
 
 import '@/app/features';
 import { featureRegistry } from '@/shared/lib/feature';

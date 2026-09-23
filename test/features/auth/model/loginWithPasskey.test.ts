@@ -40,7 +40,7 @@ vi.mock('@simplewebauthn/browser', () => ({
   WebAuthnError: class WebAuthnError extends Error {},
 }));
 
-vi.mock('@/components', () => ({ schliesseModal: hideMock }));
+vi.mock('@/shared/ui/modal/showModal', () => ({ schliesseModal: hideMock }));
 
 import loginWithPasskey from '@/features/auth/model/loginWithPasskey';
 

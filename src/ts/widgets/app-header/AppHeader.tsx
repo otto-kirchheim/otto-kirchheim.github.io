@@ -12,15 +12,15 @@ import {
   DBSelect,
   DBTooltip,
 } from '@db-ux/react-core-components';
-import { DBLoadingButton } from '@/components';
+import DBLoadingButton from '@/shared/ui/button-loading/DBLoadingButton';
 import { featureRegistry } from '@/shared/lib/feature';
-import schliesseMobilenDrawer from '../../shared/model/navigation/schliesseMobilenDrawer';
+import schliesseMobilenDrawer from '@/shared/model/navigation/schliesseMobilenDrawer';
 import ThemeSwitcher from './ThemeSwitcher';
-import useActiveTab from '../../shared/model/navigation/useActiveTab';
-import useFeatureTabsVisible from '../../shared/model/navigation/useFeatureTabsVisible';
+import useActiveTab from '@/shared/model/navigation/useActiveTab';
+import useFeatureTabsVisible from '@/shared/model/navigation/useFeatureTabsVisible';
 import useMediaQuery from './useMediaQuery';
-import useNavigationVisible from '../../shared/model/navigation/useNavigationVisible';
-import { BREAKPOINTS } from '../../shared/ui/custom-table/breakpoints';
+import useNavigationVisible from '@/shared/model/navigation/useNavigationVisible';
+import { BREAKPOINTS } from '@/shared/ui/custom-table/breakpoints';
 
 const MONATE_LANG = [
   'Januar',

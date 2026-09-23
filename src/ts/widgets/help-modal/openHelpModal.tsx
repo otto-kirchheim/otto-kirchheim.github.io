@@ -1,7 +1,7 @@
-import { unmount } from '@/infrastructure/ui';
+import { unmount } from '@/shared/lib/react-root/reactRoot';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 
-import { oeffneDrawer } from '@/components';
+import { oeffneDrawer } from '@/shared/ui/modal/showModal';
 import MyHelpModal from './MyHelpModal';
 import { getHelpContent, type HelpContent, type HelpContextKey } from '@/shared/lib/help/helpContent';
 

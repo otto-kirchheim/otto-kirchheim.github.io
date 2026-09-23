@@ -1,5 +1,5 @@
 import { setMonatJahrStore } from '@/shared/model/period/monatJahrStore';
-import { flushExtern } from '@/infrastructure/ui/reactRoot';
+import { flushExtern } from '@/shared/lib/react-root/reactRoot';
 
 /**
  * Setzt Monat und Jahr fuer die Ueberschriften aller Tabs (`monatJahrStore`). Wirft nie: die Tabs lesen den Store

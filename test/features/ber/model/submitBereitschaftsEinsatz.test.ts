@@ -55,9 +55,7 @@ vi.mock('@/shared/lib/autosave/autoSave', () => ({
   scheduleAutoSave: scheduleAutoSaveMock,
 }));
 
-vi.mock('@/core', () => ({
-  publishEvent: publishDataChangedMock,
-}));
+vi.mock('@/shared/lib/events/appEvents', () => ({ publishEvent: publishDataChangedMock }));
 
 vi.mock('@/shared/lib/storage/Storage', () => ({
   default: {

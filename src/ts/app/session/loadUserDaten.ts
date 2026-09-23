@@ -9,9 +9,9 @@ import { cancelAllPending, flushAll, isAutoSaveEnabled, setAutoSaveEnabled } fro
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import { default as buttonDisable } from '@/shared/ui/button-loading/buttonDisable';
 import { default as clearLoading } from '@/shared/ui/button-loading/clearLoading';
-import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
+import { default as updateTabVisibility } from '@/shared/model/navigation/updateTabVisibility';
 import { setNavigationSichtbar } from '@/shared/model/navigation/navigationVisibleStore';
-import { syncFeatureTabs } from '@/app/init/syncFeatureTabs';
+import { syncFeatureTabs } from '@/shared/lib/feature/syncFeatureTabs';
 import { warmeFormularCaches } from '@/shared/lib/pdf/warmeFormularCaches';
 import { type LoadedYearData, loadAllYearData } from '@/shared/api/apiService';
 import { hideConflictReviewBanner, showConflictReviewBanner } from '@/features/auth/ui';

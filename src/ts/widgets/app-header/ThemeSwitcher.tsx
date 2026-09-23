@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { MyCheckbox } from '@/components';
+import MyCheckbox from '@/shared/ui/form/MyCheckbox';
 import { useColorMode } from './useColorMode.ts';
 
 /**

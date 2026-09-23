@@ -11,7 +11,7 @@ import {
   type BackendVorgabe,
 } from '../api/api';
 import { DBButton, DBHeadingH5 } from '@db-ux/react-core-components';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
 
 /**

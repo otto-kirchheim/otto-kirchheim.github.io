@@ -1,4 +1,4 @@
-import { schliesseModal, showModal } from '@/components';
+import showModal, { schliesseModal } from '@/shared/ui/modal/showModal';
 import type { AdminUserRow } from '../api/api';
 import { AdminBulkEditModal } from './AdminBulkEditModal';
 

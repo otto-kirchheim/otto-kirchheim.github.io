@@ -3,21 +3,17 @@ import { createRef, type ChangeEvent, type SubmitEvent } from 'react';
 import type { Column } from '@/shared/ui/custom-table/CustomTable';
 import { CustomTable, Row } from '@/shared/ui/custom-table/CustomTable';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
-import {
-  MyFormModal,
-  MyInput,
-  MyModalBody,
-  MySelect,
-  beiModalSchliessen,
-  schliesseModal,
-  showModal,
-} from '@/components';
-import { getEwtDaten } from '../../ewt/model';
+import MyFormModal from '@/shared/ui/modal/MyFormModal';
+import MyInput from '@/shared/ui/form/MyInput';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import MySelect from '@/shared/ui/form/MySelect';
+import showModal, { beiModalSchliessen, schliesseModal } from '@/shared/ui/modal/showModal';
+import getEwtDaten from '@/shared/lib/ressource/getEwtDaten';
 import type { CustomHTMLDivElement, IDatenEWT, IDatenN } from '@/types';
 import Storage from '@/shared/lib/storage/Storage';
 import { default as checkMaxTag } from '@/shared/lib/validation/checkMaxTag';
 import dayjs from '@/shared/lib/date/configDayjs';
-import { onEvent } from '@/core';
+import { onEvent } from '@/shared/lib/events/appEvents';
 import {
   applySelectOptions,
   formatNebengeldZulagen,

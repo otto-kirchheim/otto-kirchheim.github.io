@@ -1,4 +1,4 @@
-import { showModal } from '@/components';
+import showModal from '@/shared/ui/modal/showModal';
 import { AdminUserLinksModal } from './AdminUserLinksModal';
 
 /**

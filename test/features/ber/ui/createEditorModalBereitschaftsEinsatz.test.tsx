@@ -33,15 +33,15 @@ const {
   onEventMock: vi.fn(),
 }));
 
-vi.mock('@/components', () => ({
+vi.mock('@/shared/ui/modal/showModal', () => ({
   schliesseModal: hideMock,
   beiModalSchliessen: vi.fn(),
-  showModal: showModalMock,
-  MyFormModal: huelleMock,
-  MyModalBody: huelleMock,
-  MyInput: inputMock,
-  MySelect: (props: Record<string, unknown>) => h('select', props),
+  default: showModalMock,
 }));
+vi.mock('@/shared/ui/modal/MyFormModal', () => ({ default: huelleMock }));
+vi.mock('@/shared/ui/modal/MyModalBody', () => ({ default: huelleMock }));
+vi.mock('@/shared/ui/form/MyInput', () => ({ default: inputMock }));
+vi.mock('@/shared/ui/form/MySelect', () => ({ default: (props: Record<string, unknown>) => h('select', props) }));
 
 vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
@@ -62,9 +62,7 @@ vi.mock('@/features/ber/model', () => ({
   persistBereitschaftsEinsatzTableData: persistBereitschaftsEinsatzTableDataMock,
 }));
 
-vi.mock('@/core', () => ({
-  onEvent: onEventMock,
-}));
+vi.mock('@/shared/lib/events/appEvents', () => ({ onEvent: onEventMock }));
 
 import EditorModalBE from '@/features/ber/ui/createEditorModalBereitschaftsEinsatz';
 

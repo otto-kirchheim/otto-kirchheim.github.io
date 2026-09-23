@@ -1,18 +1,18 @@
-import selectYear from './selectYear';
-import { registerAppStartTask } from '@/app/init/bootstrap';
+import selectYear from '@/pages/einstellungen/model/selectYear';
+import { registerAppStartTask } from '@/shared/lib/lifecycle/bootstrap';
 import { openHelpModal } from '@/widgets/help-modal/openHelpModal';
 import type { IVorgabenU } from '@/types';
 import { ACT_AS_STATUS_EVENT, updateActAsBanner } from '@/shared/model/session/actAsStatus';
 import { getStoredMonatJahr } from '@/shared/lib/date/dateStorage';
 import Storage from '@/shared/lib/storage/Storage';
-import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
+import { default as updateTabVisibility } from '@/shared/model/navigation/updateTabVisibility';
 import { getUserCookie, isAdmin } from '@/shared/api/token/decodeAccessToken';
 import { initAutoSaveEventListener } from '@/shared/lib/autosave/autoSave';
 import { setNavigationSichtbar } from '@/shared/model/navigation/navigationVisibleStore';
-import { setzeHauptTabErlaubtPruefung } from '@/infrastructure/ui/tabController';
+import { setzeHauptTabErlaubtPruefung } from '@/shared/model/navigation/tabController';
 import { createModalLogin } from '@/features/auth/ui';
 import { handleAuthUrlState } from '@/features/auth/model';
-import { markStep } from '@/app/init/initSequence';
+import { markStep } from '@/shared/lib/lifecycle/initSequence';
 
 // `tabController.ts` bleibt bewusst auth-agnostisch (siehe dortiger Kommentar) -- die Login-Policy
 // fuer Hauptgruppen-Tabs (ohne Session nur `start`) sitzt deshalb hier. Die Pruefung laeuft live

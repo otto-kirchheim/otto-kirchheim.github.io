@@ -29,10 +29,10 @@ bun run coverage       # Bun-Coverage-Lauf (--isolate --coverage)
 
 ## Verzeichnisstruktur
 
-`test/` spiegelt grob `src/ts/` (`core/`, `infrastructure/`, `features/`, `Admin/`), daneben ein
-großer, flacher Bestand an `Feature.spezifischesThema.test.ts`-Dateien pro Domain-Feature
-(`Bereitschaft.*`, `EWT.*`, `Neben.*`, `EA.*`, `Berechnung.*`, `Login.*`, `Einstellungen/*`).
-Ein Blick in `test/` selbst ist zuverlässiger als eine hier gepflegte Liste (wächst laufend).
+`test/` spiegelt `src/ts/` nach FSD-Schichten: der Test zu `src/ts/<pfad>/<datei>.ts` liegt unter
+`test/<pfad>/<datei>.test.ts` (z. B. `test/features/ber/model/…`, `test/shared/lib/ressource/…`). Snapshots
+liegen in `__snapshots__/` neben dem Test; beim Verschieben eines Tests mitziehen, sonst schreibt Bun still
+einen neuen Snapshot.
 
 ```
 test/
@@ -40,12 +40,10 @@ test/
 ├── global.d.ts             # Test-Typen
 ├── mockData.ts             # Gemeinsame Mock-Daten
 ├── mockPDFString.ts        # Mock für PDF-Tests
-├── __snapshots__/
-├── core/, infrastructure/, features/, Admin/, Einstellungen/, orchestration/, fixtures/
-├── class/                  # Legacy-Ordnername (testet u.a. infrastructure/table/CustomTable.ts,
-│                           #  infrastructure/ui/CustomSnackbar.ts — nie umbenannt)
-├── components/             # React-Komponenten-Tests
-└── Utilities/              # Utility-Tests (abortController, FetchRetry, download, ...)
+├── reactRender.ts          # Render-Helfer für React-Tests
+├── fixtures/
+├── app/, pages/, widgets/, features/, shared/   # wie src/ts
+└── scripts.newFeature.test.ts                   # Scaffold `bun run new-feature`
 ```
 
 ---

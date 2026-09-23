@@ -26,7 +26,7 @@ import type {
 } from '@/types';
 import { joinOeLevels, splitOeInput } from './oeLevels';
 import dayjs from '@/shared/lib/date/configDayjs';
-import { formatNebengeldZulagen, normalizeNebengeldZulagen } from '@/features/ez/model';
+import { formatNebengeldZulagen, normalizeNebengeldZulagen } from '@/shared/lib/zulagen/nebengeldZulagen';
 
 // ─── Typen für Backend-Dokumente ─────────────────────────
 

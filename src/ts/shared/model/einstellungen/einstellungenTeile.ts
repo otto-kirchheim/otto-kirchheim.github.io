@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { featureRegistry } from '@/shared/lib/feature';
 import type { IFeatureEinstellungen } from '@/types';
 import { createSnackBar } from '../../ui/snackbar/CustomSnackbar';
-import { flushExtern } from '../../../infrastructure/ui/reactRoot';
+import { flushExtern } from '../../lib/react-root/reactRoot';
 
 /**
  * Geladene Einstellungen-Slots der Features (Teil `einstellungen`), nach `meta.order`. `EinstellungenTab` rendert daraus die

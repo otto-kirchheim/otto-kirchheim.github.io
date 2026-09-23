@@ -1,7 +1,7 @@
 import { CATEGORY_LABELS } from '../model/bulkEditOe';
 import type { AdminUserRow, BackendProfileTemplate, BulkApplyCategory } from '../api/api';
 import { DBCheckbox, DBRadio } from '@db-ux/react-core-components';
-import { DbAuswahl } from '@/components';
+import { DbAuswahl } from '@/shared/ui/form/DbFeld';
 
 export type ApplySource = 'none' | 'template' | 'user';
 

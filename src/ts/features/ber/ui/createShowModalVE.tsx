@@ -1,5 +1,9 @@
 import type { Row } from '@/shared/ui/custom-table/CustomTable';
-import { MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '@/components';
+import MyDivModal from '@/shared/ui/modal/MyDivModal';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import MyShowElement from '@/shared/ui/modal/MyShowElement';
+import MyShowFooter from '@/shared/ui/modal/MyShowFooter';
+import showModal from '@/shared/ui/modal/showModal';
 import type { CustomHTMLDivElement, IVorgabenUvorgabenB } from '@/types';
 import { DBDivider, DBHeadingH6 } from '@db-ux/react-core-components';
 

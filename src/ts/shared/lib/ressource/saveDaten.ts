@@ -16,7 +16,7 @@ import dayjs from '@/shared/lib/date/configDayjs';
 import { publishEvent } from '@/shared/lib/events/appEvents';
 import { featureRegistry, invokeHook } from '@/shared/lib/feature';
 import { resourceKeys } from './resourceConfig';
-import { syncFeatureTabs } from '@/app/init/syncFeatureTabs';
+import { syncFeatureTabs } from '@/shared/lib/feature/syncFeatureTabs';
 
 /**
  * Vergleicht zwei Einstellungsstände per JSON-Serialisierung.

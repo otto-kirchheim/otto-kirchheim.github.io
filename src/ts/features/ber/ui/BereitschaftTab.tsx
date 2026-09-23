@@ -9,7 +9,7 @@ import {
 } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
 
-import { DBLoadingButton } from '@/components';
+import DBLoadingButton from '@/shared/ui/button-loading/DBLoadingButton';
 import MonatUeberschrift from '@/shared/ui/monat-ueberschrift/MonatUeberschrift';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';

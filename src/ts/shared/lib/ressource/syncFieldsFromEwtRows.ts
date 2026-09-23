@@ -1,6 +1,6 @@
 import type { CustomHTMLTableElement, IDatenEWT, TResourceKey } from '@/types';
 import { default as Storage, type TStorageData } from '@/shared/lib/storage/Storage';
-import { publishEvent } from '@/core';
+import { publishEvent } from '@/shared/lib/events/appEvents';
 
 /**
  * Übernimmt geänderte EWT-Felder (z.B. Beginn/Ende oder eine daraus abgeleitete Dauer) in eine

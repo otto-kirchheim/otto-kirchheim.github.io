@@ -29,7 +29,7 @@ vi.mock('@/shared/ui/button-loading/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
-vi.mock('@/infrastructure/ui/updateTabVisibility', () => ({
+vi.mock('@/shared/model/navigation/updateTabVisibility', () => ({
   hideAllFeatureTabs: hideAllFeatureTabsMock,
 }));
 
@@ -47,7 +47,7 @@ vi.mock('@/shared/lib/events/appEvents', () => ({
   publishEvent: publishEventMock,
 }));
 
-vi.mock('@/infrastructure/ui/tabController', () => ({
+vi.mock('@/shared/model/navigation/tabController', () => ({
   zeigeTab: zeigeTabMock,
 }));
 

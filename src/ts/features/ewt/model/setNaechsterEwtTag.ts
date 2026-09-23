@@ -2,7 +2,7 @@ import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { IMonatsDaten } from '@/types';
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import dayjs from '@/shared/lib/date/configDayjs';
-import getEwtDaten from './getEwtDaten';
+import getEwtDaten from '@/shared/lib/ressource/getEwtDaten';
 
 /**
  * Trägt in `#Tag` den nächsten freien Tag des aktiven Monats ein: ab `tag` aufwärts, am Monatsende weiter beim 1.

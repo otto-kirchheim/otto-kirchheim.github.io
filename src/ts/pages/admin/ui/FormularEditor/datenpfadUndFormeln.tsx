@@ -1,7 +1,7 @@
 import type { Feld } from '@otto-kirchheim/nebengeld-shared';
 import { gruppiere, katalogFelder, type FormularCode, type KatalogEintrag } from './datenKatalog';
 import { DBButton, DBStack } from '@db-ux/react-core-components';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 /**
  * Wählt EINEN Datenpfad. Für Kopf-/Fuß-Felder im "Datenfeld"-Modus ist der Objekt-Schlüssel selbst

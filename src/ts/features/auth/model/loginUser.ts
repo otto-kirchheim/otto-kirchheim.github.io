@@ -4,7 +4,7 @@ import { default as setLoading } from '@/shared/ui/button-loading/setLoading';
 import { authApi } from '@/shared/api/apiService';
 import { resetTokenState } from '@/shared/api/token/tokenErneuern';
 import type { CustomHTMLDivElement } from '@/types';
-import { schliesseModal } from '@/components';
+import { schliesseModal } from '@/shared/ui/modal/showModal';
 
 /**
  * Meldet den Benutzer über das Login-Modal an: fehlende Zugangsdaten kommen aus `#Benutzer`/

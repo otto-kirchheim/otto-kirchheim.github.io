@@ -29,7 +29,7 @@ import {
   type EditState,
 } from './adminResourceBrowserGemeinsam';
 import { type AdminResourceConfig, adminCrossRef, adminFieldEnum, adminResourceByEndpoint } from '../adminFeatures';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 type Props = {
   edit: EditState;

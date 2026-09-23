@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 
 import { ZULAGEN_CATALOG } from '@/shared/lib/zulagen/zulagenCatalog';
-import { ArbeitszeiteingabePanel } from '../../../shared/ui/arbeitszeit-editor/ArbeitszeiteingabePanel';
+import { ArbeitszeiteingabePanel } from '@/shared/ui/arbeitszeit-editor/ArbeitszeiteingabePanel';
 import {
   PERS_FIELDS,
   tabOptions,
@@ -13,7 +13,7 @@ import { VorgabenBWeekRangeEditor } from './VorgabenBWeekRangeEditor';
 import { OeLevelBoxes } from './OeLevelBoxes';
 import { DBButton, DBCheckbox, DBStack, DBTag } from '@db-ux/react-core-components';
 import type { BereitschaftSchichtTyp } from '@/types';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 type SectionKey = 'Pers' | 'Arbeitszeit' | 'Fahrzeit' | 'VorgabenB' | 'Einstellungen';
 

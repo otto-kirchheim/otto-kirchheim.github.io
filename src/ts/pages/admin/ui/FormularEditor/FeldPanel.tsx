@@ -8,7 +8,7 @@ import { istGleich, naechsterFreierSchluessel } from './feldPanelHelfer';
 import type { Props } from './feldPanelTypen';
 import { TabellenBlock } from './TabellenBlock';
 import { DBButton, DBStack } from '@db-ux/react-core-components';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 export type { Armed, Vorschau } from './feldPanelTypen';
 

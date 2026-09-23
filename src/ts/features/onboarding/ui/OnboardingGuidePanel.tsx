@@ -1,7 +1,7 @@
 import { DBButton, DBCard, DBHeadingH6, DBInfotext, DBTooltip } from '@db-ux/react-core-components';
 import { type FC, useEffect, useMemo, useState } from 'react';
 
-// Direktimporte statt Barrel (@/core, @/components), um den Zyklus createOnboardingGuideModal →
+// Direktimporte statt Barrel, um den Zyklus createOnboardingGuideModal →
 // OnboardingGuidePanel → openHelpModal → MyHelpModal → createOnboardingGuideModal zu vermeiden.
 import { onEvent } from '@/shared/lib/events/appEvents';
 import { featureRegistry } from '@/shared/lib/feature';

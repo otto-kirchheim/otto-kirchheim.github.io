@@ -27,7 +27,7 @@ vi.mock('@/shared/model/period/setMonatJahr', () => ({
 }));
 
 import Storage from '@/shared/lib/storage/Storage';
-import selectYear from '@/app/session/selectYear';
+import selectYear from '@/pages/einstellungen/model/selectYear';
 
 describe('SelectYear', () => {
   let container: HTMLDivElement;

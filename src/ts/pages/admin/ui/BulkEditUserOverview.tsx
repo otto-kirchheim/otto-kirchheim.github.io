@@ -4,7 +4,7 @@ import { joinOeLevels } from '@/shared/lib/ressource/oeLevels';
 import { useDebouncedValue, matchesOeQuery } from '../model/adminUserListHelpers';
 import type { AdminUserRow } from '../api/api';
 import { DBButton, DBTooltip } from '@db-ux/react-core-components';
-import { DbFeld } from '@/components';
+import { DbFeld } from '@/shared/ui/form/DbFeld';
 
 /**
  * Übersichtstabelle der für die Massenänderung ausgewählten Benutzer mit aktuellen Werten.

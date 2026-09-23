@@ -36,7 +36,7 @@ description: 'Use when: frontend topic coding-konventionen'
 **IMMER** `dayjs` verwenden, **NIEMALS** native `Date`-Methoden oder moment.js.
 
 ```ts
-import dayjs from "@/infrastructure/date/configDayjs";
+import dayjs from "@/shared/lib/date/configDayjs";
 ```
 
 Die zentrale Konfiguration (`configDayjs.ts`) lädt:
@@ -62,7 +62,7 @@ export { default as MyFormModal } from "./MyFormModal";
 ### Import-Reihenfolge
 
 1. Externe Pakete (`react`, `dayjs`, `@db-ux/react-core-components`)
-2. `core`/`infrastructure` (per `@/`-Alias, z.B. `@/infrastructure/api/FetchRetry`)
+2. tiefere FSD-Schichten per `@/`-Alias auf die konkrete Datei, z.B. `@/shared/api/FetchRetry`
 3. Komponenten (`../components`)
 4. Lokale Dateien (`./utils`)
 
@@ -82,7 +82,7 @@ verwendet diese Komponenten direkt statt rohes `db-*`-Markup nachzubauen.
 - **`DBLoadingButton`** (`components/DBLoadingButton.tsx`) statt `DBButton`, wenn der Button per
   `id` an `setLoading`/`clearLoading` haengt (z.B. Speichern-/PDF-Buttons) -- ein normaler
   `DBButton` wuerde deren `replaceChildren()`-Zugriff am React-Tree vorbei nicht ueberleben,
-  siehe `infrastructure/ui/buttonLoadingStore.ts`.
+  siehe `shared/ui/button-loading/buttonLoadingStore.ts`.
 - **`MyCheckbox`** (kapselt `DBSwitch`) fuer alles, was semantisch ein Schalter ist
   (`role="switch"`-Markup), nicht `DBCheckbox`.
 - **`DbFeld`/`DbAuswahl`** (kapseln `DBInput`/`DBSelect`) fuer kompakte Felder ohne sichtbares
@@ -104,7 +104,7 @@ const MeinButton: FC<Props> = ({ label, onClick }) => { ... };
 React-Komponenten werden in einen `DBDrawer` gerendert (`showModal()`, nativer `<dialog>`):
 
 ```ts
-import { mount, unmount } from "@/infrastructure/ui";
+import { mount, unmount } from "@/shared/lib/react-root/reactRoot";
 mount(document.getElementById("modal-body"), <MyComponent {...props} />);
 // Abhaengen (frueher `render(null, el)`):
 unmount(document.getElementById("modal-body"));
@@ -145,7 +145,7 @@ die Werte kommen aber aus den DB-Tokens. Neue Hilfsklassen gehoeren nach `src/sc
 Alle Server-Anfragen über `FetchRetry`:
 
 ```ts
-import { FetchRetry } from "@/infrastructure/api/FetchRetry";
+import { FetchRetry } from "@/shared/api/FetchRetry";
 
 const response = await FetchRetry<RequestBody, ResponseData>("resource", data, "POST");
 ```
@@ -161,7 +161,7 @@ const response = await FetchRetry<RequestBody, ResponseData>("resource", data, "
 Typsicherer Zugriff über `Storage`-Singleton:
 
 ```ts
-import Storage from "@/infrastructure/storage/Storage";
+import Storage from "@/shared/lib/storage/Storage";
 
 // Lesen mit Typ
 const monat = Storage.get<number>("Monat");

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 import { Role } from '@otto-kirchheim/nebengeld-shared';
 import { render } from '@test/reactRender';
 import { setAktivenAdminTab } from '@/shared/model/navigation/activeAdminTabStore';
-import { zeigeTab } from '@/infrastructure/ui/tabController';
+import { zeigeTab } from '@/shared/model/navigation/tabController';
 
 /**
  * `AdminTab`s Unternavigation (Teil 3 der "mehr echtes React"-Initiative): `zeigeTab()`

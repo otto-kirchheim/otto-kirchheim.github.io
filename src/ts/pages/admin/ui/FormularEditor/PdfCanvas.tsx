@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { ladePdfjs } from './pdfjsLoader';
 import { DBButton, DBTag } from '@db-ux/react-core-components';
-import { DbAuswahl } from '@/components';
+import { DbAuswahl } from '@/shared/ui/form/DbFeld';
 
 // pdfjs liefert `convertToPdfPoint`/`convertToViewportPoint` nicht typisiert genug fuer unsere
 // Zwecke -- eigenes, minimales Interface statt des vollen `PageViewport`-Typs.

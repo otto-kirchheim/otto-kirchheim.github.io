@@ -16,9 +16,9 @@
  * Nur die Hauptgruppe schreibt den Hash (`istHauptgruppe()`), Admin-Wechsel bewusst nicht.
  */
 
-import { flushExtern } from './reactRoot';
-import { getAktivenTab, setAktivenTab } from '../../shared/model/navigation/activeTabStore';
-import { getAktivenAdminTab, setAktivenAdminTab } from '../../shared/model/navigation/activeAdminTabStore';
+import { flushExtern } from '@/shared/lib/react-root/reactRoot';
+import { getAktivenTab, setAktivenTab } from '@/shared/model/navigation/activeTabStore';
+import { getAktivenAdminTab, setAktivenAdminTab } from '@/shared/model/navigation/activeAdminTabStore';
 
 // Standard: alles erlaubt -- der Controller bleibt auth-agnostisch. `auth/index.ts` ersetzt diese
 // Pruefung einmal beim Modulladen durch die Login-Pruefung. `zeigeTab()` ist die einzige

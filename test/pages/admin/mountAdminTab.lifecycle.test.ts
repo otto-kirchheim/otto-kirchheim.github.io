@@ -11,7 +11,7 @@ const { mockMount, mockUnmount, mockFetchCurrentAdminCapabilities, mockGetActAsS
   mockGetServerUrl: vi.fn(async () => 'https://example.com/api/v2'),
 }));
 
-vi.mock('@/infrastructure/ui/reactRoot', () => ({ mount: mockMount, unmount: mockUnmount }));
+vi.mock('@/shared/lib/react-root/reactRoot', () => ({ mount: mockMount, unmount: mockUnmount }));
 vi.mock('@/pages/admin/api/api', () => ({
   fetchCurrentAdminCapabilities: mockFetchCurrentAdminCapabilities,
 }));

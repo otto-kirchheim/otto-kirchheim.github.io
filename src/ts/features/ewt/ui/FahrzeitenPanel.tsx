@@ -1,6 +1,6 @@
 import { type JSX, useEffect, useRef, useState } from 'react';
 
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 import type { IVorgabenUfZ } from '@/types';
 import { normalizeTimeString } from '@/shared/lib/validation/timeString';
 import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';

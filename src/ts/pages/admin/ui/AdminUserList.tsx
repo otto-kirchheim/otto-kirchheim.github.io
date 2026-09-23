@@ -18,7 +18,7 @@ import { joinOeLevels, splitOeInput } from '@/shared/lib/ressource/oeLevels';
 import createAdminBulkEditModal from './createAdminBulkEditModal';
 import { AdminUserCard } from './AdminUserCard';
 import type { UserEditState } from './adminUserListTypen';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 /**
  * Benutzerverwaltung als Kartenliste mit Filter (Name, OE, Rolle), Einzelbearbeitung und Massenänderung.

@@ -8,6 +8,40 @@ import dbUx from '@db-ux/core-eslint-plugin';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
+import { existsSync, readdirSync } from 'node:fs';
+
+/**
+ * FSD-Schichtgrenzen (tasks/plan-fsd-feature-module.md): Import nur abwärts app → pages → widgets → features → shared,
+ * keine Importe zwischen Slices derselben Schicht. Aufrufe gegen die Richtung laufen über `invokeHook`
+ * (`shared/lib/feature/hookRegistry.ts`); die steckbaren Module (Ordner mit `meta.ts`) kennt nur `app/`
+ * (Manifest `app/features.ts`), alle anderen erreichen sie über die Feature-Registry.
+ */
+const slices = schicht => readdirSync(`src/ts/${schicht}`, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name);
+const MODULE = slices('features').filter(name => existsSync(`src/ts/features/${name}/meta.ts`));
+const importsOf = name => [`@/${name}`, `@/${name}/**`];
+const verbot = (message, namen) => ({ message, group: namen.flatMap(importsOf) });
+const fsdGrenzen = (schicht, hoeher, extra = []) =>
+  slices(schicht).map(slice => ({
+    files: [`src/ts/${schicht}/${slice}/**/*.{ts,tsx}`],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            ...(hoeher.length ? [verbot(`${schicht} darf nur tiefere Schichten importieren.`, hoeher)] : []),
+            ...extra,
+            ...slices(schicht)
+              .filter(andere => andere !== slice)
+              .map(andere => ({
+                message: `${schicht}/${slice} darf ${schicht}/${andere} nicht importieren (Ziel: shared oder invokeHook).`,
+                group: [...importsOf(`${schicht}/${andere}`), `**/${schicht}/${andere}`, `**/${schicht}/${andere}/**`, `../${andere}`, `../${andere}/**`, `../../${andere}/**`],
+              })),
+          ],
+        },
+      ],
+    },
+  }));
+const nurUeberRegistry = verbot('Module nur über die Feature-Registry laden (Manifest app/features.ts).', MODULE.map(m => `features/${m}`));
 
 export default defineConfig(
   // Basis
@@ -102,6 +136,20 @@ export default defineConfig(
       '@typescript-eslint/no-deprecated': 'error',
     },
   },
+
+  // FSD-Schichtgrenzen (siehe oben)
+  {
+    files: ['src/ts/shared/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { patterns: [verbot('shared darf keine höhere Schicht importieren.', ['app', 'pages', 'widgets', 'features'])] },
+      ],
+    },
+  },
+  ...fsdGrenzen('features', ['app', 'pages', 'widgets']),
+  ...fsdGrenzen('widgets', ['app', 'pages'], [nurUeberRegistry]),
+  ...fsdGrenzen('pages', ['app'], [nurUeberRegistry]),
 
   // Dateien ignorieren
   {

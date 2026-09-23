@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'bun:test';
-import { initializeAppBootstrap, registerAppStartTask } from '@/app/init/bootstrap';
+import { initializeAppBootstrap, registerAppStartTask } from '@/shared/lib/lifecycle/bootstrap';
 
 // Jede Datei bekommt in Bun eine eigene Modulinstanz – kein vi.resetModules() nötig.
 // Alle Tests sequenziell: bootstrapInitialized / bootstrapStarted werden nach dem

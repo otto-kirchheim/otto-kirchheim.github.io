@@ -29,7 +29,7 @@ vi.mock('@/shared/api/apiService', () => ({
   },
 }));
 
-vi.mock('@/components', () => ({ schliesseModal: hideMock }));
+vi.mock('@/shared/ui/modal/showModal', () => ({ schliesseModal: hideMock }));
 
 import loginUser from '@/features/auth/model/loginUser';
 

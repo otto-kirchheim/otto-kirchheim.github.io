@@ -1,7 +1,7 @@
-import { unmount } from '@/infrastructure/ui';
+import { unmount } from '@/shared/lib/react-root/reactRoot';
 
 import { DBButton, DBHeadingH5, DBTooltip } from '@db-ux/react-core-components';
-import { oeffneDrawer } from '@/components';
+import { oeffneDrawer } from '@/shared/ui/modal/showModal';
 import { PlatzhalterHilfeInhalt } from './PlatzhalterHilfeInhalt';
 
 /**

@@ -21,13 +21,19 @@ const {
 type InputProps = { id: string; name?: string; type?: string; min?: string; max?: string; value?: string };
 type SelectProps = { id: string; options: Array<{ value?: string; text: string }> };
 
-vi.mock('@/components', () => ({
+vi.mock('@/shared/ui/modal/showModal', () => ({
   schliesseModal: hideMock,
   beiModalSchliessen: vi.fn(),
-  showModal: showModalMock,
-  MyFormModal: (props: { children?: ReactNode }) => h('div', { className: 'modal-stub' }, props.children),
-  MyModalBody: (props: { children?: ReactNode }) => h('div', { className: 'modal-body-stub' }, props.children),
-  MyInput: (props: InputProps) =>
+  default: showModalMock,
+}));
+vi.mock('@/shared/ui/modal/MyFormModal', () => ({
+  default: (props: { children?: ReactNode }) => h('div', { className: 'modal-stub' }, props.children),
+}));
+vi.mock('@/shared/ui/modal/MyModalBody', () => ({
+  default: (props: { children?: ReactNode }) => h('div', { className: 'modal-body-stub' }, props.children),
+}));
+vi.mock('@/shared/ui/form/MyInput', () => ({
+  default: (props: InputProps) =>
     h('input', {
       id: props.id,
       name: props.name,
@@ -36,13 +42,17 @@ vi.mock('@/components', () => ({
       max: props.max,
       defaultValue: props.value,
     }),
-  MySelect: (props: SelectProps) =>
+}));
+vi.mock('@/shared/ui/form/MySelect', () => ({
+  default: (props: SelectProps) =>
     h(
       'select',
       { id: props.id },
       props.options.map(o => h('option', { key: o.text, value: o.value }, o.text)),
     ),
-  MyCheckbox: (props: { id: string; children?: ReactNode }) => h('input', { type: 'checkbox', id: props.id }),
+}));
+vi.mock('@/shared/ui/form/MyCheckbox', () => ({
+  default: (props: { id: string; children?: ReactNode }) => h('input', { type: 'checkbox', id: props.id }),
 }));
 
 vi.mock('@/shared/lib/storage/Storage', () => ({
@@ -55,9 +65,7 @@ vi.mock('@/features/ber/model', () => ({
   isBzUnsynced: (bz: { _id?: string; __localState?: string }) => !bz._id || bz.__localState === 'modified',
 }));
 
-vi.mock('@/core', () => ({
-  onEvent: onEventMock,
-}));
+vi.mock('@/shared/lib/events/appEvents', () => ({ onEvent: onEventMock }));
 
 import createAddModalBereitschaftsEinsatz from '@/features/ber/ui/createAddModalBereitschaftsEinsatz';
 

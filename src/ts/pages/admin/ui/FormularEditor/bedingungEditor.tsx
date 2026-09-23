@@ -9,7 +9,7 @@ import {
   type KatalogEintrag,
 } from './datenKatalog';
 import { DBButton, DBCheckbox, DBStack } from '@db-ux/react-core-components';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 /** Form, die sich `Bedingung` (Zeile) und `FeldBedingung` (Dokument) exakt teilen -- nur der
  * GEPRÜFTE Wert davor unterscheidet sich, der Vergleich danach ist identisch. */

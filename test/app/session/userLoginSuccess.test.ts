@@ -28,7 +28,7 @@ vi.mock('@/features/auth/model/requestVerificationMail', () => ({
   default: requestVerificationMailMock,
 }));
 
-vi.mock('@/app/session/selectYear', () => ({
+vi.mock('@/pages/einstellungen/model/selectYear', () => ({
   default: selectYearMock,
 }));
 
@@ -53,7 +53,7 @@ vi.mock('@/pages/admin/mountAdminTab', () => ({
 
 import userLoginSuccess from '@/app/session/userLoginSuccess';
 import { featureLifecycleRegistry } from '@/shared/lib/feature';
-import { LOGIN_INIT_SEQUENCE, getSteps, resetSteps } from '@/app/init/initSequence';
+import { LOGIN_INIT_SEQUENCE, getSteps, resetSteps } from '@/shared/lib/lifecycle/initSequence';
 
 describe('userLoginSuccess', () => {
   beforeEach(() => {

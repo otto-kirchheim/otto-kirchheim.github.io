@@ -15,9 +15,7 @@ vi.mock('@/shared/lib/ressource/tableToArray', () => ({
   default: tableToArrayMock,
 }));
 
-vi.mock('@/core', () => ({
-  publishEvent: publishDataChangedMock,
-}));
+vi.mock('@/shared/lib/events/appEvents', () => ({ publishEvent: publishDataChangedMock }));
 
 import { persistNebengeldTableData } from '@/features/ez/model';
 

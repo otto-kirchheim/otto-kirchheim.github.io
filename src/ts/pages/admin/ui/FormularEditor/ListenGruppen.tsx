@@ -7,7 +7,7 @@ import {
   type FormularCode,
 } from './datenKatalog';
 import { DBButton, DBCheckbox, DBTooltip } from '@db-ux/react-core-components';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 type Props = {
   tabelle: TabellenDef;

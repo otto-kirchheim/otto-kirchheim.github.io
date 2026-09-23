@@ -6,7 +6,7 @@ import { authApi } from '@/shared/api/apiService';
 import { getPasskeyErrorMessage } from '@/shared/api/token/passkeys';
 import { resetTokenState } from '@/shared/api/token/tokenErneuern';
 import type { CustomHTMLDivElement } from '@/types';
-import { schliesseModal } from '@/components';
+import { schliesseModal } from '@/shared/ui/modal/showModal';
 
 /**
  * Meldet per Passkey (WebAuthn) an. Der Benutzername im Login-Dialog ist optional (ohne ihn

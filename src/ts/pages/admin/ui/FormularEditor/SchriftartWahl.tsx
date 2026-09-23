@@ -1,5 +1,5 @@
 import type { Schriftart } from '@otto-kirchheim/nebengeld-shared';
-import { DbAuswahl } from '@/components';
+import { DbAuswahl } from '@/shared/ui/form/DbFeld';
 import { SCHRIFTARTEN } from './datenKatalog';
 import type { VorlageFontFamilie } from './vorlageFonts';
 import {

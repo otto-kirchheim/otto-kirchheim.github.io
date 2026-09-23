@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 
-import { MyDivModal, MyModalBody } from '@/components';
+import MyDivModal from '@/shared/ui/modal/MyDivModal';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import {
   bulkUpdateUserProfiles,

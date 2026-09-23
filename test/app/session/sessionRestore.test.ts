@@ -30,14 +30,14 @@ const {
   createModalLoginMock: vi.fn(),
 }));
 
-vi.mock('@/app/init/bootstrap', () => ({
+vi.mock('@/shared/lib/lifecycle/bootstrap', () => ({
   registerAppStartTask: (task: () => void | Promise<void>) => {
     taskRef.fn = task;
   },
   initializeAppBootstrap: vi.fn(),
 }));
 
-vi.mock('@/app/session/selectYear', () => ({
+vi.mock('@/pages/einstellungen/model/selectYear', () => ({
   default: selectYearMock,
 }));
 
@@ -58,7 +58,7 @@ vi.mock('@/shared/lib/storage/Storage', () => ({
   },
 }));
 
-vi.mock('@/infrastructure/ui/updateTabVisibility', () => ({
+vi.mock('@/shared/model/navigation/updateTabVisibility', () => ({
   default: updateTabVisibilityMock,
 }));
 
@@ -83,7 +83,7 @@ vi.mock('@/features/auth/model', () => ({
   handleAuthUrlState: handleAuthUrlStateMock,
 }));
 
-import { SESSION_RESTORE_SEQUENCE, getSteps, resetSteps } from '@/app/init/initSequence';
+import { SESSION_RESTORE_SEQUENCE, getSteps, resetSteps } from '@/shared/lib/lifecycle/initSequence';
 import { setNavigationSichtbar } from '@/shared/model/navigation/navigationVisibleStore';
 
 let authModuleLoaded = false;

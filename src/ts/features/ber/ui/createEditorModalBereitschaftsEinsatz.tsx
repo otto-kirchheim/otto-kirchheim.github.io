@@ -4,20 +4,16 @@ import { createRef, type SubmitEvent, Fragment, type ReactNode } from 'react';
 import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import { CustomTable, Row } from '@/shared/ui/custom-table/CustomTable';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
-import {
-  MyFormModal,
-  MyInput,
-  MyModalBody,
-  MySelect,
-  beiModalSchliessen,
-  schliesseModal,
-  showModal,
-} from '@/components';
+import MyFormModal from '@/shared/ui/modal/MyFormModal';
+import MyInput from '@/shared/ui/form/MyInput';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import MySelect from '@/shared/ui/form/MySelect';
+import showModal, { beiModalSchliessen, schliesseModal } from '@/shared/ui/modal/showModal';
 import type { CustomHTMLDivElement, IDatenBE } from '@/types';
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import { default as checkMaxTag } from '@/shared/lib/validation/checkMaxTag';
 import dayjs from '@/shared/lib/date/configDayjs';
-import { onEvent } from '@/core';
+import { onEvent } from '@/shared/lib/events/appEvents';
 import {
   classifyBzCoverage,
   isBzUnsynced,

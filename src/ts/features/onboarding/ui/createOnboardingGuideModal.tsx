@@ -1,4 +1,4 @@
-import { mount, unmount } from '@/infrastructure/ui';
+import { mount, unmount } from '@/shared/lib/react-root/reactRoot';
 
 import Storage from '@/shared/lib/storage/Storage';
 import OnboardingGuidePanel from './OnboardingGuidePanel';

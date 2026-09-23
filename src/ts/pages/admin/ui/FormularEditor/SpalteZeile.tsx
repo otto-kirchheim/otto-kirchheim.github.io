@@ -9,7 +9,7 @@ import { istGleich } from './feldPanelHelfer';
 import type { Armed, Vorschau } from './feldPanelTypen';
 import { WertVorschau } from './WertVorschau';
 import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 /**
  * Aufklappbare Zeile für eine Tabellenspalte: x-Kanten, Art des Inhalts (Datenfeld, Berechnet, Ankreuzen, Listen-Platz), Anzeigename, Darstellung und Beispielwert.

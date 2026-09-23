@@ -1,9 +1,9 @@
 import type { IVorgabenU } from '@/types';
 import Storage from '@/shared/lib/storage/Storage';
 import { PERS_FIELD_LABELS, validatePersInput } from '@/shared/lib/validation/addressValidation';
-import { zeigeTab } from '@/infrastructure/ui/tabController';
+import { zeigeTab } from '@/shared/model/navigation/tabController';
 import { setOffenenAbschnitt } from '@/shared/model/navigation/offenerAbschnittStore';
-import { flushExtern } from '@/infrastructure/ui/reactRoot';
+import { flushExtern } from '@/shared/lib/react-root/reactRoot';
 
 /** Die 5 Pflichtfelder der persönlichen Daten, die der Nutzer selbst eintragen muss. */
 const PERS_FELDER = [

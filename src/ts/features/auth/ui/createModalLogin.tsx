@@ -3,7 +3,11 @@ import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import { createRef, type SubmitEvent } from 'react';
 
 import { loginUser, loginWithPasskey } from '../model';
-import { DBLoadingButton, MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
+import DBLoadingButton from '@/shared/ui/button-loading/DBLoadingButton';
+import MyFormModal from '@/shared/ui/modal/MyFormModal';
+import MyInput from '@/shared/ui/form/MyInput';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import showModal from '@/shared/ui/modal/showModal';
 import { createModalForgotPassword, createModalNewUser } from '.';
 import type { CustomHTMLDivElement } from '@/types';
 

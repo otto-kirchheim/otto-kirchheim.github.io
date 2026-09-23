@@ -5,9 +5,8 @@ import { authApi } from '@/shared/api/apiService';
 import { registerPasskeyWithResult } from '@/shared/api/token/passkeys';
 import { getPasswordValidationMessage } from '@/shared/lib/validation/passwordValidation';
 import { resetTokenState } from '@/shared/api/token/tokenErneuern';
-import { openOnboardingGuideOnce } from '@/features/onboarding/ui/createOnboardingGuideModal';
 import { invokeHook } from '@/shared/lib/feature';
-import { schliesseModal } from '@/components';
+import { schliesseModal } from '@/shared/ui/modal/showModal';
 
 /**
  * Bietet nach der Registrierung die Passkey-Einrichtung an, sofern der Browser `PublicKeyCredential` kennt.
@@ -128,7 +127,7 @@ export default async function checkNeuerBenutzer(): Promise<void> {
       emailVerified: me?.emailVerified,
     });
 
-    openOnboardingGuideOnce();
+    invokeHook('onboarding:open-once');
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.log(msg);

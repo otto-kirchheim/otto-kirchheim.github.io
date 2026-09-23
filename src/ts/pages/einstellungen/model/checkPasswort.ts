@@ -4,7 +4,7 @@ import { default as clearLoading } from '@/shared/ui/button-loading/clearLoading
 import { default as setLoading } from '@/shared/ui/button-loading/setLoading';
 import { authApi } from '@/shared/api/apiService';
 import { getPasswordValidationMessage } from '@/shared/lib/validation/passwordValidation';
-import { schliesseModal } from '@/components';
+import { schliesseModal } from '@/shared/ui/modal/showModal';
 
 /**
  * Prüft die Eingaben des Passwort-Ändern-Modals (alle Felder gefüllt, Passwort-Regeln, Wiederholung, neu != alt,

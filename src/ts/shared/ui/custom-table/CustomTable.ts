@@ -6,7 +6,7 @@
 import { createElement, useReducer, useRef } from 'react';
 import './customtable.scss';
 import type { CustomHTMLTableElement } from '@/types';
-import { flushExtern, mount } from '@/infrastructure/ui/reactRoot';
+import { flushExtern, mount } from '@/shared/lib/react-root/reactRoot';
 import { BREAKPOINTS } from '@/shared/ui/custom-table/breakpoints';
 import { Column, Columns } from './Column';
 import CustomTableView from './CustomTableView';

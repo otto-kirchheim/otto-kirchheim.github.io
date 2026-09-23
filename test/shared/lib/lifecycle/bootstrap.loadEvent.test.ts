@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'bun:test';
-import { initializeAppBootstrap, registerAppStartTask } from '@/app/init/bootstrap';
+import { initializeAppBootstrap, registerAppStartTask } from '@/shared/lib/lifecycle/bootstrap';
 
 // Eigene Datei für eine frische Modulinstanz (siehe test/app/init/bootstrap.notReady.test.ts):
 // prüft, dass der registrierte 'load'-Listener beim Feuern tatsächlich die Start-Tasks ausführt.

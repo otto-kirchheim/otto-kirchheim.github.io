@@ -1,7 +1,8 @@
 import { type JSX, useEffect, useRef, useState } from 'react';
 
 import { DBDivider, DBHeadingH5 } from '@db-ux/react-core-components';
-import { DbFeld, MyCheckbox } from '@/components';
+import { DbFeld } from '@/shared/ui/form/DbFeld';
+import MyCheckbox from '@/shared/ui/form/MyCheckbox';
 import type { IVorgabenUaZ, IPerWeekdaySchicht, ISchichtZeiten, SchichtBase } from '@/types';
 import { setArbeitszeitPanelState } from './arbeitszeitPanelState';
 import { SchichtSection } from './SchichtSection';

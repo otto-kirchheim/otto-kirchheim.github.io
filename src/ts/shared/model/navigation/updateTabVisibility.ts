@@ -1,6 +1,6 @@
 import { featureRegistry } from '@/shared/lib/feature';
-import { setFeatureTabsVisible } from '../../shared/model/navigation/featureTabsStore';
-import { flushExtern } from './reactRoot';
+import { setFeatureTabsVisible } from '@/shared/model/navigation/featureTabsStore';
+import { flushExtern } from '@/shared/lib/react-root/reactRoot';
 
 /**
  * Zeigt/Versteckt Feature-Tabs (Nav-Eintrag und Start-Schnellzugriff gemeinsam) basierend auf `aktivierteTabs`.

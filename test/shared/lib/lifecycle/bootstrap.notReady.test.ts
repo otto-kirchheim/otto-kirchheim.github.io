@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'bun:test';
-import { initializeAppBootstrap } from '@/app/init/bootstrap';
+import { initializeAppBootstrap } from '@/shared/lib/lifecycle/bootstrap';
 
 // Eigene Datei, damit dieser Test eine frische Modulinstanz von @/app/init/bootstrap bekommt
 // (siehe test/app/init/bootstrap.test.ts: bootstrapInitialized ist dort bereits nach dem ersten

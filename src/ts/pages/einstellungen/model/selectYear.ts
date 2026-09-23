@@ -2,7 +2,7 @@ import { default as Storage } from '@/shared/lib/storage/Storage';
 import { getUserCookie } from '@/shared/api/token/decodeAccessToken';
 import { default as setLoading } from '@/shared/ui/button-loading/setLoading';
 import { invokeHook } from '@/shared/lib/feature';
-import setMonatJahr from '../../shared/model/period/setMonatJahr';
+import setMonatJahr from '@/shared/model/period/setMonatJahr';
 
 /**
  * Wählt Monat und Jahr aus: merkt sie im Storage (Jahreswechsel wird vermerkt), aktualisiert die Überschriften und lädt bei angemeldetem Benutzer die Daten. Offline passiert nichts.

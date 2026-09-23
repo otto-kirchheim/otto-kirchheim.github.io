@@ -18,6 +18,8 @@ export interface HookMap {
   'session:load-month': (monat: number, jahr: number) => Promise<void>;
   /** Öffnet die Hilfe zu einem Kontext (`widgets/help-modal/openHelpModal`). */
   'help:open': (key: HelpContextKey) => Promise<void>;
+  /** Öffnet die Ersteinrichtung einmalig (`features/onboarding`). */
+  'onboarding:open-once': () => void;
   'network:reconnect': () => void;
   'pre-save:settings': () => IVorgabenU;
   'app:version-outdated': () => void;

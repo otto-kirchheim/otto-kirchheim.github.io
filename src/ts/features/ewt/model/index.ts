@@ -3,7 +3,7 @@ import addEwtTag from './addEwtTag';
 import calculateEwtEintraege from './calculateEwtEintraege';
 import calculateBuchungstagEwt from '@/features/ewt/model/calculateBuchungstagEwt';
 import clearEwtZeiten from './clearEwtZeiten';
-import getEwtDaten from './getEwtDaten';
+import getEwtDaten from '@/shared/lib/ressource/getEwtDaten';
 import getEwtEditorDate from './getEwtEditorDate';
 import getEwtWindow from './getEwtWindow';
 import recalculateEwtMonat from './recalculateEwtMonat';

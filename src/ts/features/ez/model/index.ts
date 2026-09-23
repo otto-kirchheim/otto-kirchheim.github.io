@@ -13,7 +13,7 @@ import persistTableData from '@/shared/lib/ressource/persistTableData';
 const persistNebengeldTableData = (ft: CustomTable<IDatenN>) => persistTableData('N', ft);
 
 export { addNebengeldTag, getNebengeldDaten, persistNebengeldTableData };
-export { default as applySelectOptions } from '../../../shared/ui/form/applySelectOptions';
+export { default as applySelectOptions } from '@/shared/ui/form/applySelectOptions';
 export { default as syncNebengeldTimesFromEwtRows } from './syncEwtToNeben';
 export {
   formatNebengeldZulagen,
@@ -23,4 +23,4 @@ export {
   normalizeNebengeldZulagen,
   readNebengeldZulagenFromForm,
   validateNebengeldZulagen,
-} from './nebengeldZulagen';
+} from '@/shared/lib/zulagen/nebengeldZulagen';

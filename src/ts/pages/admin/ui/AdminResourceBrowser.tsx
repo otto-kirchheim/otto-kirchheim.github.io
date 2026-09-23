@@ -24,7 +24,7 @@ import {
   type AdminPage,
 } from '../api/api';
 import { DBButton, DBCard, DBNotification, DBStack, DBTag, DBTooltip } from '@db-ux/react-core-components';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 type Props = { onNavigateToUser?: (userId: string) => void };
 

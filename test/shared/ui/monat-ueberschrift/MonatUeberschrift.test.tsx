@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import MonatUeberschrift from '@/shared/ui/monat-ueberschrift/MonatUeberschrift';
 import { resetMonatJahr, setMonatJahrStore } from '@/shared/model/period/monatJahrStore';
-import { flushExtern } from '@/infrastructure/ui/reactRoot';
+import { flushExtern } from '@/shared/lib/react-root/reactRoot';
 import { render } from '@test/reactRender';
 
 describe('MonatUeberschrift', () => {

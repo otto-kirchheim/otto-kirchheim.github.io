@@ -1,7 +1,7 @@
 import { joinOeLevels } from '@/shared/lib/ressource/oeLevels';
 import { OeLevelInputs } from './OeLevelInputs';
 import { DBRadio } from '@db-ux/react-core-components';
-import { DbAuswahl } from '@/components';
+import { DbAuswahl } from '@/shared/ui/form/DbFeld';
 
 export type AdminOeActionMode = 'none' | 'add' | 'remove';
 export type AdminOeActionState = { mode: AdminOeActionMode; value: string; levels: string[] };

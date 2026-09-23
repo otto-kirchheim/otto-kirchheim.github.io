@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 
-import initPullToRefresh from '@/infrastructure/ui/pullToRefresh';
+import initPullToRefresh from '@/app/shell/pullToRefresh';
 
 /**
  * Prueft die Stellschrauben aus `pullToRefresh.ts` (Ausloese-Distanz, Daempfung,

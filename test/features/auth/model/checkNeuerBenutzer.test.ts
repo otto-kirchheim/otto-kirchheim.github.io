@@ -48,7 +48,7 @@ vi.mock('@/shared/api/token/tokenErneuern', () => ({
   resetTokenState: resetTokenStateMock,
 }));
 
-vi.mock('@/components', () => ({ schliesseModal: hideMock }));
+vi.mock('@/shared/ui/modal/showModal', () => ({ schliesseModal: hideMock }));
 
 vi.mock('@/shared/ui/dialog/confirmDialog', () => ({
   confirmDialog: confirmMock,

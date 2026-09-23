@@ -18,7 +18,7 @@ import {
   type VersionUebersicht,
 } from '../api/formularVersionenApi';
 import { DBButton, DBHeadingH5, DBHeadingH6 } from '@db-ux/react-core-components';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 import { useAdminFeatures } from '../adminFeatures';
 
 /** Intervall-Konflikt: die Kette hat danach eine Lücke oder eine nicht offene letzte Version. */

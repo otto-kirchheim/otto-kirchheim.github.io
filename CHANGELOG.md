@@ -2,6 +2,27 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-23 (188)
+
+### refactor (P10: FSD-Abschluss)
+
+- `main.tsx`/`App.tsx` → `app/` (`index.html` lädt `ts/app/main.tsx`); `pullToRefresh`/`setOffline`/`setVersionOutdated`
+  → `app/shell`; `reactRoot` → `shared/lib/react-root`; `tabController`/`updateTabVisibility` → `shared/model/navigation`;
+  `bootstrap`/`initSequence` (+ `DEPENDENCIES.md`) → `shared/lib/lifecycle`, `syncFeatureTabs` → `shared/lib/feature`
+  (Pages, `saveDaten` und `features/auth` rufen sie auf); `selectYear` zurück nach `pages/einstellungen/model`;
+  `getEwtDaten` → `shared/lib/ressource`, `nebengeldZulagen` → `shared/lib/zulagen` (je ≥ 2 Konsumenten).
+- Legacy-Ordner `core`, `components`, `infrastructure` samt Barrels und Aliasen (tsconfig, Vite) gelöscht; 121 Dateien
+  importieren jetzt die konkreten Module, 29 Test-`vi.mock` auf Barrels wurden je Modul aufgeteilt.
+- `features/auth` → `features/onboarding` über den neuen Hook `onboarding:open-once`.
+- Schichtgrenzen als `error` in `eslint.config.js` (Import nur abwärts, keine Slice-Querimporte, Module nur über die
+  Registry; Slices werden aus den Ordnern gelesen); `eslint.fsd.config.js` und `lint:fsd` entfallen.
+- Scaffold `bun run new-feature` erzeugte noch Importe aus `@/core/hooks`/`@/infrastructure/ui` → `@/shared/...`.
+- Tests gespiegelt (`test/Utilities`, `test/ui.*`, `test/app/init` aufgelöst); verwaiste Snapshots `test/__snapshots__`
+  (Duplikate der verschobenen ber-Tests) gelöscht.
+- Doku: `CLAUDE.md` (FSD-Schichten), Skills `architektur`, `coding-konventionen`, `tests`; Root-`.claude/CLAUDE.md` (PDF-Pfade).
+- Gate: typecheck 0, lint 0, Tests 2289/2289, `lint:css` i.o., build i.o. (Precache 115 → 136: ohne die Sammel-Barrels
+  bildet Rolldown feinere gemeinsame Chunks).
+
 ## 2026-09-23 (187)
 
 ### refactor (FSD: Aufrufe gegen die Schichtrichtung über Hooks)

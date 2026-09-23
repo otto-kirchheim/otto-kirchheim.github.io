@@ -24,9 +24,7 @@ const {
   scheduleAutoSaveMock: vi.fn(),
 }));
 
-vi.mock('@/core', () => ({
-  publishEvent: publishDataChangedMock,
-}));
+vi.mock('@/shared/lib/events/appEvents', () => ({ publishEvent: publishDataChangedMock }));
 
 vi.mock('@/features/ber/model', () => ({
   getBereitschaftsZeitraumDaten: getBereitschaftsZeitraumDatenMock,

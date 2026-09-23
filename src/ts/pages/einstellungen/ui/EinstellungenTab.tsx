@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
-import { DBLoadingButton } from '@/components';
+import DBLoadingButton from '@/shared/ui/button-loading/DBLoadingButton';
 import { featureRegistry } from '@/shared/lib/feature';
 import {
   DBAccordion,
@@ -18,8 +18,8 @@ import {
 import { setOffenenAbschnitt, useOffenenAbschnitt } from '@/shared/model/navigation/offenerAbschnittStore';
 import PersoenlicheDatenPanel from '@/pages/einstellungen/ui/PersoenlicheDatenPanel';
 import type { IEinstellungenSection } from '@/types';
-import { useEinstellungenTeile } from '../../../shared/model/einstellungen/einstellungenTeile';
-import useFeatureTabsVisible from '../../../shared/model/navigation/useFeatureTabsVisible';
+import { useEinstellungenTeile } from '@/shared/model/einstellungen/einstellungenTeile';
+import useFeatureTabsVisible from '@/shared/model/navigation/useFeatureTabsVisible';
 
 /**
  * Ein Abschnitt des Einstellungen-Akkordeons. Der "offen"-Zustand liegt im

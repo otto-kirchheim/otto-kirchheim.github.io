@@ -9,7 +9,11 @@ import {
 } from 'react';
 
 import { CustomTable, Row } from '@/shared/ui/custom-table/CustomTable';
-import { MyCheckbox, MyFormModal, MyInput, MyModalBody, schliesseModal, showModal } from '@/components';
+import MyCheckbox from '@/shared/ui/form/MyCheckbox';
+import MyFormModal from '@/shared/ui/modal/MyFormModal';
+import MyInput from '@/shared/ui/form/MyInput';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import showModal, { schliesseModal } from '@/shared/ui/modal/showModal';
 import type { BereitschaftSchichtTyp, IVorgabenU, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import saveTableDataVorgabenU from '../model/saveTableDataVorgabenU';

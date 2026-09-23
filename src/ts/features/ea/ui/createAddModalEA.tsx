@@ -1,14 +1,18 @@
 import { createRef, type ChangeEvent, type SubmitEvent } from 'react';
 
 import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
-import { MyFormModal, MyInput, MyModalBody, MySelect, beiModalSchliessen, showModal } from '@/components';
+import MyFormModal from '@/shared/ui/modal/MyFormModal';
+import MyInput from '@/shared/ui/form/MyInput';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import MySelect from '@/shared/ui/form/MySelect';
+import showModal, { beiModalSchliessen } from '@/shared/ui/modal/showModal';
 import type { IDatenEA, IDatenEWT, IVorgabenU } from '@/types';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import Storage from '@/shared/lib/storage/Storage';
 import dayjs from '@/shared/lib/date/configDayjs';
-import { onEvent } from '@/core';
-import { getEwtDaten } from '../../ewt/model';
-import { default as applySelectOptions } from '../../../shared/ui/form/applySelectOptions';
+import { onEvent } from '@/shared/lib/events/appEvents';
+import getEwtDaten from '@/shared/lib/ressource/getEwtDaten';
+import { default as applySelectOptions } from '@/shared/ui/form/applySelectOptions';
 import { addEaTag, calculateEaDauerFromEwt } from '../model';
 import { TAETIGKEIT_VORSCHLAEGE } from '../model/taetigkeitVorschlaege';
 

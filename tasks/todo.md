@@ -176,7 +176,24 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
       Registry die vorhandene Hook-Registry: `auth:login-success`, `session:load-month`, `help:open` (Registrierung
       in `main.tsx`), `VorgabenBTable` → bestehender `pre-save:settings`. 6 Tests auf `registerHook` statt
       `vi.mock`. Gate: typecheck 0, lint 0, `lint:fsd` 4, test 2289/2289
-- [ ] P10 Abschluss
+- [x] P10 Abschluss (2026-09-23). **Abweichung vom Plan:** `reactRoot`, `tabController`, `updateTabVisibility`,
+      `bootstrap`, `initSequence`, `syncFeatureTabs` nach `shared/` statt `app/shell` bzw. `app/init` (Konsumenten in
+      shared/features/pages); nur `pullToRefresh`/`setOffline`/`setVersionOutdated` in `app/shell`.
+  - [x] Zielordner angelegt (Claude); Moves in der IDE (User). Zwei Zeilen kamen anders an (alte `main.tsx` blieb
+        liegen, `getEwtDaten` im falschen Ordner) → `main.tsx` gelöscht (Claude), `getEwtDaten` von Claude nach
+        `shared/lib/ressource` nachgezogen (keine relativen Importe), `nebengeldZulagen` vom User nachgeschoben (Lesson)
+  - [x] Nacharbeit (Claude): Barrels `core`/`components`/`infrastructure/ui` aufgelöst (121 Dateien, 29 `vi.mock`),
+        Legacy-Ordner + Aliase gelöscht, `index.html`, Hook `onboarding:open-once`, Boundaries als `error` in
+        `eslint.config.js`, `lint:fsd` entfernt, Scaffold-Vorlagen, Kommentare, Tests gespiegelt, verwaiste Snapshots
+  - [x] Doku: `CLAUDE.md`, Skills `architektur`/`coding-konventionen`/`tests`, Root-`.claude/CLAUDE.md` (Hauptrepo)
+  - [x] Gate: typecheck 0, lint 0 (inkl. Schichtgrenzen), test 2289/2289, `lint:css` i.o., build i.o. (Precache 136), `format`
+  - [x] Browser-Check durch den User: i.o. (2026-09-23)
+- [ ] Module 100 % steckbar (User-Wunsch 2026-09-23): Fehlt eines der Module `ber`/`ewt`/`ez`/`ea` (Ordner + Manifest-
+      Zeile entfernt), laufen die übrigen vollständig weiter oder zeigen einen klaren Hinweis, dass ein anderes Modul
+      nötig ist. Zu prüfen u. a.: `ea`/`ez` lesen EWT-Zeilen (`getEwtDaten`, `syncEwtToEa`, `syncEwtToNeben`,
+      `syncFieldsFromEwtRows`, `unlinkEwtRefs` in `shared/lib/ressource`), BE/BZ-Verknüpfung, Berechnung/PDF/Admin-
+      Kataloge mit fehlendem Modul. Abhängigkeiten deklarativ machen (z. B. `meta.benoetigt: ['ewt']`, Hinweis in UI
+      und Einstellungen statt stillem Ausfall); Abnahmetest je Teilmenge (erweitert `test/app/featureAbnahme.test.tsx`).
 
 ---
 

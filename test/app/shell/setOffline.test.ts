@@ -12,7 +12,7 @@ const { mockCreateSnackBar, mockSetDisableButton, mockReconnectHandler } = (
 vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 vi.mock('@/shared/ui/button-loading/buttonDisable', () => ({ setDisableButton: mockSetDisableButton }));
 
-import setOffline from '@/infrastructure/ui/setOffline';
+import setOffline from '@/app/shell/setOffline';
 import { registerHook, clearAllHooks } from '@/shared/lib/feature';
 
 describe('setOffline', () => {

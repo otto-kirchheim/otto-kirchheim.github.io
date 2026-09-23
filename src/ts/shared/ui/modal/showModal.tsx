@@ -1,6 +1,6 @@
 import { DBDrawer } from '@db-ux/react-core-components';
 import { type ReactNode } from 'react';
-import { mount, unmount } from '@/infrastructure/ui';
+import { mount, unmount } from '@/shared/lib/react-root/reactRoot';
 
 import type { CustomHTMLDivElement } from '@/types';
 import type { CustomTableTypes } from '@/shared/ui/custom-table/CustomTable';

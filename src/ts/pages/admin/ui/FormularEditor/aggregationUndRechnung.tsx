@@ -10,7 +10,7 @@ import type {
 } from '@otto-kirchheim/nebengeld-shared';
 import { gruppiere, katalogZeilenFelder, type FormularCode, type KatalogEintrag } from './datenKatalog';
 import { DBButton, DBCheckbox, DBStack } from '@db-ux/react-core-components';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 import { berechneteEintraege, alleBerechneteEintraege } from './aggregationsHelfer';
 

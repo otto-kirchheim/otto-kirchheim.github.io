@@ -26,7 +26,7 @@ vi.mock('@/shared/ui/button-loading/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
-vi.mock('@/components', () => ({ schliesseModal: modalHideMock }));
+vi.mock('@/shared/ui/modal/showModal', () => ({ schliesseModal: modalHideMock }));
 
 import checkPasswort from '@/pages/einstellungen/model/checkPasswort';
 import type { CustomHTMLDivElement } from '@/shared/types';

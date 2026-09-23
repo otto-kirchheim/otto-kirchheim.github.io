@@ -2,7 +2,12 @@ import { DBButton, DBCheckbox } from '@db-ux/react-core-components';
 import { createRef, type ChangeEvent, type MouseEvent, type SubmitEvent } from 'react';
 
 import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
-import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
+import MyCheckbox from '@/shared/ui/form/MyCheckbox';
+import MyFormModal from '@/shared/ui/modal/MyFormModal';
+import MyInput from '@/shared/ui/form/MyInput';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import MySelect from '@/shared/ui/form/MySelect';
+import showModal from '@/shared/ui/modal/showModal';
 import type { IDatenEWT } from '@/types';
 import { type IVorgabenU, type IVorgabenUfZ } from '@/types';
 import { default as Storage } from '@/shared/lib/storage/Storage';

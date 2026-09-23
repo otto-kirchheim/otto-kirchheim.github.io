@@ -3,7 +3,7 @@ import { useState } from 'react';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { triggerAdminHeapSnapshot, type MetricPoint, type HeapData } from '../api/api';
 import { DBButton, DBCard, DBCheckbox, DBHeadingH6, DBTag, DBTooltip } from '@db-ux/react-core-components';
-import { DbAuswahl } from '@/components';
+import { DbAuswahl } from '@/shared/ui/form/DbFeld';
 import { formatUptime } from '../model/formatUptime';
 
 const EVENT_LABELS: Record<string, string> = {

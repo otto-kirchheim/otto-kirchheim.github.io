@@ -1,5 +1,5 @@
 import { DBButton, DBCheckbox, DBStack } from '@db-ux/react-core-components';
-import { DbAuswahl, DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 import type { Drehwinkel, SkalierFaktoren } from './skaliereKonfig';
 
 type Masse = { w: number; h: number };

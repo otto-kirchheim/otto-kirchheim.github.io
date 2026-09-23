@@ -1,7 +1,7 @@
 import { type JSX, useState } from 'react';
 
 import { DBButton, DBHeadingH5, DBTag, DBTooltip } from '@db-ux/react-core-components';
-import { DbFeld } from '@/components';
+import { DbFeld } from '@/shared/ui/form/DbFeld';
 import type { IPerWeekdaySchicht, SchichtBase } from '@/types';
 import { groupBySchedule, isOvernightSchicht } from '@/shared/lib/schicht/resolveSchichtDay';
 

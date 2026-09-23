@@ -1,6 +1,6 @@
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import dayjs from '@/shared/lib/date/configDayjs';
-import { TAB_SHOWN_EVENT } from '@/infrastructure/ui/tabController';
+import { TAB_SHOWN_EVENT } from '@/shared/model/navigation/tabController';
 
 /*
  * Monats-Fenster der Berechnungstabelle: Wie viele Monatsspalten sichtbar sind, folgt allein aus der

@@ -3,7 +3,8 @@ import { type FC } from 'react';
 
 import type { HelpContent } from '@/shared/lib/help/helpContent';
 import { openOnboardingGuide } from '@/features/onboarding/ui/createOnboardingGuideModal';
-import { MyDivModal, MyModalBody } from '@/components';
+import MyDivModal from '@/shared/ui/modal/MyDivModal';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
 
 /**
  * Hilfedialog: zeigt Titel, Kurzbeschreibung und die optionalen Abschnitte des `HelpContent`.

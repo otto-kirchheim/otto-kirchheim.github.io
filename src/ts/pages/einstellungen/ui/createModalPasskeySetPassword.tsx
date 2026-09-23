@@ -1,7 +1,11 @@
 import { createRef, type SubmitEvent } from 'react';
 
 import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
-import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, schliesseModal, showModal } from '@/components';
+import MyFormModal from '@/shared/ui/modal/MyFormModal';
+import MyInput from '@/shared/ui/form/MyInput';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import PasswordStrengthMeter from '@/shared/ui/form/PasswordStrengthMeter';
+import showModal, { schliesseModal } from '@/shared/ui/modal/showModal';
 import { authApi } from '@/shared/api/apiService';
 import { getUserCookie } from '@/shared/api/token/decodeAccessToken';
 import { getPasskeyErrorMessage } from '@/shared/api/token/passkeys';

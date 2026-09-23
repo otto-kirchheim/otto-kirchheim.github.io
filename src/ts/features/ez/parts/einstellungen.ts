@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import type { FeatureParts } from '@/shared/lib/feature';
 import ZulagenAbschnitt from '../ui/ZulagenEinstellungenAbschnitt';
-import { mount } from '@/infrastructure/ui';
+import { mount } from '@/shared/lib/react-root/reactRoot';
 import ZulagenCheckboxList from '@/features/ez/ui/ZulagenCheckboxList';
 
 // Zaehlt jeden Aufruf hoch, damit `key` sich aendert und React die Liste neu mountet (siehe EWT-Slot).

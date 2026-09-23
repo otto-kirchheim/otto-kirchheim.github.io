@@ -1,5 +1,5 @@
 import { Role } from '@otto-kirchheim/nebengeld-shared';
-import selectYear from './selectYear';
+import selectYear from '@/pages/einstellungen/model/selectYear';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import Storage from '@/shared/lib/storage/Storage';
 import { default as setLoading } from '@/shared/ui/button-loading/setLoading';
@@ -8,7 +8,7 @@ import { isAdmin } from '@/shared/api/token/decodeAccessToken';
 import dayjs from '@/shared/lib/date/configDayjs';
 import requestVerificationMail from '@/features/auth/model/requestVerificationMail';
 import { featureLifecycleRegistry } from '@/shared/lib/feature';
-import { markStep } from '@/app/init/initSequence';
+import { markStep } from '@/shared/lib/lifecycle/initSequence';
 
 /**
  * Maskiert HTML-Sonderzeichen fuer die Ausgabe per `innerHTML`.

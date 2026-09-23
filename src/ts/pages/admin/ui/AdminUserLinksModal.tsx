@@ -1,7 +1,8 @@
 import { useState } from 'react';
 
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
-import { DbFeld, MyModalHeader } from '@/components';
+import { DbFeld } from '@/shared/ui/form/DbFeld';
+import MyModalHeader from '@/shared/ui/modal/MyModalHeader';
 import { DBButton } from '@db-ux/react-core-components';
 import { issueVerificationLink, issuePasswordResetLink, type AdminIssuedLink } from '../api/api';
 

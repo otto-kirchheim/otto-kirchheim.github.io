@@ -11,19 +11,23 @@ const { showModalMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) =>
 
 type StubProps = { children?: ReactNode; Footer?: ReactNode };
 
-vi.mock('@/components', () => ({
-  showModal: showModalMock,
-  MyDivModal: (props: StubProps) => h('div', { className: 'modal-stub' }, props.Footer, props.children),
-  MyModalBody: (props: StubProps) => h('div', { className: 'modal-body-stub' }, props.children),
-  MyShowElement: (props: { id: string; title: string; text: string }) =>
+vi.mock('@/shared/ui/modal/showModal', () => ({ default: showModalMock }));
+vi.mock('@/shared/ui/modal/MyDivModal', () => ({
+  default: (props: StubProps) => h('div', { className: 'modal-stub' }, props.Footer, props.children),
+}));
+vi.mock('@/shared/ui/modal/MyModalBody', () => ({
+  default: (props: StubProps) => h('div', { className: 'modal-body-stub' }, props.children),
+}));
+vi.mock('@/shared/ui/modal/MyShowElement', () => ({
+  default: (props: { id: string; title: string; text: string }) =>
     h(
       'div',
       { className: 'show-element', 'data-id': props.id },
       h('span', { className: 'label' }, props.title),
       h('span', { className: 'value' }, props.text),
     ),
-  MyShowFooter: () => h('div', { className: 'show-footer' }),
 }));
+vi.mock('@/shared/ui/modal/MyShowFooter', () => ({ default: () => h('div', { className: 'show-footer' }) }));
 
 import ShowModalVE from '@/features/ber/ui/createShowModalVE';
 

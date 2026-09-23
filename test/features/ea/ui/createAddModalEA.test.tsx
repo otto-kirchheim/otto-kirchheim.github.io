@@ -25,15 +25,19 @@ const {
   calculateEaDauerFromEwtMock: vi.fn(),
 }));
 
-vi.mock('@/components', () => ({
-  showModal: showModalMock,
-  beiModalSchliessen: vi.fn(),
+vi.mock('@/shared/ui/modal/showModal', () => ({ default: showModalMock, beiModalSchliessen: vi.fn() }));
+
+vi.mock('@/shared/ui/modal/MyFormModal', () => ({
   // Echtes <form ref={...}> statt Stub-Div: der SUT liest Felder ueber `ref.current.querySelector(...)`,
   // die Kinder muessen also tatsaechlich im per Ref referenzierten Element landen.
-  MyFormModal: (props: { myRef?: unknown; children?: ReactNode }) => h('form', { ref: props.myRef }, props.children),
-  MyModalBody: (props: { children?: ReactNode }) => h('div', {}, props.children),
-  MyInput: inputMock,
-  MySelect: (props: {
+  default: (props: { myRef?: unknown; children?: ReactNode }) => h('form', { ref: props.myRef }, props.children),
+}));
+vi.mock('@/shared/ui/modal/MyModalBody', () => ({
+  default: (props: { children?: ReactNode }) => h('div', {}, props.children),
+}));
+vi.mock('@/shared/ui/form/MyInput', () => ({ default: inputMock }));
+vi.mock('@/shared/ui/form/MySelect', () => ({
+  default: (props: {
     id: string;
     changeHandler?: (e: Event) => void;
     options: Array<{ value?: string; text: string; selected?: boolean; disabled?: boolean }>;
@@ -57,12 +61,10 @@ vi.mock('@/shared/lib/storage/Storage', () => ({
   default: { get: storageGetMock },
 }));
 
-vi.mock('@/core', () => ({
-  onEvent: onEventMock,
-}));
+vi.mock('@/shared/lib/events/appEvents', () => ({ onEvent: onEventMock }));
 
-vi.mock('@/features/ewt/model', () => ({
-  getEwtDaten: getEwtDatenMock,
+vi.mock('@/shared/lib/ressource/getEwtDaten', () => ({
+  default: getEwtDatenMock,
 }));
 
 vi.mock('@/shared/ui/form/applySelectOptions', () => ({

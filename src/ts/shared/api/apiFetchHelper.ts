@@ -1,5 +1,5 @@
-import { unwrapEnvelope } from '@/core';
-import type { ApiHttpResponse } from '@/core';
+import { unwrapEnvelope } from '@/shared/types/api';
+import type { ApiHttpResponse } from '@/shared/types/api';
 import { FetchRetry } from './FetchRetry';
 
 export type ResourceName =

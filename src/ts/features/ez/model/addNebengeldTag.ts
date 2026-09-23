@@ -3,7 +3,11 @@ import dayjs from '@/shared/lib/date/configDayjs';
 import { persistNebengeldTableData } from '.';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { IDatenN } from '@/types';
-import { formatNebengeldZulagen, readNebengeldZulagenFromForm, validateNebengeldZulagen } from './nebengeldZulagen';
+import {
+  formatNebengeldZulagen,
+  readNebengeldZulagenFromForm,
+  validateNebengeldZulagen,
+} from '@/shared/lib/zulagen/nebengeldZulagen';
 
 /**
  * Übernimmt den im Add-Modal gewählten EWT-Tag samt Zulagen und Auftragsnummer als Nebengeld-Zeile und speichert die Tabelle.

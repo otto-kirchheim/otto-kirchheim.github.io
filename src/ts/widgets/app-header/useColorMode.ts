@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react';
-import Storage from '../../shared/lib/storage/Storage';
+import Storage from '@/shared/lib/storage/Storage';
 
 export type Theme = 'light' | 'dark' | 'auto';
 
