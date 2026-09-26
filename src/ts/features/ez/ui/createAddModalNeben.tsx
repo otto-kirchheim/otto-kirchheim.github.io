@@ -8,7 +8,8 @@ import MyInput from '@/shared/ui/form/MyInput';
 import MyModalBody from '@/shared/ui/modal/MyModalBody';
 import MySelect from '@/shared/ui/form/MySelect';
 import showModal, { beiModalSchliessen } from '@/shared/ui/modal/showModal';
-import getEwtDaten from '@/shared/lib/ressource/getEwtDaten';
+import { featureRegistry } from '@/shared/lib/feature';
+import getEwtDatenFuerZuordnung from '@/shared/lib/ressource/getEwtDatenFuerZuordnung';
 import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '@/types';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { onEvent } from '@/shared/lib/events/appEvents';
@@ -82,15 +83,22 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
 
 /**
  * Öffnet den Modal für einen neuen Nebenbezug zu einem EWT-Tag des aktiven Monats. Die Tag-Auswahl wird bei
- * `data:changed` für EWT aktualisiert, bis der Modal schließt.
+ * `data:changed` für EWT aktualisiert, bis der Modal schließt. Fehlt das Modul `ewt`, öffnet stattdessen direkt die
+ * manuelle Eingabe (neue Zeile).
  *
  * @param tableN - Nebenbezug-Tabelle, in die der neue Eintrag kommt.
  * @throws {Error} Wenn der Monat keine EWT-Tage hat (mit Snackbar) oder die Formular-Referenz fehlt.
  */
 export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void {
+  // Ohne `ewt` gibt es keine Tage zur Schnellauswahl: direkt die manuelle Eingabe ("Neue Zeile").
+  if (featureRegistry.fehlende('ez').includes('ewt')) {
+    tableN.options.editing.addRow();
+    return;
+  }
+
   const ref = createRef<HTMLFormElement>();
 
-  const dataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag' });
+  const dataE = getEwtDatenFuerZuordnung('ez', { scope: 'monat', filter: 'starttag' });
   if (dataE.length === 0) {
     createSnackBar({
       message:
@@ -178,7 +186,7 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
     if (resource !== 'EWT' && resource !== 'all') return;
     const select = form.querySelector<HTMLSelectElement>('#Tag');
     if (!select) return;
-    const freshDataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag' });
+    const freshDataE = getEwtDatenFuerZuordnung('ez', { scope: 'monat', filter: 'starttag' });
     applySelectOptions(select, getTagOptions(freshDataE));
   });
   beiModalSchliessen(unsubscribeEwtSync);

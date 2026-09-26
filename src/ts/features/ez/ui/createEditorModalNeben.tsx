@@ -8,7 +8,7 @@ import MyInput from '@/shared/ui/form/MyInput';
 import MyModalBody from '@/shared/ui/modal/MyModalBody';
 import MySelect from '@/shared/ui/form/MySelect';
 import showModal, { beiModalSchliessen, schliesseModal } from '@/shared/ui/modal/showModal';
-import getEwtDaten from '@/shared/lib/ressource/getEwtDaten';
+import getEwtDatenFuerZuordnung from '@/shared/lib/ressource/getEwtDatenFuerZuordnung';
 import type { CustomHTMLDivElement, IDatenEWT, IDatenN } from '@/types';
 import Storage from '@/shared/lib/storage/Storage';
 import { default as checkMaxTag } from '@/shared/lib/validation/checkMaxTag';
@@ -114,7 +114,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
     datum = dayjs([Jahr, Monat, checkMaxTag(Jahr, Monat)]);
   } else throw new Error('unbekannter Fehler');
 
-  const dataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag', excludeDeleted: true });
+  const dataE = getEwtDatenFuerZuordnung('ez', { scope: 'monat', filter: 'starttag', excludeDeleted: true });
   const ewtMap = new Map<string, IDatenEWT>(dataE.filter(e => e._id).map(e => [e._id as string, e]));
   const existingZulagen = row instanceof Row ? normalizeNebengeldZulagen(row.cells) : [];
   const configuredZulagen = getConfiguredNebenZulagen(existingZulagen.map(zulage => zulage.Typ));
@@ -254,7 +254,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
     if (resource !== 'EWT' && resource !== 'all') return;
     const select = form.querySelector<HTMLSelectElement>('#ewtRefSelect');
     if (!select) return;
-    const freshDataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag', excludeDeleted: true });
+    const freshDataE = getEwtDatenFuerZuordnung('ez', { scope: 'monat', filter: 'starttag', excludeDeleted: true });
     applySelectOptions(select, buildEwtOptions(freshDataE));
   });
   beiModalSchliessen(unsubscribeEwtSync);

@@ -2,6 +2,17 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-26 (189)
+
+### feat (Module steckbar: weiche Abhängigkeit ez/ea → ewt)
+
+- `FeatureMeta.benoetigt` (weich) + `featureRegistry.fehlende(id)`; `ez` und `ea` deklarieren `['ewt']`. Fehlt `ewt`
+  im Manifest, laufen beide manuell weiter: keine EWT-Zuordnung, keine Tag-Schnellauswahl (auch nicht aus Alt-Daten in
+  `dataE`), `createAddModalNeben` öffnet direkt die manuelle Zeile statt der Fehlermeldung „Erst EWT ausfüllen“.
+- Neuer Helfer `shared/lib/ressource/getEwtDatenFuerZuordnung(featureId, options)` in den Add-/Editor-Modals von `ez`/`ea`.
+- Tests: `fehlende` (Registry), Helfer, `createAddModalNeben` ohne `ewt`, Abnahme je Teilmenge prüft `fehlende`.
+  Gate: typecheck 0, lint 0, Tests 2296/2296.
+
 ## 2026-09-23 (188)
 
 ### refactor (P10: FSD-Abschluss)

@@ -41,5 +41,7 @@ export const eaMeta: FeatureMeta = {
   },
   // Verknuepfte EA-Dauern und EWT-Verweise muessen auch bei deaktiviertem EA-Tab mit EWT synchron bleiben.
   wakeOn: ['ewt:persisted', 'ewt:deleted'],
+  // EWT-Zuordnung und Schnellauswahl sind optional: ohne `ewt` bleibt die manuelle Eingabe.
+  benoetigt: ['ewt'],
   helpKeys: ['tab.ea', 'modal.eaEintrag.add', 'modal.eaEintrag.edit'],
 };

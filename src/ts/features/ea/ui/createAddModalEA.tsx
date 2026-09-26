@@ -11,7 +11,7 @@ import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import Storage from '@/shared/lib/storage/Storage';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { onEvent } from '@/shared/lib/events/appEvents';
-import getEwtDaten from '@/shared/lib/ressource/getEwtDaten';
+import getEwtDatenFuerZuordnung from '@/shared/lib/ressource/getEwtDatenFuerZuordnung';
 import { default as applySelectOptions } from '@/shared/ui/form/applySelectOptions';
 import { addEaTag, calculateEaDauerFromEwt } from '../model';
 import { TAETIGKEIT_VORSCHLAEGE } from '../model/taetigkeitVorschlaege';
@@ -160,11 +160,11 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
    */
   const handleEwtChange = (evt: ChangeEvent<HTMLSelectElement>): void => {
     const select = evt.target as HTMLSelectElement;
-    const dataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag', excludeDeleted: true });
+    const dataE = getEwtDatenFuerZuordnung('ea', { scope: 'monat', filter: 'starttag', excludeDeleted: true });
     applyEwtSelection(dataE, select.value);
   };
 
-  const initialDataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag', excludeDeleted: true });
+  const initialDataE = getEwtDatenFuerZuordnung('ea', { scope: 'monat', filter: 'starttag', excludeDeleted: true });
   const initialNextEwt = findNextAvailableEwt(initialDataE, getUsedEwtRefs());
 
   const modal = showModal<IDatenEA>(
@@ -232,7 +232,7 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
     if (resource !== 'EWT' && resource !== 'all') return;
     const select = form.querySelector<HTMLSelectElement>('#ewtRefSelect');
     if (!select) return;
-    const freshDataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag', excludeDeleted: true });
+    const freshDataE = getEwtDatenFuerZuordnung('ea', { scope: 'monat', filter: 'starttag', excludeDeleted: true });
     applySelectOptions(select, buildEwtOptions(freshDataE, getUsedEwtRefs(), select.value));
     if (select.value) applyEwtSelection(freshDataE, select.value);
   });
@@ -249,7 +249,7 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
     // Das Tag-Feld enthält hier noch den Wert des gerade gespeicherten Eintrags; ist es leer, dient
     // der Vortag des Monatsbeginns als Anker vor allen Tagen.
     const lastTag = tagInput?.value ? dayjs(tagInput.value) : datum.subtract(1, 'day');
-    const freshDataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag', excludeDeleted: true });
+    const freshDataE = getEwtDatenFuerZuordnung('ea', { scope: 'monat', filter: 'starttag', excludeDeleted: true });
     const usedEwtRefs = getUsedEwtRefs();
     const next = findNextAvailableEwt(freshDataE, usedEwtRefs, lastTag);
 

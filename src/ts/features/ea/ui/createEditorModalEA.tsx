@@ -8,7 +8,7 @@ import MyInput from '@/shared/ui/form/MyInput';
 import MyModalBody from '@/shared/ui/modal/MyModalBody';
 import MySelect from '@/shared/ui/form/MySelect';
 import showModal, { beiModalSchliessen, schliesseModal } from '@/shared/ui/modal/showModal';
-import getEwtDaten from '@/shared/lib/ressource/getEwtDaten';
+import getEwtDatenFuerZuordnung from '@/shared/lib/ressource/getEwtDatenFuerZuordnung';
 import { default as applySelectOptions } from '@/shared/ui/form/applySelectOptions';
 import type { CustomHTMLDivElement, IDatenEA, IDatenEWT } from '@/types';
 import Storage from '@/shared/lib/storage/Storage';
@@ -77,7 +77,7 @@ export default function EditorModalEA(row: CustomTable<IDatenEA> | Row<IDatenEA>
     datum = dayjs([Jahr, Monat, checkMaxTag(Jahr, Monat)]);
   } else throw new Error('unbekannter Fehler');
 
-  const dataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag', excludeDeleted: true });
+  const dataE = getEwtDatenFuerZuordnung('ea', { scope: 'monat', filter: 'starttag', excludeDeleted: true });
   const ewtMap = new Map<string, IDatenEWT>(dataE.filter(e => e._id).map(e => [e._id as string, e]));
 
   const currentEwtRef = row instanceof Row ? row.cells.EWT : undefined;
@@ -222,7 +222,7 @@ export default function EditorModalEA(row: CustomTable<IDatenEA> | Row<IDatenEA>
     if (resource !== 'EWT' && resource !== 'all') return;
     const select = form.querySelector<HTMLSelectElement>('#ewtRefSelect');
     if (!select) return;
-    const freshDataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag', excludeDeleted: true });
+    const freshDataE = getEwtDatenFuerZuordnung('ea', { scope: 'monat', filter: 'starttag', excludeDeleted: true });
     applySelectOptions(select, buildEwtOptions(freshDataE));
     // Der gewählte EWT-Eintrag kann sich bei offenem Modal geändert haben (z.B. Beginn/Ende) — Dauer
     // daher erneut übernehmen.

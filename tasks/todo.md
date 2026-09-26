@@ -194,6 +194,29 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
       `syncFieldsFromEwtRows`, `unlinkEwtRefs` in `shared/lib/ressource`), BE/BZ-Verknüpfung, Berechnung/PDF/Admin-
       Kataloge mit fehlendem Modul. Abhängigkeiten deklarativ machen (z. B. `meta.benoetigt: ['ewt']`, Hinweis in UI
       und Einstellungen statt stillem Ausfall); Abnahmetest je Teilmenge (erweitert `test/app/featureAbnahme.test.tsx`).
+  - Analyse (2026-09-26): `ber` ist unabhaengig, kein Modul importiert ein anderes (ESLint). Nur `ez`/`ea` haengen an `ewt`
+    (Tag-Schnellauswahl, EWT-Zuordnung, Dauer-/Zeiten-Sync per `ewt:*`-Events). Entscheidung User: **weiche** Abhaengigkeit --
+    `ez`/`ea` laufen ohne `ewt` manuell weiter, EWT-Zuordnung/Schnellauswahl entfallen ohne Fehlermeldung.
+  - [x] Registry: `meta.benoetigt?: readonly string[]` (weich) + `featureRegistry.fehlende(id)`; `ez`/`ea` deklarieren `['ewt']`
+  - [x] Helfer `getEwtDatenFuerZuordnung(featureId, options)` in `shared/lib/ressource`: `[]`, wenn `ewt` fehlt (auch bei Alt-Daten in `dataE`); in `ez`/`ea` Add-/Editor-Modals statt `getEwtDaten`
+  - [x] `createAddModalNeben`: ohne `ewt` direkt manuelle Zeile statt Schnellauswahl/Snackbar-Fehler
+  - [x] Tests: Registry (`fehlende`), Helfer, `featureAbnahme` (ohne `ewt`: `benoetigt`-Ids, Add-Modal manuell, kein EWT-Select), `createAddModalEA.test.tsx` anpassen
+  - [x] Doku (`CLAUDE.md` Feature-Contract), CHANGELOG 189; Gate: typecheck 0, lint 0, Tests 2296/2296, format, build i.o. (2026-09-26)
+  - [ ] Browser-Check (User): `ewt`-Zeile in `app/features.ts` entfernen → Zulagen/EA ohne Zuordnung nutzbar, "Hinzufügen" in Zulagen öffnet manuelle Zeile
+- [ ] Feature-Logik nur bei den Features (Audit 2026-09-26; Feature-Code, der noch in `shared`/`pages`/`app` liegt).
+      Schritt A (Punkte 1-5, ein Zug, mechanisch) -- Budget: L (viele Dateien, kein Verhaltenswechsel)
+  - [ ] A1 `shared/lib/ressource/fieldMapper.ts`: `bz/be/ewt/nebengeld/ea` `From`/`ToBackend` + `Backend*`-Typen -> je `features/<id>/model/backendMapper.ts`; User-/Vorgaben-/Arbeitszeit-Mapping bleibt (`nebengeldZulagen` zieht mit nach `features/ez`, falls kein anderer Nutzer)
+  - [ ] A2 `shared/api/dataApi.ts`: `bereitschaftszeitraumApi`/`bereitschaftseinsatzApi`/`ewtApi`/`nebengeldApi`/`eaApi` -> je `features/<id>/model/api.ts`; `profileApi`/`vorgabenApi`/`loadAllYearData` bleiben (Jahres-Laden geht ueber `meta.resources[].api`); Ressourcennamen-Union in `apiFetchHelper.ts` pruefen
+  - [ ] A3 `shared/lib/date/getMonatFromItem.ts`: `getMonatFromBZ/BE/EWT/N/EA` -> je Feature `lib`/`model`; `isEwtInMonat` mit `getEwtDaten` klaeren
+  - [ ] A4 `shared/lib/autosave/overlapGuard.ts` + `autoSave.ts`: `FeatureResource.overlapFenster?(cells)` in `meta`, Kopie `getEwtWindowLocal` entfaellt (nutzt `features/ewt/model/getEwtWindow.ts`); `resource === 'EWT'`-Sonderfall (`ewt:deleted`) und `resourceStates`-Keys aus der Registry
+  - [ ] A5 `app/session/loadUserDaten.ts`: feste Ressourcen-Map `BZ/BE/EWT/N/EA` fuer `aktualisiereBerechnung` aus `featureRegistry.resources()`
+  - [ ] A6 Tests mitziehen (Importpfade, `mock.module`-Strings per grep), `featureAbnahme` weiter gruen; Gate typecheck/lint/test/build/format; CHANGELOG; Browser-Check (User: Laden, Speichern, Ueberschneidungs-Fehler BZ/EWT, EWT loeschen -> EZ/EA-Verweise)
+  Folgeschritte (getrennt, je eigener Commit):
+  - [ ] B Admin-Profilvorlagen (Audit Punkt 6): fest verdrahtete Abschnitte in `AdminProfileTemplateContentEditor.tsx`/`profileTemplates.shared.ts`/`adminProfileTemplatesManagerGemeinsam.ts` (`VorgabenB`+Bereitschaft/Nachtschicht=ber, `Fahrzeit`=ewt, `benoetigteZulagen`=ez, Taetigkeit/Entgeltgruppe=ea) als Slot in `pages/admin/features/<id>/` (war in P1g vorgesehen, nicht umgesetzt)
+  - [ ] C Feld `Entgeltgruppe` (Audit Punkt 7): aus `PersoenlicheDatenPanel.tsx`/`saveEinstellungen.ts`/`generateEingabeMaskeEinstellungen.ts` in einen `einstellungen`-Teil von `ea` (ea hat noch keinen)
+  - [ ] D Admin-Ressourcenbrowser (Punkt 8): `TIME_STRING_FIELDS`/`DATE_ONLY_FIELDS` in `adminResourceBrowserGemeinsam.ts` je Feature in `AdminResourceConfig` (`zeitFelder`, `nurDatumFelder`)
+  - [ ] E Typ-Literale (Punkt 9, bewusst, nur pruefen): `FeaturePdfModus`, `FormularCode`, Storage-Enum, `IBerechnungMonatsErgebnis`-Felder -- Scaffold `bun run new-feature` weist darauf hin bzw. erweitert sie
+  - Bewusst in shared (Audit): `resolveSchichtDay`/`arbeitszeit-editor`, `zulagenCatalog`, `berechnungWerte`/`-Bausteine`, `confirmDeleteAllRows`, `resourceApi`, `createDatenGetter`, ewt-Zugriff fuer ez/ea (`getEwtDaten`, `getEwtDatenFuerZuordnung`, `syncFieldsFromEwtRows`, `unlinkEwtRefs`, Events `ewt:*`)
 
 ---
 

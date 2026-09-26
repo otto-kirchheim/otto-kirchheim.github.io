@@ -156,6 +156,12 @@ describe('(b) Entfernbarkeit: jede Teilmenge des Manifests', () => {
         expect(container.querySelector(`#quick-${meta.legacy.navId}`), `Schnellzugriff ${meta.id}`).toBeNull();
       }
 
+      // Weiche Abhaengigkeiten: fehlende Features werden gemeldet, nichts wirft.
+      for (const { meta } of aktiv) {
+        const erwartet = (meta.benoetigt ?? []).filter(id => !namen.includes(id));
+        expect(featureRegistry.fehlende(meta.id), `Abhaengigkeiten ${meta.id}`).toEqual(erwartet);
+      }
+
       // Ressourcen, PDF-Modus und Hilfe kommen nur von vorhandenen Features.
       expect(resourceKeys()).toEqual(aktiv.flatMap(definition => definition.meta.resources.map(r => r.key)));
       for (const { meta } of entfernt) {

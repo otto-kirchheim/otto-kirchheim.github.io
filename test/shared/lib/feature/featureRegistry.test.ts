@@ -232,4 +232,18 @@ describe('featureRegistry', () => {
     expect(loadEvents).toHaveBeenCalledTimes(2);
     error.mockRestore();
   });
+  it('fehlende: nennt benoetigte Features, die nicht im Manifest stehen (weiche Abhaengigkeit)', () => {
+    featureRegistry.define({ meta: { ...meta('ez', 3), benoetigt: ['ewt', 'ber'] }, parts: {} });
+    featureRegistry.define({ meta: meta('ber', 1), parts: {} });
+    expect(featureRegistry.fehlende('ez')).toEqual(['ewt']);
+
+    featureRegistry.define({ meta: meta('ewt', 2), parts: {} });
+    expect(featureRegistry.fehlende('ez')).toEqual([]);
+  });
+
+  it('fehlende: leer ohne Deklaration und fuer unbekannte Features', () => {
+    featureRegistry.define({ meta: meta('ber', 1), parts: {} });
+    expect(featureRegistry.fehlende('ber')).toEqual([]);
+    expect(featureRegistry.fehlende('gibt-es-nicht')).toEqual([]);
+  });
 });

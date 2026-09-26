@@ -133,6 +133,11 @@ export interface FeatureMeta {
   pdf?: FeaturePdfMeta;
   /** Events, die das Feature auch ohne gemounteten Tab verarbeiten muss (Teil `events` wird dafuer geladen). */
   wakeOn?: readonly EventChannel[];
+  /**
+   * Features, mit denen dieses Feature Daten verknuepft (`id`s). Weiche Abhaengigkeit: fehlt eines im Manifest, laeuft das
+   * Feature manuell weiter; die Verknuepfung wird ausgeblendet (`featureRegistry.fehlende`, kein Import des anderen Moduls).
+   */
+  benoetigt?: readonly string[];
   /** Hilfe-Schluessel des Features (`tab.<tabKey>`, `modal.…`); die Texte liefert der lazy Teil `help`. Bestimmt, welches Feature einen Schluessel besitzt. */
   helpKeys?: readonly string[];
 }
@@ -315,6 +320,16 @@ class FeatureRegistry {
    */
   meta(id: string): FeatureMeta | undefined {
     return this.definitions.get(id)?.meta;
+  }
+
+  /**
+   * Liefert die `id`s der von einem Feature benoetigten (`meta.benoetigt`), aber nicht im Manifest stehenden Features.
+   *
+   * @param id - Feature-`id`.
+   * @returns Fehlende `id`s; leer, wenn alles vorhanden ist oder das Feature keine Abhaengigkeit deklariert.
+   */
+  fehlende(id: string): string[] {
+    return (this.meta(id)?.benoetigt ?? []).filter(benoetigt => !this.definitions.has(benoetigt));
   }
 
   /** Entfernt alle Definitionen und Caches (nur fuer Tests; die Lifecycle-Registry raeumt der Test selbst). */

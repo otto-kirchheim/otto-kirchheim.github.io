@@ -118,7 +118,7 @@ Jedes Modul trennt einen kleinen eager Teil von lazy nachladbaren Teilen:
 
 ```
 features/ber/          # meta.id = 'ber'
-├── meta.ts            # FeatureMeta: id, label, icon, order, legacy-Mapping (Tab/Storage/Formular-Codes), helpKeys, resources[] -- eager, kein Chunk
+├── meta.ts            # FeatureMeta: id, label, icon, order, legacy-Mapping (Tab/Storage/Formular-Codes), helpKeys, benoetigt (weiche Abhaengigkeit, z. B. ez/ea -> ewt), resources[] -- eager, kein Chunk
 ├── parts/             # je Slot ein Lazy-Chunk, in app/features.ts per `() => import(...)` registriert
 │   ├── ui.tsx         # Tab-Komponente
 │   ├── data.ts        # getDaten/applyDaten/monatFilter je Ressource
