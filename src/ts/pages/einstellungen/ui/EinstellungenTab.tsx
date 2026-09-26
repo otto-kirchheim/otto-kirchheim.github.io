@@ -42,9 +42,6 @@ function Abschnitt({
 }) {
   const offen = useOffenenAbschnitt() === id;
   return (
-    // `Abschnitt` wird nur unterhalb des `DBAccordion` in `EinstellungenTab` gerendert; die
-    // statische Regel sieht die Komponentengrenze nicht.
-    // eslint-disable-next-line db-ux/sub-component-required-parent
     <DBAccordionItem
       id={id}
       className={versteckt ? 'd-none' : undefined}

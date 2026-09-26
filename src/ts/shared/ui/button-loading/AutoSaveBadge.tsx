@@ -114,6 +114,10 @@ const AutoSaveBadge: FC<TAutoSaveBadge> = ({ resources }) => {
   }
 
   return (
+    // Eck-Badge nur mit Icon: der zugaengliche Name kommt aus `label` (bei `corner-*` das aria-label), das die Regel
+    // (seit core-eslint-plugin 5.6 zaehlt `DBIcon` nicht mehr als Inhalt) nicht auswertet. Sichtbarer `text` passt
+    // nicht in die Ecke.
+    // eslint-disable-next-line db-ux/text-or-children-required
     <DBBadge
       className={`autosave-badge${status === 'saving' ? ' autosave-pulse' : ''}`}
       placement="corner-top-right"

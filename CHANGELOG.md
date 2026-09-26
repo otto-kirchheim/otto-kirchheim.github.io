@@ -2,6 +2,24 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-26 (191)
+
+### chore (DB UX 5.6.0 / db-theme 6.3.0)
+
+- `@db-ux/core-components`, `core-foundations`, `react-core-components`, `core-eslint-plugin` 5.5.0 -> 5.6.0,
+  `agent-cli`/`core-stylelint` ^5.6.0, `db-theme` 6.2.0 -> 6.3.0 (neue Icons, `db-theme-icons` 4.3.0).
+- Anpassungen an Breaking Changes: DB benennt die Titel-Huelle im Drawer-Kopf `db-drawer-header-container` ->
+  `db-drawer-header-content` -- unser nachgebautes Kopf-Markup in `MyModalHeader.tsx` und `signaturDialog.ts` zieht
+  mit (Titelgroesse bleibt 20px/fett ueber `styles.scss`, im Browser geprueft). `DBDrawer.onClose` feuert jetzt auf dem
+  nativen `close`-Event; `showModal`/Impressum/Admin-Dialoge werten das Event nicht aus, keine Aenderung noetig.
+- ESLint-Plugin 5.6: `text-or-children-required` zaehlt `DBIcon` nicht mehr als Inhalt -> `AutoSaveBadge` (Eck-Badge,
+  Name ueber `label`) mit begruendetem Disable; `sub-component-required-parent` erkennt die Accordion-Unterkomponenten
+  jetzt selbst -> zwei ueberfluessige Disables entfernt.
+- Neu verfuegbar, nicht eingesetzt: `DBDialog` (zentrierter nativer Dialog; Kandidat fuer `showModal`, eigener Task),
+  `DBPagination`, `DBLoadingIndicator`.
+- Gate: typecheck 0, lint 0, `lint:css` 87 Warnungen (unveraendert), Tests 2296/2296, build i.o., `icons:gen` ohne
+  Aenderung, Livetest 27/27.
+
 ## 2026-09-26 (190)
 
 ### refactor (Feature-Logik aus `shared`/`app` in die Features, Audit Schritt A)

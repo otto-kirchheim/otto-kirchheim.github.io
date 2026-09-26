@@ -90,7 +90,7 @@ function signaturEntscheidung(cachedPng: string | null): Promise<SignaturWahl> {
     modal.innerHTML = `
       <div class="dialog-rumpf">
         <div class="db-drawer-header">
-          <header class="db-drawer-header-container">
+          <header class="db-drawer-header-content">
             <h5>Unterschrift</h5>
           </header>
           <button

@@ -53,9 +53,6 @@ function MonatsKarte({
     );
 
   return (
-    // `MonatsKarte` wird nur von `BerechnungMobileCards` unterhalb des `DBAccordion` gerendert; die
-    // statische Regel sieht die Komponentengrenze nicht.
-    // eslint-disable-next-line db-ux/sub-component-required-parent
     <DBAccordionItem
       id={collapseId}
       open={offen}

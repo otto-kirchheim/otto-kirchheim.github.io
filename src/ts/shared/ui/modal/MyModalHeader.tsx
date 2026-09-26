@@ -30,7 +30,7 @@ const MyModalHeader: FC<{ title: string; helpContext?: HelpContextKey }> = ({ ti
 
   return (
     <div className="db-drawer-header" ref={kopfRef}>
-      <header className="db-drawer-header-container">
+      <header className="db-drawer-header-content">
         <DBHeadingH2 paragraphSpacing id={ueberschriftId}>
           {title}
         </DBHeadingH2>
