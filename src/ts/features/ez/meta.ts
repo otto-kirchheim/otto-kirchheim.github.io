@@ -1,12 +1,11 @@
 import type { FeatureMeta } from '@/shared/lib/feature';
-import { nebengeldApi } from '@/shared/api/apiService';
 import { createResourceApi } from '@/shared/api/resourceApi';
 import { periodFromDate } from '@/shared/lib/date/periodFromDate';
-import { nebengeldFromBackend } from '@/shared/lib/ressource/fieldMapper';
-import { getMonatFromN } from '@/shared/lib/date/getMonatFromItem';
+import { nebengeldApi, nebengeldFromBackend } from './model/backend';
+import { getMonatFromN } from './model/monat';
 import type { IDatenN } from '@/types';
 
-/** Eager gehaltene Beschreibung des Features EZ (Erschwerniszulagen, bisher Neben); kein Feature-Code importieren. */
+/** Eager gehaltene Beschreibung des Features EZ (Erschwerniszulagen, bisher Neben); nur kleine, UI-freie Helfer aus `model/` importieren (Backend-Mapper, Monat, Zeitfenster). */
 export const ezMeta: FeatureMeta = {
   id: 'ez',
   label: 'Zulagen',

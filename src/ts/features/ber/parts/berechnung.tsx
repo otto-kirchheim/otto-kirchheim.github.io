@@ -3,7 +3,7 @@ import type { FeatureParts } from '@/shared/lib/feature';
 import type { IBerechnungMonatsErgebnis, IDatenBE, IDatenBZ, IVorgabenBerechnungMonat } from '@/types';
 import { currency, formatCurrency, timeConvert } from '@/shared/lib/ressource/berechnungWerte';
 import dayjs from '@/shared/lib/date/configDayjs';
-import { getMonatFromBE, getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
+import { getMonatFromBE, getMonatFromBZ } from '../model/monat';
 import { DetailZeile, GruppenTitel } from '@/shared/ui/berechnung/berechnungBausteine';
 
 type Bucket = IVorgabenBerechnungMonat['B'];

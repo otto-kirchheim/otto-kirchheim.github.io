@@ -20,16 +20,11 @@ vi.mock('@/shared/api/abortController', () => ({
   abortController: { signal: new AbortController().signal, reset: vi.fn() },
 }));
 
-import {
-  authApi,
-  bereitschaftseinsatzApi,
-  bereitschaftszeitraumApi,
-  ewtApi,
-  loadAllYearData,
-  nebengeldApi,
-  profileApi,
-  vorgabenApi,
-} from '@/shared/api/apiService';
+import { authApi, loadAllYearData, profileApi, vorgabenApi } from '@/shared/api/apiService';
+// Endpunkte der Feature-Ressourcen (`createResourceEndpoints`), je Feature in `model/backend.ts`.
+import { bereitschaftseinsatzApi, bereitschaftszeitraumApi } from '@/features/ber/model/backend';
+import { ewtApi } from '@/features/ewt/model/backend';
+import { nebengeldApi } from '@/features/ez/model/backend';
 
 // ─── Hilfsfunktionen ─────────────────────────────────────
 

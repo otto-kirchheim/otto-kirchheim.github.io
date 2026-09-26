@@ -11,9 +11,9 @@ import { default as Storage } from '@/shared/lib/storage/Storage';
 import { default as clearLoading } from '@/shared/ui/button-loading/clearLoading';
 import { default as setLoading } from '@/shared/ui/button-loading/setLoading';
 import { default as tableToArray } from '@/shared/lib/ressource/tableToArray';
-import { bereitschaftszeitraumApi } from '@/shared/api/apiService';
+import { bereitschaftszeitraumApi } from './backend';
 import dayjs from '@/shared/lib/date/configDayjs';
-import { getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
+import { getMonatFromBZ } from './monat';
 
 /**
  * Berechnet aus dem Modal neue Bereitschaftszeiträume und schreibt sie in Storage und Tabelle. Bei Monatswechsel wird der Folgemonat mitberechnet; bei Jahreswechsel wird er sofort per Bulk-API gespeichert (offline nur ohne Wechsel möglich).

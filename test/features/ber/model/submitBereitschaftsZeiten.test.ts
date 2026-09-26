@@ -30,7 +30,7 @@ vi.mock('@/shared/ui/button-loading/setLoading', () => ({ default: setLoadingMoc
 vi.mock('@/shared/ui/button-loading/clearLoading', () => ({ default: clearLoadingMock }));
 vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
 vi.mock('@/shared/lib/events/appEvents', () => ({ publishEvent: publishDataChangedMock }));
-vi.mock('@/shared/api/apiService', () => ({
+vi.mock('@/features/ber/model/backend', () => ({
   bereitschaftszeitraumApi: { loadYear: apiLoadYearMock, bulk: apiBulkMock },
 }));
 

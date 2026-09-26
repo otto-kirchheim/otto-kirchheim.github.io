@@ -2,8 +2,8 @@ import { unwrapEnvelope } from '@/shared/types/api';
 import type { ApiHttpResponse } from '@/shared/types/api';
 import { FetchRetry } from './FetchRetry';
 
-export type ResourceName =
-  'bereitschaftszeitraum' | 'bereitschaftseinsatz' | 'einsatzwechseltaetigkeit' | 'nebengeld' | 'ea';
+/** API-Pfadsegment einer Ressource (z. B. `nebengeld`); die Features legen es in `model/backend.ts` fest. */
+export type ResourceName = string;
 
 /** Bulk-Operation Request */
 export interface BulkRequest<TCreate = unknown, TUpdate = unknown> {

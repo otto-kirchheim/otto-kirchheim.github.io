@@ -1,37 +1,11 @@
-import type { Dayjs } from 'dayjs';
-import type { IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN, TEwtFilter } from '@/types';
+/**
+ * Monatsermittlung, die mehrere Features brauchen: EWT (auch fuer die Zuordnung in EZ/EA, siehe `getEwtDaten`), der
+ * `Tag`-Parser von EZ/EA und `filterByMonat`. Die Monatsermittlung je Ressource liegt sonst im Feature (`model/monat.ts`).
+ */
+
+import type { IDatenEWT, TEwtFilter } from '@/types';
 import dayjs from './configDayjs';
 import Storage from '../storage/Storage';
-
-/**
- * Monat (1-12) eines Datums.
- *
- * @param value - Datum als String oder Dayjs.
- * @returns Monat, 1 = Januar.
- */
-function toMonat(value: string | Dayjs): number {
-  return dayjs(value).month() + 1;
-}
-
-/**
- * Monat eines Bereitschaftszeitraums (`Beginn`).
- *
- * @param item - Bereitschaftszeitraum.
- * @returns Monat (1-12).
- */
-export function getMonatFromBZ(item: IDatenBZ): number {
-  return toMonat(item.Beginn as string | Dayjs);
-}
-
-/**
- * Monat eines Bereitschaftseinsatzes (`Tag` im Format `DD.MM.YYYY`).
- *
- * @param item - Bereitschaftseinsatz.
- * @returns Monat (1-12).
- */
-export function getMonatFromBE(item: IDatenBE): number {
-  return dayjs(item.Tag, 'DD.MM.YYYY').month() + 1;
-}
 
 /**
  * Monat des Starttags einer EWT (`Tag`).
@@ -75,7 +49,7 @@ export function isEwtInMonat(item: IDatenEWT, monat: number, mode: TEwtFilter = 
  * @param tag - Wert des Feldes `Tag`.
  * @returns Monat (1-12).
  */
-function monatAusTag(tag: string): number {
+export function monatAusTag(tag: string): number {
   const parsedDate = dayjs(tag, 'DD.MM.YYYY', true);
   if (parsedDate.isValid()) return parsedDate.month() + 1;
 
@@ -84,26 +58,6 @@ function monatAusTag(tag: string): number {
   }
 
   return dayjs(tag).month() + 1;
-}
-
-/**
- * Monat einer Nebengeld-Zeile (`Tag`, siehe `monatAusTag`).
- *
- * @param item - Nebengeld-Zeile.
- * @returns Monat (1-12).
- */
-export function getMonatFromN(item: IDatenN): number {
-  return monatAusTag(item.Tag);
-}
-
-/**
- * Monat einer Entgeltausgleich-Zeile (`Tag`, siehe `monatAusTag`).
- *
- * @param item - Entgeltausgleich-Zeile.
- * @returns Monat (1-12).
- */
-export function getMonatFromEA(item: IDatenEA): number {
-  return monatAusTag(item.Tag);
 }
 
 /**

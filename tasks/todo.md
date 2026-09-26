@@ -205,12 +205,20 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
   - [ ] Browser-Check (User): `ewt`-Zeile in `app/features.ts` entfernen → Zulagen/EA ohne Zuordnung nutzbar, "Hinzufügen" in Zulagen öffnet manuelle Zeile
 - [ ] Feature-Logik nur bei den Features (Audit 2026-09-26; Feature-Code, der noch in `shared`/`pages`/`app` liegt).
       Schritt A (Punkte 1-5, ein Zug, mechanisch) -- Budget: L (viele Dateien, kein Verhaltenswechsel)
-  - [ ] A1 `shared/lib/ressource/fieldMapper.ts`: `bz/be/ewt/nebengeld/ea` `From`/`ToBackend` + `Backend*`-Typen -> je `features/<id>/model/backendMapper.ts`; User-/Vorgaben-/Arbeitszeit-Mapping bleibt (`nebengeldZulagen` zieht mit nach `features/ez`, falls kein anderer Nutzer)
-  - [ ] A2 `shared/api/dataApi.ts`: `bereitschaftszeitraumApi`/`bereitschaftseinsatzApi`/`ewtApi`/`nebengeldApi`/`eaApi` -> je `features/<id>/model/api.ts`; `profileApi`/`vorgabenApi`/`loadAllYearData` bleiben (Jahres-Laden geht ueber `meta.resources[].api`); Ressourcennamen-Union in `apiFetchHelper.ts` pruefen
-  - [ ] A3 `shared/lib/date/getMonatFromItem.ts`: `getMonatFromBZ/BE/EWT/N/EA` -> je Feature `lib`/`model`; `isEwtInMonat` mit `getEwtDaten` klaeren
-  - [ ] A4 `shared/lib/autosave/overlapGuard.ts` + `autoSave.ts`: `FeatureResource.overlapFenster?(cells)` in `meta`, Kopie `getEwtWindowLocal` entfaellt (nutzt `features/ewt/model/getEwtWindow.ts`); `resource === 'EWT'`-Sonderfall (`ewt:deleted`) und `resourceStates`-Keys aus der Registry
-  - [ ] A5 `app/session/loadUserDaten.ts`: feste Ressourcen-Map `BZ/BE/EWT/N/EA` fuer `aktualisiereBerechnung` aus `featureRegistry.resources()`
-  - [ ] A6 Tests mitziehen (Importpfade, `mock.module`-Strings per grep), `featureAbnahme` weiter gruen; Gate typecheck/lint/test/build/format; CHANGELOG; Browser-Check (User: Laden, Speichern, Ueberschneidungs-Fehler BZ/EWT, EWT loeschen -> EZ/EA-Verweise)
+  - [x] A1 `shared/lib/ressource/fieldMapper.ts`: `bz/be/ewt/nebengeld/ea` `From`/`ToBackend` + `Backend*`-Typen -> je `features/<id>/model/backendMapper.ts`; User-/Vorgaben-/Arbeitszeit-Mapping bleibt (`nebengeldZulagen` zieht mit nach `features/ez`, falls kein anderer Nutzer)
+  - [x] A2 `shared/api/dataApi.ts`: `bereitschaftszeitraumApi`/`bereitschaftseinsatzApi`/`ewtApi`/`nebengeldApi`/`eaApi` -> je `features/<id>/model/api.ts`; `profileApi`/`vorgabenApi`/`loadAllYearData` bleiben (Jahres-Laden geht ueber `meta.resources[].api`); Ressourcennamen-Union in `apiFetchHelper.ts` pruefen
+  - [x] A3 `shared/lib/date/getMonatFromItem.ts`: `getMonatFromBZ/BE/EWT/N/EA` -> je Feature `lib`/`model`; `isEwtInMonat` mit `getEwtDaten` klaeren
+  - [x] A4 `shared/lib/autosave/overlapGuard.ts` + `autoSave.ts`: `FeatureResource.overlapFenster?(cells)` in `meta`, Kopie `getEwtWindowLocal` entfaellt (nutzt `features/ewt/model/getEwtWindow.ts`); `resource === 'EWT'`-Sonderfall (`ewt:deleted`) und `resourceStates`-Keys aus der Registry
+  - [x] A5 `app/session/loadUserDaten.ts`: feste Ressourcen-Map `BZ/BE/EWT/N/EA` fuer `aktualisiereBerechnung` aus `featureRegistry.resources()`
+  - [x] A6 Tests mitziehen (Importpfade, `mock.module`-Strings per grep), `featureAbnahme` weiter gruen; Gate typecheck/lint/test/build/format; CHANGELOG; Browser-Check (User: Laden, Speichern, Ueberschneidungs-Fehler BZ/EWT, EWT loeschen -> EZ/EA-Verweise)
+    Stand 2026-09-26: A1-A5 umgesetzt (CHANGELOG 190). Abweichungen: API-Objekte per `createResourceEndpoints` statt
+    Einzel-Kopien; EWT-Monatsfunktionen bleiben in shared (Grundlage von `getEwtDaten`); `onDeleted`/`overlapWindow` als
+    neue `FeatureResource`-Felder. Gate: typecheck 0, lint 0, Tests 2296/2296, format, build i.o. Browser-Check per `bun scripts/livetest.ts`
+    (Puppeteer + Fake-Backend, Dev-Server :8080): 26/26 (Login/Laden, Mapper, Monatsfilter, Berechnung, Overlap BZ/EWT,
+    EWT loeschen -> Verweise EZ/EA geloest).
+    Gegen das lokale Backend (`--backend http://localhost:8081/api/v2`, Benutzer `livetest-fsd`, DB DEV2): 27/27, Daten
+    danach wieder leer. Konsole: `Einstellungen sammeln fehlgeschlagen: Persoenliche Daten fehlerhaft` beim Speichern --
+    Vorlage `kirchheim` liefert 7-stellige PNummer, Feld verlangt 8 (vorbestehend, nicht Teil von A).
   Folgeschritte (getrennt, je eigener Commit):
   - [ ] B Admin-Profilvorlagen (Audit Punkt 6): fest verdrahtete Abschnitte in `AdminProfileTemplateContentEditor.tsx`/`profileTemplates.shared.ts`/`adminProfileTemplatesManagerGemeinsam.ts` (`VorgabenB`+Bereitschaft/Nachtschicht=ber, `Fahrzeit`=ewt, `benoetigteZulagen`=ez, Taetigkeit/Entgeltgruppe=ea) als Slot in `pages/admin/features/<id>/` (war in P1g vorgesehen, nicht umgesetzt)
   - [ ] C Feld `Entgeltgruppe` (Audit Punkt 7): aus `PersoenlicheDatenPanel.tsx`/`saveEinstellungen.ts`/`generateEingabeMaskeEinstellungen.ts` in einen `einstellungen`-Teil von `ea` (ea hat noch keinen)

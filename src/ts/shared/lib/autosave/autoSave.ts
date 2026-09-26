@@ -17,7 +17,7 @@ import Storage from '../storage/Storage';
 import type { TStorageData } from '../storage/Storage';
 import dayjs from '@/shared/lib/date/configDayjs';
 import mergeVisibleResourceRows from '@/shared/lib/ressource/mergeVisibleResourceRows';
-import { resourceKeys, storageKeyOf, tableIdOf } from '@/shared/lib/ressource/resourceConfig';
+import { resourceDef, resourceKeys, storageKeyOf, tableIdOf } from '@/shared/lib/ressource/resourceConfig';
 import { mapCreatedIdsByClientRequestId, mapCreatedIdsByContent } from './changeTracking';
 import { applyServerRowsToTable, collectRowErrorMatches, findTable, sendBulk } from './savePipeline';
 import {
@@ -56,56 +56,39 @@ type StatusListener = (resource: TResourceKey, status: TSaveStatus, error?: stri
 
 // ─── State ───────────────────────────────────────────────
 
-const resourceStates: Record<TResourceKey, ResourceState> = {
-  BZ: {
-    timer: null,
-    status: 'idle',
-    lastSaved: null,
-    lastError: null,
-    queuedDuringSave: false,
-    skipNextSavingSchedule: false,
-  },
-  BE: {
-    timer: null,
-    status: 'idle',
-    lastSaved: null,
-    lastError: null,
-    queuedDuringSave: false,
-    skipNextSavingSchedule: false,
-  },
-  EWT: {
-    timer: null,
-    status: 'idle',
-    lastSaved: null,
-    lastError: null,
-    queuedDuringSave: false,
-    skipNextSavingSchedule: false,
-  },
-  N: {
-    timer: null,
-    status: 'idle',
-    lastSaved: null,
-    lastError: null,
-    queuedDuringSave: false,
-    skipNextSavingSchedule: false,
-  },
-  EA: {
-    timer: null,
-    status: 'idle',
-    lastSaved: null,
-    lastError: null,
-    queuedDuringSave: false,
-    skipNextSavingSchedule: false,
-  },
-  settings: {
-    timer: null,
-    status: 'idle',
-    lastSaved: null,
-    lastError: null,
-    queuedDuringSave: false,
-    skipNextSavingSchedule: false,
-  },
-};
+/** Zustand je Ressource; wird beim ersten Zugriff angelegt (Ressourcen kommen aus den angemeldeten Features). */
+const resourceStates = new Map<TResourceKey, ResourceState>();
+
+/**
+ * Liefert den Zustand einer Ressource und legt ihn beim ersten Zugriff an.
+ *
+ * @param resource - Ressource.
+ * @returns Veraenderbarer Zustand.
+ */
+function stateOf(resource: TResourceKey): ResourceState {
+  let state = resourceStates.get(resource);
+  if (!state) {
+    state = {
+      timer: null,
+      status: 'idle',
+      lastSaved: null,
+      lastError: null,
+      queuedDuringSave: false,
+      skipNextSavingSchedule: false,
+    };
+    resourceStates.set(resource, state);
+  }
+  return state;
+}
+
+/**
+ * Alle Ressourcen mit Zustand: Einstellungen plus die Ressourcen der angemeldeten Features.
+ *
+ * @returns Ressourcen-Schluessel.
+ */
+function alleRessourcen(): TResourceKey[] {
+  return ['settings', ...resourceKeys()];
+}
 
 const statusListeners: StatusListener[] = [];
 
@@ -119,7 +102,7 @@ const statusListeners: StatusListener[] = [];
  * @param error - Fehlermeldung (nur bei `error`).
  */
 function setStatus(resource: TResourceKey, status: TSaveStatus, error?: string): void {
-  const state = resourceStates[resource];
+  const state = stateOf(resource);
   state.status = status;
   if (status === 'saved') state.lastSaved = Date.now();
   if (status === 'error') state.lastError = error ?? 'Unbekannter Fehler';
@@ -210,7 +193,7 @@ export function onAutoSaveStatus(listener: StatusListener): () => void {
  * @returns Kopie des Zustands (Status, letzter Speicherzeitpunkt, letzter Fehler).
  */
 export function getResourceStatus(resource: TResourceKey): ResourceState {
-  return { ...resourceStates[resource] };
+  return { ...stateOf(resource) };
 }
 
 /**
@@ -220,8 +203,8 @@ export function getResourceStatus(resource: TResourceKey): ResourceState {
  * @param resetStatus - `false` lässt den Status unverändert.
  */
 export function cancelAllPending(resetStatus = true): void {
-  for (const key of Object.keys(resourceStates) as TResourceKey[]) {
-    const state = resourceStates[key];
+  for (const key of alleRessourcen()) {
+    const state = stateOf(key);
     if (state.timer) {
       clearTimeout(state.timer);
       state.timer = null;
@@ -245,7 +228,7 @@ export async function flushAll(): Promise<void> {
   for (const key of resourceKeys()) {
     if (hasPendingResourceChanges(key, true)) {
       promises.push(saveResourceNow(key, true));
-    } else if (resourceStates[key].status === 'pending') {
+    } else if (stateOf(key).status === 'pending') {
       setStatus(key, 'idle');
     }
   }
@@ -320,7 +303,7 @@ export function createOnChangeHandler<T extends CustomTableTypes>(
 export function scheduleAutoSave(resource: TResourceKey): void {
   if (!autoSaveEnabled) return;
 
-  const state = resourceStates[resource];
+  const state = stateOf(resource);
 
   if (state.status === 'saving') {
     if (state.skipNextSavingSchedule) {
@@ -385,7 +368,7 @@ export async function flushResource(resource: TResourceKey): Promise<void> {
  * @returns Promise, das nach Abschluss erfüllt wird; Fehler landen im Status.
  */
 async function saveResourceNow(resource: TResourceKey, includeDeletes = false): Promise<void> {
-  const state = resourceStates[resource];
+  const state = stateOf(resource);
 
   if (!navigator.onLine) {
     setStatus(resource, 'pending');
@@ -468,10 +451,8 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
       if (uncommitted.length > 0 && typeof table.drawRows === 'function') table.drawRows();
     }
 
-    // Verknuepfte Features (EZ, EA) loesen ihre EWT-Verweise auf die geloeschten Ids, auch ohne gemounteten Tab.
-    if (resource === 'EWT' && includeDeletes && result.deleted.length > 0) {
-      publishEvent('ewt:deleted', { ids: result.deleted });
-    }
+    // Feature-Reaktion auf serverseitig geloeschte Zeilen (z. B. EWT: Verweise in EZ/EA loesen).
+    if (includeDeletes && result.deleted.length > 0) resourceDef(resource).onDeleted?.(result.deleted);
 
     updateLocalStorage(resource, table);
     state.skipNextSavingSchedule = true;
@@ -532,7 +513,7 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
  * @returns Promise, das nach Abschluss erfüllt wird; Fehler landen im Status.
  */
 async function saveSettingsNow(): Promise<void> {
-  const state = resourceStates.settings;
+  const state = stateOf('settings');
 
   if (!navigator.onLine) {
     setStatus('settings', 'pending');
@@ -580,8 +561,8 @@ function registerOnlineRetry(): void {
     () => {
       onlineListenerRegistered = false;
       console.log('[AutoSave] Wieder online – starte ausstehende Saves');
-      for (const key of Object.keys(resourceStates) as TResourceKey[]) {
-        if (resourceStates[key].status === 'pending') {
+      for (const key of alleRessourcen()) {
+        if (stateOf(key).status === 'pending') {
           scheduleAutoSave(key);
         }
       }
@@ -606,7 +587,7 @@ export function markResourceSaved(resource: TResourceKey): void {
  */
 export function markResourcesIdle(resources: TResourceKey[]): void {
   resources.forEach(resource => {
-    const state = resourceStates[resource];
+    const state = stateOf(resource);
     if (state.timer) {
       clearTimeout(state.timer);
       state.timer = null;
@@ -619,5 +600,5 @@ export function markResourcesIdle(resources: TResourceKey[]): void {
  * Setzt alle Ressourcen auf idle (Hard-Reset nach manuellem Speichern).
  */
 export function markAllResourcesIdle(): void {
-  (Object.keys(resourceStates) as TResourceKey[]).forEach(resource => setStatus(resource, 'idle'));
+  alleRessourcen().forEach(resource => setStatus(resource, 'idle'));
 }

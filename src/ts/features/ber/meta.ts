@@ -1,12 +1,12 @@
 import type { FeatureMeta } from '@/shared/lib/feature';
-import { bereitschaftseinsatzApi, bereitschaftszeitraumApi } from '@/shared/api/apiService';
 import { createResourceApi } from '@/shared/api/resourceApi';
 import { periodFromDate } from '@/shared/lib/date/periodFromDate';
-import { beFromBackend, bzFromBackend } from '@/shared/lib/ressource/fieldMapper';
-import { getMonatFromBE, getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
+import { beFromBackend, bereitschaftseinsatzApi, bereitschaftszeitraumApi, bzFromBackend } from './model/backend';
+import { getMonatFromBE, getMonatFromBZ } from './model/monat';
 import type { IDatenBE, IDatenBZ } from '@/types';
+import getBzWindow from './model/getBzWindow';
 
-/** Eager gehaltene Beschreibung des Features Bereitschaft; kein Feature-Code importieren. */
+/** Eager gehaltene Beschreibung des Features Bereitschaft; nur kleine, UI-freie Helfer aus `model/` importieren (Backend-Mapper, Monat, Zeitfenster). */
 export const berMeta: FeatureMeta = {
   id: 'ber',
   label: 'Bereitschaft',
@@ -21,6 +21,7 @@ export const berMeta: FeatureMeta = {
       monatOf: row => getMonatFromBZ(row as IDatenBZ),
       periodOf: row => periodFromDate((row as IDatenBZ).Beginn),
       api: createResourceApi(bzFromBackend, () => bereitschaftszeitraumApi),
+      overlapWindow: getBzWindow,
     },
     {
       key: 'BE',

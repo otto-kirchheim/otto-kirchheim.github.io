@@ -1,5 +1,6 @@
 import type { IDatenBZ, IDataQueryOptions, IMonatsDaten } from '@/types';
-import { filterByMonat, getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
+import { filterByMonat } from '@/shared/lib/date/getMonatFromItem';
+import { getMonatFromBZ } from './monat';
 import { getStoredMonatJahr } from '@/shared/lib/date/dateStorage';
 import { default as normalizeResourceRows } from '@/shared/lib/ressource/normalizeResourceRows';
 import { default as Storage } from '@/shared/lib/storage/Storage';

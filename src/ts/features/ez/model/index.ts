@@ -23,4 +23,4 @@ export {
   normalizeNebengeldZulagen,
   readNebengeldZulagenFromForm,
   validateNebengeldZulagen,
-} from '@/shared/lib/zulagen/nebengeldZulagen';
+} from './nebengeldZulagen';

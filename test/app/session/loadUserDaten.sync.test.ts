@@ -9,12 +9,12 @@ const { getMonatFromBZMock, getMonatFromBEMock, getMonatFromEWTMock, getMonatFro
   getMonatFromNMock: vi.fn(),
 }));
 
-vi.mock('@/shared/lib/date/getMonatFromItem', () => ({
+vi.mock('@/shared/lib/date/getMonatFromItem', () => ({ getMonatFromEWT: getMonatFromEWTMock }));
+vi.mock('@/features/ber/model/monat', () => ({
   getMonatFromBZ: getMonatFromBZMock,
   getMonatFromBE: getMonatFromBEMock,
-  getMonatFromEWT: getMonatFromEWTMock,
-  getMonatFromN: getMonatFromNMock,
 }));
+vi.mock('@/features/ez/model/monat', () => ({ getMonatFromN: getMonatFromNMock }));
 
 vi.mock('@/shared/lib/ressource/normalizeResourceRows', () => ({
   default: (rows: unknown) => (Array.isArray(rows) ? rows : []),

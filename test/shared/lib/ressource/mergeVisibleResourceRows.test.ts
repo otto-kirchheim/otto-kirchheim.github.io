@@ -18,12 +18,12 @@ const {
 
 vi.mock('@/shared/lib/storage/Storage', () => ({ default: { get: storageGetMock } }));
 vi.mock('@/shared/lib/date/dateStorage', () => ({ getStoredMonatJahr: getStoredMonatJahrMock }));
-vi.mock('@/shared/lib/date/getMonatFromItem', () => ({
+vi.mock('@/shared/lib/date/getMonatFromItem', () => ({ isEwtInMonat: isEwtInMonatMock }));
+vi.mock('@/features/ber/model/monat', () => ({
   getMonatFromBZ: getMonatFromBZMock,
   getMonatFromBE: getMonatFromBEMock,
-  isEwtInMonat: isEwtInMonatMock,
-  getMonatFromN: getMonatFromNMock,
 }));
+vi.mock('@/features/ez/model/monat', () => ({ getMonatFromN: getMonatFromNMock }));
 
 import '@/app/features';
 import { createCustomTable, type CustomTableTypes } from '@/shared/ui/custom-table/CustomTable';

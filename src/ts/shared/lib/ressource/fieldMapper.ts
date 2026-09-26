@@ -1,20 +1,12 @@
 /**
  * Field-Mapper: Konvertiert zwischen Frontend-Feldnamen und Backend-API-Feldnamen.
  *
- * Strategie: Die internen Datenstrukturen (IDatenBZ, IDatenBE, etc.) bleiben unverändert.
- * Die Konvertierung passiert nur an der API-Grenze (beim Laden und Speichern).
+ * Strategie: Die internen Datenstrukturen bleiben unverändert; die Konvertierung passiert nur an der API-Grenze
+ * (beim Laden und Speichern). Hier nur Profil und Vorgaben; die Mapper der Feature-Ressourcen liegen je Feature in
+ * `features/<id>/model/backend.ts`.
  */
 
-import type { IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
-import type {
-  IBereitschaftseinsatz,
-  IBereitschaftszeitraum,
-  IEinsatzwechseltaetigkeit,
-  IEntgeltausgleich,
-  IFahrzeit,
-  INebengeld,
-  IPers,
-} from '@otto-kirchheim/nebengeld-shared';
+import type { IFahrzeit, IPers } from '@otto-kirchheim/nebengeld-shared';
 import type {
   BereitschaftSchichtTyp,
   IPerWeekdaySchicht,
@@ -25,45 +17,8 @@ import type {
   IVorgabenUvorgabenB,
 } from '@/types';
 import { joinOeLevels, splitOeInput } from './oeLevels';
-import dayjs from '@/shared/lib/date/configDayjs';
-import { formatNebengeldZulagen, normalizeNebengeldZulagen } from '@/shared/lib/zulagen/nebengeldZulagen';
 
 // ─── Typen für Backend-Dokumente ─────────────────────────
-
-export interface BackendBereitschaftszeitraum extends IBereitschaftszeitraum {
-  User?: string;
-  Monat: number;
-  Jahr: number;
-  updatedAt?: string;
-}
-
-export interface BackendBereitschaftseinsatz extends IBereitschaftseinsatz {
-  User?: string;
-  Monat: number;
-  Jahr: number;
-  updatedAt?: string;
-}
-
-export interface BackendEWT extends IEinsatzwechseltaetigkeit {
-  User?: string;
-  Monat: number;
-  Jahr: number;
-  updatedAt?: string;
-}
-
-export interface BackendNebengeld extends INebengeld {
-  User?: string;
-  Monat: number;
-  Jahr: number;
-  updatedAt?: string;
-}
-
-export interface BackendEA extends IEntgeltausgleich {
-  User?: string;
-  Monat: number;
-  Jahr: number;
-  updatedAt?: string;
-}
 
 export interface BackendUserProfile {
   _id?: string;
@@ -238,107 +193,6 @@ function migrateVorgabenBEntry(entry: Record<string, unknown>): IVorgabenUvorgab
 // ─── Backend → Frontend (Laden) ──────────────────────────
 
 /**
- * Konvertiert ein Backend-Bereitschaftszeitraum-Dokument in das Frontend-Format.
- *
- * @param doc - Backend-Dokument.
- * @returns Frontend-Zeile; fehlende `Pause` wird `0`.
- */
-export function bzFromBackend(doc: BackendBereitschaftszeitraum): IDatenBZ {
-  return {
-    _id: doc._id,
-    Beginn: doc.Beginn,
-    Ende: doc.Ende,
-    Pause: doc.Pause ?? 0,
-  };
-}
-
-/**
- * Konvertiert ein Backend-Bereitschaftseinsatz-Dokument in das Frontend-Format.
- *
- * @param doc - Backend-Dokument.
- * @returns Frontend-Zeile mit `Tag` als `DD.MM.YYYY`; ein einzelner `Bereitschaftszeitraum` wird zum Array.
- */
-export function beFromBackend(doc: BackendBereitschaftseinsatz): IDatenBE {
-  return {
-    _id: doc._id,
-    Bereitschaftszeitraum: Array.isArray(doc.Bereitschaftszeitraum)
-      ? doc.Bereitschaftszeitraum
-      : doc.Bereitschaftszeitraum
-        ? [doc.Bereitschaftszeitraum as unknown as string]
-        : undefined,
-    Tag: dayjs(doc.Tag).format('DD.MM.YYYY'),
-    Auftragsnummer: doc.Auftragsnummer,
-    Beginn: doc.Beginn,
-    Ende: doc.Ende,
-    LRE: doc.LRE,
-    PrivatKm: doc.PrivatKm,
-  };
-}
-
-/**
- * Konvertiert ein Backend-EWT-Dokument in das Frontend-Format.
- *
- * @param doc - Backend-Dokument.
- * @returns Frontend-Zeile mit `Tag`/`Buchungstag` als `YYYY-MM-DD` (Buchungstag Standard: `Tag`); fehlende Zeiten werden leere Strings.
- */
-export function ewtFromBackend(doc: BackendEWT): IDatenEWT {
-  return {
-    _id: doc._id,
-    Tag: dayjs(doc.Tag).format('YYYY-MM-DD'),
-    Buchungstag: dayjs(doc.Buchungstag ?? doc.Tag).format('YYYY-MM-DD'),
-    Einsatzort: doc.Einsatzort ?? '',
-    Schicht: doc.Schicht,
-    abWE: doc.abWE ?? '',
-    ab1E: doc.ab1E ?? '',
-    anEE: doc.anEE ?? '',
-    beginE: doc.beginE ?? '',
-    endeE: doc.endeE ?? '',
-    abEE: doc.abEE ?? '',
-    an1E: doc.an1E ?? '',
-    anWE: doc.anWE ?? '',
-    berechnen: doc.berechnen ?? true,
-  };
-}
-
-/**
- * Konvertiert ein Backend-Nebengeld-Dokument in das Frontend-Format. Zulagen mit `Wert` 0 entfallen;
- * `zulagenAnzeigeN` wird daraus fuer die Tabelle abgeleitet.
- *
- * @param doc - Backend-Dokument.
- * @returns Frontend-Zeile mit `Tag` als `DD.MM.YYYY`.
- */
-export function nebengeldFromBackend(doc: BackendNebengeld): IDatenN {
-  const Zulagen = doc.Zulagen.map(zulage => ({ Typ: zulage.Typ, Wert: zulage.Wert })).filter(z => z.Wert > 0);
-  return {
-    _id: doc._id,
-    EWT: doc.EWT ?? undefined,
-    Tag: dayjs(doc.Tag).format('DD.MM.YYYY'),
-    Beginn: doc.Beginn,
-    Ende: doc.Ende,
-    Zulagen,
-    zulagenAnzeigeN: formatNebengeldZulagen(Zulagen),
-    Auftragsnummer: doc.Auftragsnummer ?? '',
-  };
-}
-
-/**
- * Konvertiert ein Backend-Entgeltausgleich-Dokument in das Frontend-Format.
- *
- * @param doc - Backend-Dokument.
- * @returns Frontend-Zeile mit `Tag` als `DD.MM.YYYY`; fehlende Texte werden leere Strings.
- */
-export function eaFromBackend(doc: BackendEA): IDatenEA {
-  return {
-    _id: doc._id,
-    EWT: doc.EWT ?? undefined,
-    Tag: dayjs(doc.Tag).format('DD.MM.YYYY'),
-    Dauer: doc.Dauer,
-    Taetigkeit: doc.Taetigkeit ?? '',
-    Entgeltgruppe: doc.Entgeltgruppe ?? '',
-  };
-}
-
-/**
  * Konvertiert ein Backend-UserProfile in das Frontend-Format (IVorgabenU). Die Container-Keys
  * (Pers, Arbeitszeit, Fahrzeit, VorgabenB, Einstellungen) sind gleich; `VorgabenB` ist im Backend
  * ein Array, im Frontend eine Map. Fehlende Felder erhalten Standardwerte.
@@ -416,163 +270,6 @@ export function vorgabenFromBackend(doc: BackendVorgabe): Record<number, Record<
 }
 
 // ─── Frontend → Backend (Speichern) ──────────────────────
-
-/**
- * Bestimmt Monat und Jahr eines Datumswerts.
- *
- * @param value - Datumswert.
- * @param fallbackMonat - Monat bei ungueltigem Datum.
- * @param fallbackJahr - Jahr bei ungueltigem Datum.
- * @param format - Optionales Format; dann strikt geparst.
- * @returns Monat (1-12) und Jahr.
- */
-function resolveYearMonth(value: string, fallbackMonat: number, fallbackJahr: number, format?: string) {
-  const parsed = format ? dayjs(value, format, true) : dayjs(value);
-  if (!parsed.isValid()) {
-    return { Monat: fallbackMonat, Jahr: fallbackJahr };
-  }
-
-  return {
-    Monat: parsed.month() + 1,
-    Jahr: parsed.year(),
-  };
-}
-
-/**
- * Konvertiert einen Frontend-BZ-Eintrag in das Backend-Format.
- *
- * @param item - Frontend-Zeile.
- * @param monat - Fallback-Monat bei ungueltigem `Beginn`.
- * @param jahr - Fallback-Jahr bei ungueltigem `Beginn`.
- * @returns Backend-Dokument ohne `User`; `Monat`/`Jahr` stammen aus `Beginn`.
- */
-export function bzToBackend(item: IDatenBZ, monat: number, jahr: number): Omit<BackendBereitschaftszeitraum, 'User'> {
-  const period = resolveYearMonth(item.Beginn, monat, jahr);
-
-  return {
-    _id: item._id,
-    Monat: period.Monat,
-    Jahr: period.Jahr,
-    Beginn: item.Beginn,
-    Ende: item.Ende,
-    Pause: item.Pause,
-  };
-}
-
-/**
- * Konvertiert einen Frontend-BE-Eintrag in das Backend-Format.
- *
- * @param item - Frontend-Zeile.
- * @param monat - Fallback-Monat bei ungueltigem `Tag`.
- * @param jahr - Fallback-Jahr bei ungueltigem `Tag`.
- * @returns Backend-Dokument ohne `User`; `Tag` als ISO-String, `Monat`/`Jahr` aus `Tag`.
- */
-export function beToBackend(item: IDatenBE, monat: number, jahr: number): Omit<BackendBereitschaftseinsatz, 'User'> {
-  const period = resolveYearMonth(item.Tag, monat, jahr, 'DD.MM.YYYY');
-
-  return {
-    _id: item._id,
-    Bereitschaftszeitraum: item.Bereitschaftszeitraum,
-    Monat: period.Monat,
-    Jahr: period.Jahr,
-    Tag: dayjs(item.Tag, 'DD.MM.YYYY').toISOString(),
-    Auftragsnummer: item.Auftragsnummer,
-    Beginn: item.Beginn,
-    Ende: item.Ende,
-    LRE: item.LRE,
-    PrivatKm: item.PrivatKm,
-  };
-}
-
-/**
- * Konvertiert einen Frontend-EWT-Eintrag in das Backend-Format.
- *
- * @param item - Frontend-Zeile.
- * @param monat - Fallback-Monat bei ungueltigem `Tag`.
- * @param jahr - Fallback-Jahr bei ungueltigem `Tag`.
- * @returns Backend-Dokument ohne `User`; `Tag`/`Buchungstag` als ISO-String (Buchungstag Standard: `Tag`).
- */
-export function ewtToBackend(item: IDatenEWT, monat: number, jahr: number): Omit<BackendEWT, 'User'> {
-  const buchungstag = item.Buchungstag || item.Tag;
-  const period = resolveYearMonth(item.Tag, monat, jahr, 'YYYY-MM-DD');
-
-  return {
-    _id: item._id,
-    Monat: period.Monat,
-    Jahr: period.Jahr,
-    Tag: dayjs(item.Tag).toISOString(),
-    Buchungstag: dayjs(buchungstag).toISOString(),
-    // Leere Strings explizit mitsenden: `undefined` fällt bei JSON.stringify weg,
-    // wodurch ein Update gelöschte Zeiten nicht überschreiben würde (alter Wert bliebe erhalten).
-    Einsatzort: item.Einsatzort,
-    Schicht: item.Schicht,
-    abWE: item.abWE,
-    ab1E: item.ab1E,
-    anEE: item.anEE,
-    beginE: item.beginE,
-    endeE: item.endeE,
-    abEE: item.abEE,
-    an1E: item.an1E,
-    anWE: item.anWE,
-    berechnen: item.berechnen,
-  };
-}
-
-/**
- * Konvertiert einen Frontend-Nebengeld-Eintrag in das Backend-Format.
- *
- * @param item - Frontend-Zeile.
- * @param monat - Fallback-Monat bei ungueltigem `Tag`.
- * @param jahr - Fallback-Jahr bei ungueltigem `Tag`.
- * @returns Backend-Dokument ohne `User`; `EWT` ist `null` ohne Verknuepfung, `Zulagen` sind normalisiert.
- */
-export function nebengeldToBackend(item: IDatenN, monat: number, jahr: number): Omit<BackendNebengeld, 'User'> {
-  const period = resolveYearMonth(item.Tag, monat, jahr, 'DD.MM.YYYY');
-  const normalizedZulagen = normalizeNebengeldZulagen(item);
-  const zulagen: BackendNebengeld['Zulagen'] = normalizedZulagen.map(zulage => ({
-    Typ: zulage.Typ,
-    Wert: zulage.Wert,
-  }));
-  return {
-    _id: item._id,
-    // null statt undefined: undefined fällt bei JSON.stringify weg, das Entfernen der
-    // EWT-Verknüpfung käme nie am Server an. null wird dort zu $unset übersetzt.
-    EWT: item.EWT || null,
-    Monat: period.Monat,
-    Jahr: period.Jahr,
-    Tag: dayjs(item.Tag, 'DD.MM.YYYY').toISOString(),
-    Beginn: item.Beginn,
-    Ende: item.Ende,
-    // Leerstring explizit mitsenden, damit eine gelöschte Auftragsnummer beim Update auch serverseitig geleert wird.
-    Auftragsnummer: item.Auftragsnummer,
-    Zulagen: zulagen,
-  };
-}
-
-/**
- * Konvertiert einen Frontend-EA-Eintrag in das Backend-Format.
- *
- * @param item - Frontend-Zeile.
- * @param monat - Fallback-Monat bei ungueltigem `Tag`.
- * @param jahr - Fallback-Jahr bei ungueltigem `Tag`.
- * @returns Backend-Dokument ohne `User`; `EWT` ist `null` ohne Verknuepfung.
- */
-export function eaToBackend(item: IDatenEA, monat: number, jahr: number): Omit<BackendEA, 'User'> {
-  const period = resolveYearMonth(item.Tag, monat, jahr, 'DD.MM.YYYY');
-  return {
-    _id: item._id,
-    // null statt undefined: undefined fällt bei JSON.stringify weg, das Entfernen der
-    // EWT-Verknüpfung käme nie am Server an. null wird dort zu $unset übersetzt.
-    EWT: item.EWT || null,
-    Monat: period.Monat,
-    Jahr: period.Jahr,
-    Tag: dayjs(item.Tag, 'DD.MM.YYYY').toISOString(),
-    Dauer: item.Dauer,
-    // Leerstring explizit mitsenden, damit ein gelöschtes Feld beim Update auch serverseitig geleert wird.
-    Taetigkeit: item.Taetigkeit,
-    Entgeltgruppe: item.Entgeltgruppe,
-  };
-}
 
 /**
  * Konvertiert Frontend IVorgabenU in das Backend UserProfile-Update-Format.

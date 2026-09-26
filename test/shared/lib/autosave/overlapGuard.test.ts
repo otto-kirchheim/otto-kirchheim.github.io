@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'bun:test';
+// Die Zeitfenster kommen aus `meta.resources[].overlapWindow` der angemeldeten Features.
+import '@/app/features';
 import { findOverlapBlockedRows } from '@/shared/lib/autosave/overlapGuard';
 import type { CustomTable, CustomTableTypes, RowState } from '@/shared/ui/custom-table/CustomTable';
 

@@ -68,6 +68,13 @@ export interface FeatureResource {
   signatureOmitKeys?: readonly string[];
   /** Backend-Adapter der Ressource. */
   api: FeatureResourceApi;
+  /**
+   * Zeitfenster (ms) einer Zeile fuer die Ueberschneidungspruefung vor dem AutoSave; spiegelt `ensureNoOverlap` im Backend.
+   * Ohne Angabe keine Pruefung; `null` = Zeile ohne pruefbares Fenster.
+   */
+  overlapWindow?(row: unknown): { start: number; end: number } | null;
+  /** Nach dem Speichern mit den `_id`s serverseitig geloeschter Zeilen aufgerufen (z. B. Event fuer verknuepfte Features). */
+  onDeleted?(ids: string[]): void;
   /** Tabelle zeigt beim Laden (`loadUserDaten`) Zeilen erst ab diesem Jahr; ohne Angabe immer. */
   minYear?: number;
   /** Wie `minYear`, aber fuer den Monatswechsel (`changeMonatJahr`); weicht bei EA heute bewusst ab (Latent-Bug, spaeter angleichen). */
@@ -99,7 +106,7 @@ export interface FeaturePdfContext {
   vorgabenGeld: IVorgabenGeldType;
 }
 
-/** Eager gehaltene, rein deklarative Beschreibung eines Features (klein halten, kein Feature-Code importieren). */
+/** Eager gehaltene, rein deklarative Beschreibung eines Features (klein halten; aus dem Feature nur UI-freie Helfer wie Backend-Mapper, Monat, Zeitfenster). */
 export interface FeatureMeta {
   /** Schluessel des Features (Ordner, Manifest), z. B. `ea`. */
   id: string;

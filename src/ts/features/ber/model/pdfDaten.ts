@@ -5,7 +5,8 @@ import type {
   TarifBesoldung,
 } from '@otto-kirchheim/nebengeld-shared';
 import type { FeaturePdfContext } from '@/shared/lib/feature';
-import { filterByMonat, getMonatFromBE, getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
+import { filterByMonat } from '@/shared/lib/date/getMonatFromItem';
+import { getMonatFromBE, getMonatFromBZ } from './monat';
 import tableToArray from '@/shared/lib/ressource/tableToArray';
 import { tableIdOf } from '@/shared/lib/ressource/resourceConfig';
 import { alsMinuten, alsZeitstempelMinuten, ZEILEN_OPS } from '@/shared/lib/pdf/aggregatoren';

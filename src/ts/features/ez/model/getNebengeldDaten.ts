@@ -1,7 +1,8 @@
 import type { IDatenN } from '@/types';
-import { filterByMonat, getMonatFromN } from '@/shared/lib/date/getMonatFromItem';
+import { filterByMonat } from '@/shared/lib/date/getMonatFromItem';
+import { getMonatFromN } from './monat';
 import { createDatenGetter } from '@/shared/lib/ressource/createDatenGetter';
-import { hydrateNebengeldRows } from '@/shared/lib/zulagen/nebengeldZulagen';
+import { hydrateNebengeldRows } from './nebengeldZulagen';
 
 /**
  * Liefert die Neben-Zeilen (erst ab 2024) aus dem Storage, nach Monat gefiltert und mit hydrierten Zulagen.

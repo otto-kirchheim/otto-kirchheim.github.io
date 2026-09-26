@@ -1,12 +1,11 @@
 import type { FeatureMeta } from '@/shared/lib/feature';
-import { eaApi } from '@/shared/api/apiService';
 import { createResourceApi } from '@/shared/api/resourceApi';
 import { periodFromDate } from '@/shared/lib/date/periodFromDate';
-import { eaFromBackend } from '@/shared/lib/ressource/fieldMapper';
-import { getMonatFromEA } from '@/shared/lib/date/getMonatFromItem';
+import { eaApi, eaFromBackend } from './model/backend';
+import { getMonatFromEA } from './model/monat';
 import type { IDatenEA } from '@/types';
 
-/** Eager gehaltene Beschreibung des Features EA (Entgeltausgleich); kein Feature-Code importieren. */
+/** Eager gehaltene Beschreibung des Features EA (Entgeltausgleich); nur kleine, UI-freie Helfer aus `model/` importieren (Backend-Mapper, Monat, Zeitfenster). */
 export const eaMeta: FeatureMeta = {
   id: 'ea',
   label: 'Entgeltausgleich',

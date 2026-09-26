@@ -3,7 +3,7 @@ import { aktualisiereBerechnung } from '@/pages/berechnung';
 import generateTableBerechnung from '@/pages/berechnung/generateTableBerechnung';
 import { generateEingabeMaskeEinstellungen } from '@/pages/einstellungen/model';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
-import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
+import type { CustomHTMLTableElement } from '@/types';
 import { isRowInMonat, resourceDefs } from '@/shared/lib/ressource/resourceConfig';
 import { cancelAllPending, flushAll, isAutoSaveEnabled, setAutoSaveEnabled } from '@/shared/lib/autosave/autoSave';
 import { default as Storage } from '@/shared/lib/storage/Storage';
@@ -102,13 +102,9 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
 
   Storage.set('VorgabenGeld', datenGeld);
 
-  const datenBerechnung = await aktualisiereBerechnung({
-    BZ: rowsOf<IDatenBZ>('BZ'),
-    BE: rowsOf<IDatenBE>('BE'),
-    EWT: rowsOf<IDatenEWT>('EWT'),
-    N: rowsOf<IDatenN>('N'),
-    EA: rowsOf<IDatenEA>('EA'),
-  });
+  const datenBerechnung = await aktualisiereBerechnung(
+    Object.fromEntries(resourceDefs().map(resource => [resource.key, rowsOf<unknown>(resource.key)])),
+  );
 
   if (vorhanden.length > 0) {
     if (Object.keys(dataServer).length > 0) console.log('Unterschiede Server - Client', dataServer);

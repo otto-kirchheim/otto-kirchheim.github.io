@@ -71,7 +71,7 @@ vi.mock('@/shared/lib/storage/Storage', () => ({
   },
 }));
 
-vi.mock('@/shared/lib/date/getMonatFromItem', () => ({
+vi.mock('@/features/ber/model/monat', () => ({
   getMonatFromBZ: (item: IDatenBZ) => {
     // Return April (4) for our test BZs (2023-04-xx)
     const d = new Date(String(item.Beginn));

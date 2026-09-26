@@ -1,6 +1,7 @@
 import type { INebengeld } from '@otto-kirchheim/nebengeld-shared';
 import type { FeaturePdfContext } from '@/shared/lib/feature';
-import { filterByMonat, getMonatFromN } from '@/shared/lib/date/getMonatFromItem';
+import { filterByMonat } from '@/shared/lib/date/getMonatFromItem';
+import { getMonatFromN } from './monat';
 import tableToArray from '@/shared/lib/ressource/tableToArray';
 import { tableIdOf } from '@/shared/lib/ressource/resourceConfig';
 import type { IPdfBase } from '@/shared/lib/pdf/pdfDaten';

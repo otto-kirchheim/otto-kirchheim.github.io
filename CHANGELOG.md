@@ -2,6 +2,27 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-26 (190)
+
+### refactor (Feature-Logik aus `shared`/`app` in die Features, Audit Schritt A)
+
+- Backend-Grenze je Feature in `features/<id>/model/backend.ts`: Dokumenttyp, `*FromBackend`/`*ToBackend` und Endpunkte
+  (bisher `shared/lib/ressource/fieldMapper.ts` und `shared/api/dataApi.ts`). Die fünf gleichförmigen API-Objekte baut
+  jetzt `createResourceEndpoints(resource, fromBackend, toBackend)` (`shared/api/resourceApi.ts`); `ResourceName` ist ein
+  freier String. `fieldMapper`/`dataApi` behalten nur Profil, Vorgaben und `loadAllYearData`.
+  `nebengeldZulagen` → `features/ez/model` (einziger Nutzer); `resolveYearMonth` → `shared/lib/date/periodFromDate`.
+- Monatsermittlung je Ressource in `features/<id>/model/monat.ts` (`getMonatFromBZ/BE`, `getMonatFromN`, `getMonatFromEA`);
+  in `shared/lib/date/getMonatFromItem` bleiben EWT (für `getEwtDaten`), `monatAusTag` (EZ/EA) und `filterByMonat`.
+- AutoSave: `FeatureResource.overlapWindow` (BZ, EWT) statt fester Resolver in `overlapGuard.ts` (Kopie `getEwtWindowLocal`
+  entfällt, EWT nutzt `features/ewt/model/getEwtWindow`); `FeatureResource.onDeleted` statt `resource === 'EWT'` für
+  `ewt:deleted`; Ressourcen-Zustände werden bei Bedarf angelegt statt fest für `BZ/BE/EWT/N/EA`.
+- `loadUserDaten`: Ressourcen-Map für die Berechnung aus der Registry statt fester Keys.
+- Tests gespiegelt (`fieldMapper`/`getMonatFromItem` je Feature aufgeteilt, Mocks auf neue Pfade); Anzahl unverändert.
+  Gate: typecheck 0, lint 0, Tests 2296/2296, format, build i.o. (Entry 157 kB, Precache 141).
+- Neu: `scripts/livetest.ts` -- Live-Test im Browser (Puppeteer) gegen den Dev-Server; Standard mit Fake-Backend per
+  Request-Interception, mit `--backend http://localhost:8081/api/v2` gegen das lokale Backend (eigener Testbenutzer
+  `livetest-fsd`, legt Testdaten an und raeumt sie wieder ab). Optionen `--base`, `--headful`, `--slow`.
+
 ## 2026-09-26 (189)
 
 ### feat (Module steckbar: weiche Abhängigkeit ez/ea → ewt)

@@ -1,8 +1,8 @@
 import type { FeatureResourceApi } from '@/shared/lib/feature';
-import type { BulkResponse } from './apiFetchHelper';
+import { type BulkRequest, type BulkResponse, type ResourceName, loadResourceYear, smartSync } from './apiFetchHelper';
 
-/** Erwartete Form der Ressourcen-API in `dataApi` (`loadYear` und `bulk`). */
-interface ResourceEndpoints<TRow, TBackend> {
+/** Endpunkte einer Ressource (`loadYear` und `bulk`), gebaut von `createResourceEndpoints`. */
+export interface ResourceEndpoints<TRow, TBackend> {
   loadYear(year: number): Promise<{ data: TRow[]; updatedAt: string | null }>;
   bulk(
     items: { create: (TRow & { clientRequestId: string })[]; update: TRow[]; delete: string[] },
@@ -29,5 +29,41 @@ export function createResourceApi<TRow, TBackend>(
     loadYear: year => endpoints().loadYear(year),
     bulk: (items, monat, jahr) =>
       endpoints().bulk(items as Parameters<ResourceEndpoints<TRow, TBackend>['bulk']>[0], monat, jahr),
+  };
+}
+
+/**
+ * Baut die Endpunkte einer Ressource aus API-Pfad und Mappern: Jahr laden und gebuendelt senden (neue Zeilen ohne `_id`,
+ * mit `clientRequestId`).
+ *
+ * @typeParam TRow - Zeilentyp im Frontend.
+ * @typeParam TBackend - Dokumenttyp im Backend.
+ * @param resource - API-Pfadsegment (`<resource>/<jahr>`, `<resource>/bulk`).
+ * @param fromBackend - Mapper Backend-Dokument -> Frontend-Zeile.
+ * @param toBackend - Mapper Frontend-Zeile -> Backend-Dokument; `monat`/`jahr` sind Fallbacks bei ungueltigem Datum.
+ * @returns `loadYear` und `bulk` der Ressource.
+ */
+export function createResourceEndpoints<TRow extends { _id?: string }, TBackend extends { updatedAt?: string }>(
+  resource: ResourceName,
+  fromBackend: (doc: TBackend) => TRow,
+  toBackend: (item: TRow, monat: number, jahr: number) => object,
+): ResourceEndpoints<TRow, TBackend> {
+  return {
+    async loadYear(year) {
+      const result = await loadResourceYear<TBackend, TRow>(resource, year, fromBackend);
+      return { data: result.data, updatedAt: result.maxUpdatedAt };
+    },
+    async bulk(items, monat, jahr) {
+      const bulk: BulkRequest = {
+        create: items.create.map(item => {
+          const data = toBackend(item, monat, jahr);
+          delete (data as Record<string, unknown>)._id;
+          return { ...data, clientRequestId: item.clientRequestId };
+        }),
+        update: items.update.map(item => ({ ...toBackend(item, monat, jahr), _id: item._id! })),
+        delete: items.delete,
+      };
+      return smartSync<TBackend>(resource, bulk);
+    },
   };
 }

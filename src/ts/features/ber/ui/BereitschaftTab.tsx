@@ -19,7 +19,7 @@ import { invokeHook } from '@/shared/lib/feature';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ } from '@/types';
 import { confirmDeleteAllRows } from '@/shared/lib/ressource/confirmDeleteAllRows';
 import { createOnChangeHandler } from '@/shared/lib/autosave/autoSave';
-import { getMonatFromBE, getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
+import { getMonatFromBE, getMonatFromBZ } from '../model/monat';
 import { default as saveDaten } from '@/shared/lib/ressource/saveDaten';
 import { bindClickHandlers } from '@/shared/lib/dom/bindClickHandlers';
 import Storage from '@/shared/lib/storage/Storage';

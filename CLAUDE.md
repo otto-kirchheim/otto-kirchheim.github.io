@@ -118,7 +118,7 @@ Jedes Modul trennt einen kleinen eager Teil von lazy nachladbaren Teilen:
 
 ```
 features/ber/          # meta.id = 'ber'
-├── meta.ts            # FeatureMeta: id, label, icon, order, legacy-Mapping (Tab/Storage/Formular-Codes), helpKeys, benoetigt (weiche Abhaengigkeit, z. B. ez/ea -> ewt), resources[] -- eager, kein Chunk
+├── meta.ts            # FeatureMeta: id, label, icon, order, legacy-Mapping (Tab/Storage/Formular-Codes), helpKeys, benoetigt (weiche Abhaengigkeit, z. B. ez/ea -> ewt), resources[] (inkl. api, overlapWindow, onDeleted) -- eager, kein Chunk
 ├── parts/             # je Slot ein Lazy-Chunk, in app/features.ts per `() => import(...)` registriert
 │   ├── ui.tsx         # Tab-Komponente
 │   ├── data.ts        # getDaten/applyDaten/monatFilter je Ressource
@@ -128,7 +128,7 @@ features/ber/          # meta.id = 'ber'
 │   ├── help.ts        # Hilfetexte des Moduls (`meta.helpKeys`)
 │   └── events.ts      # Wake-Event-Handler (optional)
 ├── ui/                # React TSX: Tab, Add/Edit/Show Modals
-└── model/             # Business-Logik, Berechnungen, Daten-Handling
+└── model/             # Business-Logik, Berechnungen, Daten-Handling; backend.ts (Backend-Typ, Mapper, Endpunkte), monat.ts (Monatsermittlung)
 ```
 
 Ein globaler Bereich laedt ein Modul nie direkt, sondern ueber `featureRegistry.load(id, teil)`/`loadMany`/`loadAll` (`shared/lib/feature/featureRegistry.ts`); nicht benoetigte Teile bleiben ungeladen. **Admin-Anteile liegen nie im Modul selbst**, sondern in `pages/admin/features/<id>/` (`index.ts` = `AdminFeature`, `katalog.ts` = PDF-Feldkatalog fuers FormularEditor), angemeldet im separaten Admin-Manifest `pages/admin/adminFeatures.ts` (nur fuer Admins geladen). Neues Modul/Admin-Ordner anlegen: `bun run new-feature <slug> --label "..." [--admin]` (`scripts/new-feature.ts`).

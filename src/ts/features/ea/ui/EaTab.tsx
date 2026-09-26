@@ -9,7 +9,7 @@ import CustomTableView from '@/shared/ui/custom-table/CustomTableView';
 import type { CustomHTMLTableElement, IDatenEA } from '@/types';
 import { invokeHook } from '@/shared/lib/feature';
 import { confirmDeleteAllRows } from '@/shared/lib/ressource/confirmDeleteAllRows';
-import { getMonatFromEA } from '@/shared/lib/date/getMonatFromItem';
+import { getMonatFromEA } from '../model/monat';
 import Storage from '@/shared/lib/storage/Storage';
 import { createOnChangeHandler } from '@/shared/lib/autosave/autoSave';
 import { default as saveDaten } from '@/shared/lib/ressource/saveDaten';

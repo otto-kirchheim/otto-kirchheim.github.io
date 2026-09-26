@@ -31,11 +31,16 @@ const {
 vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 vi.mock('@/shared/api/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
-  bereitschaftszeitraumApi: { bulk: mockBzBulk },
-  bereitschaftseinsatzApi: { bulk: mockBeBulk },
-  ewtApi: { bulk: mockEwtBulk },
-  nebengeldApi: { bulk: mockNBulk },
 }));
+
+// Die Feature-Metas binden ihre Endpunkte spaet (`() => ewtApi`); die Mappers bleiben echt, nur `bulk` wird ersetzt.
+import { bereitschaftseinsatzApi, bereitschaftszeitraumApi } from '@/features/ber/model/backend';
+import { ewtApi } from '@/features/ewt/model/backend';
+import { nebengeldApi } from '@/features/ez/model/backend';
+Object.assign(bereitschaftszeitraumApi, { bulk: mockBzBulk });
+Object.assign(bereitschaftseinsatzApi, { bulk: mockBeBulk });
+Object.assign(ewtApi, { bulk: mockEwtBulk });
+Object.assign(nebengeldApi, { bulk: mockNBulk });
 
 import Storage from '@/shared/lib/storage/Storage';
 import {
