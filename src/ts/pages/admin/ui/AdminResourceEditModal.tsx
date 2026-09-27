@@ -15,13 +15,13 @@ import { DIALOG_RICHTUNG } from '@/shared/ui/modal/showModal';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { JsonEditor } from './JsonEditor';
 import {
-  DATE_ONLY_FIELDS,
   IMMUTABLE_FIELDS,
   READONLY_FIELDS,
-  TIME_STRING_FIELDS,
   formatDateOnly,
   formatDateTime,
   isObjectId,
+  istNurDatumFeld,
+  istZeitFeld,
   looksLikeIso,
   toDateInput,
   toDatetimeLocal,
@@ -94,10 +94,11 @@ export function AdminResourceEditModal({
             const disabled = immutable || readonly;
             const isNull = val === null;
             const fieldEnum = adminFieldEnum(key);
-            const isDateOnly = typeof val === 'string' && looksLikeIso(val) && DATE_ONLY_FIELDS.has(key);
-            const isDateTime = typeof val === 'string' && looksLikeIso(val) && !DATE_ONLY_FIELDS.has(key);
+            // Feldtypen aus dem Admin-Anteil der Ressource (`nurDatumFelder`, `zeitFelder`).
+            const isDateOnly = typeof val === 'string' && looksLikeIso(val) && istNurDatumFeld(resource, key);
+            const isDateTime = typeof val === 'string' && looksLikeIso(val) && !istNurDatumFeld(resource, key);
             // String-Zeitfelder: "HH:mm" (kein ISO) → type="time"
-            const isTimeString = typeof val === 'string' && !looksLikeIso(val) && TIME_STRING_FIELDS.has(key);
+            const isTimeString = typeof val === 'string' && !looksLikeIso(val) && istZeitFeld(resource, key);
 
             return (
               <div key={key} className="mb-3">

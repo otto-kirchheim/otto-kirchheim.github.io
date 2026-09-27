@@ -29,6 +29,8 @@ const adminFeature: AdminFeature = {
         'anWE',
         'berechnen',
       ],
+      nurDatumFelder: ['Tag', 'Buchungstag'],
+      zeitFelder: ['abWE', 'ab1E', 'anEE', 'beginE', 'endeE', 'abEE', 'an1E', 'anWE'],
     },
   ],
   fieldEnums: { Schicht: ['T', 'SP', 'N', 'S', 'BN'] },

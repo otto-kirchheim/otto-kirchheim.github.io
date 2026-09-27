@@ -244,7 +244,13 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
     EA abgewaehlt -> Feld ausgeblendet (`PersFelder` mit `versteckt`), Wert bleibt; Modul entfernt -> Wert bleibt (Test).
     Gate: Tests 2316/2316. Livetest Fake-Backend 42/42 (Schritt 5 Einstellungen inkl. EA ab-/anwaehlen), lokales Backend
     34/34 (Wert danach zurueckgesetzt).
-  - [ ] D Admin-Ressourcenbrowser (Punkt 8): `TIME_STRING_FIELDS`/`DATE_ONLY_FIELDS` in `adminResourceBrowserGemeinsam.ts` je Feature in `AdminResourceConfig` (`zeitFelder`, `nurDatumFelder`)
+  - [x] D Admin-Ressourcenbrowser (Punkt 8): `TIME_STRING_FIELDS`/`DATE_ONLY_FIELDS` in `adminResourceBrowserGemeinsam.ts` je Feature in `AdminResourceConfig` (`zeitFelder`, `nurDatumFelder`)
+    Plan (2026-09-27, Budget S): `AdminResourceConfig.nurDatumFelder?`/`zeitFelder?`; Zuordnung wie bisher (BE: Tag + Beginn/Ende,
+    BZ: keine -- Beginn/Ende sind Date, EWT: Tag/Buchungstag + 8 Zeitfelder, NG: Tag + Beginn/Ende, EA: Tag + Dauer);
+    `formatCell(resource, feld, wert)` und `AdminResourceEditModal` lesen aus `resource`; globale Sets entfallen.
+    - [x] Umsetzung + Tests (formatCell je Ressource, Editor-Inputtypen), Gate, CHANGELOG 194, Livetest/Browser-Check Admin > Ressourcen
+    Ergebnis (2026-09-27): Tests 2319/2319; Livetest Fake-Backend 44/44 (neuer Schritt 7: Ressourcenbrowser per Modul-Import
+    gemountet, da nur Super-Admins ihn sehen), lokales Backend 34/34.
   - [ ] E Typ-Literale (Punkt 9, bewusst, nur pruefen): `FeaturePdfModus`, `FormularCode`, Storage-Enum, `IBerechnungMonatsErgebnis`-Felder -- Scaffold `bun run new-feature` weist darauf hin bzw. erweitert sie
   - Bewusst in shared (Audit): `resolveSchichtDay`/`arbeitszeit-editor`, `zulagenCatalog`, `berechnungWerte`/`-Bausteine`, `confirmDeleteAllRows`, `resourceApi`, `createDatenGetter`, ewt-Zugriff fuer ez/ea (`getEwtDaten`, `getEwtDatenFuerZuordnung`, `syncFieldsFromEwtRows`, `unlinkEwtRefs`, Events `ewt:*`)
 - [ ] DB UX 5.6 neue Komponenten einbauen (Hinweis User 2026-09-26, nach Update auf 5.6.0, CHANGELOG 191):

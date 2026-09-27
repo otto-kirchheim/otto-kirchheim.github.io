@@ -12,6 +12,8 @@ const adminFeature: AdminFeature = {
       tableFields: ['User', 'Jahr', 'Monat', 'Tag'],
       extraFields: ['EWT', 'createdAt'],
       schemaFields: ['User', 'EWT', 'Jahr', 'Monat', 'Tag', 'Beginn', 'Ende', 'Auftragsnummer', 'Zulagen'],
+      nurDatumFelder: ['Tag'],
+      zeitFelder: ['Beginn', 'Ende'],
     },
   ],
   // Verknuepfung auf die EWT (Feld `EWT`); ohne das EWT-Feature entfaellt der Link.

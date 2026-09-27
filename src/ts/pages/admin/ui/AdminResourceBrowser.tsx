@@ -512,13 +512,13 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                     }
                     return (
                       <td key={f} className="small">
-                        {formatCell(f, doc[f])}
+                        {formatCell(resource, f, doc[f])}
                       </td>
                     );
                   })}
                   {resource.extraFields?.map(f => (
                     <td key={f} className="small d-none d-lg-table-cell">
-                      {formatCell(f, doc[f])}
+                      {formatCell(resource, f, doc[f])}
                     </td>
                   ))}
                   <td className="text-end">

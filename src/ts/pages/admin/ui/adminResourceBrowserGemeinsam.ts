@@ -1,28 +1,9 @@
 import dayjs from '@/shared/lib/date/configDayjs';
-import { adminCrossRef, adminSchemaFields } from '../adminFeatures';
+import { adminCrossRef, adminSchemaFields, type AdminResourceConfig } from '../adminFeatures';
 
 export const IMMUTABLE_FIELDS = new Set(['_id', '__v', 'createdAt']);
 export const READONLY_FIELDS = new Set(['updatedAt']);
 export const ITEMS_PER_PAGE = 25;
-
-// Datumsfelder die NUR als Datum gespeichert sind (kein Zeitanteil relevant)
-export const DATE_ONLY_FIELDS = new Set(['Tag', 'Buchungstag']);
-
-// Zeitfelder, die als "HH:mm"-String gespeichert sind (kein ISO-Datum, kein looksLikeIso-Match).
-// BZ.Beginn/Ende sind Date-Typ und greifen über looksLikeIso.
-export const TIME_STRING_FIELDS = new Set([
-  'Beginn',
-  'Ende', // BE + NG
-  'abWE',
-  'ab1E',
-  'anEE',
-  'beginE',
-  'endeE',
-  'abEE',
-  'an1E',
-  'anWE', // EWT
-  'Dauer', // EA
-]);
 
 export const MONATE = [
   'Januar',
@@ -115,18 +96,41 @@ export function toDatetimeLocal(isoStr: string): string {
 }
 
 /**
+ * Prueft, ob ein Feld der Ressource nur ein Datum traegt (`nurDatumFelder` des Admin-Anteils).
+ *
+ * @param resource - Ressourcen-Konfiguration.
+ * @param fieldName - Feldname.
+ * @returns `true` bei reinem Datumsfeld.
+ */
+export function istNurDatumFeld(resource: AdminResourceConfig, fieldName: string): boolean {
+  return resource.nurDatumFelder?.includes(fieldName) ?? false;
+}
+
+/**
+ * Prueft, ob ein Feld der Ressource eine `HH:mm`-Zeit als String traegt (`zeitFelder` des Admin-Anteils).
+ *
+ * @param resource - Ressourcen-Konfiguration.
+ * @param fieldName - Feldname.
+ * @returns `true` bei Zeitfeld.
+ */
+export function istZeitFeld(resource: AdminResourceConfig, fieldName: string): boolean {
+  return resource.zeitFelder?.includes(fieldName) ?? false;
+}
+
+/**
  * Formatiert einen Feldwert für die Tabellenzelle: Datum je nach Feldtyp, Arrays/Objekte als Kurzform, Text auf 24 Zeichen gekürzt.
  *
- * @param fieldName - Feldname; bestimmt, ob ein Datum ohne Uhrzeit angezeigt wird.
+ * @param resource - Ressourcen-Konfiguration; ihre `nurDatumFelder` werden ohne Uhrzeit angezeigt.
+ * @param fieldName - Feldname.
  * @param val - Feldwert.
  * @returns Anzeigetext; `'—'` bei `null`/`undefined`.
  */
-export function formatCell(fieldName: string, val: unknown): string {
+export function formatCell(resource: AdminResourceConfig, fieldName: string, val: unknown): string {
   if (val === null || val === undefined) return '—';
   if (Array.isArray(val)) return `[${(val as unknown[]).length}]`;
   if (typeof val === 'object') return '{…}';
   if (looksLikeIso(val)) {
-    return DATE_ONLY_FIELDS.has(fieldName) ? formatDateOnly(String(val)) : formatDateTime(String(val));
+    return istNurDatumFeld(resource, fieldName) ? formatDateOnly(String(val)) : formatDateTime(String(val));
   }
   const s = String(val);
   return s.length > 24 ? `${s.slice(0, 22)}…` : s;

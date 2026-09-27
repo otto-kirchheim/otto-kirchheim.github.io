@@ -17,6 +17,9 @@
  *  6. Nur Fake-Backend (Benutzer ist dort Team-Admin): Admin > Profile-Templates mit den Feature-Abschnitten
  *     (`profilVorlage` der Admin-Anteile: VorgabenB, Fahrzeit, Zulagen, EA-Pers-Felder), Bearbeiten und Speichern
  *
+ *  7. Nur Fake-Backend: Ressourcenbrowser (nur Super-Admins, deshalb per Modul-Import eigenstaendig gemountet), Feldtypen je
+ *     Ressource aus dem Admin-Anteil (`nurDatumFelder`, `zeitFelder`)
+ *
  * Aufruf (Dev-Server muss laufen, z. B. `bun run dev`):
  *   bun scripts/livetest.ts                                        # Fake-Backend, headless
  *   bun scripts/livetest.ts --backend http://localhost:8081/api/v2  # lokales Backend
@@ -160,7 +163,30 @@ interface Backend {
   gespeicherteVorlage?(): Record<string, unknown> | undefined;
 }
 
-/** Profil-Vorlage des Fake-Backends (Schritt 5); `eigenesFeld` prueft, dass Unbekanntes erhalten bleibt. */
+/** Endpunkte des Admin-Ressourcenbrowsers (`pages/admin/features/<id>/index.ts`). */
+const ADMIN_RESSOURCEN = [
+  'bereitschaftseinsaetze',
+  'bereitschaftszeitraeume',
+  'einsatzwechseltaetigkeiten',
+  'nebengeld',
+  'entgeltausgleich',
+];
+
+/** EWT-Dokument im Admin-Ressourcenbrowser des Fake-Backends (Schritt 7). */
+const FAKE_ADMIN_EWT = {
+  _id: 'aaaaaaaaaaaaaaaaaaaaaaaa',
+  User: 'bbbbbbbbbbbbbbbbbbbbbbbb',
+  Jahr: JAHR,
+  Monat: MONAT,
+  Tag: '2026-09-03T00:00:00.000Z',
+  Buchungstag: '2026-09-03T00:00:00.000Z',
+  Einsatzort: 'Kirchheim',
+  Schicht: 'T',
+  beginE: '08:00',
+  createdAt: '2026-09-03T06:30:00.000Z',
+};
+
+/** Profil-Vorlage des Fake-Backends (Schritt 6); `eigenesFeld` prueft, dass Unbekanntes erhalten bleibt. */
 const FAKE_VORLAGE = {
   _id: 'tpl1',
   code: 'livetest',
@@ -223,7 +249,12 @@ function fakeBackend(): Backend {
     return doc;
   };
 
-  const antwort = (method: string, path: string, body: unknown): { status: number; data: unknown } => {
+  const antwort = (
+    method: string,
+    path: string,
+    body: unknown,
+    query: URLSearchParams,
+  ): { status: number; data: unknown } => {
     const segs = path.split('/').filter(Boolean);
     const [head, second] = segs;
     if (segs.length === 0) return { status: 200, data: { min_frontend_version: '0.0.0' } };
@@ -232,7 +263,7 @@ function fakeBackend(): Backend {
         status: 200,
         data: { user: { userName: USER, role: 'team-admin' }, accessToken: jwt, refreshToken: 'rt' },
       };
-    // Team-Admin mit Vorlagen-Recht: Schritt 5 prueft den Profil-Vorlagen-Editor.
+    // Team-Admin mit Vorlagen-Recht: Schritt 6 prueft den Profil-Vorlagen-Editor.
     if (path === 'auth/me')
       return {
         status: 200,
@@ -245,6 +276,12 @@ function fakeBackend(): Backend {
         },
       };
     if (path === 'profile-templates') return { status: 200, data: [vorlage] };
+    // Ressourcenbrowser (Schritt 7): Seiten je Ressource, nur die EWT mit einem Dokument (reines Datums- und Zeitfeld).
+    if (head === 'admin' && ADMIN_RESSOURCEN.includes(second ?? '') && segs.length === 2) {
+      if (query.has('distinctJahr')) return { status: 200, data: [JAHR] };
+      const docs = second === 'einsatzwechseltaetigkeiten' ? [FAKE_ADMIN_EWT] : [];
+      return { status: 200, data: { data: docs, total: docs.length, limit: 25, skip: 0 } };
+    }
     if (head === 'profile-templates' && method === 'PUT' && second === vorlage._id) {
       Object.assign(vorlage, body as object);
       gespeichert = (body as { template?: Record<string, unknown> }).template;
@@ -323,9 +360,10 @@ function fakeBackend(): Backend {
         await request.respond({ status: 204, headers });
         return true;
       }
-      const path = new URL(request.url()).pathname.replace(new URL(apiBase).pathname, '').replace(/^\//, '');
+      const url = new URL(request.url());
+      const path = url.pathname.replace(new URL(apiBase).pathname, '').replace(/^\//, '');
       const raw = request.hasPostData() ? await request.fetchPostData() : undefined;
-      const { status, data } = antwort(request.method(), path, raw ? JSON.parse(raw) : undefined);
+      const { status, data } = antwort(request.method(), path, raw ? JSON.parse(raw) : undefined, url.searchParams);
       await request.respond({
         status,
         headers,
@@ -869,6 +907,66 @@ try {
       JSON.stringify(gespeichert?.Fahrzeit) === JSON.stringify(FAKE_VORLAGE.template.Fahrzeit),
       gespeichert?.Fahrzeit,
     );
+  }
+
+  // 7. Admin: Ressourcenbrowser -- Feldtypen je Ressource aus dem Admin-Anteil (nur Fake-Backend, dort Super-Admin)
+  if (backend.gespeicherteVorlage) {
+    console.log('7. Admin: Ressourcenbrowser (Feldtypen)');
+    // Der Browser ist nur fuer Super-Admins sichtbar; das Fake-Backend beantwortet sonst nicht alle Admin-Aufrufe.
+    // Deshalb eigenstaendig mounten (echte Komponente, echtes DB-UX-CSS, Daten ueber das Fake-Backend).
+    await page.evaluate(async () => {
+      // Dieselbe React-Instanz wie die App: URL (mit Versions-Hash) aus dem transformierten Modul lesen.
+      const quelle = await (await fetch('/ts/pages/admin/ui/AdminResourceBrowser.tsx')).text();
+      const reactUrl = /from "([^"]*\/deps\/react\.js[^"]*)"/.exec(quelle)?.[1];
+      if (!reactUrl) throw new Error('React-Modul nicht gefunden');
+      // Vite liefert React als CommonJS-Wrapper: die API steckt im Default-Export.
+      const { createElement } = ((await import(reactUrl)) as { default: typeof import('react') }).default;
+      const { mount } = (await import('/ts/shared/lib/react-root/reactRoot.ts' as string)) as {
+        mount(container: Element, node: unknown): void;
+      };
+      const { ladeAdminFeatures } = (await import('/ts/pages/admin/adminFeatures.ts' as string)) as {
+        ladeAdminFeatures(): Promise<unknown>;
+      };
+      const { AdminResourceBrowser } = (await import('/ts/pages/admin/ui/AdminResourceBrowser.tsx' as string)) as {
+        AdminResourceBrowser: () => null;
+      };
+      await ladeAdminFeatures();
+      const host = document.createElement('div');
+      host.id = 'livetest-ressourcen';
+      document.body.prepend(host);
+      mount(host, createElement(AdminResourceBrowser));
+    });
+    await warteBis(page, () => Boolean(document.querySelector('#livetest-ressourcen [role="tab"]')));
+    await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLButtonElement>('#livetest-ressourcen [role="tab"]')]
+        .find(b => b.textContent?.includes('Einsatzwechseltätigkeit'))
+        ?.click(),
+    );
+    const zeile = await warteBis(page, () =>
+      Boolean(document.querySelector('#livetest-ressourcen tbody td[title="Klicken zum Bearbeiten"]')),
+    );
+    const zellen = await page.evaluate(() =>
+      [...document.querySelectorAll('#livetest-ressourcen tbody tr:first-child td')].map(td => td.textContent?.trim()),
+    );
+    check('EWT-Tabelle: Tag ohne Uhrzeit (nurDatumFelder)', zeile && zellen.includes('03.09.2026'), zellen);
+    await page.evaluate(() =>
+      (document.querySelector('#livetest-ressourcen tbody td[title="Klicken zum Bearbeiten"]') as HTMLElement).click(),
+    );
+    await warteBis(page, () => Boolean(document.querySelector('dialog[open] input[type="time"]')));
+    const typen = await page.evaluate(() =>
+      Object.fromEntries(
+        [...document.querySelectorAll<HTMLInputElement>('dialog[open] input')].map(input => [
+          input.closest('.db-input')?.querySelector('label')?.textContent?.trim() ?? input.id,
+          input.type,
+        ]),
+      ),
+    );
+    check(
+      'EWT-Editor: Tag/Buchungstag als Datum, beginE als Zeit',
+      typen.Tag === 'date' && typen.Buchungstag === 'date' && typen.beginE === 'time',
+      typen,
+    );
+    await page.keyboard.press('Escape');
   }
 
   check('Keine unbehandelten Seitenfehler', seitenfehler.length === 0, seitenfehler);

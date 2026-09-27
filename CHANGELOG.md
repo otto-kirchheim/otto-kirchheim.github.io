@@ -2,6 +2,18 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-27 (194)
+
+### refactor (Feldtypen des Admin-Ressourcenbrowsers je Feature, Audit Schritt D)
+
+- `AdminResourceConfig.nurDatumFelder`/`zeitFelder`: jede Ressource meldet in ihrem Admin-Anteil
+  (`pages/admin/features/<id>/index.ts`), welche ISO-Felder nur ein Datum tragen und welche `HH:mm`-Strings sind. Die
+  globalen Listen `DATE_ONLY_FIELDS`/`TIME_STRING_FIELDS` in `adminResourceBrowserGemeinsam.ts` entfallen;
+  `formatCell(resource, feld, wert)`, `istNurDatumFeld`, `istZeitFeld`. Zuordnung unverändert (BE/NG: Tag + Beginn/Ende,
+  EWT: Tag/Buchungstag + 8 Zeitfelder, EA: Tag + Dauer, BZ: keine).
+- Tests: `adminResourceFeldtypen.test.tsx` (Zuordnung je Ressource, `formatCell`, Eingabetypen im Editor).
+  `scripts/livetest.ts` Schritt 7 (Ressourcenbrowser eigenständig gemountet, EWT: Tag ohne Uhrzeit, Editor date/time).
+
 ## 2026-09-27 (193)
 
 ### fix (AdminUserCard: abgeschnittene Kartenecke)

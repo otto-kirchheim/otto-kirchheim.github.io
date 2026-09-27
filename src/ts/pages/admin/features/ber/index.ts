@@ -24,6 +24,8 @@ const adminFeature: AdminFeature = {
         'LRE',
         'PrivatKm',
       ],
+      nurDatumFelder: ['Tag'],
+      zeitFelder: ['Beginn', 'Ende'],
     },
     {
       label: 'Bereitschaftszeitraum',

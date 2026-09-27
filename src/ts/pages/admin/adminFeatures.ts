@@ -22,6 +22,10 @@ export interface AdminResourceConfig {
   extraFields?: string[];
   /** Felder des Schemas (auch leere werden im Editor angezeigt). */
   schemaFields: string[];
+  /** ISO-Felder, die nur ein Datum tragen (Anzeige/Editor ohne Uhrzeit, in UTC); andere ISO-Felder gelten als Datum mit Uhrzeit. */
+  nurDatumFelder?: string[];
+  /** Zeitfelder, die als `HH:mm`-String gespeichert sind (Editor `type="time"`). */
+  zeitFelder?: string[];
 }
 
 /** Verweis eines Feldes auf eine andere Ressource; fehlt die Ziel-Ressource (Feature nicht angemeldet), entfaellt der Link. */
