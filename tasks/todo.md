@@ -230,7 +230,20 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
     - [x] Tests (Payload-Roundtrip je Abschnitt, fehlendes Feature, Editor-Tags), Gate (Tests 2309), CHANGELOG 192
     - [x] Livetest (2026-09-27): Fake-Backend 35/35 inkl. Schritt 5 (Admin > Profile-Templates: Abschnitte, EA-Pers-Felder,
           VorgabenB hinzufuegen, Zulage waehlen, Speichern-Payload), lokales Backend 27/27 (ohne `Persoenliche Daten fehlerhaft`)
-  - [ ] C Feld `Entgeltgruppe` (Audit Punkt 7): aus `PersoenlicheDatenPanel.tsx`/`saveEinstellungen.ts`/`generateEingabeMaskeEinstellungen.ts` in einen `einstellungen`-Teil von `ea` (ea hat noch keinen)
+  - [x] C Feld `Entgeltgruppe` (Audit Punkt 7): aus `PersoenlicheDatenPanel.tsx`/`saveEinstellungen.ts`/`generateEingabeMaskeEinstellungen.ts` in einen `einstellungen`-Teil von `ea` (ea hat noch keinen)
+    Plan (2026-09-27, Budget M): `IFeatureEinstellungen.PersFelder?: ComponentType` (Felder im Panel „Persönliche Daten“, nach
+    Tätigkeit); `features/ea/parts/einstellungen.ts` mit `sections: []`, `PersFelder` (Entgeltgruppe), `read`/`collect`
+    (validiert, schreibt `Pers.Entgeltgruppe`); `addressValidation`: Entgeltgruppe raus aus `PERS_FIELD_LABELS`, neue
+    `validateOptionalTextInput` (auch fuer Tätigkeit). Tätigkeit bleibt global (allgemeine Stellenbezeichnung, PDF-Katalog).
+    Admin-Profileditor/`datenKatalog` bleiben.
+    - [x] Typ + Panel + ea-Teil + `app/features.ts`; Seiten ohne `Entgeltgruppe ??= ''`
+    - [x] Tests: ea-Teil (read/collect/ungueltig/Feld fehlt), `featureAbnahme`, Einstellungen-Tests; Gate typecheck/lint/test/format/build
+    - [x] Livetest (Einstellungen speichern mit Entgeltgruppe), CHANGELOG 193, `CLAUDE.md` Feature-Contract
+    Ergebnis (2026-09-27): Livetest fand einen verdeckten Fehler -- `setElementValues` warf bei `Pers.Entgeltgruppe ===
+    undefined` (Server-Mapper), bisher vom entfernten `??= ''` verdeckt; behoben + Regressionstest. Nachtrag (User-Frage):
+    EA abgewaehlt -> Feld ausgeblendet (`PersFelder` mit `versteckt`), Wert bleibt; Modul entfernt -> Wert bleibt (Test).
+    Gate: Tests 2316/2316. Livetest Fake-Backend 42/42 (Schritt 5 Einstellungen inkl. EA ab-/anwaehlen), lokales Backend
+    34/34 (Wert danach zurueckgesetzt).
   - [ ] D Admin-Ressourcenbrowser (Punkt 8): `TIME_STRING_FIELDS`/`DATE_ONLY_FIELDS` in `adminResourceBrowserGemeinsam.ts` je Feature in `AdminResourceConfig` (`zeitFelder`, `nurDatumFelder`)
   - [ ] E Typ-Literale (Punkt 9, bewusst, nur pruefen): `FeaturePdfModus`, `FormularCode`, Storage-Enum, `IBerechnungMonatsErgebnis`-Felder -- Scaffold `bun run new-feature` weist darauf hin bzw. erweitert sie
   - Bewusst in shared (Audit): `resolveSchichtDay`/`arbeitszeit-editor`, `zulagenCatalog`, `berechnungWerte`/`-Bausteine`, `confirmDeleteAllRows`, `resourceApi`, `createDatenGetter`, ewt-Zugriff fuer ez/ea (`getEwtDaten`, `getEwtDatenFuerZuordnung`, `syncFieldsFromEwtRows`, `unlinkEwtRefs`, Events `ewt:*`)
@@ -243,6 +256,13 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
   - [ ] `DBLoadingIndicator` (Spinner/Fortschritt) statt eigener Ladeanzeigen: `DBLoadingButton`/`button-loading`
         (`setLoading`/`clearLoading`), AutoSave-Puls, Laden nach Login, PDF-Erzeugung; vorher Props/Varianten per
         `mcp__db-ux__get_component_props` pruefen.
+- [ ] stylelint-Warnungen beheben (User 2026-09-27; `lint:css` laeuft lokal schon ohne `--max-warnings 93`): Stand 87
+      Warnungen (`db-ux/use-spacings` 48, `use-sizing` 28, `use-border-width` 8, `use-border-color` 2,
+      `use-border-radius` 1) in `styles.scss`, `utilities.scss`, `raster.scss`, `CustomSnackbar.css`, `customtable.scss`.
+      Feste `rem`/`px`-Werte auf `db-spacing-*`/`db-sizing-*`/`db-border-width-*`-Tokens; Fehlalarme des Plugins
+      (`var()`, SCSS-`$wert`, `calc()`/`min()`, 1px-Haarlinie, `50%`-Kreis) mit begruendetem `stylelint-disable`-Kommentar,
+      siehe Analyse 2026-09-09 unten und `tasks/lessons.md` (Ratsche). Optik aendert sich bei Werten zwischen Token-Stufen
+      -> Browser-Sichtpruefung je Datei (Hell/Dunkel, Mobil). Danach `--max-warnings` in `package.json` auf 0.
 
 ---
 

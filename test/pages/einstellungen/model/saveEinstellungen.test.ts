@@ -1,7 +1,8 @@
 import '@test/setupBun';
-import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'bun:test';
 import '@/app/features';
-import { ladeEinstellungenTeile } from '@/shared/model/einstellungen/einstellungenTeile';
+import { featureRegistry } from '@/shared/lib/feature';
+import { ladeEinstellungenTeile, resetEinstellungenTeile } from '@/shared/model/einstellungen/einstellungenTeile';
 import saveEinstellungen from '@/pages/einstellungen/model/saveEinstellungen';
 import { setArbeitszeitPanelState } from '@/shared/ui/arbeitszeit-editor/arbeitszeitPanelState';
 import { setFahrzeitPanelState } from '@/features/ewt/ui/fahrzeitPanelState';
@@ -327,5 +328,37 @@ describe('saveEinstellungen – Tabs, Zulagen, AutoSave und fZ', () => {
     setFahrzeitPanelState([{ key: '', text: 'km 167,0', value: '00:10' }]);
 
     expect(() => saveEinstellungen()).toThrow('Tätigkeitsstätte fehlt');
+  });
+});
+
+describe('saveEinstellungen: Entgeltgruppe ohne das Modul ea', () => {
+  beforeEach(async () => {
+    localStorage.clear();
+    setArbeitszeitPanelState(null);
+    setFahrzeitPanelState(null);
+    const original = featureRegistry.loadAll.bind(featureRegistry);
+    vi.spyOn(featureRegistry, 'loadAll').mockImplementation(async part =>
+      (await original(part)).filter(ergebnis => ergebnis.id !== 'ea'),
+    );
+    resetEinstellungenTeile();
+    await ladeEinstellungenTeile();
+  });
+
+  afterEach(async () => {
+    vi.restoreAllMocks();
+    resetEinstellungenTeile();
+    await ladeEinstellungenTeile();
+  });
+
+  it('behaelt die gespeicherte Entgeltgruppe, wenn das Feld fehlt (Modul entfernt)', () => {
+    const vorgabenU = createVorgabenU();
+    renderSettingsForm(vorgabenU);
+    Storage.set('VorgabenU', { ...vorgabenU, Pers: { ...vorgabenU.Pers, Entgeltgruppe: '105' } });
+
+    const result = saveEinstellungen();
+
+    expect(document.querySelector('#Entgeltgruppe')).toBeNull();
+    expect(result.Pers.Entgeltgruppe).toBe('105');
+    expect(Storage.get<IVorgabenU>('VorgabenU')?.Pers.Entgeltgruppe).toBe('105');
   });
 });

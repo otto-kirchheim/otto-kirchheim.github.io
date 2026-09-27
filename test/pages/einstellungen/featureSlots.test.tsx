@@ -2,6 +2,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'bun:
 import '@/app/features';
 import { featureRegistry } from '@/shared/lib/feature';
 import EinstellungenTab from '@/pages/einstellungen/ui/EinstellungenTab';
+import PersoenlicheDatenPanel from '@/pages/einstellungen/ui/PersoenlicheDatenPanel';
 import {
   getEinstellungenTeile,
   ladeEinstellungenTeile,
@@ -32,8 +33,9 @@ describe('Einstellungen ueber Feature-Slots', () => {
     vi.restoreAllMocks();
   });
 
-  it('meldet Abschnitte von ber, ewt und ez mit den bisherigen Ids; ea hat keinen Slot und wird uebersprungen', () => {
-    expect(getEinstellungenTeile().map(t => t.id)).toEqual(['ber', 'ewt', 'ez']);
+  it('meldet Abschnitte von ber, ewt und ez mit den bisherigen Ids; ea steuert nur Pers-Felder bei', () => {
+    expect(getEinstellungenTeile().map(t => t.id)).toEqual(['ber', 'ewt', 'ez', 'ea']);
+    expect(getEinstellungenTeile().find(t => t.id === 'ea')!.part.PersFelder).toBeDefined();
     expect(getEinstellungenTeile().flatMap(t => t.part.sections.map(s => [s.id, s.titel]))).toEqual([
       ['collapseThree', 'Bereitschaft'],
       ['collapseFour', 'Fahrzeiten'],
@@ -118,7 +120,7 @@ describe('Einstellungen ueber Feature-Slots', () => {
 
     const geladen = await ladeEinstellungenTeile();
 
-    expect(geladen.map(t => t.id)).toEqual(['ber', 'ez']);
+    expect(geladen.map(t => t.id)).toEqual(['ber', 'ez', 'ea']);
     expect(errorSpy).toHaveBeenCalled();
   });
 
@@ -147,5 +149,90 @@ describe('Einstellungen ueber Feature-Slots', () => {
     await ladeEinstellungenTeile();
     const ber = getEinstellungenTeile().find(t => t.id === 'ber')!.part;
     expect(() => ber.read(VorgabenUMock)).toThrow('Tabelle nicht gefunden');
+  });
+
+  describe('ea: Pers-Feld Entgeltgruppe', () => {
+    /** Rendert das Panel „Persönliche Daten“ und liefert Container und EA-Slot (sofern geladen). */
+    async function zeichnePanel() {
+      resetEinstellungenTeile();
+      await ladeEinstellungenTeile();
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      render(<PersoenlicheDatenPanel />, container);
+      // DBInput setzt die `id` am <input> erst nach dem ersten Effekt.
+      await new Promise(resolve => setTimeout(resolve, 0));
+      return { container, ea: getEinstellungenTeile().find(t => t.id === 'ea')?.part };
+    }
+
+    it('steht im Panel direkt nach der Taetigkeit', async () => {
+      const { container } = await zeichnePanel();
+      const ids = [...container.querySelectorAll('input')].map(input => input.id);
+      expect(ids.indexOf('Entgeltgruppe')).toBe(ids.indexOf('Taetigkeit') + 1);
+      render(null, container);
+    });
+
+    it('read traegt den Wert ein (leer ohne gepflegten Wert), collect schreibt ihn nach Pers', async () => {
+      const { container, ea: slot } = await zeichnePanel();
+      const ea = slot!;
+      const input = container.querySelector<HTMLInputElement>('#Entgeltgruppe')!;
+      const mit = { ...VorgabenUMock, Pers: { ...VorgabenUMock.Pers, Entgeltgruppe: '105' } } as IVorgabenU;
+      const ohne = {
+        ...VorgabenUMock,
+        Pers: { ...VorgabenUMock.Pers, Entgeltgruppe: undefined },
+      } as unknown as IVorgabenU;
+
+      ea.read(mit);
+      expect(input.value).toBe('105');
+      ea.read(ohne);
+      expect(input.value).toBe('');
+
+      input.value = '  104 ';
+      expect(ea.collect(mit).Pers).toEqual({ ...mit.Pers, Entgeltgruppe: '104' });
+      render(null, container);
+    });
+
+    it('collect wirft bei ungueltigen Zeichen und markiert das Feld', async () => {
+      const { container, ea: slot } = await zeichnePanel();
+      const ea = slot!;
+      const input = container.querySelector<HTMLInputElement>('#Entgeltgruppe')!;
+      input.value = '<105>';
+
+      expect(() => ea.collect(VorgabenUMock)).toThrow('Persönliche Daten fehlerhaft');
+      expect(input.getAttribute('data-custom-validity')).toBe('invalid');
+      render(null, container);
+    });
+
+    it('EA abgewaehlt: Feld ausgeblendet, bleibt aber im DOM und wird weiter eingesammelt', async () => {
+      const { container, ea: slot } = await zeichnePanel();
+      const ea = slot!;
+      const input = container.querySelector<HTMLInputElement>('#Entgeltgruppe')!;
+      const zelle = () => container.querySelector('#Entgeltgruppe')!.closest('.sp-md-6')!;
+      input.value = '105';
+
+      updateTabVisibility(['bereitschaft', 'ewt', 'neben']);
+      expect(zelle().classList.contains('d-none')).toBe(true);
+      expect(ea.collect(VorgabenUMock).Pers?.Entgeltgruppe).toBe('105');
+
+      updateTabVisibility(['bereitschaft', 'ewt', 'neben', 'ea']);
+      expect(zelle().classList.contains('d-none')).toBe(false);
+      resetFeatureTabsVisible();
+      render(null, container);
+    });
+
+    it('ohne gerendertes Feld traegt ea nichts bei; ohne ea-Slot fehlt das Feld', async () => {
+      const { container, ea: slot } = await zeichnePanel();
+      const ea = slot!;
+      render(null, container);
+      expect(ea.collect(VorgabenUMock)).toEqual({});
+
+      const original = featureRegistry.loadAll.bind(featureRegistry);
+      vi.spyOn(featureRegistry, 'loadAll').mockImplementation(async part =>
+        (await original(part)).filter(ergebnis => ergebnis.id !== 'ea'),
+      );
+      const ohneEa = await zeichnePanel();
+      expect(ohneEa.container.querySelector('#Entgeltgruppe')).toBeNull();
+      expect(ohneEa.container.querySelector('#Taetigkeit')).not.toBeNull();
+      render(null, ohneEa.container);
+    });
   });
 });

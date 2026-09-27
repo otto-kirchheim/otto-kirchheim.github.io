@@ -23,7 +23,6 @@ export default async function generateEingabeMaskeEinstellungen(
   // Bestandsnutzer haben diese Felder ggf. nicht im Dokument (kein Server-Default) -- ohne
   // Default fehlt der Object-Key komplett und setElementValues/saveEinstellungen sehen ihn nie.
   VorgabenU.Pers.Taetigkeit ??= '';
-  VorgabenU.Pers.Entgeltgruppe ??= '';
 
   setElementValues<IVorgabenUPers>(VorgabenU.Pers);
   renderArbeitszeiteingabePanel(VorgabenU);
@@ -68,14 +67,16 @@ function renderArbeitszeiteingabePanel(VorgabenU: IVorgabenU): void {
  *
  * @typeParam T - Objekttyp; die Schlüssel entsprechen den Element-Ids.
  * @param values - Werte je Feld-Id; nur vorhandene Input-/Select-Elemente werden befüllt.
- * @throws {Error} Wenn ein Wert weder Zahl noch String ist.
+ * @throws {Error} Wenn ein Wert weder Zahl, String noch `undefined` ist.
  */
 function setElementValues<T>(values: T): void {
   for (const key in values) {
     const element = document.querySelector<HTMLInputElement | HTMLSelectElement>(`#${key}`);
     const value = values[key as keyof T];
     if (element instanceof HTMLInputElement || element instanceof HTMLSelectElement) {
-      if (isNumberOrString(value)) element.value = value.toString();
+      // Optionale Felder kommen vom Server ggf. als `undefined` (`fieldMapper`: `Entgeltgruppe ?? undefined`) -> leeren.
+      if (value === undefined) element.value = '';
+      else if (isNumberOrString(value)) element.value = value.toString();
       else throw new Error('unbekannter Wert');
     }
   }

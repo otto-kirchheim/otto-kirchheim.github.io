@@ -12,7 +12,9 @@
  *  2. Mapper, Monatsfilter je Tabelle (`features/<id>/model/monat.ts`), Berechnung aus der Registry (`loadUserDaten`)
  *  3. Ueberschneidungspruefung BZ/EWT (`meta.resources[].overlapWindow`)
  *  4. EWT loeschen + Speichern: `onDeleted` -> `ewt:deleted` -> Verweise in EZ und EA geloest
- *  5. Nur Fake-Backend (Benutzer ist dort Team-Admin): Admin > Profile-Templates mit den Feature-Abschnitten
+ *  5. Einstellungen: Pers-Feld „Entgeltgruppe“ aus dem Einstellungen-Slot von `ea` (`PersFelder`), Speichern nach `Pers`;
+ *     EA abgewaehlt: Feld ausgeblendet, Wert bleibt
+ *  6. Nur Fake-Backend (Benutzer ist dort Team-Admin): Admin > Profile-Templates mit den Feature-Abschnitten
  *     (`profilVorlage` der Admin-Anteile: VorgabenB, Fahrzeit, Zulagen, EA-Pers-Felder), Bearbeiten und Speichern
  *
  * Aufruf (Dev-Server muss laufen, z. B. `bun run dev`):
@@ -659,9 +661,112 @@ try {
   check('EA: Verweis ea2 -> e2 bleibt', dataEA?.find(r => r._id === ids.ea2)?.EWT === ids.e2, dataEA);
   check('Tabelle EWT: 2 Zeilen', (await sichtbareZeilen(page, 'tableE')) === 2);
 
-  // 5. Admin: Profil-Vorlagen mit Feature-Abschnitten (nur Fake-Backend, dort ist der Benutzer Team-Admin)
+  // 5. Einstellungen: Entgeltgruppe kommt aus dem Einstellungen-Slot von ea und wird beim Speichern nach Pers geschrieben
+  console.log('5. Einstellungen: Entgeltgruppe (ea)');
+  await page.evaluate(() => (document.querySelector('#einstellungen-tab') as HTMLElement | null)?.click());
+  const feldDa = await warteBis(page, () => Boolean(document.querySelector('#Entgeltgruppe')));
+  const reihenfolge = await page.evaluate(() => {
+    const ids = [...document.querySelectorAll('#formEinstellungen input')].map(input => input.id);
+    return ids.indexOf('Entgeltgruppe') - ids.indexOf('Taetigkeit');
+  });
+  check(
+    'Feld Entgeltgruppe im Panel Persönliche Daten, direkt nach Tätigkeit',
+    feldDa && reihenfolge === 1,
+    reihenfolge,
+  );
+  const vorgabenVorher = await storage<{ Pers: { Entgeltgruppe?: string } }>(page, 'VorgabenU');
+  const alt = vorgabenVorher?.Pers.Entgeltgruppe ?? '';
+  check(
+    'read (ea): gespeicherter Wert eingetragen',
+    (await page.$eval('#Entgeltgruppe', el => (el as HTMLInputElement).value)) === alt,
+    alt,
+  );
+  /** Setzt die Entgeltgruppe, speichert die Einstellungen und wartet, bis `VorgabenU` den Wert enthaelt. */
+  const speichereEntgeltgruppe = async (wert: string): Promise<boolean> => {
+    // Direkt setzen statt tippen: das Akkordeon „Persönliche Daten“ kann zugeklappt sein.
+    await page.$eval(
+      '#Entgeltgruppe',
+      (el, w) => {
+        (el as HTMLInputElement).value = w;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      },
+      wert,
+    );
+    await page.evaluate(() => (document.querySelector('#formEinstellungen') as HTMLFormElement).requestSubmit());
+    return warteBis(
+      page,
+      (w: string) => {
+        const raw = localStorage.getItem('VorgabenU');
+        const vorgaben = raw ? (JSON.parse(raw) as { data?: { Pers?: { Entgeltgruppe?: string } } }) : undefined;
+        return (
+          (vorgaben?.data ?? (vorgaben as { Pers?: { Entgeltgruppe?: string } } | undefined))?.Pers?.Entgeltgruppe === w
+        );
+      },
+      wert,
+    );
+  };
+  const vorSpeichern = apiLog.length;
+  const neuerWert = alt === '104' ? '103' : '104';
+  check('collect (ea): neuer Wert in VorgabenU.Pers.Entgeltgruppe', await speichereEntgeltgruppe(neuerWert), {
+    feld: await page.$eval('#Entgeltgruppe', el => (el as HTMLInputElement).value),
+    gespeichert: (await storage<{ Pers: { Entgeltgruppe?: string } }>(page, 'VorgabenU'))?.Pers.Entgeltgruppe,
+    konsolenfehler,
+  });
+  // Der Profil-PUT laeuft nach dem Schreiben in den Storage; kurz darauf warten.
+  for (let i = 0; i < 30 && !apiLog.slice(vorSpeichern).includes('PUT user-profiles/me'); i++)
+    await new Promise(resolve => setTimeout(resolve, 100));
+  check(
+    'Profil an den Server gesendet',
+    apiLog.slice(vorSpeichern).includes('PUT user-profiles/me'),
+    apiLog.slice(vorSpeichern),
+  );
+  // EA unter „Sichtbare Bereiche“ abwaehlen und speichern: Feld ausgeblendet, Wert bleibt erhalten.
+  /** Setzt den Haken fuer EA, speichert und wartet, bis `aktivierteTabs` passt. */
+  const setzeEa = async (aktiv: boolean): Promise<boolean> => {
+    await page.$eval(
+      '#collapseFive input[data-tab-key="ea"]',
+      (el, a) => {
+        if ((el as HTMLInputElement).checked !== a) (el as HTMLInputElement).click();
+      },
+      aktiv,
+    );
+    await page.evaluate(() => (document.querySelector('#formEinstellungen') as HTMLFormElement).requestSubmit());
+    return warteBis(
+      page,
+      (a: string) => {
+        const raw = localStorage.getItem('VorgabenU');
+        const parsed = raw ? (JSON.parse(raw) as { data?: unknown }) : undefined;
+        const vorgaben = (parsed?.data ?? parsed) as { Einstellungen?: { aktivierteTabs?: string[] } } | undefined;
+        return (vorgaben?.Einstellungen?.aktivierteTabs ?? []).includes('ea') === (a === '1');
+      },
+      aktiv ? '1' : '0',
+    );
+  };
+  const eaAus = await setzeEa(false);
+  const ausgeblendet = await page.$eval('#Entgeltgruppe', el => Boolean(el.closest('.d-none')));
+  const nachAbwahl = (await storage<{ Pers: { Entgeltgruppe?: string } }>(page, 'VorgabenU'))?.Pers.Entgeltgruppe;
+  check(
+    'EA abgewaehlt + gespeichert: Feld ausgeblendet, Entgeltgruppe bleibt',
+    eaAus && ausgeblendet && nachAbwahl === neuerWert,
+    { eaAus, ausgeblendet, nachAbwahl },
+  );
+  const eaAn = await setzeEa(true);
+  check(
+    'EA wieder angewaehlt: Feld sichtbar mit Wert',
+    eaAn &&
+      (await page.$eval(
+        '#Entgeltgruppe',
+        (el, w) => !el.closest('.d-none') && (el as HTMLInputElement).value === w,
+        neuerWert,
+      )),
+  );
+
+  // Urspruenglichen Wert wiederherstellen (Backend-Modus: Profil des Testbenutzers).
+  check('Ursprungswert wiederhergestellt', await speichereEntgeltgruppe(alt));
+
+  // 6. Admin: Profil-Vorlagen mit Feature-Abschnitten (nur Fake-Backend, dort ist der Benutzer Team-Admin)
   if (backend.gespeicherteVorlage) {
-    console.log('5. Admin: Profil-Vorlagen');
+    console.log('6. Admin: Profil-Vorlagen');
     await page.evaluate(() => (document.querySelector('a#admin-tab[href="#Admin"]') as HTMLElement | null)?.click());
     const reiter = await warteBis(page, () =>
       Boolean(document.querySelector('[data-tab-target="admin-pane-templates"]')),

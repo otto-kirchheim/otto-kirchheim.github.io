@@ -25,7 +25,14 @@ export type IEinstellungenBeitrag = Partial<Omit<IVorgabenU, 'Einstellungen'>> &
  * seiner Felder. `Einstellungen` kennt kein Feature; die Abschnitte und Felder kommen aus den Slots.
  */
 export interface IFeatureEinstellungen {
+  /** Eigene Abschnitte im Akkordeon; leer, wenn das Feature nur Felder in „Persönliche Daten“ beisteuert. */
   sections: readonly IEinstellungenSection[];
+  /**
+   * Zusaetzliche Felder im Panel „Persönliche Daten“ (nach „Tätigkeit“), je Feld eine Rasterzelle (`sp-md-6`). Befuellen und
+   * Einsammeln uebernehmen `read`/`collect` des Features. `versteckt` ist gesetzt, wenn der Bereich des Features in den
+   * Einstellungen abgewaehlt ist: dann `d-none`, aber im DOM lassen (der Wert wird weiter eingesammelt und bleibt erhalten).
+   */
+  PersFelder?: ComponentType<{ versteckt: boolean }>;
   /** Befuellt die Felder des Features aus den Benutzer-Vorgaben (die Abschnitte sind dann gerendert). */
   read(vorgabenU: IVorgabenU): void;
   /** Liest die Felder des Features aus und validiert sie. Wirft bei ungueltigen Werten (mit Snackbar-Hinweis). */

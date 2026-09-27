@@ -18,7 +18,6 @@ export default function saveEinstellungen(): IVorgabenU {
   // Bestandsnutzer haben diese Felder ggf. nicht im Dokument (kein Server-Default) -- ohne
   // Default fehlt der Object-Key komplett und die Object.keys-Schleife unten liest den Input nie ein.
   VorgabenU.Pers.Taetigkeit ??= '';
-  VorgabenU.Pers.Entgeltgruppe ??= '';
   setupPersValidation();
 
   /**

@@ -3,6 +3,9 @@ import type { ComponentProps } from 'react';
 
 import { STANDARD_UNGUELTIG_MELDUNG } from '@/shared/ui/form/dbFeldHelfer';
 import { useEmailStatus } from '../model/emailStatusStore';
+import { useEinstellungenTeile } from '@/shared/model/einstellungen/einstellungenTeile';
+import { featureRegistry } from '@/shared/lib/feature';
+import useFeatureTabsVisible from '@/shared/model/navigation/useFeatureTabsVisible';
 import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
 
 const TAETIGKEIT_VORSCHLAEGE = ['Arbeiter', 'Facharbeiter', 'Signalmechaniker', 'Signalmechaniker RBEG', 'Meister'];
@@ -86,10 +89,19 @@ function Auswahl({
 /**
  * Panel "Persoenliche Daten" der Einstellungen. Rein praesentational: `generateEingabeMaskeEinstellungen.ts` und
  * `saveEinstellungen.ts` lesen/schreiben jedes Feld per `document.querySelector('#<Feld-Id>')`, die Feld-Id entspricht
- * deshalb dem `IVorgabenUPers`-Schluessel. Den Hinweis zur E-Mail-Verifizierung liefert `useEmailStatus()`.
+ * deshalb dem `IVorgabenUPers`-Schluessel. Felder der Features (`PersFelder` im Einstellungen-Slot) befuellen und sammeln
+ * deren `read`/`collect`. Den Hinweis zur E-Mail-Verifizierung liefert `useEmailStatus()`.
  */
 export default function PersoenlicheDatenPanel() {
   const emailStatus = useEmailStatus();
+  // Pers-Felder der Features (z. B. Entgeltgruppe des EA) aus deren Einstellungen-Slot; ein fehlendes Feature hat keine.
+  // Ist der Bereich des Features abgewaehlt, blendet das Feld sich aus (wie die Feature-Abschnitte in `EinstellungenTab`).
+  const featureTabs = useFeatureTabsVisible();
+  const featureFelder = useEinstellungenTeile().flatMap(({ id, part }) => {
+    if (!part.PersFelder) return [];
+    const navId = featureRegistry.meta(id)?.legacy.navId;
+    return [{ id, PersFelder: part.PersFelder, versteckt: navId !== undefined && !featureTabs.nav(navId) }];
+  });
 
   return (
     <div className="raster text-start abstand-3">
@@ -183,9 +195,9 @@ export default function PersoenlicheDatenPanel() {
           dataList={TAETIGKEIT_VORSCHLAEGE}
         />
       </div>
-      <div className="sp-md-6">
-        <Feld id="Entgeltgruppe" label="Entgeltgruppe (Optional / Entgeltausgleich)" icon="person" placeholder="105" />
-      </div>
+      {featureFelder.map(({ id, PersFelder, versteckt }) => (
+        <PersFelder key={id} versteckt={versteckt} />
+      ))}
       <div className="sp-md-6">
         <Feld
           id="kmArbeitsort"

@@ -91,7 +91,8 @@ describe('(a) Vertrag je Manifest-Feature', () => {
       }
       if (parts.einstellungen) {
         const einstellungen = await geladen('einstellungen');
-        expect(einstellungen.sections.length).toBeGreaterThan(0);
+        // Mindestens ein Abschnitt oder Pers-Felder (EA steuert nur die Entgeltgruppe bei).
+        expect(einstellungen.sections.length > 0 || einstellungen.PersFelder !== undefined).toBe(true);
         for (const funktion of ['read', 'collect'] as const) expect(typeof einstellungen[funktion]).toBe('function');
       }
     },
@@ -187,9 +188,9 @@ describe('(b) Entfernbarkeit: jede Teilmenge des Manifests', () => {
       expect(ergebnis.eaMinuten === null || namen.includes('ea')).toBe(true);
       expect(ergebnis.summeGesamt === null).toBe(!namen.some(id => id !== 'ea'));
 
-      // Einstellungen: nur die vorhandenen Features liefern Abschnitte.
+      // Einstellungen: nur die vorhandenen Features liefern Slots.
       const einstellungen = await ladeEinstellungenTeile();
-      expect(einstellungen.map(teil => teil.id)).toEqual(namen.filter(id => id !== 'ea'));
+      expect(einstellungen.map(teil => teil.id)).toEqual(namen);
 
       // Tab-Sync (Login, Speichern): mountet nur vorhandene Features, wirft nicht.
       await syncFeatureTabs(['bereitschaft', 'ewt', 'neben', 'ea']);

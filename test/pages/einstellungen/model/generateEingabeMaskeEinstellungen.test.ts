@@ -350,4 +350,24 @@ describe('generateEingabeMaskeEinstellungen - vollständige Maske', () => {
     // CustomTable-Zweig: rows.load + saveTableDataVorgabenU wurden aufgerufen.
     expect(saveTableDataVorgabenU).toHaveBeenCalled();
   });
+
+  it('leert optionale Pers-Felder, die vom Server als undefined kommen (Entgeltgruppe, ea-Slot), statt zu werfen', async () => {
+    setupFullDomShell();
+    document.body.insertAdjacentHTML(
+      'afterbegin',
+      '<input id="Taetigkeit" value="alt" /><input id="Entgeltgruppe" value="alt" />',
+    );
+    (Storage.get as ReturnType<typeof vi.fn>).mockReturnValue('');
+    const vorgabenU = buildFullVorgabenU();
+    vorgabenU.Pers = {
+      ...vorgabenU.Pers,
+      Taetigkeit: undefined,
+      Entgeltgruppe: undefined,
+    } as unknown as IVorgabenU['Pers'];
+
+    await generateEingabeMaskeEinstellungen(vorgabenU);
+
+    expect(document.querySelector<HTMLInputElement>('#Taetigkeit')?.value).toBe('');
+    expect(document.querySelector<HTMLInputElement>('#Entgeltgruppe')?.value).toBe('');
+  });
 });

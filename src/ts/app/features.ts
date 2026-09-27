@@ -55,6 +55,7 @@ featureRegistry.define({
     pdf: () => import('@/features/ea/parts/pdf'),
     help: () => import('@/features/ea/parts/help'),
     berechnung: () => import('@/features/ea/parts/berechnung'),
+    einstellungen: () => import('@/features/ea/parts/einstellungen'),
     events: () => import('@/features/ea/parts/events'),
   },
 });

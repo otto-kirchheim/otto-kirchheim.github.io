@@ -49,7 +49,6 @@ export const PERS_FIELD_LABELS = {
   kmnBhf: 'Entfernung zum nächsten Bahnhof in km',
   TB: 'Tarif / Beamter',
   Taetigkeit: 'Tätigkeit / Stellenbezeichnung',
-  Entgeltgruppe: 'Entgeltgruppe (Entgeltausgleich)',
 } as const;
 
 const DEFAULT_PERS_VALIDATION_SELECTORS = Object.keys(PERS_FIELD_LABELS).map(key => `#${key}`);
@@ -198,6 +197,39 @@ export function validateGermanAddressInput(
 }
 
 /**
+ * Prueft einen optionalen Freitext: leer bleibt gueltig, sonst nur erlaubte Zeichen.
+ *
+ * @param normalizedValue - Bereinigter Wert.
+ * @param label - Feldbezeichnung fuer die Meldung.
+ * @returns Fehlermeldung oder '' bei gueltigem Wert.
+ */
+function optionalerTextFehler(normalizedValue: string, label: string): string {
+  return normalizedValue !== '' && !TEXT_REGEX.test(normalizedValue) ? `${label} enthält ungültige Zeichen.` : '';
+}
+
+/**
+ * Validiert ein optionales Freitextfeld (z. B. Pers-Felder der Features) und zeigt das Ergebnis am Feld an.
+ *
+ * @param input - Eingabefeld.
+ * @param label - Feldbezeichnung fuer die Meldung.
+ * @param opts - `normalize`: schreibt den bereinigten Wert ins Feld zurueck (Default `true`).
+ * @returns `true`, wenn der Wert gueltig ist.
+ */
+export function validateOptionalTextInput(
+  input: HTMLInputElement,
+  label: string,
+  opts: { normalize?: boolean } = {},
+): boolean {
+  const normalizedValue = normalizeTextValue(input.value);
+  // normalize: false während des Tippens, sonst löscht trim() gerade eingegebene Leerzeichen.
+  if (opts.normalize ?? true) input.value = normalizedValue;
+  input.setCustomValidity('');
+  const message =
+    optionalerTextFehler(normalizedValue, label) || (input.checkValidity() ? '' : input.validationMessage);
+  return setValidationState(input, message === '', message);
+}
+
+/**
  * Validiert ein Feld der persoenlichen Daten anhand seiner Id (Schluessel aus `PERS_FIELD_LABELS`) und
  * zeigt das Ergebnis am Feld an. Felder mit unbekannter Id gelten als gueltig.
  *
@@ -267,12 +299,8 @@ export function validatePersInput(input: ValidatableElement, opts: { normalize?:
       if (!VALID_TB_VALUES.has(normalizedValue)) validationMessage = `${label} bitte auswählen.`;
       break;
 
-    // Optional (nur fuer Entgeltausgleich benoetigt) -- leer bleibt gueltig, sonst Zeichen pruefen.
     case 'Taetigkeit':
-    case 'Entgeltgruppe':
-      if (normalizedValue !== '' && !TEXT_REGEX.test(normalizedValue)) {
-        validationMessage = `${label} enthält ungültige Zeichen.`;
-      }
+      validationMessage = optionalerTextFehler(normalizedValue, label);
       break;
 
     default:

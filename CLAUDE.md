@@ -123,7 +123,7 @@ features/ber/          # meta.id = 'ber'
 │   ├── ui.tsx         # Tab-Komponente
 │   ├── data.ts        # getDaten/applyDaten/monatFilter je Ressource
 │   ├── berechnung.tsx # aggregate/calc/tableRows/mobileCard fuer die Berechnung
-│   ├── einstellungen.ts # sections[] (read/collect) fuer die Einstellungen
+│   ├── einstellungen.ts # sections[] + optional PersFelder (Felder in „Persönliche Daten“), read/collect fuer die Einstellungen
 │   ├── pdf.ts         # baueDaten() fuer den PDF-Export
 │   ├── help.ts        # Hilfetexte des Moduls (`meta.helpKeys`)
 │   └── events.ts      # Wake-Event-Handler (optional)

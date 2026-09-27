@@ -10,6 +10,26 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
   den Kartenrand) hat dadurch die obere Rundung ueberdeckt. `overflow: hidden` auf dem `db-card`-Div ergaenzt
   (`AdminUserCard.tsx`).
 
+## 2026-09-27 (193)
+
+### refactor (Entgeltgruppe in den Einstellungen-Teil von ea, Audit Schritt C)
+
+- Neues optionales Feld `IFeatureEinstellungen.PersFelder` (Komponente): Features steuern damit Felder im Panel „Persönliche
+  Daten“ bei (nach „Tätigkeit“), Befüllen/Einsammeln über ihr `read`/`collect`.
+- ea hat jetzt einen Einstellungen-Teil (`features/ea/parts/einstellungen.ts`, ohne eigenen Abschnitt): Feld
+  `Entgeltgruppe` (`features/ea/ui/EntgeltgruppeFeld.tsx`) samt Prüfung. `PersoenlicheDatenPanel`, `saveEinstellungen` und
+  `generateEingabeMaskeEinstellungen` kennen das Feld nicht mehr; ohne ea fehlt es, der gespeicherte Wert bleibt erhalten.
+  Ist EA unter „Sichtbare Bereiche“ abgewählt, blendet sich das Feld aus (`PersFelder` bekommt `versteckt`, wie die
+  Feature-Abschnitte), bleibt aber im DOM und wird weiter gespeichert.
+- `addressValidation`: Entgeltgruppe raus aus `PERS_FIELD_LABELS`, neue `validateOptionalTextInput` (optionaler Freitext,
+  auch für Tätigkeit genutzt).
+- fix: `setElementValues` leert Felder, deren Wert `undefined` ist (Server liefert optionale Pers-Felder so), statt
+  „unbekannter Wert“ zu werfen -- bisher verdeckt durch `Entgeltgruppe ??= ''`.
+- Tests: `featureSlots.test.tsx` (ea-Slot: Position im Panel, read/collect, ungültig, ohne ea, EA abgewählt),
+  `saveEinstellungen.test.ts` (ohne Modul ea bleibt die Entgeltgruppe), Regressionstest `generateEingabeMaskeEinstellungen`,
+  `featureAbnahme` (ea liefert Einstellungen). `scripts/livetest.ts` Schritt 5 (Einstellungen: Entgeltgruppe
+  lesen/speichern, EA ab- und wieder anwählen, zurücksetzen; beide Modi).
+
 ## 2026-09-27 (192)
 
 ### refactor (Admin-Profilvorlagen nach Features, Audit Schritt B)
