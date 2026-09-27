@@ -2,6 +2,14 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-27 (193)
+
+### fix (AdminUserCard: abgeschnittene Kartenecke)
+
+- `db-card` (DB UX) setzt `border-radius`, aber nie `overflow` -- der Kopfzeilen-Div (`bg-body-secondary`, flush an
+  den Kartenrand) hat dadurch die obere Rundung ueberdeckt. `overflow: hidden` auf dem `db-card`-Div ergaenzt
+  (`AdminUserCard.tsx`).
+
 ## 2026-09-27 (192)
 
 ### refactor (Admin-Profilvorlagen nach Features, Audit Schritt B)

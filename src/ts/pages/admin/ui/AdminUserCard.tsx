@@ -62,6 +62,7 @@ export function AdminUserCard({
       <div
         className={`db-card ${isSelfRow ? 'border-primary' : ''} ${changed ? 'border-warning' : ''}`}
         data-spacing="none"
+        style={{ overflow: 'hidden' }}
       >
         <div
           className="d-flex justify-content-between align-items-center py-2 px-3 bg-body-secondary border-bottom"
