@@ -1,4 +1,5 @@
 import type { AdminFeature } from '../../adminFeatures';
+import katalog from './katalog';
 import { fahrzeitAbschnitt } from './profilVorlage';
 
 /** Admin-Anteile der EWT (`ewt`): Einsatzwechseltätigkeit. */
@@ -34,7 +35,7 @@ const adminFeature: AdminFeature = {
     },
   ],
   fieldEnums: { Schicht: ['T', 'SP', 'N', 'S', 'BN'] },
-  formular: { code: 'ewt', label: 'Einsatzwechseltätigkeit (EWT)', order: 2 },
+  formular: { code: 'ewt', label: 'Einsatzwechseltätigkeit (EWT)', order: 2, katalog },
   statsRows: [{ label: 'Einsatzwechseltätigkeiten', countKey: 'einsatzwechseltaetigkeiten', growthKey: 'ewtLast7d' }],
   profilVorlage: { abschnitte: [fahrzeitAbschnitt] },
 };

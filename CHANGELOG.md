@@ -2,6 +2,20 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-27 (196)
+
+### refactor (Formular-Katalog und Storage-Ressourcen ohne feste Feature-Listen, Audit F/G)
+
+- F: Katalog des Formular-Editors über das Admin-Manifest: `AdminFeature.formular.katalog` (aus `katalog.ts` des
+  Admin-Ordners); `datenKatalog.ts` importiert keine Feature-Ordner mehr (`zeilenQuellen()`, `listenVorlagen()`,
+  `vorlagenKategorie()` statt der Konstanten `ZEILEN_QUELLEN`/`LISTEN_VORLAGEN`/`VORLAGEN_KATEGORIE`), `FormularCode` ist
+  `string`. Ohne Admin-Anteil eines Features hat dessen Formular einen leeren Katalog statt eines Build-Fehlers. Geladen
+  wird weiterhin nur im Admin-Chunk (nur Admins).
+- G: `Storage.ts` ohne feste `RESOURCE_KEYS`: den `{ data, timestamp }`-Wrapper bekommen `VorgabenU` und die
+  `meta.resources[].storageKey` der angemeldeten Features.
+- `scripts/new-feature.ts` `HANDARBEIT` entsprechend gekürzt. Tests: `datenKatalog.test.ts` (Entfernbarkeit ea),
+  `Storage.test.ts` (Keys aus der Registry), `ListenGruppen.test.tsx`. Livetest 44/44 + 34/34, Katalog im Browser geprüft.
+
 ## 2026-09-27 (195)
 
 ### chore (Audit Schritt E: geschlossene Typen)

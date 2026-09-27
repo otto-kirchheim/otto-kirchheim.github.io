@@ -82,15 +82,7 @@ describe('scripts/new-feature (planeFeature)', () => {
 
   it('nennt die geschlossenen Typen, die ein Feature von Hand erweitern muss (Audit E)', () => {
     const text = HANDARBEIT.join('\n');
-    for (const stelle of [
-      'StorageData',
-      'RESOURCE_KEYS',
-      'FeaturePdfModus',
-      'FormularCode',
-      'FEATURE_KATALOGE',
-      'IVorgabenBerechnungMonat',
-      'IBerechnungMonatsErgebnis',
-    ])
+    for (const stelle of ['StorageData', 'FeaturePdfModus', 'IVorgabenBerechnungMonat', 'IBerechnungMonatsErgebnis'])
       expect(text).toContain(stelle);
   });
 });

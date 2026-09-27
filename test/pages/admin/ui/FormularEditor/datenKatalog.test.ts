@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { beforeAll, describe, expect, it, vi } from 'bun:test';
 import { ZulageCategory } from '@otto-kirchheim/nebengeld-shared';
 import {
   beispielWert,
@@ -6,12 +6,15 @@ import {
   istBooleanFeld,
   katalogFelder,
   katalogZeilenFelder,
-  LISTEN_VORLAGEN,
-  VORLAGEN_KATEGORIE,
+  listenVorlagen,
+  vorlagenKategorie,
   werteAuswahl,
-  ZEILEN_QUELLEN,
+  zeilenQuellen,
   type FormularCode,
 } from '@/pages/admin/ui/FormularEditor/datenKatalog';
+import '@/app/features';
+import { featureRegistry } from '@/shared/lib/feature';
+import { ladeAdminFeatures, resetAdminFeatures } from '@/pages/admin/adminFeatures';
 
 const FORMULARE: FormularCode[] = ['bereitschaft', 'ewt', 'ez', 'ea'];
 
@@ -21,11 +24,17 @@ const FORMULARE: FormularCode[] = ['bereitschaft', 'ewt', 'ez', 'ea'];
  * Ausgabe fest.
  */
 describe('datenKatalog: Zusammenfuehrung der Feature-Beitraege', () => {
-  it('ZEILEN_QUELLEN nennt genau die Zeilenlisten jedes Formulars', () => {
-    expect(ZEILEN_QUELLEN.bereitschaft.map(q => q.pfad)).toEqual(['Daten.BZ', 'Daten.BE']);
-    expect(ZEILEN_QUELLEN.ewt.map(q => q.pfad)).toEqual(['Daten.EWT']);
-    expect(ZEILEN_QUELLEN.ez.map(q => q.pfad)).toEqual(['Daten.N']);
-    expect(ZEILEN_QUELLEN.ea.map(q => q.pfad)).toEqual(['Daten.EA']);
+  // Die Katalog-Beitraege kommen ueber die geladenen Admin-Anteile (`AdminFeature.formular.katalog`).
+  beforeAll(async () => {
+    resetAdminFeatures();
+    await ladeAdminFeatures();
+  });
+
+  it('zeilenQuellen nennt genau die Zeilenlisten jedes Formulars', () => {
+    expect(zeilenQuellen('bereitschaft').map(q => q.pfad)).toEqual(['Daten.BZ', 'Daten.BE']);
+    expect(zeilenQuellen('ewt').map(q => q.pfad)).toEqual(['Daten.EWT']);
+    expect(zeilenQuellen('ez').map(q => q.pfad)).toEqual(['Daten.N']);
+    expect(zeilenQuellen('ea').map(q => q.pfad)).toEqual(['Daten.EA']);
   });
 
   it.each(FORMULARE)('katalogFelder("%s") liefert Basis- und Zeilenquellen-Eintraege', formular => {
@@ -34,7 +43,7 @@ describe('datenKatalog: Zusammenfuehrung der Feature-Beitraege', () => {
     expect(felder.length).toBeGreaterThan(0);
     expect(felder.map(f => f.pfad)).toContain('Jahr');
     expect(felder.map(f => f.pfad)).toContain('VorgabenU.Pers.Vorname');
-    for (const quelle of ZEILEN_QUELLEN[formular]) expect(felder.map(f => f.pfad)).toContain(quelle.pfad);
+    for (const quelle of zeilenQuellen(formular)) expect(felder.map(f => f.pfad)).toContain(quelle.pfad);
   });
 
   it('Bereitschaftszulage-Basisfelder gibt es nur bei "bereitschaft"', () => {
@@ -70,15 +79,33 @@ describe('datenKatalog: Zusammenfuehrung der Feature-Beitraege', () => {
     expect(bz.find(f => f.pfad === 'Dauer')?.label).not.toBe(be.find(f => f.pfad === 'Dauer')?.label);
   });
 
-  it('LISTEN_VORLAGEN und VORLAGEN_KATEGORIE liefern die Zulagen-Listen nur bei "ez"', () => {
-    expect(LISTEN_VORLAGEN.ez.map(v => v.name)).toEqual(['erschwernis', 'leistung', 'gkr']);
-    for (const formular of ['bereitschaft', 'ewt', 'ea'] as const) expect(LISTEN_VORLAGEN[formular]).toEqual([]);
+  it('listenVorlagen und vorlagenKategorie liefern die Zulagen-Listen nur bei "ez"', () => {
+    expect(listenVorlagen('ez').map(v => v.name)).toEqual(['erschwernis', 'leistung', 'gkr']);
+    for (const formular of ['bereitschaft', 'ewt', 'ea'] as const) expect(listenVorlagen(formular)).toEqual([]);
 
-    expect(VORLAGEN_KATEGORIE).toEqual({
-      erschwernis: ZulageCategory.Erschwerniszulage,
-      leistung: ZulageCategory.LeistungspramieUndFahrentschaedigung,
-      gkr: ZulageCategory.Ganzkoerperreinigung,
-    });
+    expect(['erschwernis', 'leistung', 'gkr', 'unbekannt'].map(vorlagenKategorie)).toEqual([
+      ZulageCategory.Erschwerniszulage,
+      ZulageCategory.LeistungspramieUndFahrentschaedigung,
+      ZulageCategory.Ganzkoerperreinigung,
+      undefined,
+    ]);
+  });
+
+  it('Entfernbarkeit: ohne den Admin-Anteil von ea hat dessen Formular einen leeren Katalog, die anderen bleiben', async () => {
+    const original = featureRegistry.metas.bind(featureRegistry);
+    const spion = vi
+      .spyOn(featureRegistry, 'metas')
+      .mockImplementation(() => original().filter(meta => meta.id !== 'ea'));
+    resetAdminFeatures();
+    await ladeAdminFeatures();
+
+    expect(zeilenQuellen('ea')).toEqual([]);
+    expect(katalogZeilenFelder('ea')).toEqual([]);
+    expect(zeilenQuellen('ez').map(q => q.pfad)).toEqual(['Daten.N']);
+
+    spion.mockRestore();
+    resetAdminFeatures();
+    await ladeAdminFeatures();
   });
 
   it('beispielWert findet formular- und quellenspezifische Beispiele', () => {

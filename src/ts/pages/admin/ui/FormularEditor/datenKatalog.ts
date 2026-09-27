@@ -1,10 +1,7 @@
 import { LreType, ZULAGEN_CATALOG } from '@otto-kirchheim/nebengeld-shared';
 import type { FormatName, Schriftfamilie, ZulageCategory } from '@otto-kirchheim/nebengeld-shared';
-import berKatalog from '@/pages/admin/features/ber/katalog';
-import ewtKatalog from '@/pages/admin/features/ewt/katalog';
-import eaKatalog from '@/pages/admin/features/ea/katalog';
-import ezKatalog from '@/pages/admin/features/ez/katalog';
 import type { FeatureKatalog, FormularCode, KatalogEintrag, ListenVorlage } from './katalogTypen';
+import { getAdminFeaturesState } from '../../adminFeatures';
 
 export type { BeispielWert, FormularCode, KatalogEintrag, ListenVorlage } from './katalogTypen';
 
@@ -44,15 +41,36 @@ export const FORMATE: { wert: FormatName | ''; label: string }[] = [
   { wert: 'oe', label: 'Organisationseinheit (V.IW-MI-N-KSL-IL 03)' },
 ];
 
-// Katalog-Beitrag je Formular-Feature; Felder/Quellen/Listen liegen bei den Features (`pages/admin/features/<key>/katalog.ts`),
-// hier nur die Zusammenfuehrung. Abgeleitet aus `shared/lib/pdf/pdfDaten.ts` (Basis) und `features/<Feature>/utils/pdfDaten.ts`
-// (`IPdf*`-Typen je Ressource): die TS-Typen sind zur Laufzeit weg, daher von Hand gepflegt -- bei Änderungen an den `IPdf*`-Typen mitziehen.
-const FEATURE_KATALOGE: Record<FormularCode, FeatureKatalog> = {
-  bereitschaft: berKatalog,
-  ewt: ewtKatalog,
-  ez: ezKatalog,
-  ea: eaKatalog,
-};
+// Katalog-Beitrag je Formular-Feature; Felder/Quellen/Listen liegen bei den Features (`pages/admin/features/<key>/katalog.ts`,
+// angemeldet ueber `AdminFeature.formular.katalog`), hier nur die Zusammenfuehrung. Abgeleitet aus `shared/lib/pdf/pdfDaten.ts`
+// (Basis) und `features/<id>/model/pdfDaten.ts` (`IPdf*`-Typen je Ressource): die TS-Typen sind zur Laufzeit weg, daher von
+// Hand gepflegt -- bei Änderungen an den `IPdf*`-Typen mitziehen.
+
+/** Katalog ohne Felder (Formular eines nicht geladenen oder fehlenden Features). */
+const LEERER_KATALOG: FeatureKatalog = { zeilenFelder: [], zeilenQuellen: [] };
+
+/**
+ * Katalogbeitraege der geladenen Admin-Anteile (`ladeAdminFeatures`), je Formular-Code.
+ *
+ * @returns Katalog je Formular-Code; leer, solange keine Admin-Anteile geladen sind.
+ */
+function featureKataloge(): Map<FormularCode, FeatureKatalog> {
+  return new Map(
+    getAdminFeaturesState().features.flatMap(feature =>
+      feature.formular ? [[feature.formular.code, feature.formular.katalog] as const] : [],
+    ),
+  );
+}
+
+/**
+ * Katalogbeitrag eines Formulars.
+ *
+ * @param formular - Formularcode.
+ * @returns Beitrag des Features; ohne geladenes Feature ein leerer Katalog.
+ */
+function featureKatalog(formular: FormularCode): FeatureKatalog {
+  return featureKataloge().get(formular) ?? LEERER_KATALOG;
+}
 
 /** Felder, die in jedem Formular vorkommen (Zeitraum, Person, Dienststelle); formularspezifische Basis-Felder liegen bei den Features. */
 const BASIS: KatalogEintrag[] = [
@@ -106,20 +124,25 @@ const BASIS: KatalogEintrag[] = [
 ];
 
 /**
- * `BASIS`-Einträge fuer `formular`, ergaenzt um dessen eigene (`FEATURE_KATALOGE[formular].basisEintraege`, z. B.
+ * `BASIS`-Einträge fuer `formular`, ergaenzt um dessen eigene (`basisEintraege` des Feature-Katalogs, z. B.
  * Bereitschaftszulage nur bei Bereitschaft).
  *
  * @param formular - Formularcode.
  * @returns Die für dieses Formular sichtbaren Basis-Einträge.
  */
 function basisFuer(formular: FormularCode): KatalogEintrag[] {
-  return [...BASIS, ...(FEATURE_KATALOGE[formular].basisEintraege ?? [])];
+  return [...BASIS, ...(featureKatalog(formular).basisEintraege ?? [])];
 }
 
-/** Zeilenlisten im Download-Body, aus denen eine Tabelle gespeist wird (Beitrag der Features). */
-export const ZEILEN_QUELLEN: Record<FormularCode, { pfad: string; label: string }[]> = Object.fromEntries(
-  Object.entries(FEATURE_KATALOGE).map(([formular, katalog]) => [formular, katalog.zeilenQuellen]),
-) as Record<FormularCode, { pfad: string; label: string }[]>;
+/**
+ * Zeilenlisten im Download-Body, aus denen eine Tabelle gespeist wird (Beitrag des Features).
+ *
+ * @param formular - Formularcode.
+ * @returns Zeilenquellen; leer ohne geladenes Feature.
+ */
+export function zeilenQuellen(formular: FormularCode): { pfad: string; label: string }[] {
+  return featureKatalog(formular).zeilenQuellen;
+}
 
 /**
  * Auswahl für Kopf-/Fuß-/Übertrags-Felder: alles außerhalb der Datentabelle.
@@ -130,7 +153,7 @@ export const ZEILEN_QUELLEN: Record<FormularCode, { pfad: string; label: string 
 export function katalogFelder(formular: FormularCode): KatalogEintrag[] {
   return [
     ...basisFuer(formular),
-    ...ZEILEN_QUELLEN[formular].map(q => ({ pfad: q.pfad, label: `${q.label} (ganze Liste)`, gruppe: 'Daten' })),
+    ...zeilenQuellen(formular).map(q => ({ pfad: q.pfad, label: `${q.label} (ganze Liste)`, gruppe: 'Daten' })),
   ];
 }
 
@@ -140,11 +163,11 @@ export function katalogFelder(formular: FormularCode): KatalogEintrag[] {
  * anderen Tabelle mit auf. Ohne Angabe alle Einträge.
  *
  * @param formular - Formularcode.
- * @param quelle - Zeilenquelle (`ZEILEN_QUELLEN[formular][].pfad`), ohne Angabe alle.
+ * @param quelle - Zeilenquelle (`zeilenQuellen(formular)[].pfad`), ohne Angabe alle.
  * @returns Die passenden Zeilenfelder.
  */
 export function katalogZeilenFelder(formular: FormularCode, quelle?: string): KatalogEintrag[] {
-  const eintraege = FEATURE_KATALOGE[formular].zeilenFelder;
+  const eintraege = featureKatalog(formular).zeilenFelder;
   return quelle === undefined ? eintraege : eintraege.filter(e => e.quelle === undefined || e.quelle === quelle);
 }
 
@@ -228,13 +251,26 @@ export function zulagenKurztexte(kategorie: ZulageCategory): Record<string, stri
   return Object.fromEntries(ZULAGEN_CATALOG.filter(z => z.category === kategorie).map(z => [z.code, z.shortLabel]));
 }
 
-/** Fertige Listen-Gruppen je Formular (Beitrag der Features; bisher nur EZ). */
-export const LISTEN_VORLAGEN: Record<FormularCode, ListenVorlage[]> = Object.fromEntries(
-  Object.entries(FEATURE_KATALOGE).map(([formular, katalog]) => [formular, katalog.listenVorlagen ?? []]),
-) as Record<FormularCode, ListenVorlage[]>;
+/**
+ * Fertige Listen-Gruppen eines Formulars (Beitrag des Features; bisher nur EZ).
+ *
+ * @param formular - Formularcode.
+ * @returns Listen-Vorlagen; leer ohne Beitrag.
+ */
+export function listenVorlagen(formular: FormularCode): ListenVorlage[] {
+  return featureKatalog(formular).listenVorlagen ?? [];
+}
 
-/** Kategorie zu einer Listen-Vorlage (Beitrag der Features; bisher nur EZ), für die Kurztext-Umschaltung im Editor. */
-export const VORLAGEN_KATEGORIE: Record<string, ZulageCategory> = Object.assign(
-  {},
-  ...Object.values(FEATURE_KATALOGE).map(katalog => katalog.vorlagenKategorie ?? {}),
-);
+/**
+ * Kategorie zu einer Listen-Vorlage (Beitrag der Features; bisher nur EZ), für die Kurztext-Umschaltung im Editor.
+ *
+ * @param name - Name der Listen-Vorlage.
+ * @returns Zulagen-Kategorie oder `undefined`.
+ */
+export function vorlagenKategorie(name: string): ZulageCategory | undefined {
+  for (const katalog of featureKataloge().values()) {
+    const kategorie = katalog.vorlagenKategorie?.[name];
+    if (kategorie !== undefined) return kategorie;
+  }
+  return undefined;
+}

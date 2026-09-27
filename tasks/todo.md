@@ -262,9 +262,14 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
       (`FEATURE_KATALOGE`) statt ueber das Admin-Manifest -- ohne Admin-Ordner `ea` bricht der Build, ein neuer
       `--admin`-Katalog wird nicht angemeldet. Einzige verbliebene Stelle mit statischem Admin-Feature-Import.
     Umgesetzt: `scripts/new-feature.ts` `HANDARBEIT` (Ausgabe nach dem Anlegen) + Test. Vorschlag Folgeschritte (User):
-  - [ ] F Formular-Katalog ueber das Admin-Manifest: `AdminFeature.formular.katalog`, `datenKatalog.ts` ohne statische
+  - [x] F Formular-Katalog ueber das Admin-Manifest: `AdminFeature.formular.katalog`, `datenKatalog.ts` ohne statische
         Feature-Importe (`ZEILEN_QUELLEN`/`LISTEN_VORLAGEN` als Funktionen), `FormularCode` -> `string`
-  - [ ] G `RESOURCE_KEYS` aus `featureRegistry.resources()` (+ `VorgabenU`) statt fester Liste
+  - [x] G `RESOURCE_KEYS` aus `featureRegistry.resources()` (+ `VorgabenU`) statt fester Liste
+    Stand F+G (2026-09-27): Tests 2323/2323, typecheck/lint/build 0; Livetest 44/44 + 34/34; Katalog im Browser (Dev-Server,
+    Modul-Import): vor `ladeAdminFeatures` leer, danach EZ `Daten.N` + Listen-Vorlagen, BER BZ/BE; CHANGELOG 196.
+    F: `AdminFeature.formular.katalog`, `datenKatalog.ts` ohne Feature-Importe (`zeilenQuellen()`/`listenVorlagen()`/
+    `vorlagenKategorie()` statt Konstanten), `FormularCode = string`. Nicht angefasst: `WERTE` (LRE) und
+    `BOOLEAN_FELDER` (EWT) in `datenKatalog.ts` -- ebenfalls Feature-Wissen, Kandidat fuer `FeatureKatalog`.
   - Bewusst in shared (Audit): `resolveSchichtDay`/`arbeitszeit-editor`, `zulagenCatalog`, `berechnungWerte`/`-Bausteine`, `confirmDeleteAllRows`, `resourceApi`, `createDatenGetter`, ewt-Zugriff fuer ez/ea (`getEwtDaten`, `getEwtDatenFuerZuordnung`, `syncFieldsFromEwtRows`, `unlinkEwtRefs`, Events `ewt:*`)
 - [ ] DB UX 5.6 neue Komponenten einbauen (Hinweis User 2026-09-26, nach Update auf 5.6.0, CHANGELOG 191):
   - [ ] `DBDialog`/`DBDialogHeader`/`DBDialogFooter` (nativer, zentrierter `<dialog>`, `backdrop`, `containerSize`,

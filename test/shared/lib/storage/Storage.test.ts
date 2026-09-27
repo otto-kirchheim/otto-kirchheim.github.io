@@ -8,6 +8,8 @@ vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
+import '@/app/features';
+import { featureRegistry, type FeatureResource } from '@/shared/lib/feature';
 import Storage from '@/shared/lib/storage/Storage';
 
 describe('Storage', () => {
@@ -114,6 +116,25 @@ describe('Storage', () => {
   });
 
   // ─── getTimestamp ───────────────────────────────────────────
+
+  describe('Ressourcen-Keys aus der Feature-Registry', () => {
+    it('wrappt den Storage-Key eines neu angemeldeten Features ohne Eintrag in Storage.ts', () => {
+      vi.spyOn(featureRegistry, 'resources').mockReturnValue([{ storageKey: 'key' } as FeatureResource]);
+      Storage.setWithTimestamp('key', [1], 1700000000000);
+
+      expect(JSON.parse(localStorage.getItem('key')!)).toEqual({ data: [1], timestamp: 1700000000000 });
+      expect(Storage.getTimestamp('key')).toBe(1700000000000);
+    });
+
+    it('ohne angemeldetes Feature kein Wrapper (VorgabenU bleibt Ressource)', () => {
+      vi.spyOn(featureRegistry, 'resources').mockReturnValue([]);
+      Storage.set('dataEA', [1]);
+      Storage.set('VorgabenU', { a: 1 } as never);
+
+      expect(JSON.parse(localStorage.getItem('dataEA')!)).toEqual([1]);
+      expect(Storage.getTimestamp('VorgabenU')).toBeGreaterThan(0);
+    });
+  });
 
   describe('getTimestamp', () => {
     it('gibt 0 zurück für Nicht-Ressourcen-Key', () => {

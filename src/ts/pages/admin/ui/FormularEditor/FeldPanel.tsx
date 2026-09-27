@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import type { Feld } from '@otto-kirchheim/nebengeld-shared';
 import { FeldListe } from './FeldZeile';
-import { gruppiere, katalogZeilenFelder, ZEILEN_QUELLEN } from './datenKatalog';
+import { gruppiere, katalogZeilenFelder, zeilenQuellen } from './datenKatalog';
 import { Abschnitt, DarstellungsFelder, ScharfButton, ZahlFeld, Zellkoordinaten } from './feldPanelGemeinsam';
 import { istGleich, naechsterFreierSchluessel } from './feldPanelHelfer';
 import type { Props } from './feldPanelTypen';
@@ -90,7 +90,7 @@ export function FeldPanel({
     if (tabellen[name]) return;
     onTabellenChange({
       ...tabellen,
-      [name]: { quelle: ZEILEN_QUELLEN[formular][0]?.pfad ?? '', startY: 700, maxZeilen: 10, hoehe: 14, spalten: [] },
+      [name]: { quelle: zeilenQuellen(formular)[0]?.pfad ?? '', startY: 700, maxZeilen: 10, hoehe: 14, spalten: [] },
     });
     setNeuerName('');
   }

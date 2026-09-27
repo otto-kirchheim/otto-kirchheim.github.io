@@ -6,7 +6,8 @@ import type { FormatName, ListenGruppe, ZulageCategory } from '@otto-kirchheim/n
  * `datenKatalog.ts` nicht importieren muessen (sonst Zyklus: `datenKatalog.ts` importiert umgekehrt die Beitraege).
  */
 
-export type FormularCode = 'ez' | 'ewt' | 'bereitschaft' | 'ea';
+/** Formular-Code eines Features (`AdminFeature.formular.code`, z. B. `ez`, `bereitschaft`; Backend-Vertrag `GET /formulare/<code>`). */
+export type FormularCode = string;
 
 /**
  * Beispielwert für die Vorschau: Konstante oder, wo die Zeilen variieren müssen (Tage,

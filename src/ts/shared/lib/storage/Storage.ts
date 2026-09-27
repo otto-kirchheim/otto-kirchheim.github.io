@@ -1,4 +1,5 @@
 import { createSnackBar } from '../../ui/snackbar/CustomSnackbar';
+import { featureRegistry } from '../feature/featureRegistry';
 
 interface IStorage {
   set<T>(key: TStorageData, value: T): void;
@@ -46,8 +47,16 @@ enum StorageData {
 
 export type TStorageData = keyof typeof StorageData;
 
-/** Keys die intern als `{ data, timestamp }` gespeichert werden */
-const RESOURCE_KEYS: ReadonlySet<TStorageData> = new Set(['dataBZ', 'dataBE', 'dataE', 'dataN', 'dataEA', 'VorgabenU']);
+/**
+ * Prueft, ob ein Key intern als `{ data, timestamp }` gespeichert wird: `VorgabenU` und die Zeilen-Keys der angemeldeten
+ * Features (`meta.resources[].storageKey`). Zur Laufzeit gelesen, damit ein neues Feature ohne Eintrag hier auskommt.
+ *
+ * @param key - Storage-Key.
+ * @returns `true` bei Ressourcen-Key.
+ */
+function istRessourcenKey(key: TStorageData): boolean {
+  return key === 'VorgabenU' || featureRegistry.resources().some(resource => resource.storageKey === key);
+}
 
 type DataWithTimestamp<T = unknown> = { data: T; timestamp: number };
 
@@ -72,7 +81,7 @@ class Storage implements IStorage {
    * @param value - Zu speichernder Wert.
    */
   set<T>(key: TStorageData, value: T): void {
-    if (RESOURCE_KEYS.has(key)) {
+    if (istRessourcenKey(key)) {
       const wrapped: DataWithTimestamp<T> = { data: value, timestamp: Date.now() };
       localStorage.setItem(key, JSON.stringify(wrapped));
     } else {
@@ -99,7 +108,7 @@ class Storage implements IStorage {
    * @returns Der Timestamp in ms; 0, wenn kein Ressourcen-Key, nicht vorhanden oder ohne Wrapper.
    */
   getTimestamp(key: TStorageData): number {
-    if (!RESOURCE_KEYS.has(key)) return 0;
+    if (!istRessourcenKey(key)) return 0;
     const value = localStorage.getItem(key);
     if (value === null) return 0;
     try {
@@ -160,7 +169,7 @@ class Storage implements IStorage {
     const parsed: unknown = this.isJsonString(value) ? JSON.parse(value!) : this.convertToJson<T>(key, value as T);
 
     // Ressourcen-Keys: unwrap { data, timestamp } → data
-    if (RESOURCE_KEYS.has(key) && parsed && typeof parsed === 'object') {
+    if (istRessourcenKey(key) && parsed && typeof parsed === 'object') {
       if (!('data' in parsed && 'timestamp' in parsed)) {
         // Altbestand ohne Wrapper: migrieren
         this.setWithTimestamp(key, parsed as T, 0);

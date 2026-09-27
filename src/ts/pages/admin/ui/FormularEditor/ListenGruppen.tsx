@@ -1,7 +1,7 @@
 import type { ListenGruppe, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
 import {
-  LISTEN_VORLAGEN,
-  VORLAGEN_KATEGORIE,
+  listenVorlagen,
+  vorlagenKategorie,
   katalogZeilenFelder,
   zulagenKurztexte,
   type FormularCode,
@@ -27,7 +27,7 @@ type Props = {
  */
 export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props) {
   const gruppen = Object.entries(tabelle.listen ?? {});
-  const vorlagen = LISTEN_VORLAGEN[formular].filter(v => !(v.name in (tabelle.listen ?? {})));
+  const vorlagen = listenVorlagen(formular).filter(v => !(v.name in (tabelle.listen ?? {})));
   const zeilenFelder = katalogZeilenFelder(formular);
 
   /**
@@ -50,7 +50,7 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
       <div className="small fw-semibold mb-1">Dynamische Spalten</div>
 
       {gruppen.map(([name, gruppe]) => {
-        const kategorie = VORLAGEN_KATEGORIE[name];
+        const kategorie = vorlagenKategorie(name);
         const kurztexte = Boolean(gruppe.beschriftungen);
         return (
           <div key={name} className="border p-2 mb-1 bg-body">

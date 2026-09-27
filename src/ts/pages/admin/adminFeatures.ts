@@ -1,7 +1,7 @@
 import { useEffect, useSyncExternalStore, type ComponentType } from 'react';
 import { featureRegistry } from '@/shared/lib/feature';
 import type { AdminStats } from './api/api';
-import type { FormularCode } from './ui/FormularEditor/datenKatalog';
+import type { FeatureKatalog, FormularCode } from './ui/FormularEditor/katalogTypen';
 import type { TemplateField } from './ui/profileTemplates.shared';
 
 /**
@@ -92,8 +92,11 @@ export interface AdminFeature {
   crossRefs?: Record<string, AdminCrossRef>;
   /** Felder mit festen Werten (Dropdown im Editor). */
   fieldEnums?: Record<string, string[]>;
-  /** PDF-Formular des Features im Formular-Upload; `order` bestimmt die Reihenfolge der Auswahl. */
-  formular?: { code: FormularCode; label: string; order: number };
+  /**
+   * PDF-Formular des Features im Formular-Upload; `order` bestimmt die Reihenfolge der Auswahl, `katalog` die Datenfelder
+   * des Formular-Editors (`katalog.ts` im Admin-Ordner; `datenKatalog.ts` liest ihn ueber die geladenen Admin-Anteile).
+   */
+  formular?: { code: FormularCode; label: string; order: number; katalog: FeatureKatalog };
   statsRows: AdminStatsRow[];
   /** Anteile am Profil-Vorlagen-Editor: eigene Abschnitte und zusaetzliche Felder im Abschnitt Pers. */
   profilVorlage?: {

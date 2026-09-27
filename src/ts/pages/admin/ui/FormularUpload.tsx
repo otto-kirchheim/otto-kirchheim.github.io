@@ -4,7 +4,7 @@ import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
 import { FormularEditor, type Konfig } from './FormularEditor/FormularEditor';
 import { leereSeite } from './FormularEditor/seitenHelfer';
-import { ZEILEN_QUELLEN, type FormularCode } from './FormularEditor/datenKatalog';
+import { zeilenQuellen, type FormularCode } from './FormularEditor/datenKatalog';
 import { FormularVersionenListe } from './FormularVersionenListe';
 import {
   aendereVersion,
@@ -34,7 +34,7 @@ function leereKonfig(formular: FormularCode): Konfig {
   return {
     seiten: [leereSeite()],
     tabellen: {
-      haupt: { quelle: ZEILEN_QUELLEN[formular][0]?.pfad ?? '', startY: 700, maxZeilen: 10, hoehe: 14, spalten: [] },
+      haupt: { quelle: zeilenQuellen(formular)[0]?.pfad ?? '', startY: 700, maxZeilen: 10, hoehe: 14, spalten: [] },
     },
   };
 }

@@ -1,4 +1,5 @@
 import type { AdminFeature } from '../../adminFeatures';
+import katalog from './katalog';
 import { zulagenAbschnitt } from './profilVorlage';
 
 /** Admin-Anteile der Erschwerniszulagen (`ez`, bisher Neben): Nebengeld. */
@@ -18,7 +19,7 @@ const adminFeature: AdminFeature = {
   ],
   // Verknuepfung auf die EWT (Feld `EWT`); ohne das EWT-Feature entfaellt der Link.
   crossRefs: { EWT: { endpoint: 'einsatzwechseltaetigkeiten' } },
-  formular: { code: 'ez', label: 'Zulagenzettel (EZ)', order: 1 },
+  formular: { code: 'ez', label: 'Zulagenzettel (EZ)', order: 1, katalog },
   statsRows: [{ label: 'Nebengeld-Einträge', countKey: 'nebengeld', growthKey: 'nebengeldLast7d' }],
   profilVorlage: { abschnitte: [zulagenAbschnitt] },
 };

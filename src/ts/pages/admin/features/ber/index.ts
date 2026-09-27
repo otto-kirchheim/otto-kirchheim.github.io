@@ -1,5 +1,6 @@
 import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import type { AdminFeature } from '../../adminFeatures';
+import katalog from './katalog';
 import { vorgabenBAbschnitt } from './profilVorlage';
 
 /** Admin-Anteile der Bereitschaft (`ber`): Bereitschaftseinsatz und Bereitschaftszeitraum. */
@@ -38,7 +39,7 @@ const adminFeature: AdminFeature = {
   ],
   crossRefs: { Bereitschaftszeitraum: { endpoint: 'bereitschaftszeitraeume', isArray: true } },
   fieldEnums: { LRE: Object.values(LreType) },
-  formular: { code: 'bereitschaft', label: 'Bereitschaft (B)', order: 3 },
+  formular: { code: 'bereitschaft', label: 'Bereitschaft (B)', order: 3, katalog },
   statsRows: [
     {
       label: 'Bereitschaftseinsätze',

@@ -51,11 +51,11 @@ export interface FeaturePlan {
  * Bewusst geschlossen gehalten (Typsicherheit fuer die bestehenden Module); das Skript nennt sie nach dem Anlegen.
  */
 export const HANDARBEIT: readonly string[] = [
-  'Ressource mit Zeilen im Storage: Key im Enum `StorageData` UND in `RESOURCE_KEYS` (`shared/lib/storage/Storage.ts`; ' +
-    'ohne diesen Eintrag fehlt der `{ data, timestamp }`-Wrapper und der Server-Abgleich in `loadUserDaten.sync.ts` ' +
-    'sieht Timestamp 0), dazu `TResourceKey` in `@otto-kirchheim/nebengeld-shared` und die Backend-Route.',
-  'PDF-Export: Modus in `FeaturePdfModus` (`shared/lib/feature/featureRegistry.ts`); Formular im Admin: Code in ' +
-    '`FormularCode` (`pages/admin/ui/FormularEditor/katalogTypen.ts`) und Katalog in `FEATURE_KATALOGE` (`datenKatalog.ts`).',
+  'Ressource mit Zeilen im Storage: Key im Enum `StorageData` (`shared/lib/storage/Storage.ts`; den `{ data, timestamp }`-' +
+    'Wrapper bekommt er ueber `meta.resources[].storageKey`), dazu `TResourceKey` in `@otto-kirchheim/nebengeld-shared` ' +
+    'und die Backend-Route.',
+  'PDF-Export: Modus in `FeaturePdfModus` (`shared/lib/feature/featureRegistry.ts`); das Formular im Admin meldet ' +
+    '`AdminFeature.formular` samt `katalog` an (kein weiterer Eintrag noetig).',
   'Berechnung: Bucket in `IVorgabenBerechnungMonat` und Ergebnisfelder in `IBerechnungMonatsErgebnis` (`shared/types`).',
 ];
 

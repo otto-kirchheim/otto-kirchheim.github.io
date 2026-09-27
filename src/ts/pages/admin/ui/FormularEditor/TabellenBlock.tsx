@@ -1,6 +1,6 @@
 import type { Spalte, SeitenDef, TabellenBereich, TabellenDef, Zeile } from '@otto-kirchheim/nebengeld-shared';
 import { berechneteEintraege } from './aggregationsHelfer';
-import { katalogZeilenFelder, werteAuswahl, ZEILEN_QUELLEN, type FormularCode } from './datenKatalog';
+import { katalogZeilenFelder, werteAuswahl, zeilenQuellen, type FormularCode } from './datenKatalog';
 import { Abschnitt, ScharfButton, ZahlFeld } from './feldPanelGemeinsam';
 import { istGleich } from './feldPanelHelfer';
 import type { Armed, Vorschau } from './feldPanelTypen';
@@ -184,7 +184,7 @@ export function TabellenBlock({
             value={tabelle.quelle}
             onChange={e => onChange({ ...tabelle, quelle: e.target.value })}
           >
-            {ZEILEN_QUELLEN[formular].map(q => (
+            {zeilenQuellen(formular).map(q => (
               <option key={q.pfad} value={q.pfad}>
                 {q.label}
               </option>

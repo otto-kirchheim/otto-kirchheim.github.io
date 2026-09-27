@@ -1,4 +1,6 @@
-import { describe, expect, it, mock } from 'bun:test';
+import { beforeAll, describe, expect, it, mock } from 'bun:test';
+import '@/app/features';
+import { ladeAdminFeatures } from '@/pages/admin/adminFeatures';
 import { klickeCheckbox, render, setzeWert } from '@test/reactRender';
 
 import type { ListenGruppe, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
@@ -33,6 +35,11 @@ function loeschKnoepfe(container: Element): HTMLButtonElement[] {
 }
 
 describe('ListenGruppen', () => {
+  // Listen-Vorlagen kommen ueber die geladenen Admin-Anteile (`AdminFeature.formular.katalog`).
+  beforeAll(async () => {
+    await ladeAdminFeatures();
+  });
+
   it('rendert nichts, wenn weder Gruppen noch Vorlagen existieren (nicht-EZ-Formular)', () => {
     const container = renderGruppen({ formular: 'ewt', tabelle: baseTabelle() });
     expect(container.innerHTML).toBe('');

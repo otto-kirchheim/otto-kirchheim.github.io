@@ -1,4 +1,5 @@
 import type { AdminFeature } from '../../adminFeatures';
+import katalog from './katalog';
 
 /** Admin-Anteile des Entgeltausgleichs (`ea`). */
 const adminFeature: AdminFeature = {
@@ -17,7 +18,7 @@ const adminFeature: AdminFeature = {
   ],
   // Verknuepfung auf die EWT (Feld `EWT`); ohne das EWT-Feature entfaellt der Link.
   crossRefs: { EWT: { endpoint: 'einsatzwechseltaetigkeiten' } },
-  formular: { code: 'ea', label: 'Endgeltausgleich (EA)', order: 4 },
+  formular: { code: 'ea', label: 'Endgeltausgleich (EA)', order: 4, katalog },
   statsRows: [
     { label: 'Entgeltausgleich-Einträge', countKey: 'entgeltausgleich', growthKey: 'entgeltausgleichLast7d' },
   ],
