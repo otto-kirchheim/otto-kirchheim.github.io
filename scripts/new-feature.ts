@@ -7,8 +7,8 @@
  * Aufruf: `bun run new-feature <slug> [--ordner <Name>] [--label <Anzeigename>] [--icon <db-icon>] [--admin] [--dry-run]`
  *
  * Weitere Teile (`data`, `pdf`, `berechnung`, `einstellungen`, `events`) und Ressourcen (`meta.resources`) kommen von Hand
- * dazu: `features/ea` ist die kleinste vollstaendige Vorlage. Ein neues Datenobjekt braucht zusaetzlich einen Eintrag in
- * `@otto-kirchheim/nebengeld-shared`/Backend (`TResourceKey`).
+ * dazu: `features/ea` ist die kleinste vollstaendige Vorlage. Geschlossene Typen, die dann mitwachsen muessen (Storage,
+ * PDF-Modus, Formular-Code, Berechnung), listet `HANDARBEIT`; das Skript gibt sie am Ende aus.
  *
  * `--admin` legt zusaetzlich einen (leeren) Admin-Ordner an (`pages/admin/features/<slug>/{index,katalog}.ts`) und
  * traegt ihn im Admin-Manifest (`pages/admin/adminFeatures.ts`) ein; Ressourcen, Verweise und PDF-Formular darin
@@ -45,6 +45,19 @@ export interface FeaturePlan {
   /** Neuer Inhalt von `src/ts/pages/admin/adminFeatures.ts`; nur bei `optionen.admin`. */
   adminManifest?: string;
 }
+
+/**
+ * Geschlossene Typen/Listen, die ein neues Feature je nach Umfang von Hand erweitern muss (Audit Schritt E, 2026-09-27).
+ * Bewusst geschlossen gehalten (Typsicherheit fuer die bestehenden Module); das Skript nennt sie nach dem Anlegen.
+ */
+export const HANDARBEIT: readonly string[] = [
+  'Ressource mit Zeilen im Storage: Key im Enum `StorageData` UND in `RESOURCE_KEYS` (`shared/lib/storage/Storage.ts`; ' +
+    'ohne diesen Eintrag fehlt der `{ data, timestamp }`-Wrapper und der Server-Abgleich in `loadUserDaten.sync.ts` ' +
+    'sieht Timestamp 0), dazu `TResourceKey` in `@otto-kirchheim/nebengeld-shared` und die Backend-Route.',
+  'PDF-Export: Modus in `FeaturePdfModus` (`shared/lib/feature/featureRegistry.ts`); Formular im Admin: Code in ' +
+    '`FormularCode` (`pages/admin/ui/FormularEditor/katalogTypen.ts`) und Katalog in `FEATURE_KATALOGE` (`datenKatalog.ts`).',
+  'Berechnung: Bucket in `IVorgabenBerechnungMonat` und Ergebnisfelder in `IBerechnungMonatsErgebnis` (`shared/types`).',
+];
 
 const MANIFEST_PFAD = 'src/ts/app/features.ts';
 const ADMIN_MANIFEST_PFAD = 'src/ts/pages/admin/adminFeatures.ts';
@@ -317,6 +330,7 @@ function main(): void {
     if (!dryRun) writeFileSync(adminManifestPfad, plan.adminManifest);
   }
   console.log('Danach: `bun run format`, Tests und Changelog.');
+  console.log(`Je nach Umfang von Hand erweitern (geschlossene Typen):\n${HANDARBEIT.map(punkt => `  - ${punkt}`).join('\n')}`);
 }
 
 if (import.meta.main) main();

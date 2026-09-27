@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { planeFeature } from '../scripts/new-feature';
+import { HANDARBEIT, planeFeature } from '../scripts/new-feature';
 
 const manifest = readFileSync('src/ts/app/features.ts', 'utf8');
 const adminManifest = readFileSync('src/ts/pages/admin/adminFeatures.ts', 'utf8');
@@ -78,5 +78,19 @@ describe('scripts/new-feature (planeFeature)', () => {
 
   it('lehnt `admin: true` ohne den aktuellen Admin-Manifest-Inhalt ab', () => {
     expect(() => planeFeature({ slug: 'demo', admin: true }, manifest)).toThrow('adminManifest');
+  });
+
+  it('nennt die geschlossenen Typen, die ein Feature von Hand erweitern muss (Audit E)', () => {
+    const text = HANDARBEIT.join('\n');
+    for (const stelle of [
+      'StorageData',
+      'RESOURCE_KEYS',
+      'FeaturePdfModus',
+      'FormularCode',
+      'FEATURE_KATALOGE',
+      'IVorgabenBerechnungMonat',
+      'IBerechnungMonatsErgebnis',
+    ])
+      expect(text).toContain(stelle);
   });
 });

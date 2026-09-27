@@ -251,7 +251,20 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
     - [x] Umsetzung + Tests (formatCell je Ressource, Editor-Inputtypen), Gate, CHANGELOG 194, Livetest/Browser-Check Admin > Ressourcen
     Ergebnis (2026-09-27): Tests 2319/2319; Livetest Fake-Backend 44/44 (neuer Schritt 7: Ressourcenbrowser per Modul-Import
     gemountet, da nur Super-Admins ihn sehen), lokales Backend 34/34.
-  - [ ] E Typ-Literale (Punkt 9, bewusst, nur pruefen): `FeaturePdfModus`, `FormularCode`, Storage-Enum, `IBerechnungMonatsErgebnis`-Felder -- Scaffold `bun run new-feature` weist darauf hin bzw. erweitert sie
+  - [x] E Typ-Literale (Punkt 9, bewusst, nur pruefen): `FeaturePdfModus`, `FormularCode`, Storage-Enum, `IBerechnungMonatsErgebnis`-Felder -- Scaffold `bun run new-feature` weist darauf hin bzw. erweitert sie
+    Befund (2026-09-27):
+    - `FeaturePdfModus`: reiner Typ, `generatePDF` sucht das Feature ueber `featureRegistry.metaByPdfModus` -- unkritisch.
+    - `IVorgabenBerechnungMonat`/`IBerechnungMonatsErgebnis`: feste Buckets/Felder je Feature, bewusst (persistierte
+      `datenBerechnung`, typsichere Formeln) -- unkritisch.
+    - Storage: Enum `StorageData` plus **`RESOURCE_KEYS`** (fest `dataBZ..dataEA`): eine neue Ressource ohne Eintrag bekommt
+      keinen `{ data, timestamp }`-Wrapper, `loadUserDaten.sync.ts` sieht Timestamp 0 -> Verhalten weicht still ab.
+    - **`FormularCode` + `datenKatalog.ts`**: importiert die vier `pages/admin/features/<id>/katalog.ts` statisch
+      (`FEATURE_KATALOGE`) statt ueber das Admin-Manifest -- ohne Admin-Ordner `ea` bricht der Build, ein neuer
+      `--admin`-Katalog wird nicht angemeldet. Einzige verbliebene Stelle mit statischem Admin-Feature-Import.
+    Umgesetzt: `scripts/new-feature.ts` `HANDARBEIT` (Ausgabe nach dem Anlegen) + Test. Vorschlag Folgeschritte (User):
+  - [ ] F Formular-Katalog ueber das Admin-Manifest: `AdminFeature.formular.katalog`, `datenKatalog.ts` ohne statische
+        Feature-Importe (`ZEILEN_QUELLEN`/`LISTEN_VORLAGEN` als Funktionen), `FormularCode` -> `string`
+  - [ ] G `RESOURCE_KEYS` aus `featureRegistry.resources()` (+ `VorgabenU`) statt fester Liste
   - Bewusst in shared (Audit): `resolveSchichtDay`/`arbeitszeit-editor`, `zulagenCatalog`, `berechnungWerte`/`-Bausteine`, `confirmDeleteAllRows`, `resourceApi`, `createDatenGetter`, ewt-Zugriff fuer ez/ea (`getEwtDaten`, `getEwtDatenFuerZuordnung`, `syncFieldsFromEwtRows`, `unlinkEwtRefs`, Events `ewt:*`)
 - [ ] DB UX 5.6 neue Komponenten einbauen (Hinweis User 2026-09-26, nach Update auf 5.6.0, CHANGELOG 191):
   - [ ] `DBDialog`/`DBDialogHeader`/`DBDialogFooter` (nativer, zentrierter `<dialog>`, `backdrop`, `containerSize`,

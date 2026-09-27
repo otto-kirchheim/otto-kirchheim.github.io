@@ -2,6 +2,15 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-27 (195)
+
+### chore (Audit Schritt E: geschlossene Typen)
+
+- `scripts/new-feature.ts`: `HANDARBEIT` nennt nach dem Anlegen die geschlossenen Typen/Listen, die ein Feature je nach
+  Umfang von Hand erweitern muss (`StorageData` + `RESOURCE_KEYS`, `FeaturePdfModus`, `FormularCode` + `FEATURE_KATALOGE`,
+  `IVorgabenBerechnungMonat`/`IBerechnungMonatsErgebnis`); Test in `scripts.newFeature.test.ts`. Befund und Folgeschritte
+  (Katalog ueber das Admin-Manifest, `RESOURCE_KEYS` aus der Registry) in `tasks/todo.md`.
+
 ## 2026-09-27 (194)
 
 ### refactor (Feldtypen des Admin-Ressourcenbrowsers je Feature, Audit Schritt D)
