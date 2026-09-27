@@ -1,7 +1,8 @@
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore, type ComponentType } from 'react';
 import { featureRegistry } from '@/shared/lib/feature';
 import type { AdminStats } from './api/api';
 import type { FormularCode } from './ui/FormularEditor/datenKatalog';
+import type { TemplateField } from './ui/profileTemplates.shared';
 
 /**
  * Admin-Anteile der Features (Ressourcenbrowser, Dashboard, Formular-Upload). Jedes Feature hat einen eigenen Ordner unter
@@ -37,6 +38,47 @@ export interface AdminStatsRow {
   growthKey: keyof AdminStats['growth'];
 }
 
+/** Props des Editors eines Vorlagen-Abschnitts. */
+export interface AdminVorlagenEditorProps<D> {
+  /** Id der Vorlage (Schluessel fuer React-Keys). */
+  templateId: string;
+  /** Entwurf des Abschnitts. */
+  value: D;
+  /** Meldet den neuen Entwurf. */
+  onChange(next: D): void;
+  /** Waehrend des Speicherns gesperrt. */
+  disabled: boolean;
+}
+
+/**
+ * Abschnitt des Profil-Vorlagen-Editors, den ein Feature beisteuert (Tag + Editor). `D` ist der editierbare Entwurf; die
+ * Vorlage selbst bleibt das Backend-Format (`BackendProfileTemplate['template']`).
+ */
+export interface AdminVorlagenAbschnitt<D = unknown> {
+  /** Schluessel im Entwurf (`TemplateContentDraft.abschnitte`) und Abschnittsschalter. */
+  id: string;
+  /** Beschriftung des Abschnittsschalters. */
+  label: string;
+  /** Liest den Entwurf aus dem Rohinhalt der Vorlage (fehlende oder kaputte Werte normalisiert). */
+  ausVorlage(template: Record<string, unknown>): D;
+  /** Schreibt den Entwurf in den Speicher-Inhalt `result` (leerer Abschnitt: Schluessel entfernen). */
+  inVorlage(result: Record<string, unknown>, entwurf: D): void;
+  /** Ob der Abschnitt Daten enthaelt (hebt den Schalter hervor). */
+  hatDaten(entwurf: D): boolean;
+  /** Editor des Abschnitts. */
+  Editor: ComponentType<AdminVorlagenEditorProps<D>>;
+}
+
+/**
+ * Typisiert einen Vorlagen-Abschnitt und gibt ihn fuer die gemischte Liste (`AdminVorlagenAbschnitt<unknown>`) frei.
+ *
+ * @param abschnitt - Abschnitt mit konkretem Entwurfstyp.
+ * @returns Derselbe Abschnitt.
+ */
+export function defineVorlagenAbschnitt<D>(abschnitt: AdminVorlagenAbschnitt<D>): AdminVorlagenAbschnitt<unknown> {
+  return abschnitt as unknown as AdminVorlagenAbschnitt<unknown>;
+}
+
 /** Admin-Anteile eines Features. */
 export interface AdminFeature {
   /** `meta.id` des Features. */
@@ -49,6 +91,11 @@ export interface AdminFeature {
   /** PDF-Formular des Features im Formular-Upload; `order` bestimmt die Reihenfolge der Auswahl. */
   formular?: { code: FormularCode; label: string; order: number };
   statsRows: AdminStatsRow[];
+  /** Anteile am Profil-Vorlagen-Editor: eigene Abschnitte und zusaetzliche Felder im Abschnitt Pers. */
+  profilVorlage?: {
+    abschnitte?: readonly AdminVorlagenAbschnitt<unknown>[];
+    persFelder?: readonly TemplateField[];
+  };
 }
 
 /** Admin-Manifest: die einzige Stelle, die die Admin-Ordner der Features kennt (Schluessel = `meta.id`). Hinzufuegen = Ordner plus eine Zeile. */
@@ -132,6 +179,26 @@ export function useAdminFeatures(): AdminFeaturesState {
     if (!snapshot.geladen || snapshot.fehler.length > 0) void ladeAdminFeatures();
   }, [snapshot]);
   return snapshot;
+}
+
+/**
+ * Abschnitte des Profil-Vorlagen-Editors aller geladenen Admin-Anteile.
+ *
+ * @param features - Geladene Admin-Anteile (in `meta.order`).
+ * @returns Abschnitte in Feature-Reihenfolge.
+ */
+export function vorlagenAbschnitte(features: readonly AdminFeature[]): AdminVorlagenAbschnitt<unknown>[] {
+  return features.flatMap(feature => feature.profilVorlage?.abschnitte ?? []);
+}
+
+/**
+ * Zusaetzliche Pers-Felder des Profil-Vorlagen-Editors aller geladenen Admin-Anteile.
+ *
+ * @param features - Geladene Admin-Anteile (in `meta.order`).
+ * @returns Felder in Feature-Reihenfolge.
+ */
+export function vorlagenPersFelder(features: readonly AdminFeature[]): TemplateField[] {
+  return features.flatMap(feature => feature.profilVorlage?.persFelder ?? []);
 }
 
 /** Setzt den Zustand zurueck (nur fuer Tests). */

@@ -2,6 +2,25 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-27 (192)
+
+### refactor (Admin-Profilvorlagen nach Features, Audit Schritt B)
+
+- Neuer Slot `AdminFeature.profilVorlage` (`pages/admin/adminFeatures.ts`): `abschnitte` (`AdminVorlagenAbschnitt`: `id`,
+  `label`, `ausVorlage`, `inVorlage`, `hatDaten`, `Editor`) und `persFelder`. Der Vorlagen-Editor kennt nur noch Pers,
+  Arbeitszeit und die sichtbaren Bereiche; alles Feature-Eigene steckt in `TemplateContentDraft.abschnitte`.
+- ber: `VorgabenB` (Editor inkl. Navigation/Standard/Verschieben, bisher im Manager verteilt) ->
+  `pages/admin/features/ber/{vorgabenB.ts,VorgabenBEditor.tsx,profilVorlage.ts}`, `VorgabenBWeekRangeEditor` dorthin
+  verschoben; ewt: `Fahrzeit`; ez: `Einstellungen.benoetigteZulagen` als eigener Abschnitt **„Zulagen“** (bisher unter
+  „Einstellungen“); ea: Pers-Felder Tätigkeit/Entgeltgruppe.
+- Fehlt ein Feature, bleiben seine Daten in der Vorlage erhalten (Abschnitt wird weder gelesen noch geschrieben); unbekannte
+  Schlüssel in `Einstellungen` bleiben ebenfalls erhalten (bisher verworfen). Der Manager lädt die Vorlagen erst nach
+  den Admin-Anteilen.
+- Tests: `profileTemplateAbschnitte.test.ts` (Roundtrip, fehlendes Feature, leere Abschnitte, Zulagen-Dirty-Check),
+  `features/ber/vorgabenB.test.tsx` (Hinzufügen/Standard/Verschieben/Entfernen), Editor-Test auf Abschnitte umgestellt.
+  Gate: typecheck 0, lint 0, Tests 2309/2309, build i.o. `scripts/livetest.ts` um Schritt 5 (Admin > Profile-Templates,
+  Fake-Backend als Team-Admin) erweitert.
+
 ## 2026-09-26 (191)
 
 ### chore (DB UX 5.6.0 / db-theme 6.3.0)

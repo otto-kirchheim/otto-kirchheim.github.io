@@ -1,14 +1,8 @@
 import { describe, expect, it } from 'bun:test';
 
-import {
-  normalizeVorgabenBRows,
-  PERS_FIELDS,
-  tabOptions,
-  TB_OPTIONS,
-  WEEKDAY_OPTIONS,
-} from '@/pages/admin/ui/profileTemplates.shared';
+import { PERS_FIELDS, tabOptions, TB_OPTIONS, WEEKDAY_OPTIONS } from '@/pages/admin/ui/profileTemplates.shared';
+import { normalizeVorgabenBRows, type VorgabenBRow } from '@/pages/admin/features/ber/vorgabenB';
 import '@/app/features';
-import type { VorgabenBRow } from '@/pages/admin/ui/profileTemplates.shared';
 
 function makeRow(name: string, standard: boolean): VorgabenBRow {
   return {

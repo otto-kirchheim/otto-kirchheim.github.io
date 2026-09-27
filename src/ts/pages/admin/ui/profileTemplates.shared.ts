@@ -1,39 +1,24 @@
 import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
 import { featureRegistry } from '@/shared/lib/feature';
 import { HOLIDAY_REGION_OPTIONS } from '@/shared/lib/date/holidayRegion';
-import type { BereitschaftSchichtTyp, IVorgabenUaZ, IVorgabenUPers } from '@/types';
+import type { IVorgabenUaZ, IVorgabenUPers } from '@/types';
 
-export type FahrzeitRow = { key: string; text: string; value: string };
-
-export type VorgabenBRow = {
-  key: string;
-  rawValue: Record<string, unknown>;
-  value: {
-    Name: string;
-    beginnB: { tag: number; zeit: string };
-    endeB: { tag: number; zeit: string; Nwoche: boolean };
-    schichten: BereitschaftSchichtTyp[];
-    nacht: boolean;
-    beginnN: { tag: number; zeit: string; Nwoche: boolean };
-    endeN: { tag: number; zeit: string; Nwoche: boolean };
-    standard: boolean;
-  };
-};
-
+/**
+ * Editierbarer Entwurf einer Profil-Vorlage. Pers, Arbeitszeit und die sichtbaren Bereiche sind global; alles
+ * Feature-Eigene liegt in `abschnitte` (je `AdminVorlagenAbschnitt.id` aus `profilVorlage` der Admin-Anteile).
+ */
 export type TemplateContentDraft = {
   Pers: Record<string, string>;
   Arbeitszeit: IVorgabenUaZ | null;
-  Fahrzeit: FahrzeitRow[];
-  VorgabenB: VorgabenBRow[];
   Einstellungen: {
     aktivierteTabs: string[];
-    benoetigteZulagen: string[];
   };
+  abschnitte: Record<string, unknown>;
 };
 
-type TemplateFieldOption = { value: string; label: string };
+export type TemplateFieldOption = { value: string; label: string };
 
-type TemplateField = {
+export type TemplateField = {
   key: string;
   label: string;
   type?: 'text' | 'number' | 'select';
@@ -47,6 +32,7 @@ type TemplateField = {
  */
 export const TB_OPTIONS: readonly IVorgabenUPers['TB'][] = TB_VALUES;
 
+/** Pers-Felder ohne Feature-Bezug; Features ergaenzen eigene ueber `profilVorlage.persFelder` (z. B. EA). */
 export const PERS_FIELDS: TemplateField[] = [
   { key: 'Vorname', label: 'Vorname' },
   { key: 'Nachname', label: 'Nachname' },
@@ -74,8 +60,6 @@ export const PERS_FIELDS: TemplateField[] = [
     type: 'select',
     options: [{ value: '', label: 'Bitte wählen…' }, ...TB_OPTIONS.map(value => ({ value, label: value }))],
   },
-  { key: 'Taetigkeit', label: 'Tätigkeit (Entgeltausgleich)' },
-  { key: 'Entgeltgruppe', label: 'Entgeltgruppe (Entgeltausgleich)' },
 ];
 
 /**
@@ -96,26 +80,3 @@ export const WEEKDAY_OPTIONS = [
   { value: 6, label: 'Sa' },
   { value: 7, label: 'So' },
 ] as const;
-
-/**
- * Vergibt fortlaufende Schlüssel (`'1'`, `'2'`, …) und markiert genau eine Zeile als Standard.
- *
- * @param rows - Bereitschafts-Vorgaben.
- * @param preferredStandardIndex - Gewünschter Standard-Index; ungültig oder fehlend gilt die bisherige Standardzeile, sonst die erste.
- * @returns Neue Zeilen; leeres Array bei leerer Eingabe.
- */
-export function normalizeVorgabenBRows(rows: VorgabenBRow[], preferredStandardIndex?: number): VorgabenBRow[] {
-  if (rows.length === 0) return [];
-
-  let standardIndex = preferredStandardIndex ?? rows.findIndex(row => row.value.standard);
-  if (standardIndex < 0 || standardIndex >= rows.length) standardIndex = 0;
-
-  return rows.map((row, index) => ({
-    ...row,
-    key: String(index + 1),
-    value: {
-      ...row.value,
-      standard: index === standardIndex,
-    },
-  }));
-}

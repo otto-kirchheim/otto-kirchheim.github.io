@@ -131,7 +131,7 @@ features/ber/          # meta.id = 'ber'
 └── model/             # Business-Logik, Berechnungen, Daten-Handling; backend.ts (Backend-Typ, Mapper, Endpunkte), monat.ts (Monatsermittlung)
 ```
 
-Ein globaler Bereich laedt ein Modul nie direkt, sondern ueber `featureRegistry.load(id, teil)`/`loadMany`/`loadAll` (`shared/lib/feature/featureRegistry.ts`); nicht benoetigte Teile bleiben ungeladen. **Admin-Anteile liegen nie im Modul selbst**, sondern in `pages/admin/features/<id>/` (`index.ts` = `AdminFeature`, `katalog.ts` = PDF-Feldkatalog fuers FormularEditor), angemeldet im separaten Admin-Manifest `pages/admin/adminFeatures.ts` (nur fuer Admins geladen). Neues Modul/Admin-Ordner anlegen: `bun run new-feature <slug> --label "..." [--admin]` (`scripts/new-feature.ts`).
+Ein globaler Bereich laedt ein Modul nie direkt, sondern ueber `featureRegistry.load(id, teil)`/`loadMany`/`loadAll` (`shared/lib/feature/featureRegistry.ts`); nicht benoetigte Teile bleiben ungeladen. **Admin-Anteile liegen nie im Modul selbst**, sondern in `pages/admin/features/<id>/` (`index.ts` = `AdminFeature`, `katalog.ts` = PDF-Feldkatalog fuers FormularEditor, `profilVorlage.ts` = eigene Abschnitte des Profil-Vorlagen-Editors, z. B. VorgabenB/Fahrzeit/Zulagen), angemeldet im separaten Admin-Manifest `pages/admin/adminFeatures.ts` (nur fuer Admins geladen). Neues Modul/Admin-Ordner anlegen: `bun run new-feature <slug> --label "..." [--admin]` (`scripts/new-feature.ts`).
 
 **Hybrid-Rendering:**
 

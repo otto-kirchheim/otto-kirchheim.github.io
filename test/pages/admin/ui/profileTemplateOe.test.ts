@@ -6,9 +6,8 @@ function draftWith(pers: Record<string, string>): TemplateContentDraft {
   return {
     Pers: pers,
     Arbeitszeit: null,
-    Fahrzeit: [],
-    VorgabenB: [],
-    Einstellungen: { aktivierteTabs: [], benoetigteZulagen: [] },
+    Einstellungen: { aktivierteTabs: [] },
+    abschnitte: {},
   };
 }
 

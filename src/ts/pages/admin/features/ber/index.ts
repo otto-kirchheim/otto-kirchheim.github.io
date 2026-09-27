@@ -1,5 +1,6 @@
 import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import type { AdminFeature } from '../../adminFeatures';
+import { vorgabenBAbschnitt } from './profilVorlage';
 
 /** Admin-Anteile der Bereitschaft (`ber`): Bereitschaftseinsatz und Bereitschaftszeitraum. */
 const adminFeature: AdminFeature = {
@@ -48,6 +49,7 @@ const adminFeature: AdminFeature = {
       growthKey: 'bereitschaftszaetraumeLast7d',
     },
   ],
+  profilVorlage: { abschnitte: [vorgabenBAbschnitt] },
 };
 
 export default adminFeature;

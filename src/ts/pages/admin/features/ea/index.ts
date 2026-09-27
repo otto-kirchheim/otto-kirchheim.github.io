@@ -19,6 +19,13 @@ const adminFeature: AdminFeature = {
   statsRows: [
     { label: 'Entgeltausgleich-Einträge', countKey: 'entgeltausgleich', growthKey: 'entgeltausgleichLast7d' },
   ],
+  // Pers-Felder, die nur der Entgeltausgleich nutzt (Vorbelegung neuer EA-Eintraege).
+  profilVorlage: {
+    persFelder: [
+      { key: 'Taetigkeit', label: 'Tätigkeit (Entgeltausgleich)' },
+      { key: 'Entgeltgruppe', label: 'Entgeltgruppe (Entgeltausgleich)' },
+    ],
+  },
 };
 
 export default adminFeature;

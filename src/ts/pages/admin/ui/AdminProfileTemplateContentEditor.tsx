@@ -1,88 +1,61 @@
 import { useMemo, useState } from 'react';
 
-import { ZULAGEN_CATALOG } from '@/shared/lib/zulagen/zulagenCatalog';
 import { ArbeitszeiteingabePanel } from '@/shared/ui/arbeitszeit-editor/ArbeitszeiteingabePanel';
-import {
-  PERS_FIELDS,
-  tabOptions,
-  type FahrzeitRow,
-  type TemplateContentDraft,
-  type VorgabenBRow,
-} from './profileTemplates.shared';
-import { VorgabenBWeekRangeEditor } from './VorgabenBWeekRangeEditor';
+import { PERS_FIELDS, tabOptions, type TemplateContentDraft, type TemplateField } from './profileTemplates.shared';
+import type { AdminVorlagenAbschnitt } from '../adminFeatures';
 import { OeLevelBoxes } from './OeLevelBoxes';
 import { DBButton, DBCheckbox, DBStack, DBTag } from '@db-ux/react-core-components';
-import type { BereitschaftSchichtTyp } from '@/types';
 import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
-
-type SectionKey = 'Pers' | 'Arbeitszeit' | 'Fahrzeit' | 'VorgabenB' | 'Einstellungen';
-
-const SCHICHT_OPTIONEN: { typ: BereitschaftSchichtTyp; label: string }[] = [
-  { typ: 'frueh', label: 'Früh' },
-  { typ: 'spaet', label: 'Spät' },
-  { typ: 'nacht', label: 'Nacht' },
-  { typ: 'sonder', label: 'Sonder' },
-];
 
 type Props = {
   templateId: string;
   templateContent: TemplateContentDraft;
   isSaving: boolean;
-  activeVorgabenBIndex: number;
+  /** Abschnitte der Features (`profilVorlage.abschnitte`), zwischen Arbeitszeit und Einstellungen angezeigt. */
+  abschnitte: readonly AdminVorlagenAbschnitt<unknown>[];
+  /** Zusaetzliche Pers-Felder der Features (`profilVorlage.persFelder`), nach den globalen. */
+  zusatzPersFelder?: readonly TemplateField[];
   onUpdatePersField: (key: string, value: string) => void;
   onUpdateArbeitszeit: (value: NonNullable<TemplateContentDraft['Arbeitszeit']>) => void;
   onEnableArbeitszeit: () => void;
-  onAddFahrzeitRow: () => void;
-  onUpdateFahrzeitRow: (index: number, field: keyof FahrzeitRow, value: string) => void;
-  onRemoveFahrzeitRow: (index: number) => void;
-  onAddVorgabenBRow: () => void;
-  onSelectVorgabenBRow: (index: number) => void;
-  onMoveVorgabenBRow: (index: number, direction: 'up' | 'down') => void;
-  onSetVorgabenBStandard: (index: number) => void;
-  onRemoveVorgabenBRow: (index: number) => void;
-  onUpdateVorgabenBRow: (index: number, updater: (row: VorgabenBRow) => VorgabenBRow) => void;
+  onUpdateAbschnitt: (id: string, value: unknown) => void;
   onToggleAktivierterTab: (key: string) => void;
-  onToggleZulage: (code: string) => void;
 };
 
 /**
- * Editor für den Inhalt eines Profil-Templates, gegliedert in aufklappbare Abschnitte (Pers, Arbeitszeit, Fahrzeit, VorgabenB, Einstellungen).
+ * Editor für den Inhalt eines Profil-Templates, gegliedert in aufklappbare Abschnitte: Pers und Arbeitszeit, dann die
+ * Abschnitte der Features (z. B. VorgabenB, Fahrzeit, Zulagen), zuletzt Einstellungen (sichtbare Bereiche).
  *
- * @param props - Template-Entwurf (`templateContent`), `isSaving` sperrt Aktionen, `activeVorgabenBIndex` wählt den angezeigten Eintrag; die `on*`-Callbacks melden jede Änderung an den Manager.
+ * @param props - Template-Entwurf (`templateContent`), `isSaving` sperrt Aktionen, `abschnitte` der Features; die `on*`-Callbacks melden jede Änderung an den Manager.
  */
 export function AdminProfileTemplateContentEditor({
   templateId,
   templateContent,
   isSaving,
-  activeVorgabenBIndex,
+  abschnitte,
+  zusatzPersFelder = [],
   onUpdatePersField,
   onUpdateArbeitszeit,
   onEnableArbeitszeit,
-  onAddFahrzeitRow,
-  onUpdateFahrzeitRow,
-  onRemoveFahrzeitRow,
-  onAddVorgabenBRow,
-  onSelectVorgabenBRow,
-  onMoveVorgabenBRow,
-  onSetVorgabenBStandard,
-  onRemoveVorgabenBRow,
-  onUpdateVorgabenBRow,
+  onUpdateAbschnitt,
   onToggleAktivierterTab,
-  onToggleZulage,
 }: Props) {
-  const [activeSection, setActiveSection] = useState<SectionKey | null>('Pers');
+  const [activeSection, setActiveSection] = useState<string | null>('Pers');
+  const persFelder = useMemo(() => [...PERS_FIELDS, ...zusatzPersFelder], [zusatzPersFelder]);
 
   const badgeState = useMemo(
-    () => ({
+    (): Record<string, boolean> => ({
       Pers: Object.keys(templateContent.Pers).length > 0,
       Arbeitszeit: templateContent.Arbeitszeit !== null,
-      Fahrzeit: templateContent.Fahrzeit.length > 0,
-      VorgabenB: templateContent.VorgabenB.length > 0,
-      Einstellungen:
-        templateContent.Einstellungen.aktivierteTabs.length > 0 ||
-        templateContent.Einstellungen.benoetigteZulagen.length > 0,
+      ...Object.fromEntries(
+        abschnitte.map(abschnitt => [
+          abschnitt.id,
+          abschnitt.id in templateContent.abschnitte && abschnitt.hatDaten(templateContent.abschnitte[abschnitt.id]),
+        ]),
+      ),
+      Einstellungen: templateContent.Einstellungen.aktivierteTabs.length > 0,
     }),
-    [templateContent],
+    [templateContent, abschnitte],
   );
 
   // `DBTag` rendert immer ein `<div>` und kann selbst kein Button sein -- das Kontrollelement kommt als Kind hinein.
@@ -95,12 +68,12 @@ export function AdminProfileTemplateContentEditor({
    * @param label - Beschriftung.
    * @returns Tag mit Checkbox; hervorgehoben, wenn aktiv oder der Abschnitt Daten enthält.
    */
-  const sectionButton = (key: SectionKey, label: string) => {
+  const sectionButton = (key: string, label: string) => {
     const active = activeSection === key;
     const hasData = badgeState[key];
 
     return (
-      <DBTag semantic={active || hasData ? 'informational' : 'neutral'} emphasis={active ? 'strong' : 'weak'}>
+      <DBTag key={key} semantic={active || hasData ? 'informational' : 'neutral'} emphasis={active ? 'strong' : 'weak'}>
         <label>
           <input
             type="checkbox"
@@ -113,21 +86,22 @@ export function AdminProfileTemplateContentEditor({
     );
   };
 
+  const offenerAbschnitt = abschnitte.find(abschnitt => abschnitt.id === activeSection);
+
   return (
     <div>
       <label className="small fw-semibold mb-1">Template-Inhalt</label>
       <DBStack direction="row" wrap gap="x-small" className="mb-2">
         {sectionButton('Pers', 'Pers')}
         {sectionButton('Arbeitszeit', 'Arbeitszeit')}
-        {sectionButton('Fahrzeit', 'Fahrzeit')}
-        {sectionButton('VorgabenB', 'VorgabenB')}
+        {abschnitte.map(abschnitt => sectionButton(abschnitt.id, abschnitt.label))}
         {sectionButton('Einstellungen', 'Einstellungen')}
       </DBStack>
 
       {activeSection === 'Pers' && (
         <div className="border p-2 mb-2">
           <div className="raster abstand-2">
-            {PERS_FIELDS.map(field => (
+            {persFelder.map(field => (
               <div className="sp-md-6" key={`${templateId}-pers-${field.key}`}>
                 {field.key === 'OE' ? (
                   <>
@@ -186,437 +160,19 @@ export function AdminProfileTemplateContentEditor({
         </div>
       )}
 
-      {activeSection === 'Fahrzeit' && (
-        <div className="border p-2 mb-2">
-          <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="none" className="mb-1">
-            <label className="small fw-semibold mb-0">Fahrzeit-Einträge</label>
-            <DBButton
-              type="button"
-              variant="outlined"
-              size="small"
-              onClick={onAddFahrzeitRow}
-              disabled={isSaving}
-              data-disabler
-            >
-              Zeile hinzufügen
-            </DBButton>
-          </DBStack>
-          <DBStack direction="column" gap="x-small">
-            {templateContent.Fahrzeit.length === 0 && (
-              <small className="text-body-secondary">Keine Fahrzeit-Einträge vorhanden.</small>
-            )}
-            {templateContent.Fahrzeit.map((row, index) => (
-              <div className="raster align-items-end abstand-2" key={`${templateId}-fz-${index}`}>
-                <div>
-                  <DBStack
-                    direction="row"
-                    alignment="end"
-                    gap="x-small"
-                    className="feldgruppe admin-fahrzeit-input-group"
-                  >
-                    <DbFeld
-                      beschriftung="Key"
-                      className="admin-fahrzeit-key"
-                      placeholder="Key"
-                      value={row.key}
-                      onChange={e => onUpdateFahrzeitRow(index, 'key', (e.target as HTMLInputElement).value)}
-                    />
-
-                    <DbFeld
-                      beschriftung="Beschreibung"
-                      className="admin-fahrzeit-text"
-                      placeholder="Beschreibung"
-                      value={row.text}
-                      onChange={e => onUpdateFahrzeitRow(index, 'text', (e.target as HTMLInputElement).value)}
-                    />
-
-                    <DbFeld
-                      beschriftung="Wert"
-                      className="admin-fahrzeit-value"
-                      type="time"
-                      placeholder="Wert"
-                      value={row.value}
-                      onChange={e => onUpdateFahrzeitRow(index, 'value', (e.target as HTMLInputElement).value)}
-                    />
-
-                    <DBButton
-                      type="button"
-                      variant="outlined"
-                      data-color="critical"
-                      onClick={() => onRemoveFahrzeitRow(index)}
-                      disabled={isSaving}
-                      data-disabler
-                    >
-                      <span className="d-none d-sm-inline">Löschen</span>
-                      <span className="d-sm-none">X</span>
-                    </DBButton>
-                  </DBStack>
-                </div>
-              </div>
-            ))}
-          </DBStack>
-        </div>
-      )}
-
-      {activeSection === 'VorgabenB' && (
-        <div className="border p-2 mb-2">
-          <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="none" className="mb-2">
-            <label className="small fw-semibold mb-0">Bereitschaftszeitraum-Vorgaben</label>
-            <DBButton
-              type="button"
-              variant="outlined"
-              size="small"
-              onClick={onAddVorgabenBRow}
-              disabled={isSaving}
-              data-disabler
-            >
-              Vorgabe hinzufügen
-            </DBButton>
-          </DBStack>
-
-          {templateContent.VorgabenB.length === 0 && (
-            <small className="text-body-secondary">Keine VorgabenB-Einträge vorhanden.</small>
-          )}
-
-          {templateContent.VorgabenB.length > 0 &&
-            (() => {
-              const maxIndex = templateContent.VorgabenB.length - 1;
-              const currentIndex = Math.min(Math.max(activeVorgabenBIndex ?? 0, 0), maxIndex);
-              const row = templateContent.VorgabenB[currentIndex];
-
-              return (
-                <DBStack direction="column" gap="x-small">
-                  <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="x-small">
-                    <DBStack direction="row" wrap gap="2x-small" role="group" aria-label="VorgabenB Navigation">
-                      <DBButton
-                        type="button"
-                        variant="outlined"
-                        onClick={() => onSelectVorgabenBRow(currentIndex - 1)}
-                        disabled={isSaving || currentIndex <= 0}
-                      >
-                        Zurück
-                      </DBButton>
-                      <DBButton
-                        type="button"
-                        variant="outlined"
-                        onClick={() => onSelectVorgabenBRow(currentIndex + 1)}
-                        disabled={isSaving || currentIndex >= maxIndex}
-                      >
-                        Weiter
-                      </DBButton>
-                    </DBStack>
-                    <small className="text-body-secondary">
-                      Vorgabe {currentIndex + 1} von {templateContent.VorgabenB.length}
-                    </small>
-                  </DBStack>
-
-                  <DbAuswahl
-                    beschriftung="Auswahl"
-                    beschriftungZeigen
-                    dicht
-                    value={currentIndex}
-                    onChange={e => onSelectVorgabenBRow(Number(e.target.value))}
-                  >
-                    {templateContent.VorgabenB.map((item, index) => (
-                      <option key={`${templateId}-vb-select-${index}`} value={index}>
-                        #{index + 1}
-                        {item.value.Name ? ` - ${item.value.Name}` : ''}
-                      </option>
-                    ))}
-                  </DbAuswahl>
-
-                  <div className="border p-2" key={`${templateId}-vb-${currentIndex}`}>
-                    <DBStack
-                      direction="row"
-                      wrap
-                      alignment="center"
-                      justifyContent="space-between"
-                      gap="none"
-                      className="mb-2"
-                    >
-                      <strong className="small d-flex align-items-center gap-2">
-                        <DBTag semantic="neutral" emphasis="strong">
-                          #{currentIndex + 1}
-                        </DBTag>
-                        {row.value.Name ? ` - ${row.value.Name}` : ''}
-                        {row.value.standard && (
-                          <DBTag semantic="successful" emphasis="strong">
-                            Standard
-                          </DBTag>
-                        )}
-                      </strong>
-                      <DBStack direction="row" gap="2x-small">
-                        <DBButton
-                          type="button"
-                          variant="outlined"
-                          size="small"
-                          onClick={() => onMoveVorgabenBRow(currentIndex, 'up')}
-                          disabled={isSaving || currentIndex === 0}
-                          title="Nach oben"
-                        >
-                          ↑
-                        </DBButton>
-                        <DBButton
-                          type="button"
-                          variant="outlined"
-                          size="small"
-                          onClick={() => onMoveVorgabenBRow(currentIndex, 'down')}
-                          disabled={isSaving || currentIndex === templateContent.VorgabenB.length - 1}
-                          title="Nach unten"
-                        >
-                          ↓
-                        </DBButton>
-                        {!row.value.standard && (
-                          <DBButton
-                            type="button"
-                            variant="outlined"
-                            data-color="successful"
-                            size="small"
-                            onClick={() => onSetVorgabenBStandard(currentIndex)}
-                            disabled={isSaving}
-                          >
-                            Als Standard
-                          </DBButton>
-                        )}
-                        <DBButton
-                          type="button"
-                          variant="outlined"
-                          data-color="critical"
-                          size="small"
-                          onClick={() => onRemoveVorgabenBRow(currentIndex)}
-                          disabled={isSaving}
-                          data-disabler
-                        >
-                          Entfernen
-                        </DBButton>
-                      </DBStack>
-                    </DBStack>
-
-                    <div className="raster mb-2 abstand-2">
-                      <div>
-                        <DbFeld
-                          beschriftung="Bezeichnung"
-                          beschriftungZeigen
-                          dicht
-                          value={row.value.Name}
-                          onChange={e =>
-                            onUpdateVorgabenBRow(currentIndex, current => ({
-                              ...current,
-                              value: { ...current.value, Name: (e.target as HTMLInputElement).value },
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    <VorgabenBWeekRangeEditor
-                      selectorKey={`${templateId}-vb-b-${currentIndex}`}
-                      label="Bereitschaft"
-                      start={row.value.beginnB}
-                      end={row.value.endeB}
-                      startHasNwoche={false}
-                      disabled={isSaving}
-                      onStartChange={(tag, _Nwoche) =>
-                        onUpdateVorgabenBRow(currentIndex, current => ({
-                          ...current,
-                          value: {
-                            ...current.value,
-                            beginnB: { ...current.value.beginnB, tag },
-                          },
-                        }))
-                      }
-                      onEndChange={(tag, Nwoche) =>
-                        onUpdateVorgabenBRow(currentIndex, current => ({
-                          ...current,
-                          value: {
-                            ...current.value,
-                            endeB: { ...current.value.endeB, tag, Nwoche },
-                          },
-                        }))
-                      }
-                    />
-
-                    <div className="raster mb-2 abstand-2">
-                      <div className="sp-lg-6">
-                        <DbFeld
-                          beschriftung="Beginn Bereitschaft"
-                          beschriftungZeigen
-                          dicht
-                          type="time"
-                          value={row.value.beginnB.zeit}
-                          onChange={e =>
-                            onUpdateVorgabenBRow(currentIndex, current => ({
-                              ...current,
-                              value: {
-                                ...current.value,
-                                beginnB: {
-                                  ...current.value.beginnB,
-                                  zeit: (e.target as HTMLInputElement).value,
-                                },
-                              },
-                            }))
-                          }
-                        />
-                      </div>
-                      <div className="sp-lg-6">
-                        <DbFeld
-                          beschriftung="Ende Bereitschaft"
-                          beschriftungZeigen
-                          dicht
-                          type="time"
-                          value={row.value.endeB.zeit}
-                          onChange={e =>
-                            onUpdateVorgabenBRow(currentIndex, current => ({
-                              ...current,
-                              value: {
-                                ...current.value,
-                                endeB: {
-                                  ...current.value.endeB,
-                                  zeit: (e.target as HTMLInputElement).value,
-                                },
-                              },
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mb-2">
-                      <label className="small mb-1">Aktive Schichten</label>
-                      <DBStack direction="row" wrap gap="medium">
-                        {SCHICHT_OPTIONEN.map(({ typ, label }) => (
-                          <DBCheckbox
-                            className="m-0"
-                            size="small"
-                            key={typ}
-                            label={label}
-                            checked={row.value.schichten.includes(typ)}
-                            disabled={typ === 'frueh' || isSaving}
-                            onChange={e => {
-                              const checked = (e.target as HTMLInputElement).checked;
-                              onUpdateVorgabenBRow(currentIndex, current => {
-                                const schichten = checked
-                                  ? [...current.value.schichten.filter(s => s !== typ), typ]
-                                  : current.value.schichten.filter(s => s !== typ);
-                                const nacht = schichten.includes('nacht');
-                                return {
-                                  ...current,
-                                  value: {
-                                    ...current.value,
-                                    schichten,
-                                    nacht,
-                                    ...(nacht
-                                      ? {}
-                                      : {
-                                          beginnN: {
-                                            ...current.value.beginnN,
-                                            tag: current.value.beginnB.tag,
-                                            zeit: current.value.beginnB.zeit,
-                                            Nwoche: false,
-                                          },
-                                          endeN: {
-                                            ...current.value.endeN,
-                                            tag: current.value.endeB.tag,
-                                            zeit: current.value.endeB.zeit,
-                                            Nwoche: current.value.endeB.Nwoche,
-                                          },
-                                        }),
-                                  },
-                                };
-                              });
-                            }}
-                          />
-                        ))}
-                      </DBStack>
-                    </div>
-
-                    {row.value.schichten.includes('nacht') ? (
-                      <>
-                        <VorgabenBWeekRangeEditor
-                          selectorKey={`${templateId}-vb-n-${currentIndex}`}
-                          label="Nachtschicht"
-                          start={row.value.beginnN}
-                          end={row.value.endeN}
-                          startHasNwoche={true}
-                          disabled={isSaving}
-                          onStartChange={(tag, Nwoche) =>
-                            onUpdateVorgabenBRow(currentIndex, current => ({
-                              ...current,
-                              value: {
-                                ...current.value,
-                                beginnN: { ...current.value.beginnN, tag, Nwoche },
-                              },
-                            }))
-                          }
-                          onEndChange={(tag, Nwoche) =>
-                            onUpdateVorgabenBRow(currentIndex, current => ({
-                              ...current,
-                              value: {
-                                ...current.value,
-                                endeN: { ...current.value.endeN, tag, Nwoche },
-                              },
-                            }))
-                          }
-                        />
-
-                        <div className="raster mb-2 abstand-2">
-                          <div className="sp-lg-6">
-                            <DbFeld
-                              beschriftung="Beginn Nachtschicht"
-                              beschriftungZeigen
-                              dicht
-                              type="time"
-                              value={row.value.beginnN.zeit}
-                              onChange={e =>
-                                onUpdateVorgabenBRow(currentIndex, current => ({
-                                  ...current,
-                                  value: {
-                                    ...current.value,
-                                    beginnN: {
-                                      ...current.value.beginnN,
-                                      zeit: (e.target as HTMLInputElement).value,
-                                    },
-                                  },
-                                }))
-                              }
-                            />
-                          </div>
-                          <div className="sp-lg-6">
-                            <DbFeld
-                              beschriftung="Ende Nachtschicht"
-                              beschriftungZeigen
-                              dicht
-                              type="time"
-                              value={row.value.endeN.zeit}
-                              onChange={e =>
-                                onUpdateVorgabenBRow(currentIndex, current => ({
-                                  ...current,
-                                  value: {
-                                    ...current.value,
-                                    endeN: {
-                                      ...current.value.endeN,
-                                      zeit: (e.target as HTMLInputElement).value,
-                                    },
-                                  },
-                                }))
-                              }
-                            />
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="small text-body-secondary mb-2">Keine Nachtschicht aktiviert.</div>
-                    )}
-                  </div>
-                </DBStack>
-              );
-            })()}
-        </div>
+      {offenerAbschnitt && offenerAbschnitt.id in templateContent.abschnitte && (
+        <offenerAbschnitt.Editor
+          key={`${templateId}-${offenerAbschnitt.id}`}
+          templateId={templateId}
+          value={templateContent.abschnitte[offenerAbschnitt.id]}
+          onChange={value => onUpdateAbschnitt(offenerAbschnitt.id, value)}
+          disabled={isSaving}
+        />
       )}
 
       {activeSection === 'Einstellungen' && (
         <div className="border p-2">
-          <div className="mb-2">
+          <div>
             <label className="small mb-1">Sichtbare Bereiche</label>
             <DBStack direction="row" wrap gap="x-small">
               {tabOptions().map(option => (
@@ -627,22 +183,6 @@ export function AdminProfileTemplateContentEditor({
                   label={option.label}
                   checked={templateContent.Einstellungen.aktivierteTabs.includes(option.key)}
                   onChange={() => onToggleAktivierterTab(option.key)}
-                />
-              ))}
-            </DBStack>
-          </div>
-
-          <div>
-            <label className="small mb-1">Benötigte Zulagen</label>
-            <DBStack direction="row" wrap gap="x-small">
-              {ZULAGEN_CATALOG.map(zulage => (
-                <DBCheckbox
-                  className="m-0"
-                  size="small"
-                  key={`${templateId}-zulage-${zulage.code}`}
-                  label={zulage.code}
-                  checked={templateContent.Einstellungen.benoetigteZulagen.includes(zulage.code)}
-                  onChange={() => onToggleZulage(zulage.code)}
                 />
               ))}
             </DBStack>

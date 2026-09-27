@@ -12,8 +12,8 @@ import {
   type BackendProfileTemplate,
 } from '../api/api';
 import { AdminProfileTemplateContentEditor } from './AdminProfileTemplateContentEditor';
-import type { FahrzeitRow, TemplateContentDraft, VorgabenBRow } from './profileTemplates.shared';
-import { normalizeVorgabenBRows } from './profileTemplates.shared';
+import type { TemplateContentDraft } from './profileTemplates.shared';
+import { useAdminFeatures, vorlagenAbschnitte, vorlagenPersFelder } from '../adminFeatures';
 import {
   DEFAULT_ARBEITSZEIT,
   buildTemplatePayload,
@@ -31,9 +31,13 @@ export function AdminProfileTemplatesManager() {
   const [templates, setTemplates] = useState<BackendProfileTemplate[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [edits, setEdits] = useState<Record<string, TemplateEditState>>({});
-  const [activeVorgabenBIndex, setActiveVorgabenBIndex] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
+
+  // Feature-Abschnitte des Editors (VorgabenB, Fahrzeit, Zulagen, ...) kommen aus den Admin-Anteilen der Features.
+  const adminFeatures = useAdminFeatures();
+  const abschnitte = useMemo(() => vorlagenAbschnitte(adminFeatures.features), [adminFeatures.features]);
+  const zusatzPersFelder = useMemo(() => vorlagenPersFelder(adminFeatures.features), [adminFeatures.features]);
 
   const user = getUserCookie();
   const canDelete = user?.role === Role.SUPER_ADMIN;
@@ -54,11 +58,11 @@ export function AdminProfileTemplatesManager() {
     try {
       const next = await fetchProfileTemplates();
       setTemplates(next);
-      setEdits(Object.fromEntries(next.map(template => [template._id, toEditState(template)])));
+      setEdits(Object.fromEntries(next.map(template => [template._id, toEditState(template, abschnitte)])));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [abschnitte]);
 
   /**
    * Ändert Stammfelder (Code, Name, Beschreibung, aktiv) im Bearbeitungsstand eines Templates.
@@ -80,7 +84,7 @@ export function AdminProfileTemplatesManager() {
     const source = templates.find(t => t._id === id);
     const edit = edits[id];
     if (!source || !edit) return false;
-    const sourceDraft = toEditState(source).templateContent;
+    const sourceDraft = toEditState(source, abschnitte).templateContent;
     return (
       source.code !== edit.code ||
       source.name !== edit.name ||
@@ -155,169 +159,16 @@ export function AdminProfileTemplatesManager() {
   }
 
   /**
-   * Hängt eine leere Fahrzeit-Zeile an.
+   * Übernimmt den Entwurf eines Feature-Abschnitts.
    *
    * @param id - Template-Id.
+   * @param abschnittId - `AdminVorlagenAbschnitt.id`.
+   * @param value - Neuer Entwurf des Abschnitts.
    */
-  function addFahrzeitRow(id: string) {
+  function updateAbschnitt(id: string, abschnittId: string, value: unknown) {
     const state = edits[id];
     if (!state) return;
-    updateTemplateContent(id, {
-      Fahrzeit: [...state.templateContent.Fahrzeit, { key: '', text: '', value: '' }],
-    });
-  }
-
-  /**
-   * Ändert ein Feld einer Fahrzeit-Zeile.
-   *
-   * @param id - Template-Id.
-   * @param index - Zeilenindex.
-   * @param field - Geändertes Feld der Zeile.
-   * @param value - Neuer Wert.
-   */
-  function updateFahrzeitRow(id: string, index: number, field: keyof FahrzeitRow, value: string) {
-    const state = edits[id];
-    if (!state) return;
-    const next = [...state.templateContent.Fahrzeit];
-    next[index] = { ...next[index], [field]: value };
-    updateTemplateContent(id, { Fahrzeit: next });
-  }
-
-  /**
-   * Entfernt eine Fahrzeit-Zeile.
-   *
-   * @param id - Template-Id.
-   * @param index - Zeilenindex.
-   */
-  function removeFahrzeitRow(id: string, index: number) {
-    const state = edits[id];
-    if (!state) return;
-    updateTemplateContent(id, {
-      Fahrzeit: state.templateContent.Fahrzeit.filter((_, i) => i !== index),
-    });
-  }
-
-  /**
-   * Hängt einen leeren VorgabenB-Eintrag an (nur Frühschicht), normalisiert die Liste und wählt den neuen Eintrag aus.
-   *
-   * @param id - Template-Id.
-   */
-  function addVorgabenBRow(id: string) {
-    const state = edits[id];
-    if (!state) return;
-    const newRow: VorgabenBRow = {
-      key: '',
-      rawValue: {},
-      value: {
-        Name: '',
-        beginnB: { tag: 1, zeit: '' },
-        endeB: { tag: 1, zeit: '', Nwoche: false },
-        schichten: ['frueh'],
-        nacht: false,
-        beginnN: { tag: 1, zeit: '', Nwoche: false },
-        endeN: { tag: 1, zeit: '', Nwoche: false },
-        standard: false,
-      },
-    };
-    const nextRows = normalizeVorgabenBRows([...state.templateContent.VorgabenB, newRow]);
-    updateTemplateContent(id, {
-      VorgabenB: nextRows,
-    });
-    setActiveVorgabenBIndex(current => ({ ...current, [id]: Math.max(0, nextRows.length - 1) }));
-  }
-
-  /**
-   * Ändert einen VorgabenB-Eintrag per Updater; ein ungültiger Index wird ignoriert.
-   *
-   * @param id - Template-Id.
-   * @param index - Index des Eintrags.
-   * @param updater - Liefert aus dem bisherigen Eintrag den neuen.
-   */
-  function updateVorgabenBRow(id: string, index: number, updater: (row: VorgabenBRow) => VorgabenBRow) {
-    const state = edits[id];
-    if (!state) return;
-    const next = [...state.templateContent.VorgabenB];
-    const current = next[index];
-    if (!current) return;
-    next[index] = updater(current);
-    updateTemplateContent(id, { VorgabenB: next });
-  }
-
-  /**
-   * Entfernt einen VorgabenB-Eintrag, normalisiert die Liste und hält die Auswahl im gültigen Bereich.
-   *
-   * @param id - Template-Id.
-   * @param index - Index des zu entfernenden Eintrags.
-   */
-  function removeVorgabenBRow(id: string, index: number) {
-    const state = edits[id];
-    if (!state) return;
-    const filtered = state.templateContent.VorgabenB.filter((_, i) => i !== index);
-    const nextRows = normalizeVorgabenBRows(filtered);
-    const currentIndex = activeVorgabenBIndex[id] ?? 0;
-    const nextIndex = Math.max(
-      0,
-      Math.min(currentIndex >= index ? currentIndex - 1 : currentIndex, nextRows.length - 1),
-    );
-    updateTemplateContent(id, {
-      VorgabenB: nextRows,
-    });
-    setActiveVorgabenBIndex(current => ({ ...current, [id]: nextRows.length === 0 ? 0 : nextIndex }));
-  }
-
-  /**
-   * Verschiebt einen VorgabenB-Eintrag um eine Position; die Standard-Markierung bleibt am selben Eintrag, die Auswahl folgt dem verschobenen.
-   *
-   * @param id - Template-Id.
-   * @param index - Index des Eintrags.
-   * @param direction - Verschieberichtung.
-   */
-  function moveVorgabenBRow(id: string, index: number, direction: 'up' | 'down') {
-    const state = edits[id];
-    if (!state) return;
-    const rows = [...state.templateContent.VorgabenB];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= rows.length) return;
-
-    const oldStandardIndex = rows.findIndex(row => row.value.standard);
-    const [moved] = rows.splice(index, 1);
-    rows.splice(targetIndex, 0, moved);
-
-    let nextStandardIndex = oldStandardIndex;
-    if (oldStandardIndex === index) nextStandardIndex = targetIndex;
-    else if (direction === 'up' && oldStandardIndex >= targetIndex && oldStandardIndex < index)
-      nextStandardIndex = oldStandardIndex + 1;
-    else if (direction === 'down' && oldStandardIndex > index && oldStandardIndex <= targetIndex)
-      nextStandardIndex = oldStandardIndex - 1;
-
-    updateTemplateContent(id, {
-      VorgabenB: normalizeVorgabenBRows(rows, nextStandardIndex),
-    });
-    setActiveVorgabenBIndex(current => ({ ...current, [id]: targetIndex }));
-  }
-
-  /**
-   * Markiert einen VorgabenB-Eintrag als Standard (genau einer je Template).
-   *
-   * @param id - Template-Id.
-   * @param index - Index des neuen Standard-Eintrags.
-   */
-  function setVorgabenBStandard(id: string, index: number) {
-    const state = edits[id];
-    if (!state) return;
-    updateTemplateContent(id, {
-      VorgabenB: normalizeVorgabenBRows([...state.templateContent.VorgabenB], index),
-    });
-  }
-
-  /**
-   * Wählt den angezeigten VorgabenB-Eintrag.
-   *
-   * @param id - Template-Id.
-   * @param index - Gewünschter Index (negative Werte werden auf 0 gesetzt).
-   */
-  function selectVorgabenBRow(id: string, index: number) {
-    setActiveVorgabenBIndex(current => ({ ...current, [id]: Math.max(0, index) }));
+    updateTemplateContent(id, { abschnitte: { ...state.templateContent.abschnitte, [abschnittId]: value } });
   }
 
   /**
@@ -333,30 +184,7 @@ export function AdminProfileTemplatesManager() {
     if (current.has(key)) current.delete(key);
     else current.add(key);
     updateTemplateContent(id, {
-      Einstellungen: {
-        ...state.templateContent.Einstellungen,
-        aktivierteTabs: [...current],
-      },
-    });
-  }
-
-  /**
-   * Schaltet eine benötigte Zulage um.
-   *
-   * @param id - Template-Id.
-   * @param code - Zulagen-Code.
-   */
-  function toggleZulage(id: string, code: string) {
-    const state = edits[id];
-    if (!state) return;
-    const current = new Set(state.templateContent.Einstellungen.benoetigteZulagen);
-    if (current.has(code)) current.delete(code);
-    else current.add(code);
-    updateTemplateContent(id, {
-      Einstellungen: {
-        ...state.templateContent.Einstellungen,
-        benoetigteZulagen: [...current],
-      },
+      Einstellungen: { aktivierteTabs: [...current] },
     });
   }
 
@@ -416,7 +244,7 @@ export function AdminProfileTemplatesManager() {
         name: edit.name.trim(),
         description: edit.description.trim(),
         active: edit.active,
-        template: buildTemplatePayload(template.template, edit.templateContent),
+        template: buildTemplatePayload(template.template, edit.templateContent, abschnitte),
       });
       await reload();
     } finally {
@@ -485,9 +313,11 @@ export function AdminProfileTemplatesManager() {
     }
   }
 
+  // Erst nach den Admin-Anteilen laden: ohne sie fehlten die Feature-Abschnitte im Entwurf.
   useEffect(() => {
+    if (!adminFeatures.geladen) return;
     queueMicrotask(() => void reload());
-  }, [reload]);
+  }, [reload, adminFeatures.geladen]);
 
   return (
     <div>
@@ -498,14 +328,14 @@ export function AdminProfileTemplatesManager() {
         </DBButton>
       </div>
 
-      {loading && <div className="text-body-secondary">Lädt Templates...</div>}
+      {(loading || !adminFeatures.geladen) && <div className="text-body-secondary">Lädt Templates...</div>}
       {!loading && sortedTemplates.length === 0 && (
         <p className="text-body-secondary mb-0">Keine Templates vorhanden.</p>
       )}
 
       <div className="d-flex flex-column gap-2">
         {sortedTemplates.map(template => {
-          const edit = edits[template._id] ?? toEditState(template);
+          const edit = edits[template._id] ?? toEditState(template, abschnitte);
           const expanded = expandedId === template._id;
           const changed = hasChanges(template._id);
           const isSaving = savingId === template._id;
@@ -566,23 +396,13 @@ export function AdminProfileTemplatesManager() {
                       templateId={template._id}
                       templateContent={templateContent}
                       isSaving={isSaving}
-                      activeVorgabenBIndex={activeVorgabenBIndex[template._id] ?? 0}
+                      abschnitte={abschnitte}
+                      zusatzPersFelder={zusatzPersFelder}
                       onUpdatePersField={(key, value) => updatePersField(template._id, key, value)}
                       onUpdateArbeitszeit={value => updateArbeitszeit(template._id, value)}
                       onEnableArbeitszeit={() => enableArbeitszeit(template._id)}
-                      onAddFahrzeitRow={() => addFahrzeitRow(template._id)}
-                      onUpdateFahrzeitRow={(index, field, value) =>
-                        updateFahrzeitRow(template._id, index, field, value)
-                      }
-                      onRemoveFahrzeitRow={index => removeFahrzeitRow(template._id, index)}
-                      onAddVorgabenBRow={() => addVorgabenBRow(template._id)}
-                      onSelectVorgabenBRow={index => selectVorgabenBRow(template._id, index)}
-                      onMoveVorgabenBRow={(index, direction) => moveVorgabenBRow(template._id, index, direction)}
-                      onSetVorgabenBStandard={index => setVorgabenBStandard(template._id, index)}
-                      onRemoveVorgabenBRow={index => removeVorgabenBRow(template._id, index)}
-                      onUpdateVorgabenBRow={(index, updater) => updateVorgabenBRow(template._id, index, updater)}
+                      onUpdateAbschnitt={(abschnittId, value) => updateAbschnitt(template._id, abschnittId, value)}
                       onToggleAktivierterTab={key => toggleAktivierterTab(template._id, key)}
-                      onToggleZulage={code => toggleZulage(template._id, code)}
                     />
                   </div>
 

@@ -3,43 +3,34 @@ import { klickeCheckbox, render } from '@test/reactRender';
 
 import '@/app/features';
 import { AdminProfileTemplateContentEditor } from '@/pages/admin/ui/AdminProfileTemplateContentEditor';
-import type { TemplateContentDraft } from '@/pages/admin/ui/profileTemplates.shared';
+import { normalizeTemplateContent } from '@/pages/admin/ui/adminProfileTemplatesManagerGemeinsam';
+import { vorlagenAbschnitte, vorlagenPersFelder } from '@/pages/admin/adminFeatures';
+import berAdmin from '@/pages/admin/features/ber';
+import eaAdmin from '@/pages/admin/features/ea';
+import ewtAdmin from '@/pages/admin/features/ewt';
+import ezAdmin from '@/pages/admin/features/ez';
 
-function leererInhalt(): TemplateContentDraft {
-  return {
-    Pers: {},
-    Arbeitszeit: null,
-    Fahrzeit: [],
-    VorgabenB: [],
-    Einstellungen: { aktivierteTabs: [], benoetigteZulagen: [] },
-  };
-}
+/** Abschnitte aller vier Admin-Anteile (wie `useAdminFeatures` sie im Manager liefert). */
+const ADMIN_FEATURES = [berAdmin, ewtAdmin, ezAdmin, eaAdmin];
+const ABSCHNITTE = vorlagenAbschnitte(ADMIN_FEATURES);
 
 function zeichne(overrides: Partial<Parameters<typeof AdminProfileTemplateContentEditor>[0]> = {}) {
   const spies = {
     onUpdatePersField: mock(() => {}),
     onUpdateArbeitszeit: mock(() => {}),
     onEnableArbeitszeit: mock(() => {}),
-    onAddFahrzeitRow: mock(() => {}),
-    onUpdateFahrzeitRow: mock(() => {}),
-    onRemoveFahrzeitRow: mock(() => {}),
-    onAddVorgabenBRow: mock(() => {}),
-    onSelectVorgabenBRow: mock(() => {}),
-    onMoveVorgabenBRow: mock(() => {}),
-    onSetVorgabenBStandard: mock(() => {}),
-    onRemoveVorgabenBRow: mock(() => {}),
-    onUpdateVorgabenBRow: mock(() => {}),
+    onUpdateAbschnitt: mock(() => {}),
     onToggleAktivierterTab: mock(() => {}),
-    onToggleZulage: mock(() => {}),
   };
   const container = document.createElement('div');
   document.body.append(container);
   render(
     <AdminProfileTemplateContentEditor
       templateId="t1"
-      templateContent={leererInhalt()}
+      templateContent={normalizeTemplateContent({}, ABSCHNITTE)}
       isSaving={false}
-      activeVorgabenBIndex={0}
+      abschnitte={ABSCHNITTE}
+      zusatzPersFelder={vorlagenPersFelder(ADMIN_FEATURES)}
       {...spies}
       {...overrides}
     />,
@@ -88,15 +79,38 @@ describe('AdminProfileTemplateContentEditor', () => {
     expect(spies.onToggleAktivierterTab).toHaveBeenCalledWith('ewt');
   });
 
-  it('meldet das Umschalten einer Zulage', () => {
+  it('meldet das Umschalten einer Zulage ueber den Abschnitt der Erschwerniszulagen', () => {
     const { container, spies } = zeichne();
-    klickeCheckbox(abschnittsSchalter(container, 'Einstellungen'), true);
+    klickeCheckbox(abschnittsSchalter(container, 'Zulagen'), true);
 
-    // Die ersten vier Checkboxen sind die sichtbaren Bereiche (`tabOptions()`), danach die Zulagen.
-    const alle = container.querySelectorAll<HTMLInputElement>('.db-checkbox input[type="checkbox"]');
-    klickeCheckbox(alle[4], true);
+    const erste = container.querySelector<HTMLInputElement>('.db-checkbox input[type="checkbox"]');
+    klickeCheckbox(erste as HTMLInputElement, true);
 
-    expect(spies.onToggleZulage).toHaveBeenCalled();
+    expect(spies.onUpdateAbschnitt).toHaveBeenCalledWith('Zulagen', [expect.any(String)]);
+  });
+
+  it('zeigt die Abschnitte der Features zwischen Arbeitszeit und Einstellungen, in Feature-Reihenfolge', () => {
+    const { container } = zeichne();
+    const labels = [...container.querySelectorAll('.db-tag label')].map(l => l.textContent?.trim());
+
+    expect(labels).toEqual(['Pers', 'Arbeitszeit', 'VorgabenB', 'Fahrzeit', 'Zulagen', 'Einstellungen']);
+  });
+
+  it('ohne Admin-Anteile nur die globalen Abschnitte, ohne EA-Felder in Pers', () => {
+    const { container } = zeichne({
+      abschnitte: [],
+      zusatzPersFelder: [],
+      templateContent: normalizeTemplateContent({}),
+    });
+    const labels = [...container.querySelectorAll('.db-tag label')].map(l => l.textContent?.trim());
+
+    expect(labels).toEqual(['Pers', 'Arbeitszeit', 'Einstellungen']);
+    expect(container.textContent).not.toContain('Entgeltgruppe');
+  });
+
+  it('zeigt die Pers-Felder des Entgeltausgleichs aus dessen Admin-Anteil', () => {
+    const { container } = zeichne();
+    expect(container.textContent).toContain('Entgeltgruppe (Entgeltausgleich)');
   });
 
   it('sperrt die Aktionsknoepfe waehrend des Speicherns', () => {

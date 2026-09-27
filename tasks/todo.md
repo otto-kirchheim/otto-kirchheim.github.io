@@ -221,10 +221,28 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
     Vorlage `kirchheim` liefert 7-stellige PNummer, Feld verlangt 8 (vorbestehend, nicht Teil von A).
   Folgeschritte (getrennt, je eigener Commit):
   - [ ] B Admin-Profilvorlagen (Audit Punkt 6): fest verdrahtete Abschnitte in `AdminProfileTemplateContentEditor.tsx`/`profileTemplates.shared.ts`/`adminProfileTemplatesManagerGemeinsam.ts` (`VorgabenB`+Bereitschaft/Nachtschicht=ber, `Fahrzeit`=ewt, `benoetigteZulagen`=ez, Taetigkeit/Entgeltgruppe=ea) als Slot in `pages/admin/features/<id>/` (war in P1g vorgesehen, nicht umgesetzt)
+    Plan (2026-09-26, Budget L): `AdminFeature.profilVorlage` = `{ abschnitte?: AdminVorlagenAbschnitt[], persFelder? }`;
+    Abschnitt = `id`, `label`, `ausVorlage(template)`, `inVorlage(result, entwurf)`, `hatDaten`, `Editor`. Entwurf
+    `TemplateContentDraft` = Pers + Arbeitszeit + `Einstellungen.aktivierteTabs` (global) + `abschnitte[id]`.
+    - [x] ber: `VorgabenB` (Editor inkl. Navigation/Standard/Verschieben, `VorgabenBWeekRangeEditor`, Normalisierung) -> `pages/admin/features/ber/vorgabenB.tsx`
+    - [x] ewt: `Fahrzeit` -> `pages/admin/features/ewt/fahrzeit.tsx`; ez: `benoetigteZulagen` als eigener Abschnitt „Zulagen“ -> `pages/admin/features/ez/zulagen.tsx`; ea: Pers-Felder Taetigkeit/Entgeltgruppe
+    - [x] Manager/ContentEditor/Gemeinsam generisch (fehlendes Feature: Originalwerte bleiben erhalten, kein Loeschen)
+    - [x] Tests (Payload-Roundtrip je Abschnitt, fehlendes Feature, Editor-Tags), Gate (Tests 2309), CHANGELOG 192
+    - [x] Livetest (2026-09-27): Fake-Backend 35/35 inkl. Schritt 5 (Admin > Profile-Templates: Abschnitte, EA-Pers-Felder,
+          VorgabenB hinzufuegen, Zulage waehlen, Speichern-Payload), lokales Backend 27/27 (ohne `Persoenliche Daten fehlerhaft`)
   - [ ] C Feld `Entgeltgruppe` (Audit Punkt 7): aus `PersoenlicheDatenPanel.tsx`/`saveEinstellungen.ts`/`generateEingabeMaskeEinstellungen.ts` in einen `einstellungen`-Teil von `ea` (ea hat noch keinen)
   - [ ] D Admin-Ressourcenbrowser (Punkt 8): `TIME_STRING_FIELDS`/`DATE_ONLY_FIELDS` in `adminResourceBrowserGemeinsam.ts` je Feature in `AdminResourceConfig` (`zeitFelder`, `nurDatumFelder`)
   - [ ] E Typ-Literale (Punkt 9, bewusst, nur pruefen): `FeaturePdfModus`, `FormularCode`, Storage-Enum, `IBerechnungMonatsErgebnis`-Felder -- Scaffold `bun run new-feature` weist darauf hin bzw. erweitert sie
   - Bewusst in shared (Audit): `resolveSchichtDay`/`arbeitszeit-editor`, `zulagenCatalog`, `berechnungWerte`/`-Bausteine`, `confirmDeleteAllRows`, `resourceApi`, `createDatenGetter`, ewt-Zugriff fuer ez/ea (`getEwtDaten`, `getEwtDatenFuerZuordnung`, `syncFieldsFromEwtRows`, `unlinkEwtRefs`, Events `ewt:*`)
+- [ ] DB UX 5.6 neue Komponenten einbauen (Hinweis User 2026-09-26, nach Update auf 5.6.0, CHANGELOG 191):
+  - [ ] `DBDialog`/`DBDialogHeader`/`DBDialogFooter` (nativer, zentrierter `<dialog>`, `backdrop`, `containerSize`,
+        Invoker Commands) statt `DBDrawer` in `shared/ui/modal/showModal.tsx` + `MyModalHeader` (nachgebautes Kopf-Markup
+        entfaellt, `aria-labelledby` macht der Header selbst); pruefen: `data-dialog-dismiss`-Delegation, gestapelte
+        Dialoge, `confirmDialog`/`signaturDialog`/`errorHandling` (HTML-Markup), `DIALOG_RICHTUNG`, `data-breite`-Breiten
+        -> `containerSize`/`--db-dialog-max-width`, Mobil-Verhalten. Browser-Check aller Dialogarten.
+  - [ ] `DBLoadingIndicator` (Spinner/Fortschritt) statt eigener Ladeanzeigen: `DBLoadingButton`/`button-loading`
+        (`setLoading`/`clearLoading`), AutoSave-Puls, Laden nach Login, PDF-Erzeugung; vorher Props/Varianten per
+        `mcp__db-ux__get_component_props` pruefen.
 
 ---
 

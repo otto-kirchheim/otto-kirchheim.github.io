@@ -12,6 +12,8 @@
  *  2. Mapper, Monatsfilter je Tabelle (`features/<id>/model/monat.ts`), Berechnung aus der Registry (`loadUserDaten`)
  *  3. Ueberschneidungspruefung BZ/EWT (`meta.resources[].overlapWindow`)
  *  4. EWT loeschen + Speichern: `onDeleted` -> `ewt:deleted` -> Verweise in EZ und EA geloest
+ *  5. Nur Fake-Backend (Benutzer ist dort Team-Admin): Admin > Profile-Templates mit den Feature-Abschnitten
+ *     (`profilVorlage` der Admin-Anteile: VorgabenB, Fahrzeit, Zulagen, EA-Pers-Felder), Bearbeiten und Speichern
  *
  * Aufruf (Dev-Server muss laufen, z. B. `bun run dev`):
  *   bun scripts/livetest.ts                                        # Fake-Backend, headless
@@ -152,7 +154,39 @@ interface Backend {
   abfangen(request: HTTPRequest, apiBase: string): Promise<boolean>;
   existiert(resource: string, id: string): Promise<boolean>;
   aufraeumen(): Promise<void>;
+  /** Nur Fake-Backend: zuletzt per `PUT profile-templates/<id>` gespeicherter Vorlagen-Inhalt. */
+  gespeicherteVorlage?(): Record<string, unknown> | undefined;
 }
+
+/** Profil-Vorlage des Fake-Backends (Schritt 5); `eigenesFeld` prueft, dass Unbekanntes erhalten bleibt. */
+const FAKE_VORLAGE = {
+  _id: 'tpl1',
+  code: 'livetest',
+  name: 'Livetest-Vorlage',
+  description: '',
+  active: true,
+  template: {
+    Pers: { Vorname: 'Max', PNummer: '01234567' },
+    Fahrzeit: [{ key: 'Kirchheim', text: 'km 196,5', value: '00:10' }],
+    VorgabenB: [
+      {
+        key: '1',
+        value: {
+          Name: 'Woche',
+          beginnB: { tag: 1, zeit: '15:00' },
+          endeB: { tag: 1, zeit: '07:00', Nwoche: true },
+          schichten: ['frueh'],
+          nacht: false,
+          beginnN: { tag: 1, zeit: '', Nwoche: false },
+          endeN: { tag: 1, zeit: '', Nwoche: false },
+          standard: true,
+          eigenesFeld: 'bleibt',
+        },
+      },
+    ],
+    Einstellungen: { aktivierteTabs: ['bereitschaft', 'ewt'], benoetigteZulagen: ['040'] },
+  },
+};
 
 /**
  * Fake-Backend im Speicher, beantwortet die API-Aufrufe per Request-Interception.
@@ -165,7 +199,7 @@ function fakeBackend(): Backend {
   const base64url = (value: object): string => Buffer.from(JSON.stringify(value)).toString('base64url');
   const jwt = `${base64url({ alg: 'none', typ: 'JWT' })}.${base64url({
     userName: USER,
-    role: 'member',
+    role: 'team-admin',
     exp: Math.floor(Date.now() / 1000) + 3600,
   })}.sig`;
   const profil = {
@@ -178,6 +212,8 @@ function fakeBackend(): Backend {
     Einstellungen: { ...VorgabenUMock.Einstellungen, aktivierteTabs: ['bereitschaft', 'ewt', 'neben', 'ea'] },
     updatedAt: stamp(),
   };
+  const vorlage = structuredClone(FAKE_VORLAGE);
+  let gespeichert: Record<string, unknown> | undefined;
   const neu = (head: string, fields: Record<string, unknown>): Doc => {
     const { clientRequestId: _clientRequestId, ...rest } = fields;
     const doc = { ...rest, _id: `${head}-${crypto.randomUUID().slice(0, 8)}`, updatedAt: stamp() } as Doc;
@@ -190,9 +226,28 @@ function fakeBackend(): Backend {
     const [head, second] = segs;
     if (segs.length === 0) return { status: 200, data: { min_frontend_version: '0.0.0' } };
     if (path === 'auth/login' || path === 'auth/refresh-token')
-      return { status: 200, data: { user: { userName: USER, role: 'member' }, accessToken: jwt, refreshToken: 'rt' } };
+      return {
+        status: 200,
+        data: { user: { userName: USER, role: 'team-admin' }, accessToken: jwt, refreshToken: 'rt' },
+      };
+    // Team-Admin mit Vorlagen-Recht: Schritt 5 prueft den Profil-Vorlagen-Editor.
     if (path === 'auth/me')
-      return { status: 200, data: { userName: USER, role: 'member', email: 'live@test.de', emailVerified: true } };
+      return {
+        status: 200,
+        data: {
+          userName: USER,
+          role: 'team-admin',
+          canEditProfileTemplates: true,
+          email: 'live@test.de',
+          emailVerified: true,
+        },
+      };
+    if (path === 'profile-templates') return { status: 200, data: [vorlage] };
+    if (head === 'profile-templates' && method === 'PUT' && second === vorlage._id) {
+      Object.assign(vorlage, body as object);
+      gespeichert = (body as { template?: Record<string, unknown> }).template;
+      return { status: 200, data: vorlage };
+    }
     if (path === 'user-profiles/me') {
       if (method === 'PUT') Object.assign(profil, body as object, { updatedAt: stamp() });
       return { status: 200, data: profil };
@@ -245,6 +300,7 @@ function fakeBackend(): Backend {
 
   return {
     name: 'Fake-Backend (Request-Interception)',
+    gespeicherteVorlage: () => gespeichert,
     async vorbereiten() {
       const ids = Object.fromEntries(
         Object.values(testdokumente({}))
@@ -602,6 +658,113 @@ try {
   check('EA: Verweis ea1 -> e1 geloest', dataEA?.find(r => r._id === ids.ea1)?.EWT === undefined, dataEA);
   check('EA: Verweis ea2 -> e2 bleibt', dataEA?.find(r => r._id === ids.ea2)?.EWT === ids.e2, dataEA);
   check('Tabelle EWT: 2 Zeilen', (await sichtbareZeilen(page, 'tableE')) === 2);
+
+  // 5. Admin: Profil-Vorlagen mit Feature-Abschnitten (nur Fake-Backend, dort ist der Benutzer Team-Admin)
+  if (backend.gespeicherteVorlage) {
+    console.log('5. Admin: Profil-Vorlagen');
+    await page.evaluate(() => (document.querySelector('a#admin-tab[href="#Admin"]') as HTMLElement | null)?.click());
+    const reiter = await warteBis(page, () =>
+      Boolean(document.querySelector('[data-tab-target="admin-pane-templates"]')),
+    );
+    check('Admin-Reiter Profile-Templates sichtbar', reiter);
+    await page.evaluate(() =>
+      (document.querySelector('[data-tab-target="admin-pane-templates"]') as HTMLElement | null)?.click(),
+    );
+    const liste = await warteBis(page, () =>
+      [...document.querySelectorAll('#admin-pane-templates button')].some(b => b.textContent?.includes('livetest')),
+    );
+    check('Vorlage geladen', liste);
+
+    /** Klickt im Vorlagen-Bereich den ersten Knopf mit genau diesem Text (bzw. enthaltenem Text). */
+    const klicke = (text: string, exakt = true) =>
+      page.evaluate(
+        (t: string, e: boolean) => {
+          const knopf = [...document.querySelectorAll<HTMLButtonElement>('#admin-pane-templates button')].find(b =>
+            e ? b.textContent?.trim() === t : b.textContent?.includes(t),
+          );
+          knopf?.click();
+          return Boolean(knopf);
+        },
+        text,
+        exakt,
+      );
+    /** Schaltet einen Abschnitt des Editors auf (Checkbox im Tag). */
+    const abschnitt = (label: string) =>
+      page.evaluate((l: string) => {
+        const tag = [...document.querySelectorAll('#admin-pane-templates .db-tag label')].find(
+          x => x.textContent?.trim() === l,
+        );
+        (tag?.querySelector('input') as HTMLInputElement | null)?.click();
+        return Boolean(tag);
+      }, label);
+    const pause = () => new Promise(resolve => setTimeout(resolve, 200));
+
+    await klicke('livetest', false);
+    await pause();
+    const tags = await page.evaluate(() =>
+      [...document.querySelectorAll('#admin-pane-templates .db-tag label')].map(l => l.textContent?.trim()),
+    );
+    check(
+      'Abschnitte: global + Feature-Abschnitte in Feature-Reihenfolge',
+      JSON.stringify(tags) ===
+        JSON.stringify(['Pers', 'Arbeitszeit', 'VorgabenB', 'Fahrzeit', 'Zulagen', 'Einstellungen']),
+      tags,
+    );
+    check(
+      'Pers enthaelt die Felder des EA-Admin-Anteils',
+      await page.evaluate(() =>
+        Boolean(
+          document.querySelector('#admin-pane-templates')?.textContent?.includes('Entgeltgruppe (Entgeltausgleich)'),
+        ),
+      ),
+    );
+
+    await abschnitt('VorgabenB');
+    await pause();
+    await klicke('Vorgabe hinzufügen');
+    await pause();
+    check(
+      'VorgabenB-Editor (ber): neuer Eintrag ausgewaehlt',
+      await page.evaluate(() =>
+        Boolean(document.querySelector('#admin-pane-templates')?.textContent?.includes('Vorgabe 2 von 2')),
+      ),
+    );
+
+    await abschnitt('Zulagen');
+    await pause();
+    const zulage = await page.evaluate(() => {
+      const box = [...document.querySelectorAll<HTMLInputElement>('#admin-pane-templates .db-checkbox input')].find(
+        b => !b.checked,
+      );
+      box?.click();
+      // Nur das Label: die DB-Checkbox rendert zusaetzlich einen (versteckten) Fehlertext.
+      return box?.closest('label')?.textContent?.trim();
+    });
+    await pause();
+    await klicke('Speichern');
+    const gespeichert = await warteBis(page, () => true, '', 500).then(async () => {
+      for (let i = 0; i < 20 && !backend.gespeicherteVorlage?.(); i++) await pause();
+      return backend.gespeicherteVorlage?.();
+    });
+    const vorgabenB = gespeichert?.VorgabenB as { key: string; value: Record<string, unknown> }[] | undefined;
+    const einstellungen = gespeichert?.Einstellungen as { aktivierteTabs?: string[]; benoetigteZulagen?: string[] };
+    check(
+      'Gespeichert: VorgabenB mit 2 Eintraegen, unbekanntes Feld erhalten',
+      vorgabenB?.length === 2 && vorgabenB[0].value.eigenesFeld === 'bleibt',
+      vorgabenB,
+    );
+    check(
+      'Gespeichert: neue Zulage in Einstellungen.benoetigteZulagen, Tabs unveraendert',
+      Boolean(zulage && einstellungen?.benoetigteZulagen?.includes(zulage)) &&
+        JSON.stringify(einstellungen?.aktivierteTabs) === JSON.stringify(['bereitschaft', 'ewt']),
+      { zulage, einstellungen },
+    );
+    check(
+      'Gespeichert: Fahrzeit unveraendert',
+      JSON.stringify(gespeichert?.Fahrzeit) === JSON.stringify(FAKE_VORLAGE.template.Fahrzeit),
+      gespeichert?.Fahrzeit,
+    );
+  }
 
   check('Keine unbehandelten Seitenfehler', seitenfehler.length === 0, seitenfehler);
 } catch (error) {
