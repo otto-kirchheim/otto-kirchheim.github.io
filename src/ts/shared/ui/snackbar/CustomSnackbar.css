@@ -8,7 +8,7 @@
   max-inline-size: 100%;
   z-index: 1080;
   overflow: hidden;
-  padding: 0.5rem;
+  padding: var(--db-spacing-fixed-xs);
 
   /* Der Halter deckt einen grossen Bereich ab -- Klicks nur auf den Meldungen selbst. */
   pointer-events: none;
@@ -51,11 +51,11 @@
   transform: translateX(-50%);
 }
 
-/* Die App-Fusszeile liegt fest am unteren Rand -- unten verankerte Meldungen weichen ihr aus. */
+/* Die App-Fusszeile liegt fest am unteren Rand (mobil zweizeilig, ca. 69px) -- unten verankerte Meldungen weichen ihr aus. */
 .CustomSnackbar-container--bottom-left,
 .CustomSnackbar-container--bottom-center,
 .CustomSnackbar-container--bottom-right {
-  padding-block-end: 4rem;
+  padding-block-end: var(--db-spacing-fixed-3xl);
 }
 
 .CustomSnackbar-container--fixed {
@@ -70,7 +70,7 @@
   overflow: hidden;
   margin: 0;
   display: flex;
-  inline-size: min(26rem, calc(100vw - 2rem));
+  inline-size: min(var(--db-container-sm), calc(100vw - var(--db-spacing-fixed-xl)));
   pointer-events: auto;
   transition-property: all;
   transition-timing-function: ease;
@@ -84,8 +84,8 @@
 .CustomSnackbar__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-block-start: 0.75rem;
+  gap: var(--db-spacing-fixed-xs);
+  margin-block-start: var(--db-spacing-fixed-sm);
 }
 
 @media (max-width: 576px) {

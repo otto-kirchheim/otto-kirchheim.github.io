@@ -12,21 +12,20 @@
 
 $breakpoints: bp.$em;
 
-// Rasterabstaende auf die DB-UX-Tokens `--db-spacing-fixed-*` gelegt: der Abstand folgt so
+// Rasterabstaende: Stufe -> DB-UX-Token `--db-spacing-fixed-*` (0 = kein Abstand); der Abstand folgt so
 // automatisch der Density.
 $abstaende: (
   0: 0,
-  1: var(--db-spacing-fixed-2xs),
-  2: var(--db-spacing-fixed-xs),
-  3: var(--db-spacing-fixed-md),
-  4: var(--db-spacing-fixed-lg),
-  5: var(--db-spacing-fixed-2xl),
+  1: '2xs',
+  2: 'xs',
+  3: 'md',
+  4: 'lg',
+  5: '2xl',
 );
 
 .raster {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: var(--raster-abstand, 0);
 
   > * {
     grid-column: span 12;
@@ -36,12 +35,16 @@ $abstaende: (
 .raster-auto {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(var(--spalte-min, 14rem), 1fr));
-  gap: var(--raster-abstand, 0);
 }
 
-@each $stufe, $wert in $abstaende {
+// Abstand von `.raster`/`.raster-auto`; ohne Klasse kein Abstand (Grid-Vorgabe).
+@each $stufe, $token in $abstaende {
   .abstand-#{$stufe} {
-    --raster-abstand: #{$wert};
+    @if $token == 0 {
+      gap: 0;
+    } @else {
+      gap: var(--db-spacing-fixed-#{$token});
+    }
   }
 }
 
@@ -64,5 +67,5 @@ $abstaende: (
 // Randlose Vollbreite mit schmalem Seitenrand.
 .breit {
   inline-size: 100%;
-  padding-inline: 0.75rem;
+  padding-inline: var(--db-spacing-fixed-sm);
 }

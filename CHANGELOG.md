@@ -2,6 +2,28 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-03 (198)
+
+### style (stylelint ohne Warnungen und ohne `stylelint-disable`, DB-Tokens statt fester Werte)
+
+- `lint:css` mit `--max-warnings 0` (vorher Ratsche 93, Stand 87); keine `stylelint-disable`-Kommentare mehr (User-Vorgabe),
+  `use-sizing` mit `allowCalc` (Viewport-/Spaltenrechnungen, das Plugin zerlegt `calc()` an Leerzeichen).
+- Token-gleich ersetzt (Optik unveraendert): 0.25/0.5/0.75/1/1.5/5rem, 4/8/2px, 1px/2px-Rahmen, 14rem, 2.5rem.
+- Auf die naechste Stufe gezogen (Optik aendert sich leicht, Sichtpruefung): Icon-Knopf-Abstand 0.4 -> 0.5rem,
+  Signatur-Fusszeile 0.35 -> 0.25rem, Berechnung mobil Kopfzeilen 0.65 -> 0.75rem, Schalter in Zellen 1.7 -> 1.5rem,
+  Sortier-Icon-Platz 30px -> 2rem, Fehler-Icon 0.35 -> 0.25rem, „Bestaetigungsmail“-Knopf mobil 0.2/0.4 -> 0.25/0.5rem;
+  Knopfreihe max. 250px -> 16rem, gleich breite Knoepfe 12 -> 14rem, Kartentitel 3.5 -> 4rem, `u-min-w-120` -> 6rem,
+  **Label-Spalte der Berechnung 11.5 -> 10rem** (`ERSTE_SPALTE_PX` 184 -> 160), Fahrzeit-Label 9.25 -> 10rem,
+  Knopf max. 8.5 -> 10rem, Einsatzort-Kappung 120/140/240/480/650px -> 6/10/15/32/42rem, Onboarding-Panel und Snackbar
+  26 -> 24rem (Snackbar mobil `100vw - 2rem`), Monatsauswahl min. 8 -> 10rem, Fusszeilen-Reservierung 3.5 -> 3rem,
+  Snackbar-Abstand unten 4 -> 5rem (mobil zweizeiliger Footer 69px).
+- Rahmenfarben wie bei DB-Formularfeldern: `.border-primary/-danger/-warning` und Outlined-Semantikknoepfe
+  `<farbe>-on-bg-basic-emphasis-70`, `.border-*-subtle` `-emphasis-50` (vorher `origin` bzw. `bg-basic-level-3`).
+- Sortier-Icon per `translate: 0 -50%` statt `margin-block-start: -12px` zentriert; `.visually-hidden` ohne `margin: -1px`.
+- `.raster`/`.raster-auto`: `.abstand-*` setzt `gap` direkt (statt `--raster-abstand`); Utility-Maps mit Token-Namen.
+- Admin-Unter-Tabs ohne `.bg-darkmode-override` (fest kodierte Bootstrap-Farben im Dark Mode), DB faerbt adaptiv.
+- Tote Klassen entfernt: `jahr-auswahl`, `big-icons`, `einstellungen-icons`, `alertstyle`, `offcanvas-impressum`.
+
 ## 2026-10-03 (197)
 
 ### refactor (Wertelisten und Ja/Nein-Felder des Formular-Editors je Feature, Audit-Rest)

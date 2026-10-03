@@ -43,7 +43,7 @@ bun run test           # Bun-Testlauf (sequentiell pro Datei)
 bun run dev-test       # Bun Watch-Mode
 bun run lint           # ESLint prüfen
 bun run lint:fix       # ESLint auto-fix
-bun run lint:css       # Stylelint prüfen (Ratsche: --max-warnings, siehe stylelint.config.mjs)
+bun run lint:css       # Stylelint prüfen (--max-warnings 0, DB-Tokens statt fester Werte, siehe stylelint.config.mjs)
 bun run lint:css:fix   # Stylelint auto-fix -- danach IMMER den Diff ansehen
 bun run coverage       # Tests mit Coverage
 bun run preview        # Build-Preview (schreibt nach ../public/public)

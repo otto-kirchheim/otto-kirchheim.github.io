@@ -11,7 +11,7 @@ import { TAB_SHOWN_EVENT } from '@/shared/model/navigation/tabController';
 // Live-`getComputedStyle`-Reads.
 const MONAT_MIN_PX = 70;
 const RESERVE_PX = 24; // Container-Margin/-Padding
-const ERSTE_SPALTE_PX = 184; // feste 11.5rem der Label-Spalte, siehe styles.scss
+const ERSTE_SPALTE_PX = 160; // feste Label-Spalte `db-sizing-2xl` (10rem), siehe styles.scss
 const MONATSNAMEN = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'] as const;
 
 let startMonat: number | null = null;

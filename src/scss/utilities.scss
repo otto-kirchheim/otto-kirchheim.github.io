@@ -17,15 +17,24 @@
 // Umbruchstufen aus `_breakpoints.scss` -- dieselbe Quelle wie `raster.scss` und `customtable.scss`.
 $umbrueche: bp.$em;
 
-// Abstandsstufen 0-5 auf den DB-Spacing-Tokens.
+// Abstandsstufen 0-5 -> DB-Spacing-Token `--db-spacing-fixed-*` (0 = kein Abstand).
 $abstaende: (
   '0': 0,
-  '1': var(--db-spacing-fixed-2xs),
-  '2': var(--db-spacing-fixed-xs),
-  '3': var(--db-spacing-fixed-sm),
-  '4': var(--db-spacing-fixed-md),
-  '5': var(--db-spacing-fixed-xl),
+  '1': '2xs',
+  '2': 'xs',
+  '3': 'sm',
+  '4': 'md',
+  '5': 'xl',
 );
+
+// Wert einer Abstandsstufe fuer die Schleifen mit berechnetem Eigenschaftsnamen (`m*`/`p*`).
+@function abstand($token) {
+  @if $token == 0 {
+    @return 0;
+  }
+
+  @return var(--db-spacing-fixed-#{$token});
+}
 
 // Kuerzel -> CSS-Eigenschaften. `s`/`e` sind die logischen Kanten (start/end).
 $kanten: (
@@ -66,16 +75,19 @@ $fuellungen: (
   'danger-subtle': var(--db-critical-bg-basic-level-1-default),
   'primary-subtle': var(--db-brand-bg-basic-level-1-default, var(--db-adaptive-bg-basic-level-2-default)),
 );
+
+// Rahmenfarben: Klassen-Suffix -> DB-Farbfamilie (`.border-<name>`, `.border-<name>-subtle`).
 $rahmenfarben: (
-  'primary': var(--db-brand-origin-default),
-  'danger': var(--db-critical-origin-default),
-  'warning': var(--db-warning-origin-default),
-  'primary-subtle': var(--db-brand-bg-basic-level-3-default, var(--db-brand-origin-default)),
-  'secondary-subtle': var(--db-adaptive-on-bg-basic-emphasis-60-default),
-  'success-subtle': var(--db-successful-bg-basic-level-3-default),
-  'warning-subtle': var(--db-warning-bg-basic-level-3-default),
-  'danger-subtle': var(--db-critical-bg-basic-level-3-default),
-  'info-subtle': var(--db-informational-bg-basic-level-3-default),
+  'primary': 'brand',
+  'danger': 'critical',
+  'warning': 'warning',
+);
+$rahmenfarben-subtil: (
+  'primary': 'brand',
+  'success': 'successful',
+  'warning': 'warning',
+  'danger': 'critical',
+  'info': 'informational',
 );
 
 // Klassen-Suffix -> logische Versatz-Eigenschaft fuer `top-*`/`bottom-*`/`start-*`/`end-*`.
@@ -127,16 +139,16 @@ $ausrichtung: (
 
 @mixin abstands-klassen($suffix: '') {
   @each $kuerzel, $eigenschaften in $kanten {
-    @each $stufe, $wert in $abstaende {
+    @each $stufe, $token in $abstaende {
       .m#{$kuerzel}#{$suffix}-#{$stufe} {
         @each $eigenschaft in $eigenschaften {
-          #{$eigenschaft}: $wert !important;
+          #{$eigenschaft}: abstand($token) !important;
         }
       }
 
       .p#{$kuerzel}#{$suffix}-#{$stufe} {
         @each $eigenschaft in $eigenschaften {
-          #{'padding' + string.slice($eigenschaft, 7)}: $wert !important;
+          #{'padding' + string.slice($eigenschaft, 7)}: abstand($token) !important;
         }
       }
     }
@@ -148,9 +160,13 @@ $ausrichtung: (
     }
   }
 
-  @each $stufe, $wert in $abstaende {
+  @each $stufe, $token in $abstaende {
     .gap#{$suffix}-#{$stufe} {
-      gap: $wert !important;
+      @if $token == 0 {
+        gap: 0 !important;
+      } @else {
+        gap: var(--db-spacing-fixed-#{$token}) !important;
+      }
     }
   }
 }
@@ -366,16 +382,27 @@ $ausrichtung: (
     border-inline-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default) !important;
   }
 
-  @each $name, $wert in $rahmenfarben {
+  // Rahmen in Semantikfarbe wie bei DB selbst (`<farbe>-on-bg-basic-emphasis-70`), `-subtle` eine Stufe heller (50).
+  @each $name, $familie in $rahmenfarben {
     .border-#{$name} {
-      border-color: $wert !important;
+      border-color: var(--db-#{$familie}-on-bg-basic-emphasis-70-default) !important;
     }
   }
 
+  @each $name, $familie in $rahmenfarben-subtil {
+    .border-#{$name}-subtle {
+      border-color: var(--db-#{$familie}-on-bg-basic-emphasis-50-default) !important;
+    }
+  }
+
+  .border-secondary-subtle {
+    border-color: var(--db-adaptive-on-bg-basic-emphasis-60-default) !important;
+  }
+
   // Eckenradien kommen aus den `--db-border-radius-*`-Tokens; eine `.rounded`-Stufenklasse gibt
-  // es nicht. Nur `.rounded-circle` (echte 50%-Rundung, z.B. Signatur-Griff im PdfCanvas).
+  // es nicht. Nur `.rounded-circle` (volle Rundung, z.B. quadratische Lupe im PdfCanvas).
   .rounded-circle {
-    border-radius: 50% !important;
+    border-radius: var(--db-border-radius-full) !important;
   }
 
   .shadow {
@@ -463,12 +490,13 @@ $ausrichtung: (
     }
   }
 
+  // Screenreader-Muster: 1px-Kasten (`border-width-3xs`), vollstaendig weggeschnitten; `position: absolute` nimmt ihn aus
+  // dem Fluss, deshalb ohne das alte `margin: -1px`.
   .visually-hidden {
     position: absolute !important;
-    inline-size: 1px !important;
-    block-size: 1px !important;
+    inline-size: var(--db-border-width-3xs) !important;
+    block-size: var(--db-border-width-3xs) !important;
     padding: 0 !important;
-    margin: -1px !important;
     overflow: hidden !important;
     clip-path: inset(50%) !important;
     white-space: nowrap !important;

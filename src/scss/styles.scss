@@ -1,25 +1,25 @@
 @use 'breakpoints' as bp;
 @import 'raster';
 
-// Knopfreihen der Tabs: jeder Knopf max. 250px, sonst zieht er ueber die halbe Seite.
+// Knopfreihen der Tabs: jeder Knopf begrenzt, sonst zieht er ueber die halbe Seite.
 .knopfreihe > * {
-  max-inline-size: 250px;
+  max-inline-size: var(--db-container-2xs);
 }
 
 // Gleich breite Knoepfe einer `<DBStack>`-Reihe: feste Breite, sonst zieht der laengste Text die anderen schief.
 .knopfreihe-gleich > * {
-  inline-size: 12rem;
+  inline-size: var(--db-container-3xs);
 }
 
-// Kacheln fuellen die Zeile gleichmaessig (wachsen/schrumpfen), mindestens 14rem.
+// Kacheln fuellen die Zeile gleichmaessig (wachsen/schrumpfen), mindestens `container-3xs` (14rem).
 .karten-gleich > * {
   flex: 1 1 0%;
-  min-inline-size: 14rem;
+  min-inline-size: var(--db-container-3xs);
 }
 
 // Start-Karten-Titel: zwei Zeilen Platz, damit die Absaetze darunter auf einer Hoehe beginnen.
 .karten-titel {
-  min-block-size: 3.5rem;
+  min-block-size: var(--db-sizing-lg);
 }
 
 // `.db-stack` hat `inline-size: 100%` (als Flex-Kind eines Stack-Rows drueckt es die Geschwister in eigene Zeilen)
@@ -27,11 +27,6 @@
 .db-stack {
   inline-size: auto;
   overflow: visible;
-}
-
-.jahr-auswahl {
-  max-inline-size: 18.5rem;
-  margin-inline: auto;
 }
 
 // Feld + angehaengter Knopf (Ersatz fuer `.input-group`). Container-Eigenschaften kommen per `<DBStack>`-Props,
@@ -64,7 +59,7 @@
 }
 
 .u-min-w-120 {
-  min-inline-size: 120px;
+  min-inline-size: var(--db-sizing-xl);
 }
 
 // Icon-Groesse: `--db-icon-font-size` (gesetzt von den `db-font-size-*`-Klassen).
@@ -80,7 +75,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap: var(--db-spacing-fixed-xs);
 }
 
 .db-button > .db-icon {
@@ -120,9 +115,8 @@
   }
 
   .db-button[data-color='#{$semantik}'][data-variant='outlined'] {
-    // Rahmen in Semantikfarbe; `-origin-default` ist ein echtes DB-Token, die Regel kennt fuer Rahmen nur `-on-bg-emphasis-*`.
-    /* stylelint-disable-next-line db-ux/use-border-color */
-    border-color: var(--db-#{$semantik}-origin-default);
+    // Rahmen in Semantikfarbe wie bei DB-Formularfeldern (`<farbe>-on-bg-basic-emphasis-70`).
+    border-color: var(--db-#{$semantik}-on-bg-basic-emphasis-70-default);
     color: var(--db-#{$semantik}-origin-default);
 
     --db-icon-color: var(--db-#{$semantik}-origin-default);
@@ -172,8 +166,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  inline-size: 2.5rem;
-  block-size: 2.5rem;
+  inline-size: var(--db-sizing-md);
+  block-size: var(--db-sizing-md);
   border-radius: var(--db-border-radius-full);
   background-color: var(--db-base-bg-color-basic-level-1);
   box-shadow: 0 0.125rem 0.375rem rgb(0 0 0 / 25%);
@@ -189,20 +183,12 @@
   --db-icon-color: var(--db-brand-origin-default);
 }
 
-.big-icons {
-  margin-inline-end: 0.35rem;
-}
-
-.einstellungen-icons {
-  padding: 10px 2px 0;
-}
-
 // Zwei Motive fehlen im DB-Satz (Theme-Automatik, Filter zuruecksetzen): SVG unter `src/icons/`
 // (`scripts/icon-varianten.py`), per Maske mit `currentColor` gefaerbt.
 .app-icon {
   display: inline-block;
-  inline-size: var(--db-icon-font-size, 1.5rem);
-  block-size: var(--db-icon-font-size, 1.5rem);
+  inline-size: var(--db-icon-font-size, var(--db-sizing-sm));
+  block-size: var(--db-icon-font-size, var(--db-sizing-sm));
   vertical-align: middle;
   background: currentcolor;
   mask: var(--app-icon) center / contain no-repeat;
@@ -276,17 +262,7 @@
 }
 
 td:has(.SchichtBereitschaft) {
-  padding: 0 0.5rem;
-}
-
-.alertstyle {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.alertstyle > button {
-  margin: 0.5rem;
+  padding: 0 var(--db-spacing-fixed-xs);
 }
 
 // Liste ohne Aussenrahmen, Eintraege nur durch eine Linie getrennt (Passkeys, Fehlerlisten beim Massenspeichern).
@@ -331,9 +307,10 @@ td:has(.SchichtBereitschaft) {
   position: sticky;
 
   // Feste Label-Spalte: Grundlage der dynamischen Monatsanzahl.
-  inline-size: 11.5rem;
-  min-inline-size: 11.5rem;
-  max-inline-size: 11.5rem;
+  // `berechnungMonatsFenster.ts` (`ERSTE_SPALTE_PX`) rechnet mit derselben Breite.
+  inline-size: var(--db-sizing-2xl);
+  min-inline-size: var(--db-sizing-2xl);
+  max-inline-size: var(--db-sizing-2xl);
   white-space: normal;
 }
 
@@ -344,7 +321,7 @@ td:has(.SchichtBereitschaft) {
   background-color: inherit;
 }
 
-// Verschachtelte Auslege-Tabellen im Zeilenkopf (EWT-Schwellen, Zulagen-Codes): umbrechen in der festen 11.5rem-Spalte und
+// Verschachtelte Auslege-Tabellen im Zeilenkopf (EWT-Schwellen, Zulagen-Codes): umbrechen in der festen 10rem-Spalte (`db-sizing-2xl`) und
 // erben nichts von der `db-table`-Huelle (Rahmen, Zebra, Grid) -- alles zuruecksetzen. `display: table` ist noetig, weil die
 // Gegenregel in `utilities.scss` nur `.db-table > table` abfaengt, nicht `.db-table table`.
 .berechnung-label-tabelle {
@@ -376,13 +353,13 @@ td:has(.SchichtBereitschaft) {
 
 .table-Berechnung > tbody > tr.berechnung-gruppen-start > th,
 .table-Berechnung > tbody > tr.berechnung-gruppen-start > td {
-  border-block-start: 2px solid var(--db-adaptive-on-bg-basic-emphasis-70-default);
+  border-block-start: var(--db-border-width-2xs) solid var(--db-adaptive-on-bg-basic-emphasis-70-default);
 }
 
 #berechnungMobileCards {
   .db-accordion-item summary {
     font-size: 0.95rem;
-    padding-block: 0.65rem;
+    padding-block: var(--db-spacing-fixed-sm);
   }
 
   .berechnung-card-gruppe {
@@ -390,9 +367,9 @@ td:has(.SchichtBereitschaft) {
   }
 
   .db-accordion-item summary + div > .berechnung-card-gruppe:not(:first-child) {
-    border-block-start: 2px solid var(--db-adaptive-on-bg-basic-emphasis-70-default);
-    margin-block-start: 0.5rem;
-    padding-block-start: 0.5rem;
+    border-block-start: var(--db-border-width-2xs) solid var(--db-adaptive-on-bg-basic-emphasis-70-default);
+    margin-block-start: var(--db-spacing-fixed-xs);
+    padding-block-start: var(--db-spacing-fixed-xs);
   }
 
   .berechnung-card-zeile {
@@ -401,7 +378,7 @@ td:has(.SchichtBereitschaft) {
 
   // Dünne Linien nur zwischen aufeinanderfolgenden Zeilen, keine am Gruppenende
   .berechnung-card-zeile + .berechnung-card-zeile {
-    border-block-start: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+    border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
   }
 }
 
@@ -445,7 +422,7 @@ td:has(.SchichtBereitschaft) {
 
   /* border-box, sonst kommt der 1px-Rahmen zur per JS gesetzten Groesse dazu (2px je Achse) und laesst enge Fullscreen-Faelle ueberlaufen. */
   box-sizing: border-box;
-  border: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+  border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
   touch-action: none;
 
   /* Immer weiss, unabhaengig vom Theme: der Canvas simuliert Papier fuer die schwarze Tinte im PDF (im Dark Mode waere sie unsichtbar).
@@ -455,8 +432,8 @@ td:has(.SchichtBereitschaft) {
 
 /* Der Unterschrift-Dialog hat keine Kopfzeile; die Fusszeile haelt vier Elemente in einer schmalen Reihe -- jede Zeile Hoehe fehlt der Schreibflaeche. */
 .signatur-fusszeile {
-  gap: 0.35rem;
-  padding: 0.35rem 0.5rem;
+  gap: var(--db-spacing-fixed-2xs);
+  padding: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-xs);
   flex-wrap: nowrap;
 
   .db-checkbox {
@@ -471,11 +448,11 @@ td:has(.SchichtBereitschaft) {
 
 /* Randloser Modus (`signaturDialog.ts`, wenn die Hoehe bindet, z. B. Querformat-Handy): kompaktere Fusszeile gibt dem Canvas Vertikalraum zurueck. */
 .signatur-kompakt .dialog-koerper {
-  padding: 0.25rem;
+  padding: var(--db-spacing-fixed-2xs);
 }
 
 .signatur-kompakt .signatur-fusszeile {
-  padding: 0.25rem 0.5rem;
+  padding: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-xs);
 }
 
 // Formularbeschriftungen richten sich am Feld aus, nicht an `text-center` des Abschnitts.
@@ -500,7 +477,7 @@ td:has(.SchichtBereitschaft) {
 
 // Schalter in Tabellenzellen sollen mittig unter der Spaltenueberschrift stehen.
 td > .db-switch {
-  margin: auto 0 auto 1.7rem;
+  margin: auto 0 auto var(--db-spacing-fixed-lg);
 }
 
 .bereitschaft {
@@ -525,7 +502,7 @@ td > .db-switch {
 // Die Fusszeilen-Reservierung gehoert IN `.db-shell-content`, nicht auf `body`: `.db-shell` ist schon exakt `100dvh` hoch, ein
 // `padding-block-end` auf `body` machte zusaetzlich das Dokument scrollbar (zwei gestapelte Scrollbalken).
 .db-shell-content {
-  padding-block-end: 3.5rem;
+  padding-block-end: var(--db-spacing-fixed-2xl);
 }
 
 // Chromes eigenes Zum-Aktualisieren-Ziehen aus (`pullToRefresh.ts` ersetzt es): sonst reicht der Container die Geste an den
@@ -536,16 +513,12 @@ body,
   overscroll-behavior-y: contain;
 }
 
-// `DBFooterMeta` stapelt Copyright/Knopf unter dieser Breite (Footer 41px -> 69px); die `3.5rem`-Reservierung reicht dann nicht.
+// `DBFooterMeta` stapelt Copyright/Knopf unter dieser Breite (Footer 41px -> 69px); die `3rem`-Reservierung reicht dann nicht.
 // An derselben Bruchstelle auf 5rem erhoehen, statt den Footer einzeilig zu erzwingen (Handys waeren sonst gequetscht).
 @media (max-width: 47.9375em) {
   .db-shell-content {
-    padding-block-end: 5rem;
+    padding-block-end: var(--db-spacing-fixed-3xl);
   }
-}
-
-.offcanvas-impressum {
-  margin-block-end: 3.25rem !important;
 }
 
 .custom-text-truncate {
@@ -556,7 +529,7 @@ body,
 
 // Zulagen als einzeln umrandete Zeilen; Haken und Abstand kommen von DB, hier nur der Rahmen.
 #settings-zulagen-list .db-checkbox {
-  padding: 0.5rem 0.75rem;
+  padding: var(--db-spacing-fixed-xs) var(--db-spacing-fixed-sm);
   border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
   border-radius: var(--db-border-radius-xs);
 }
@@ -570,14 +543,6 @@ body,
   white-space: normal;
 }
 
-@media (prefers-color-scheme: dark) {
-  .bg-darkmode-override {
-    background-color: #23272b !important;
-    color: #f8f9fa !important;
-    border-color: #444950 !important;
-  }
-}
-
 .admin-user-cards {
   column-count: 1;
   column-gap: 1rem;
@@ -585,7 +550,7 @@ body,
 
 .admin-user-card-col {
   break-inside: avoid;
-  margin-block-end: 1rem;
+  margin-block-end: var(--db-spacing-fixed-md);
 }
 
 @media screen and (min-width: #{bp.$sm}px) {
@@ -625,7 +590,7 @@ body,
   flex: 0 0 auto;
 }
 
-// Unter 1200px (dynamisches Monatsfenster): `table-layout: fixed` haelt die Label-Spalte bei 11.5rem, egal wie viele
+// Unter 1200px (dynamisches Monatsfenster): `table-layout: fixed` haelt die Label-Spalte bei 10rem (`db-sizing-2xl`), egal wie viele
 // Monatsspalten `berechnungMonatsFenster.ts` einblendet; Scrollen bleibt Fallback.
 @media screen and (max-width: 1199.98px) {
   #Berechnung .db-table {
@@ -647,7 +612,7 @@ body,
   // Sichtbare Monatsspalten teilen sich den Platz rechts der Label-Spalte; die Anzahl liefert `berechnungMonatsFenster.ts` ueber
   // `--berechnung-monatsspalten` (ueberschreibt die `sp-1`-Prozentbreite).
   .table-Berechnung > thead th[data-monat]:not(.d-none) {
-    inline-size: calc((100% - 11.5rem) / var(--berechnung-monatsspalten, 6));
+    inline-size: calc((100% - var(--db-sizing-2xl)) / var(--berechnung-monatsspalten, 6));
   }
 }
 
@@ -660,8 +625,10 @@ body,
 
   .fahrzeit-feld > label {
     position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
+
+    // Screenreader-Muster wie `.visually-hidden`.
+    inline-size: var(--db-border-width-3xs);
+    block-size: var(--db-border-width-3xs);
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
@@ -698,8 +665,8 @@ body,
   }
 
   #collapseFour table tbody tr {
-    margin-block-end: 0.75rem;
-    border: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+    margin-block-end: var(--db-spacing-fixed-sm);
+    border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
     border-radius: var(--db-border-radius-sm);
     background-color: var(--db-adaptive-bg-basic-level-1-default);
     overflow: hidden;
@@ -707,19 +674,19 @@ body,
 
   #collapseFour table tbody td {
     border: 0;
-    padding: 0.25rem 0.5rem;
+    padding: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-xs);
   }
 
   #collapseFour table tbody td:first-child {
-    padding-block-start: 0.5rem;
+    padding-block-start: var(--db-spacing-fixed-xs);
   }
 
   #collapseFour table tbody td:last-child {
-    padding-block-end: 0.5rem;
+    padding-block-end: var(--db-spacing-fixed-xs);
   }
 
   #collapseFour .fahrzeit-feld > label {
-    min-inline-size: 9.25rem;
+    min-inline-size: var(--db-sizing-2xl);
   }
 
   // Zeilen-Aktionen (↑/↓/Löschen) im Karten-Layout als volle Breite für gute Tap-Ziele
@@ -742,34 +709,34 @@ body,
 
   .admin-fahrzeit-input-group > .db-button {
     flex: 0 0 2.25rem;
-    padding-inline: 0.25rem;
+    padding-inline: var(--db-spacing-fixed-2xs);
   }
 
   #btnResendVerificationEmail {
     font-size: 0.8rem;
     line-height: 1.2;
-    padding: 0.25rem 0.5rem;
+    padding: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-xs);
     white-space: normal;
     text-align: center;
-    max-inline-size: 8.5rem;
+    max-inline-size: var(--db-sizing-2xl);
   }
 }
 
 @media screen and (max-width: 575.95px) {
   #btnResendVerificationEmail {
     font-size: 0.75rem;
-    padding: 0.2rem 0.4rem;
+    padding: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-xs);
   }
 }
 
 @media screen and (min-width: 992px) {
   .arbeitszeit-col-left {
-    border-inline-end: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
-    padding-inline-end: 1.5rem;
+    border-inline-end: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+    padding-inline-end: var(--db-spacing-fixed-lg);
   }
 
   .arbeitszeit-col-right {
-    padding-inline-start: 1.5rem;
+    padding-inline-start: var(--db-spacing-fixed-lg);
   }
 }
 
@@ -777,31 +744,31 @@ body,
 // auftauchen (`customtable.scss`); oberhalb der groessten Stufe ungekappt.
 @media screen and (max-width: #{bp.$xs - 0.05}px) {
   .custom-text-truncate {
-    max-inline-size: 120px;
+    max-inline-size: var(--db-sizing-xl);
   }
 }
 
 @media screen and (min-width: #{bp.$xs}px) and (max-width: #{bp.$sm - 0.05}px) {
   .custom-text-truncate {
-    max-inline-size: 140px;
+    max-inline-size: var(--db-sizing-2xl);
   }
 }
 
 @media screen and (min-width: #{bp.$sm}px) and (max-width: #{bp.$md - 0.05}px) {
   .custom-text-truncate {
-    max-inline-size: 240px;
+    max-inline-size: var(--db-sizing-3xl);
   }
 }
 
 @media screen and (min-width: #{bp.$md}px) and (max-width: #{bp.$lg - 0.05}px) {
   .custom-text-truncate {
-    max-inline-size: 480px;
+    max-inline-size: var(--db-container-lg);
   }
 }
 
 @media screen and (min-width: #{bp.$lg}px) and (max-width: #{bp.$xl - 0.05}px) {
   .custom-text-truncate {
-    max-inline-size: 650px;
+    max-inline-size: var(--db-container-2xl);
   }
 }
 
@@ -812,7 +779,7 @@ body,
 
 @media screen and (min-width: #{bp.$sm}px) {
   .onboarding-panel {
-    inline-size: 26rem;
+    inline-size: var(--db-container-sm);
   }
 }
 
@@ -864,7 +831,8 @@ body,
 #start.active {
   display: flex;
   flex-direction: column;
-  // stylelint-disable-next-line db-ux/use-sizing -- Viewport minus Kopf- (Puppeteer gemessen:
+
+  // Viewport minus Kopf- (Puppeteer gemessen:
   // .db-control-panel-desktop 73px bei regular-Dichte/1440px), Fusszeilenhoehe (41px) UND der
   // stets vorhandene `.breit...mt-2`-Abstand des (meist leeren) `#actAsNotice`-Wrappers in
   // `App.tsx` (8px, unconditional -- kollabiert mit nichts mehr, seit `#tabContent`s `mt-3` fuer
@@ -875,7 +843,7 @@ body,
 
 // Die Marke ist ein Link auf den Start-Tab, soll aber wie eine Wortmarke aussehen.
 .db-brand {
-  gap: 0.5rem;
+  gap: var(--db-spacing-fixed-xs);
   color: inherit;
   text-decoration: none;
   cursor: pointer;
@@ -929,7 +897,7 @@ body,
 // auf ein paar Buchstaben zusammenschrumpfen.
 .db-control-panel-actions-1 .db-select {
   inline-size: auto;
-  min-inline-size: 8rem;
+  min-inline-size: var(--db-sizing-2xl);
 }
 
 // Dialoge liegen in einem `DBDrawer` (nativer `<dialog>`); die App-Huellen `dialog-kopf`/`-koerper`/`-fuss` liefern nur die
@@ -990,9 +958,9 @@ body,
 .db-drawer-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding-block-end: 0.75rem;
-  border-block-end: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+  gap: var(--db-spacing-fixed-xs);
+  padding-block-end: var(--db-spacing-fixed-sm);
+  border-block-end: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
 
   // Titel nimmt den freien Platz, Hilfe und Schliessen ruecken nach rechts.
   > :first-child {
@@ -1007,7 +975,7 @@ body,
 
 .dialog-koerper {
   flex: 1 1 auto;
-  padding-block: 1rem;
+  padding-block: var(--db-spacing-fixed-md);
 }
 
 // Schriftart-Dialog: Grundschrift + drei Schnitt-Abweichungen als ausgerichtete Zeilen
@@ -1028,9 +996,9 @@ body,
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-evenly;
-  gap: 0.5rem;
-  padding-block-start: 0.75rem;
-  border-block-start: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+  gap: var(--db-spacing-fixed-xs);
+  padding-block-start: var(--db-spacing-fixed-sm);
+  border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
 }
 
 // Deaktivierte Felder mit Tooltip: Hover soll die Hülle treffen (disabled-Inputs liefern je nach Browser keine Events).

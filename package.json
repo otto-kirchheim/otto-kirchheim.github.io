@@ -18,7 +18,7 @@
     "lint": "bunx --bun eslint src/ test/",
     "lint:fix": "bunx --bun eslint src/ test/ --fix",
     "lint:files": "bunx --bun eslint",
-    "lint:css": "bunx --bun stylelint \"src/**/*.{css,scss}\"",
+    "lint:css": "bunx --bun stylelint \"src/**/*.{css,scss}\" --max-warnings 0",
     "lint:css:fix": "bunx --bun stylelint \"src/**/*.{css,scss}\" --fix",
     "preview": "bunx --bun vite preview --outDir=../public/public",
     "dev-test": "TZ=Europe/Berlin bun test --isolate --watch",

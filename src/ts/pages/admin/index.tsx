@@ -106,7 +106,7 @@ export default function AdminTab() {
    * @returns Vollständiger `className`-String.
    */
   function paneKlasse(id: string, randKlasse: string): string {
-    return `tab-pane fade${aktiverUnterTab === id ? ' show active' : ''} bg-darkmode-override shadow-sm p-3 mb-4 border border-1 ${randKlasse}`;
+    return `tab-pane fade${aktiverUnterTab === id ? ' show active' : ''} shadow-sm p-3 mb-4 border border-1 ${randKlasse}`;
   }
 
   /**

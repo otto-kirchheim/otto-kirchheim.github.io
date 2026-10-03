@@ -275,6 +275,12 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
         Stand 2026-10-03: Tests 2324/2324 (+1 Entfernbarkeit ber/ewt), typecheck/lint/build 0, format; CHANGELOG 197.
         Browser-Check offen (Dev-Server lief nicht): Formular-Editor, Bedingung auf `LRE` (Checkboxen) und `Wohnung8bis14` (Ja/Nein).
   - Bewusst in shared (Audit): `resolveSchichtDay`/`arbeitszeit-editor`, `zulagenCatalog`, `berechnungWerte`/`-Bausteine`, `confirmDeleteAllRows`, `resourceApi`, `createDatenGetter`, ewt-Zugriff fuer ez/ea (`getEwtDaten`, `getEwtDatenFuerZuordnung`, `syncFieldsFromEwtRows`, `unlinkEwtRefs`, Events `ewt:*`)
+- [ ] Bootstrap-Rueckstaende entfernen (User 2026-10-03). Bestand: eigene Utility-Schicht `src/scss/utilities.scss` mit
+      Bootstrap-Namen, 163 Klassen / ca. 2000 Vorkommen in 100 Dateien (`small` 181, `d-flex` 147, `mb-1` 105,
+      `align-items-center` 94, `gap-2` 93, `text-body-secondary` 87, `text-muted` 66 ...); Bootstrap-Zustandsklassen
+      `tab-pane fade show active`/`tab-content`; Bootstrap-Farbnamen (`text-bg-*`, `bg-body-*`, `*-emphasis`, `border-*-subtle`);
+      Bootstrap-Markup in `test/mockData.ts`; Kommentare/JSDoc. Umfang mit User klaeren.
+- [ ] Als Naechstes (User 2026-10-03): Updates von `@db-ux/*` pruefen (neue Versionen, Changelog/Migration, danach Gate + Sichtpruefung)
 - [ ] DB UX 5.6 neue Komponenten einbauen (Hinweis User 2026-09-26, nach Update auf 5.6.0, CHANGELOG 191):
   - [ ] `DBDialog`/`DBDialogHeader`/`DBDialogFooter` (nativer, zentrierter `<dialog>`, `backdrop`, `containerSize`,
         Invoker Commands) statt `DBDrawer` in `shared/ui/modal/showModal.tsx` + `MyModalHeader` (nachgebautes Kopf-Markup
@@ -291,6 +297,22 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
       (`var()`, SCSS-`$wert`, `calc()`/`min()`, 1px-Haarlinie, `50%`-Kreis) mit begruendetem `stylelint-disable`-Kommentar,
       siehe Analyse 2026-09-09 unten und `tasks/lessons.md` (Ratsche). Optik aendert sich bei Werten zwischen Token-Stufen
       -> Browser-Sichtpruefung je Datei (Hell/Dunkel, Mobil). Danach `--max-warnings` in `package.json` auf 0.
+  Plan (2026-10-03, Budget M; User-Entscheid: Zwischenwerte und Geometrie auf naechstes Token, `.bg-darkmode-override`
+  ganz auf DB-adaptive Tokens). Token-Werte (regular): spacing 3xs .125 / 2xs .25 / xs .5 / sm .75 / md 1 / lg 1.5 / xl 2 /
+  2xl 3 / 3xl 5 rem; sizing 3xs .5 / 2xs .75 / xs 1 / sm 1.5 / md 2.5 / lg 4 / xl 6 / 2xl 10 / 3xl 15 rem; container 3xs 14 /
+  2xs 16 / xs 20 / sm 24 / md 28 / lg 32 / 2xl 42 rem; border-width 3xs 1px / 2xs 2px. Gleichstand -> groessere Stufe, wo
+  Inhalt passen muss.
+  - [x] Token-gleiche Werte 1:1 ersetzen (keine Optikaenderung)
+  - [x] Zwischenwerte runden (0.35/0.4/0.65/1.7/0.2rem, 30px)
+  - [x] Geometrie auf Tokens (Knopfbreiten, Label-Spalte 11.5 -> 10rem inkl. `ERSTE_SPALTE_PX`, Kappungsbreiten, 26rem,
+        Footer-Reservierungen); tote Klassen (`jahr-auswahl`, `big-icons`, `einstellungen-icons`, `alertstyle`,
+        `offcanvas-impressum`) entfernen
+  - [x] Fehlalarme ohne `stylelint-disable` (User: KEINE disables): Token-Namen ausgeschrieben, Rueckfallwerte als Token,
+        `allowCalc` fuer `use-sizing`
+  - [x] `.bg-darkmode-override` entfernt (DB adaptiv)
+  - [x] `--max-warnings 0`, `stylelint.config.mjs`-Kommentar; Gate lint:css/typecheck/lint/test/build gruen (Tests 2324); CHANGELOG 198
+        Livetest 38/44 -- dieselben 6 Fehler auch mit HEAD-Styles (Tabellen im Monat 9 leer, datumsabhaengig?), nicht Teil dieses Schritts
+  - [ ] Sichtpruefung (User): Hell/Dunkel, Mobil -- Liste der betroffenen Stellen im CHANGELOG
 
 ---
 

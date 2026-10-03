@@ -7,18 +7,14 @@
  *
  * Laeuft ueber `bun run lint:css` und als Teil von `bun run release:check`.
  *
- * **Ratsche statt Vollsperre:** die fuenf `db-ux/*`-Regeln melden als `warning`, nicht als
- * `error`. Der Bestand hat dort noch Altlast (Canvas-Geometrie, die feste 11.5rem-Labelspalte
- * der Berechnung, breakpoint-genaue Innenabstaende der `CustomTable`) -- die auf Tokens zu
- * ziehen aendert das Design und gehoert in Phase I. Damit die Zahl nicht wieder waechst, laeuft
- * `lint:css` mit `--max-warnings 93` (Stand 2026-09-08): jede neue Hartcodierung bricht den
- * Lauf, jede beseitigte darf die Grenze in `package.json` senken.
+ * **Ratsche bei 0:** die fuenf `db-ux/*`-Regeln melden als `warning`, `lint:css` laeuft mit
+ * `--max-warnings 0` (seit 2026-10-03; vorher Ratsche ab 93). Jede neue Hartcodierung bricht den
+ * Lauf. Werte zwischen zwei Token-Stufen auf die naechste Stufe ziehen, nicht wegdruecken.
  *
- * Ein Teil der 93 ist nicht aufloesbar -- das Plugin sieht nur den geschriebenen Wert, nicht
- * das, was dahinter steht: `gap: $wert` (SCSS-Variable, die bereits ein Token haelt),
- * `gap: var(--raster-abstand)`, `inline-size: var(--db-icon-font-size)`, `border-radius: 50%`
- * fuer den runden Punkt, `1px` fuer Trennlinien. Diese Meldungen bleiben stehen; wer die
- * Grenze senkt, prueft die Liste, statt sie pauschal wegzudruecken.
+ * Keine `stylelint-disable`-Kommentare (User-Vorgabe 2026-10-03). Das Plugin sieht nur den
+ * geschriebenen Wert: Token-Namen deshalb ausschreiben (`var(--db-spacing-fixed-#{$token})`
+ * statt `$wert`), Rueckfallwerte ebenfalls als Token. `calc()` zerlegt es an Leerzeichen (`-`
+ * ist nie ein Token) -- dafuer `allowCalc` bei `use-sizing` (Viewport-/Spaltenrechnungen).
  */
 
 /** @type {import("stylelint").Config} */
@@ -50,7 +46,7 @@ export default {
   rules: {
     // ── DB-Tokens statt fester Werte (siehe Ratsche oben) ──
     'db-ux/use-spacings': [true, { severity: 'warning' }], // margin, padding, gap
-    'db-ux/use-sizing': [true, { severity: 'warning' }], // height, width, block-size, inline-size
+    'db-ux/use-sizing': [true, { severity: 'warning', allowCalc: true }], // height, width, block-size, inline-size
     'db-ux/use-border-width': [true, { severity: 'warning' }],
     'db-ux/use-border-radius': [true, { severity: 'warning' }],
     'db-ux/use-border-color': [true, { severity: 'warning' }],

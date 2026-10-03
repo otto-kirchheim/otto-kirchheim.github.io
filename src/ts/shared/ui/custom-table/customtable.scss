@@ -54,7 +54,7 @@ tr.customtable-error td {
   --db-icon-font-size: 1rem;
 
   vertical-align: text-bottom;
-  margin-inline-end: 0.35rem;
+  margin-inline-end: var(--db-spacing-fixed-2xs);
   color: var(--db-critical-origin-default);
 }
 
@@ -81,7 +81,7 @@ td.customtable-editing {
 
 td.customtable-editing > div {
   display: inline-flex;
-  gap: 0.25rem;
+  gap: var(--db-spacing-fixed-2xs);
   vertical-align: middle;
 }
 
@@ -100,7 +100,7 @@ table.customtable > tfoot > tr > th.customtable-sortable,
 table.customtable > thead > tr > td.customtable-sortable,
 table.customtable > thead > tr > th.customtable-sortable {
   position: relative;
-  padding-inline-end: 30px;
+  padding-inline-end: var(--db-spacing-fixed-xl);
   cursor: pointer;
 }
 
@@ -120,7 +120,7 @@ th.customtable-sortable > span.customtableIcon {
   position: absolute;
   inset-inline-end: 6px;
   inset-block-start: 50%;
-  margin-block-start: -12px;
+  translate: 0 -50%;
   opacity: 0;
   transition: opacity 0.3s ease-in;
 }
@@ -151,14 +151,14 @@ th.customtable-sortable:hover > span.customtableIcon {
     .customtable-editing.customtable-toggle-#{$name}::before {
       content: '+';
       opacity: 0.3;
-      margin-inline-end: 8px;
+      margin-inline-end: var(--db-spacing-fixed-xs);
     }
   }
 }
 
 @media screen and (max-width: #{bp.$xs - 0.05}px) {
   .customtable-editing > div > button {
-    padding-inline: 4px;
+    padding-inline: var(--db-spacing-fixed-2xs);
   }
 }
 
