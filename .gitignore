@@ -24,3 +24,5 @@ agentdb.rvf.lock
 # TypeScript inkrementeller Build-Cache
 *.tsbuildinfo
 
+# Sichtvergleich (scripts/sichtvergleich.ts): Fotos und Diffs je Lauf
+.sichtvergleich/

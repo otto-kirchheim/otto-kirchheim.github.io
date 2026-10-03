@@ -279,7 +279,9 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
       Bootstrap-Namen, 163 Klassen / ca. 2000 Vorkommen in 100 Dateien (`small` 181, `d-flex` 147, `mb-1` 105,
       `align-items-center` 94, `gap-2` 93, `text-body-secondary` 87, `text-muted` 66 ...); Bootstrap-Zustandsklassen
       `tab-pane fade show active`/`tab-content`; Bootstrap-Farbnamen (`text-bg-*`, `bg-body-*`, `*-emphasis`, `border-*-subtle`);
-      Bootstrap-Markup in `test/mockData.ts`; Kommentare/JSDoc. Umfang mit User klaeren.
+      Bootstrap-Markup in `test/mockData.ts`; Kommentare/JSDoc. User: Umfang komplett, Zielbild DB-nativ direkt.
+      Plan + Ersatz-Tabelle + Batches R0-R10: `tasks/plan-bootstrap-rueckbau.md`. Naechster Schritt: R0 (Sichtvergleich-Skript,
+      Baseline, Spike).
 - [ ] Als Naechstes (User 2026-10-03): Updates von `@db-ux/*` pruefen (neue Versionen, Changelog/Migration, danach Gate + Sichtpruefung)
 - [ ] DB UX 5.6 neue Komponenten einbauen (Hinweis User 2026-09-26, nach Update auf 5.6.0, CHANGELOG 191):
   - [ ] `DBDialog`/`DBDialogHeader`/`DBDialogFooter` (nativer, zentrierter `<dialog>`, `backdrop`, `containerSize`,
