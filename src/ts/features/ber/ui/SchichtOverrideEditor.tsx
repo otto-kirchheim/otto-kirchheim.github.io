@@ -2,7 +2,8 @@ import { type FC } from 'react';
 
 import type { BereitschaftSchichtTyp, IPerWeekdaySchicht, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { mergePerWeekdaySchicht } from '@/shared/lib/schicht/resolveSchichtDay';
-import { DBCheckbox } from '@db-ux/react-core-components';
+import { DBCheckbox, DBInfotext, DBStack } from '@db-ux/react-core-components';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { SchichtSection } from '@/shared/ui/arbeitszeit-editor/SchichtSection';
 
 const SCHICHT_LABELS: Record<'frueh' | 'spaet' | 'nacht', string> = { frueh: 'Früh', spaet: 'Spät', nacht: 'Nacht' };
@@ -77,30 +78,33 @@ export const SchichtOverrideEditor: FC<SchichtOverrideEditorProps> = ({
 
   return (
     <div>
-      <p className="fw-semibold small text-uppercase text-muted mb-1">Zeiten je Wochentag überschreiben (optional)</p>
-      {overridable.map(typ => {
-        const base = aZ?.[typ];
-        const enabled = overrides[typ] !== undefined;
-        return (
-          <div key={typ} className="border p-2 mb-2">
-            <DBCheckbox
-              className="mb-1"
-              size="small"
-              id={`override-${typ}`}
-              label={`${SCHICHT_LABELS[typ]} – eigene Zeiten`}
-              checked={enabled}
-              onChange={e => setEnabled(typ, (e.target as HTMLInputElement).checked)}
-            />
-            {enabled && base && (
-              <SchichtSection
-                title=""
-                schicht={mergePerWeekdaySchicht(base, overrides[typ])}
-                onChange={schicht => updateOverride(typ, schicht)}
+      <DBInfotext showIcon={false} className="gruppe__titel">
+        <strong>Zeiten je Wochentag überschreiben (optional)</strong>
+      </DBInfotext>
+      <DBStack gap="x-small">
+        {overridable.map(typ => {
+          const base = aZ?.[typ];
+          const enabled = overrides[typ] !== undefined;
+          return (
+            <Gruppe key={typ}>
+              <DBCheckbox
+                size="small"
+                id={`override-${typ}`}
+                label={`${SCHICHT_LABELS[typ]} – eigene Zeiten`}
+                checked={enabled}
+                onChange={e => setEnabled(typ, (e.target as HTMLInputElement).checked)}
               />
-            )}
-          </div>
-        );
-      })}
+              {enabled && base && (
+                <SchichtSection
+                  title=""
+                  schicht={mergePerWeekdaySchicht(base, overrides[typ])}
+                  onChange={schicht => updateOverride(typ, schicht)}
+                />
+              )}
+            </Gruppe>
+          );
+        })}
+      </DBStack>
     </div>
   );
 };

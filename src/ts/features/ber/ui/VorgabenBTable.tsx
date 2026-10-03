@@ -207,7 +207,6 @@ export default function VorgabenBTable() {
   return (
     <table
       id="tableVE"
-      className="align-middle"
       aria-label="Voreinstellungen Bereitschaft"
       ref={(el: HTMLTableElement | null) => {
         if (el) ftVE.attachElement(el as CustomHTMLTableElement<IVorgabenUvorgabenB>);

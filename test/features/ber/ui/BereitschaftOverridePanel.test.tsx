@@ -84,7 +84,7 @@ describe('BereitschaftOverridePanel', () => {
     const { container } = renderPanel(createAz());
     const toggle = await warteAufAzOverride(container);
     expect(toggle?.checked).toBe(false);
-    expect(container.querySelector('.border.p-2.mt-1')).toBeNull();
+    expect(container.querySelector('.gruppe')).toBeNull();
   });
 
   it('öffnet das Panel und meldet leere Overrides beim Aktivieren des Schalters', async () => {
@@ -94,7 +94,7 @@ describe('BereitschaftOverridePanel', () => {
     await fireChange(toggle, true);
 
     expect(onChange).toHaveBeenCalledWith({});
-    expect(container.querySelector('.border.p-2.mt-1')).not.toBeNull();
+    expect(container.querySelector('.gruppe')).not.toBeNull();
     await warteAufElement(container, '#override-frueh');
   });
 
@@ -108,7 +108,7 @@ describe('BereitschaftOverridePanel', () => {
     await fireChange(toggle, false);
 
     expect(onChange).toHaveBeenCalledWith(undefined);
-    expect(container.querySelector('.border.p-2.mt-1')).toBeNull();
+    expect(container.querySelector('.gruppe')).toBeNull();
   });
 
   it('reicht Wochentag-Overrides aus dem SchichtOverrideEditor durch', async () => {

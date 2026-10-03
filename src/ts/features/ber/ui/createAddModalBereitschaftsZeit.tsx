@@ -1,8 +1,9 @@
-import { DBTag, DBTooltip } from '@db-ux/react-core-components';
+import { DBInfotext, DBStack, DBTag, DBTooltip } from '@db-ux/react-core-components';
 import { createRef, type CSSProperties, type SubmitEvent, type ReactElement } from 'react';
 
 import { BereitschaftsEinsatzZeiträume } from '../model/constants';
 import { DbFeld } from '@/shared/ui/form/DbFeld';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import MyCheckbox from '@/shared/ui/form/MyCheckbox';
 import MyFormModal from '@/shared/ui/modal/MyFormModal';
 import MyModalBody from '@/shared/ui/modal/MyModalBody';
@@ -44,14 +45,18 @@ const hinweisArbeitszeit = (schicht: string): string =>
  * @param feld - Das umhüllte Feld.
  * @param text - Tooltip-Text.
  * @param manuell - `true` = Hinweis gehört zum „manuell anpassen"-Schalter (wird mit ihm ausgeblendet).
- * @param className - Zusätzliche CSS-Klassen der Hülle.
+ * @param waechst - `true` = Hülle füllt die Zeile (Datum), sonst behält sie ihre Breite (Zeit).
  * @param style - Optionaler Inline-Style der Hülle.
  * @returns Die Hülle mit Feld und Tooltip.
  */
-const mitHinweis = (feld: ReactElement, text: string, manuell: boolean, className: string, style?: CSSProperties) => (
+const mitHinweis = (feld: ReactElement, text: string, manuell: boolean, waechst: boolean, style?: CSSProperties) => (
   // Hülle ist per `tabIndex` fokussierbar, damit der Hinweis auch per Tastatur erreichbar ist (die Lint-Regel
   // prüft nur den Tag-Namen, deshalb hier bewusst ausgenommen).
-  <div className={`feld-hinweis ${className}`} style={style} tabIndex={0}>
+  <div
+    className={`feld-hinweis ${waechst ? 'feld-hinweis--waechst' : 'feld-hinweis--fest'}`}
+    style={style}
+    tabIndex={0}
+  >
     {feld}
     {/* eslint-disable-next-line db-ux/tooltip-requires-interactive-parent */}
     <DBTooltip placement="top" className={manuell ? 'berechnet-hinweis' : undefined}>
@@ -84,7 +89,7 @@ const createDateInputElement = (id: string, date: dayjs.Dayjs, min: dayjs.Dayjs,
     />,
     HINWEIS_MANUELL,
     true,
-    'flex-grow-1',
+    true,
     { minWidth: 0, maxWidth: '10rem' },
   );
 
@@ -114,7 +119,7 @@ const createTimeInputElement = (id: string, name: string, required = false, schi
     />,
     schicht ? hinweisArbeitszeit(schicht) : HINWEIS_MANUELL,
     !schicht,
-    'flex-shrink-0',
+    false,
   );
 
 /**
@@ -130,7 +135,7 @@ const createSonderDateInputElement = (id: string, value: string) => (
     id={id}
     beschriftung="Datum"
     dicht
-    className="flex-grow-1"
+    className="zeitzeile__feld"
     huelleStyle={{ minWidth: 0, maxWidth: '10rem' }}
     defaultValue={value}
   />
@@ -146,23 +151,18 @@ const createSonderDateInputElement = (id: string, value: string) => (
  * @returns Die Zeile.
  */
 const punktZeile = (label: string, berechnet: boolean, dateEl: ReactElement, timeEl: ReactElement) => (
-  <div className="d-flex align-items-center gap-2 py-1">
-    <span className="small fw-medium text-body flex-shrink-0" style={{ width: '3.5rem' }}>
+  <DBStack direction="row" alignment="center" gap="x-small" className="zeitzeile">
+    <DBInfotext showIcon={false} className="zeitzeile__label">
       {label}
-    </span>
+    </DBInfotext>
     {dateEl}
     {timeEl}
     {berechnet ? (
-      <DBTag
-        className="border berechnet-badge flex-shrink-0"
-        semantic="neutral"
-        emphasis="strong"
-        style={{ fontSize: '0.6rem' }}
-      >
+      <DBTag className="berechnet-badge" semantic="neutral" emphasis="strong" style={{ fontSize: '0.6rem' }}>
         berechnet
       </DBTag>
     ) : null}
-  </div>
+  </DBStack>
 );
 
 /**
@@ -223,7 +223,7 @@ export default function createAddModalBereitschaftsZeit(): void {
     return (
       <MySelect
         myRef={ref}
-        className="pb-3"
+        className="feld-mit-luft"
         id="vorgabeB"
         title="Auswahl Bereitschaft"
         value={auswahl}
@@ -291,7 +291,7 @@ export default function createAddModalBereitschaftsZeit(): void {
         beschriftung="Datum"
         dicht
         required
-        className="flex-grow-1"
+        className="zeitzeile__feld"
         huelleStyle={{ minWidth: 0, maxWidth: '10rem' }}
         min={datum.startOf('M').format('YYYY-MM-DD')}
         max={datum.endOf('M').format('YYYY-MM-DD')}
@@ -325,10 +325,7 @@ export default function createAddModalBereitschaftsZeit(): void {
           </MyCheckbox>
         </div>
 
-        <small className="text-muted" id="schichtHinweisText" />
-
-        <div className="border p-3">
-          <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Bereitschaftszeitraum</p>
+        <Gruppe titel="Bereitschaftszeitraum">
           {/* Zeit-Platzhalter werden unmittelbar von applyBereitschaftsVorgabe aus aZ je Wochentag gesetzt. */}
           {punktZeile('Anfang', false, datumInput(), createTimeInputElement('bAT', 'Von', true))}
           {punktZeile(
@@ -344,7 +341,7 @@ export default function createAddModalBereitschaftsZeit(): void {
             ),
             createTimeInputElement('bET', 'Bis', true),
           )}
-        </div>
+        </Gruppe>
 
         {spaetVerfuegbar && (
           <div>
@@ -359,23 +356,24 @@ export default function createAddModalBereitschaftsZeit(): void {
         )}
 
         {spaetVerfuegbar && (
-          <div
-            className="border p-3"
+          <Gruppe
+            titel="Spätschicht"
             id="spaetschicht"
             style={{
               display: !(vorgabenB[auswahl].schichten?.includes('spaet') ?? false) ? 'none' : undefined,
             }}
           >
-            <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Spätschicht</p>
-            <div className="d-flex align-items-center gap-2 py-1">
-              <span className="small fw-medium text-body flex-shrink-0" style={{ width: '3.5rem' }}>
+            <DBStack direction="row" alignment="center" gap="x-small" className="zeitzeile">
+              <DBInfotext showIcon={false} className="zeitzeile__label">
                 Von
-              </span>
+              </DBInfotext>
               {createTimeInputElement('spaetAT', 'Von', false, 'Spät')}
-              <span className="small fw-medium text-body flex-shrink-0 ms-auto pe-2">Bis</span>
+              <DBInfotext showIcon={false} className="zeitzeile__bis">
+                Bis
+              </DBInfotext>
               {createTimeInputElement('spaetET', 'Bis', false, 'Spät')}
-            </div>
-          </div>
+            </DBStack>
+          </Gruppe>
         )}
 
         {(vorgabenU as IVorgabenU).Arbeitszeit?.sonder?.aktiv && (
@@ -396,24 +394,25 @@ export default function createAddModalBereitschaftsZeit(): void {
         )}
 
         {(vorgabenU as IVorgabenU).Arbeitszeit?.sonder?.aktiv && (
-          <div
-            className="border p-3"
+          <Gruppe
+            titel="Sonderschicht Zeitraum"
             id="sonderschicht"
             style={{ display: (vorgabenB[auswahl].schichten?.includes('sonder') ?? false) ? '' : 'none' }}
           >
-            <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Sonderschicht Zeitraum</p>
-            <div className="d-flex align-items-center gap-2 flex-wrap">
-              <span className="small fw-medium text-body flex-shrink-0" style={{ width: '3.5rem' }}>
+            <DBStack direction="row" alignment="center" gap="x-small" wrap>
+              <DBInfotext showIcon={false} className="zeitzeile__label">
                 Von
-              </span>
+              </DBInfotext>
               {createSonderDateInputElement('sonderVon', datum.format('YYYY-MM-DD'))}
-              <span className="small fw-medium text-body flex-shrink-0 ms-auto pe-2">Bis</span>
+              <DBInfotext showIcon={false} className="zeitzeile__bis">
+                Bis
+              </DBInfotext>
               {createSonderDateInputElement('sonderBis', datum.format('YYYY-MM-DD'))}
-            </div>
-            <small className="text-muted d-block mt-2">
+            </DBStack>
+            <DBInfotext showIcon={false} className="gruppe__hinweis">
               Gleiches Datum ist erlaubt und bedeutet einen einzelnen Tag.
-            </small>
-          </div>
+            </DBInfotext>
+          </Gruppe>
         )}
 
         <div>
@@ -431,8 +430,8 @@ export default function createAddModalBereitschaftsZeit(): void {
           </MyCheckbox>
         </div>
 
-        <div
-          className="border p-3"
+        <Gruppe
+          titel="Nachtschicht"
           id="nachtschicht"
           style={{
             display: !(vorgabenB[auswahl].schichten?.includes('nacht') ?? vorgabenB[auswahl].nacht)
@@ -440,7 +439,6 @@ export default function createAddModalBereitschaftsZeit(): void {
               : undefined,
           }}
         >
-          <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Nachtschicht</p>
           {punktZeile(
             'Anfang',
             true,
@@ -467,10 +465,10 @@ export default function createAddModalBereitschaftsZeit(): void {
             ),
             createTimeInputElement('nET', 'Bis', false, 'Nacht'),
           )}
-          <small className="text-muted d-block mt-2">
+          <DBInfotext showIcon={false} className="gruppe__hinweis">
             Die Zeiten folgen der Arbeitszeit Nacht und lassen sich über „Andere Arbeitszeiten hinterlegen" ändern.
-          </small>
-        </div>
+          </DBInfotext>
+        </Gruppe>
 
         <BereitschaftOverridePanel
           aZ={aZ}

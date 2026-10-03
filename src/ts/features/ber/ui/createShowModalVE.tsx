@@ -5,7 +5,7 @@ import MyShowElement from '@/shared/ui/modal/MyShowElement';
 import MyShowFooter from '@/shared/ui/modal/MyShowFooter';
 import showModal from '@/shared/ui/modal/showModal';
 import type { CustomHTMLDivElement, IVorgabenUvorgabenB } from '@/types';
-import { DBDivider, DBHeadingH6 } from '@db-ux/react-core-components';
+import { DBDivider, DBHeadingH6, DBInfotext } from '@db-ux/react-core-components';
 
 /**
  * Rendert ein Label-Wert-Paar für eine Spalte der Zeile.
@@ -38,9 +38,9 @@ const createShowElement = (row: Row<IVorgabenUvorgabenB>, columnName: string, fa
 const createBereitschaftBlock = (row: Row<IVorgabenUvorgabenB>) => {
   return (
     <>
-      <div className="pt-2">
-        <DBHeadingH6 className="mb-2">Bereitschaft</DBHeadingH6>
-      </div>
+      <DBHeadingH6 paragraphSpacing className="anzeige-abschnitt">
+        Bereitschaft
+      </DBHeadingH6>
       {createShowElement(row, 'beginnB', false)}
       {createShowElement(row, 'endeB', false)}
     </>
@@ -58,9 +58,9 @@ const createNachtschichtBlock = (row: Row<IVorgabenUvorgabenB>) => {
 
   return (
     <>
-      <div className="pt-2">
-        <DBHeadingH6 className="mb-2">Nachtschicht</DBHeadingH6>
-      </div>
+      <DBHeadingH6 paragraphSpacing className="anzeige-abschnitt">
+        Nachtschicht
+      </DBHeadingH6>
       {createShowElement(row, 'nacht')}
       {isNacht ? (
         <>
@@ -68,7 +68,7 @@ const createNachtschichtBlock = (row: Row<IVorgabenUvorgabenB>) => {
           {createShowElement(row, 'endeN', false)}
         </>
       ) : (
-        <div className="small text-body-secondary pb-1">Keine Nachtschicht aktiviert.</div>
+        <DBInfotext showIcon={false}>Keine Nachtschicht aktiviert.</DBInfotext>
       )}
     </>
   );

@@ -1,7 +1,8 @@
-import { DBButton, DBCheckbox, DBHeadingH6 } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBDivider, DBHeadingH6, DBInfotext, DBStack } from '@db-ux/react-core-components';
 import { type FC, type JSX, useEffect, useState } from 'react';
 
 import { DbFeld } from '@/shared/ui/form/DbFeld';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import type { BereitschaftRuntimeOverrides } from '../model/bereitschaftRuntimeOverrides';
 import type { BereitschaftSchichtTyp, ISchichtZeiten, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { SchichtOverrideEditor } from '@/features/ber/ui/SchichtOverrideEditor';
@@ -119,66 +120,69 @@ export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
         onChange={e => toggleOpen(e.target.checked)}
       />
       {open && (
-        <div className="border p-2 mt-1">
+        <Gruppe>
           <SchichtOverrideEditor aZ={aZ} schichten={activeSchichten} overrides={overrides} onChange={handleEditor} />
           {aZ.sonder.aktiv && sonderActive && (
-            <div className="mt-3 pt-3 border-top">
-              <div className="d-flex align-items-center gap-2 mb-2">
-                <DBHeadingH6 className="mb-0">Sonderschicht</DBHeadingH6>
-                <span className="text-muted small">eigene Arbeitszeit für diesen Eintrag</span>
-              </div>
-              <div className="d-flex align-items-center gap-2 flex-wrap">
-                {createSonderTimeInput('sonderOverrideBeginn', sonderOverride?.beginn ?? aZ.sonder.beginn, beginn =>
-                  handleSonderChange({
-                    aktiv: true,
-                    beginn,
-                    ende: sonderOverride?.ende ?? aZ.sonder.ende,
-                    pause: sonderOverride?.pause ?? aZ.sonder.pause,
-                  }),
-                )}
-                <span>–</span>
-                {createSonderTimeInput('sonderOverrideEnde', sonderOverride?.ende ?? aZ.sonder.ende, ende =>
-                  handleSonderChange({
-                    aktiv: true,
-                    beginn: sonderOverride?.beginn ?? aZ.sonder.beginn,
-                    ende,
-                    pause: sonderOverride?.pause ?? aZ.sonder.pause,
-                  }),
-                )}
-                <div className="d-flex align-items-center gap-1">
-                  <DbFeld
-                    type="number"
-                    beschriftung="Pause in Minuten"
-                    dicht
-                    feldKlasse="feld-zentriert"
-                    huelleStyle={{ width: '4rem' }}
-                    value={sonderOverride?.pause ?? aZ.sonder.pause}
-                    min={0}
-                    step={5}
-                    onChange={e =>
-                      handleSonderChange({
-                        aktiv: true,
-                        beginn: sonderOverride?.beginn ?? aZ.sonder.beginn,
-                        ende: sonderOverride?.ende ?? aZ.sonder.ende,
-                        pause: Number(e.target.value),
-                      })
-                    }
-                  />
-                  <span className="text-muted small">min</span>
-                </div>
-                <DBButton
-                  type="button"
-                  className="ms-auto"
-                  variant="outlined"
-                  size="small"
-                  onClick={() => handleSonderChange(undefined)}
-                >
-                  {sonderOverride ? 'Zurücksetzen' : 'Deaktivieren'}
-                </DBButton>
-              </div>
-            </div>
+            <>
+              <DBDivider width="full" />
+              <DBStack gap="x-small">
+                <DBStack direction="row" alignment="center" gap="x-small">
+                  <DBHeadingH6>Sonderschicht</DBHeadingH6>
+                  <DBInfotext showIcon={false}>eigene Arbeitszeit für diesen Eintrag</DBInfotext>
+                </DBStack>
+                <DBStack direction="row" alignment="center" gap="x-small" wrap>
+                  {createSonderTimeInput('sonderOverrideBeginn', sonderOverride?.beginn ?? aZ.sonder.beginn, beginn =>
+                    handleSonderChange({
+                      aktiv: true,
+                      beginn,
+                      ende: sonderOverride?.ende ?? aZ.sonder.ende,
+                      pause: sonderOverride?.pause ?? aZ.sonder.pause,
+                    }),
+                  )}
+                  <span>–</span>
+                  {createSonderTimeInput('sonderOverrideEnde', sonderOverride?.ende ?? aZ.sonder.ende, ende =>
+                    handleSonderChange({
+                      aktiv: true,
+                      beginn: sonderOverride?.beginn ?? aZ.sonder.beginn,
+                      ende,
+                      pause: sonderOverride?.pause ?? aZ.sonder.pause,
+                    }),
+                  )}
+                  <DBStack direction="row" alignment="center" gap="2x-small">
+                    <DbFeld
+                      type="number"
+                      beschriftung="Pause in Minuten"
+                      dicht
+                      feldKlasse="feld-zentriert"
+                      huelleStyle={{ width: '4rem' }}
+                      value={sonderOverride?.pause ?? aZ.sonder.pause}
+                      min={0}
+                      step={5}
+                      onChange={e =>
+                        handleSonderChange({
+                          aktiv: true,
+                          beginn: sonderOverride?.beginn ?? aZ.sonder.beginn,
+                          ende: sonderOverride?.ende ?? aZ.sonder.ende,
+                          pause: Number(e.target.value),
+                        })
+                      }
+                    />
+                    <DBInfotext showIcon={false}>min</DBInfotext>
+                  </DBStack>
+                  <DBButton
+                    type="button"
+                    className="knopf-rechts"
+                    variant="outlined"
+                    size="small"
+                    onClick={() => handleSonderChange(undefined)}
+                  >
+                    {sonderOverride ? 'Zurücksetzen' : 'Deaktivieren'}
+                  </DBButton>
+                </DBStack>
+              </DBStack>
+            </>
           )}
-        </div>
+        </Gruppe>
       )}
     </div>
   );

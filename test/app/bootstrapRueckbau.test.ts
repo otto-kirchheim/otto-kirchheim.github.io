@@ -9,7 +9,7 @@ import bootstrapKlassen from './bootstrapKlassen.json';
  * Klassen aus `src/scss/utilities.scss` (Stand 2026-10-03) plus `tab-pane`/`fade`/`tab-content`, damit das Zaehlen auch nach dem Loeschen der Datei greift. Die
  * Grenze sinkt mit jedem Batch und steht am Ende auf 0; neue Bootstrap-Klassen brechen den Test sofort.
  */
-const GRENZE = 1768;
+const GRENZE = 1593;
 
 const KLASSEN = new Set<string>(bootstrapKlassen);
 const QUELLEN = [

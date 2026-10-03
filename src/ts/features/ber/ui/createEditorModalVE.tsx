@@ -17,7 +17,8 @@ import showModal, { schliesseModal } from '@/shared/ui/modal/showModal';
 import type { BereitschaftSchichtTyp, IVorgabenU, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import saveTableDataVorgabenU from '../model/saveTableDataVorgabenU';
-import { DBButton, DBCheckbox, DBDivider } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBDivider, DBInfotext, DBStack } from '@db-ux/react-core-components';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { SchichtOverrideEditor } from './SchichtOverrideEditor';
 
 const SCHICHT_LABELS: Record<BereitschaftSchichtTyp, string> = {
@@ -199,16 +200,11 @@ const WeekdayRangeSelector: FC<WeekdayRangeSelectorProps> = ({
 
   return (
     <div>
-      <div className="d-flex flex-wrap gap-2 align-items-baseline mb-2">
-        <span className="fw-semibold">{label}</span>
-        <span className="small text-body-secondary">Auswahl: {inRangeText}</span>
-      </div>
-      <div
-        className="d-grid"
-        style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '0.375rem' }}
-        onPointerUp={clearDrag}
-        onPointerLeave={clearDrag}
-      >
+      <DBStack direction="row" wrap alignment="center" gap="x-small" className="wochentag-kopf">
+        <strong>{label}</strong>
+        <DBInfotext showIcon={false}>Auswahl: {inRangeText}</DBInfotext>
+      </DBStack>
+      <div className="wochentag-raster" onPointerUp={clearDrag} onPointerLeave={clearDrag}>
         {Array.from({ length: 14 }, (_, slot) => {
           const isStart = slot === startSlot;
           const isEnd = endSlot !== null && slot === endSlot;
@@ -223,7 +219,6 @@ const WeekdayRangeSelector: FC<WeekdayRangeSelectorProps> = ({
             <DBButton
               key={`${startId}-${slot}`}
               type="button"
-              className="py-2"
               variant={variante}
               data-color={farbe}
               size="small"
@@ -402,8 +397,10 @@ const SchichtenConfigSection: FC<SchichtenConfigSectionProps> = ({
   return (
     <Fragment>
       <div>
-        <p className="fw-semibold small text-uppercase text-muted mb-1">Aktive Schichten</p>
-        <div className="d-flex flex-wrap gap-3">
+        <DBInfotext showIcon={false} className="gruppe__titel">
+          <strong>Aktive Schichten</strong>
+        </DBInfotext>
+        <DBStack direction="row" wrap gap="medium">
           <DBCheckbox size="small" id="schicht-frueh" label={SCHICHT_LABELS.frueh} checked disabled />
           {optionalSchichten.map(typ => (
             <DBCheckbox
@@ -415,12 +412,11 @@ const SchichtenConfigSection: FC<SchichtenConfigSectionProps> = ({
               onChange={e => toggleSchicht(typ, (e.target as HTMLInputElement).checked)}
             />
           ))}
-        </div>
+        </DBStack>
       </div>
 
       {nachtAktiv && (
-        <div className="border p-2">
-          <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Nachtschicht-Zeitraum</p>
+        <Gruppe titel="Nachtschicht-Zeitraum">
           <div className="raster abstand-2">
             <WeekdayRangeSelector
               startId="beginnN"
@@ -431,7 +427,7 @@ const SchichtenConfigSection: FC<SchichtenConfigSectionProps> = ({
               initialEnd={nachtEnde}
             />
           </div>
-        </div>
+        </Gruppe>
       )}
 
       <SchichtOverrideEditor

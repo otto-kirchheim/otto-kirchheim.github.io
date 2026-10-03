@@ -2,6 +2,23 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-03 (204)
+
+### refactor (Bootstrap-Rueckbau R4: `features/ber`)
+
+- Bereitschafts-Dialoge und -Tab ohne Bootstrap-Klassen: Hinweise per `DBNotification` (Sync-Hinweis in einer Huelle, die Ein-/Ausblenden uebernimmt), Zeitgruppen per `Gruppe` (jetzt mit optionalem `titel`, `id`, `style`), Zeilen per `DBStack`/`DBInfotext`, Wochentag-Raster und Tab-Kopf ueber neue Klassen in `styles.scss` (`zeitzeile*`, `wochentag-*`, `tab-abschnitt`, `titel-mit-hilfe`, `knopfreihe-luft`, `knopf-rechts`).
+- Sichtbare Abweichungen: Gruppen-Rahmen enger (Token `xs` statt `p-3`), Gruppen-Titel dunkler/fett, Hinweise als DB-Notification mit Symbol, Knopfreihe der Tabs 3px tiefer. Unbenutztes leeres `#schichtHinweisText` entfernt. Ratsche 1768 auf 1593.
+- Begruessung `#Willkommen` per `textContent` (siehe 203).
+- Fusszeilen-Reservierung als `margin-block-end` statt `padding-block-end` an `.db-shell-content`: der Scrollbalken endet ueber der fixierten Fusszeile statt dahinter.
+
+## 2026-10-03 (203)
+
+### fix (Sicherheit: XSS in `confirmDialog`, Begruessung per `textContent`)
+
+- `confirmDialog` maskiert Nachricht, Titel und Button-Texte per `escapeHtml` (nur `\n` wird zu `<br>`). Vorher landete z. B. der Benutzername aus der Admin-Loeschabfrage ungeprueft in `innerHTML` (gespeichertes XSS gegen Admins).
+- Begruessung `#Willkommen` (`app/session/index.ts`, `loadUserDaten.ts`) per `textContent` statt `innerHTML` (Vorname/Benutzername waren ungemaskiert).
+- Test: HTML in Nachricht/Titel/Labels wird nicht als Markup gerendert.
+
 ## 2026-10-03 (202)
 
 ### refactor (Bootstrap-Rueckbau R3 `features/auth` + `features/onboarding`)

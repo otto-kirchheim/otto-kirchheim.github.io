@@ -1,3 +1,4 @@
+import { DBNotification } from '@db-ux/react-core-components';
 import type { Dayjs } from 'dayjs';
 import { createRef, type SubmitEvent, Fragment, type ReactNode } from 'react';
 
@@ -144,7 +145,7 @@ const hasUnsyncedBz = (): boolean =>
  */
 export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>, titel: string): void {
   const ref = createRef<HTMLFormElement>();
-  const bzSyncHintRef = createRef<HTMLParagraphElement>();
+  const bzSyncHintRef = createRef<HTMLDivElement>();
 
   let datum: dayjs.Dayjs;
   if (row instanceof Row) {
@@ -167,13 +168,15 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
       onSubmit={onSubmit()}
     >
       <MyModalBody>
-        <p className="text-bg-warning p-2 small">
+        <DBNotification semantic="warning" variant="docked">
           Hinweis: Vor dem Speichern muss ein passender Bereitschaftszeitraum vorhanden sein.
-        </p>
-        <p ref={bzSyncHintRef} className="text-bg-warning p-2 small" style={{ display: hasUnsyncedBz() ? '' : 'none' }}>
-          Achtung: Es gibt einen gerade erst angelegten, noch nicht gespeicherten Bereitschaftszeitraum. Falls dieser
-          zum Einsatz passt, bitte kurz warten, bis er synchronisiert ist.
-        </p>
+        </DBNotification>
+        <div ref={bzSyncHintRef} style={{ display: hasUnsyncedBz() ? '' : 'none' }}>
+          <DBNotification semantic="warning" variant="docked">
+            Achtung: Es gibt einen gerade erst angelegten, noch nicht gespeicherten Bereitschaftszeitraum. Falls dieser
+            zum Einsatz passt, bitte kurz warten, bis er synchronisiert ist.
+          </DBNotification>
+        </div>
         {createElements(row, datum)}
       </MyModalBody>
     </MyFormModal>,

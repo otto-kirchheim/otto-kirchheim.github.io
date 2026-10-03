@@ -1,3 +1,4 @@
+import { DBNotification } from '@db-ux/react-core-components';
 import { createRef, type SubmitEvent } from 'react';
 
 import { LreType } from '@otto-kirchheim/nebengeld-shared';
@@ -30,7 +31,7 @@ const hasUnsyncedBz = (): boolean =>
  */
 export default function createAddModalBereitschaftsEinsatz(): void {
   const formRef = createRef<HTMLFormElement>();
-  const bzSyncHintRef = createRef<HTMLParagraphElement>();
+  const bzSyncHintRef = createRef<HTMLDivElement>();
 
   const Jahr: number = Storage.get<number>('Jahr', { check: true });
   const Monat: number = Storage.get<number>('Monat', { check: true }) - 1;
@@ -50,14 +51,16 @@ export default function createAddModalBereitschaftsEinsatz(): void {
       onSubmit={onSubmit()}
     >
       <MyModalBody>
-        <p className="text-bg-warning p-2 small">
+        <DBNotification semantic="warning" variant="docked">
           Hinweis: Vor dem Speichern muss ein passender Bereitschaftszeitraum vorhanden sein. <br /> Oder wähle die
           Option: "Bereitschaftszeitraum für diesen Einsatz anlegen?".
-        </p>
-        <p ref={bzSyncHintRef} className="text-bg-warning p-2 small" style={{ display: hasUnsyncedBz() ? '' : 'none' }}>
-          Achtung: Es gibt einen gerade erst angelegten, noch nicht gespeicherten Bereitschaftszeitraum. Falls dieser
-          zum Einsatz passt, bitte kurz warten, bis er synchronisiert ist.
-        </p>
+        </DBNotification>
+        <div ref={bzSyncHintRef} style={{ display: hasUnsyncedBz() ? '' : 'none' }}>
+          <DBNotification semantic="warning" variant="docked">
+            Achtung: Es gibt einen gerade erst angelegten, noch nicht gespeicherten Bereitschaftszeitraum. Falls dieser
+            zum Einsatz passt, bitte kurz warten, bis er synchronisiert ist.
+          </DBNotification>
+        </div>
         <MyInput
           divClass="sp-12 sp-sm-6"
           required
@@ -96,7 +99,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
           ]}
         />
         <MyInput
-          divClass="sp-12 sp-sm-6 pb-3"
+          divClass="sp-12 sp-sm-6 feld-mit-luft"
           type={columns.find(col => col.name === 'PrivatKm')?.type || 'number'}
           id="privatkm"
           name={columns.find(col => col.name === 'PrivatKm')?.longTitle || 'Km Privatfahrzeug'}

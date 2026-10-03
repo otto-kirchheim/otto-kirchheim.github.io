@@ -16,11 +16,11 @@ import type { CustomHTMLDivElement, IDatenBE, IDatenBZ } from '@/types';
 const createShowElement = <T extends CustomTableTypes = IDatenBZ | IDatenBE>(column: Column<T>, row: Row<T>) => {
   if (column.editing) return;
   return (
-    <div className="mb-1 raster" key={column.name}>
-      <label className="sp-5 text-wrap fw-bold" htmlFor={column.name}>
-        {column.title}
+    <div className="raster anzeige-zeile" key={column.name}>
+      <label className="sp-5" htmlFor={column.name}>
+        <strong>{column.title}</strong>
       </label>
-      <span className="sp-7 align-middle text-break my-auto" id={column.name}>
+      <span className="sp-7 anzeige-zeile__wert" id={column.name}>
         {column.parser(row.cells[column.name] as T[keyof T])}
       </span>
     </div>

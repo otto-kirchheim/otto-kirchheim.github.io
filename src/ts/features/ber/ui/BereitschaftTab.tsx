@@ -330,13 +330,12 @@ export function BereitschaftTab() {
   }, []);
 
   return (
-    <DBSection width="large" spacing="none" className="text-center">
-      <div className="raster justify-content-center">
-        <DBHeadingH1 className="d-inline-flex align-items-center justify-content-center gap-2">
+    <DBSection width="large" spacing="none" className="tab-abschnitt">
+      <div className="raster">
+        <DBHeadingH1 className="titel-mit-hilfe">
           Bereitschaft
           <DBButton
             type="button"
-            className="p-0"
             variant="ghost"
             size="small"
             id="btnHelpBereitschaft"
@@ -351,7 +350,7 @@ export function BereitschaftTab() {
       </div>
 
       <div>
-        <DBStack direction="row" wrap justifyContent="center" gap="medium" className="my-3 knopfreihe">
+        <DBStack direction="row" wrap justifyContent="center" gap="medium" className="knopfreihe knopfreihe-luft">
           <DBLoadingButton type="button" variant="brand" icon="plus" id="btnESZ" data-disabler>
             Bereitschaft
           </DBLoadingButton>
@@ -381,7 +380,6 @@ export function BereitschaftTab() {
       <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
         <table
           id="tableBZ"
-          className="align-middle"
           aria-describedby="titelBZ"
           ref={(el: HTMLTableElement | null) => {
             if (el) ftBZ.attachElement(el as CustomHTMLTableElement<IDatenBZ>);
@@ -397,7 +395,6 @@ export function BereitschaftTab() {
       <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
         <table
           id="tableBE"
-          className="align-middle"
           aria-describedby="titelBE"
           ref={(el: HTMLTableElement | null) => {
             if (el) ftBE.attachElement(el as CustomHTMLTableElement<IDatenBE>);

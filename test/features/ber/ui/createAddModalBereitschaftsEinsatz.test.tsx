@@ -176,7 +176,10 @@ describe('createAddModalBereitschaftsEinsatz', () => {
 
     createAddModalBereitschaftsEinsatz();
     const container = renderCapturedVnode();
-    const hint = Array.from(container.querySelectorAll('p')).find(p => p.textContent?.includes('Achtung'));
+    // Der Hinweis steckt in einer DBNotification; ein- und ausgeblendet wird ihre Hülle.
+    const hint = Array.from(container.querySelectorAll('.db-notification')).find(el =>
+      el.textContent?.includes('Achtung'),
+    )?.parentElement;
     expect(hint).toBeDefined();
     expect(hint!.style.display).not.toBe('none');
 

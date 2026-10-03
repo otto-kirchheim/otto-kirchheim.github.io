@@ -505,10 +505,11 @@ td > .db-switch {
   pointer-events: all;
 }
 
-// Die Fusszeilen-Reservierung gehoert IN `.db-shell-content`, nicht auf `body`: `.db-shell` ist schon exakt `100dvh` hoch, ein
-// `padding-block-end` auf `body` machte zusaetzlich das Dokument scrollbar (zwei gestapelte Scrollbalken).
+// Die Fusszeilen-Reservierung gehoert an `.db-shell-content`, nicht auf `body`: `.db-shell` ist schon exakt `100dvh` hoch, ein
+// `padding-block-end` auf `body` machte zusaetzlich das Dokument scrollbar (zwei gestapelte Scrollbalken). Als Aussenabstand
+// (nicht Innenabstand) endet der Scrollbalken des Inhalts ueber der fixierten Fusszeile statt dahinter.
 .db-shell-content {
-  padding-block-end: var(--db-spacing-fixed-2xl);
+  margin-block-end: var(--db-spacing-fixed-2xl);
 }
 
 // Chromes eigenes Zum-Aktualisieren-Ziehen aus (`pullToRefresh.ts` ersetzt es): sonst reicht der Container die Geste an den
@@ -523,7 +524,7 @@ body,
 // An derselben Bruchstelle auf 5rem erhoehen, statt den Footer einzeilig zu erzwingen (Handys waeren sonst gequetscht).
 @media (max-width: 47.9375em) {
   .db-shell-content {
-    padding-block-end: var(--db-spacing-fixed-3xl);
+    margin-block-end: var(--db-spacing-fixed-3xl);
   }
 }
 
@@ -1205,6 +1206,43 @@ body,
   text-transform: uppercase;
 }
 
+.gruppe__hinweis {
+  display: block;
+  margin-block-start: var(--db-spacing-fixed-xs);
+}
+
+// Zeitzeilen der Bereitschafts-Dialoge (`createAddModalBereitschaftsZeit.tsx`): Beschriftung, Datum, Zeit.
+.zeitzeile {
+  padding-block: var(--db-spacing-fixed-2xs);
+  block-size: auto;
+}
+
+.zeitzeile__label {
+  flex-shrink: 0;
+  inline-size: var(--db-sizing-lg);
+}
+
+.zeitzeile__bis {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  padding-inline-end: var(--db-spacing-fixed-xs);
+}
+
+.zeitzeile__feld,
+.feld-hinweis--waechst {
+  flex-grow: 1;
+}
+
+.feld-hinweis--fest,
+.berechnet-badge {
+  flex-shrink: 0;
+}
+
+// Auswahlfeld mit Luft nach unten (Platz fuer die Ungueltig-Meldung).
+.feld-mit-luft {
+  padding-block-end: var(--db-spacing-fixed-md);
+}
+
 // Kurze Zahlenfelder (`DbFeld feldKlasse`, z. B. Pause in Minuten): Wert mittig.
 .feld-zentriert {
   text-align: center;
@@ -1239,6 +1277,43 @@ body,
 .anzeige-zeile__wert {
   align-self: center;
   overflow-wrap: anywhere;
+}
+
+// Abschnittsueberschrift in Anzeige-Dialogen (`createShowModalVE.tsx`).
+.anzeige-abschnitt {
+  padding-block-start: var(--db-spacing-fixed-xs);
+}
+
+// Tab-Kopf der Ressourcen (`BereitschaftTab.tsx` u. a.): zentrierter Abschnitt, Titel mit Hilfeknopf, Knopfreihe mit Luft.
+.tab-abschnitt {
+  text-align: center;
+}
+
+.titel-mit-hilfe {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--db-spacing-fixed-xs);
+}
+
+.knopfreihe-luft {
+  margin-block: var(--db-spacing-fixed-sm);
+}
+
+.knopf-rechts {
+  margin-inline-start: auto;
+}
+
+// Wochentag-Auswahl im Vorgaben-Editor (`createEditorModalVE.tsx`): Kopfzeile und 7-Spalten-Raster.
+.wochentag-kopf {
+  margin-block-end: var(--db-spacing-fixed-xs);
+  block-size: auto;
+}
+
+.wochentag-raster {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--db-spacing-fixed-xs);
 }
 
 .anzeige-tag {
