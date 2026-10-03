@@ -503,17 +503,6 @@ $ausrichtung: (
     border: 0 !important;
   }
 
-  // ── Tab-Panels ──
-  // `App.tsx` (Hauptgruppe) und `features/Admin/index.tsx` (Unternavigation) setzen `.active`/`.show`
-  // selbst; die Panels bringen keine eigene Sichtbarkeitslogik mit.
-  .tab-pane {
-    display: none;
-
-    &.active {
-      display: block;
-    }
-  }
-
   // ── Gegenregeln zum DB-Layer ──
   // DB setzt `list-style-type: var(--db-list-bullet)` auf Listen; ohne Gegenregel steht vor
   // jedem Eintrag der App-Listen ein Aufzaehlungspunkt.
@@ -537,15 +526,5 @@ $ausrichtung: (
   .db-table > table {
     display: table;
     inline-size: 100%;
-  }
-
-  .fade {
-    @media screen and (prefers-reduced-motion: no-preference) {
-      transition: opacity var(--db-transition-duration-medium, 0.15s) linear;
-    }
-
-    &:not(.show) {
-      opacity: 0;
-    }
   }
 }

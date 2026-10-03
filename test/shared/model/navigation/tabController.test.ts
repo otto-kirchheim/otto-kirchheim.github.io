@@ -29,9 +29,9 @@ function aufbau(): void {
       </menu>
     </nav>
     <div class="tab-content" id="tabContent">
-      <div class="tab-pane fade show active" id="start" role="tabpanel"></div>
-      <div class="tab-pane fade" id="EWT" role="tabpanel"></div>
-      <div class="tab-pane fade" id="Admin" role="tabpanel"></div>
+      <div id="start" role="tabpanel"></div>
+      <div id="EWT" role="tabpanel" hidden></div>
+      <div id="Admin" role="tabpanel" hidden></div>
     </div>
     <nav class="db-navigation admin-unternavigation" role="tablist">
       <menu>
@@ -44,8 +44,8 @@ function aufbau(): void {
       </menu>
     </nav>
     <div class="tab-content" id="admin-tab-content">
-      <div class="tab-pane fade show active" id="admin-pane-users" role="tabpanel"></div>
-      <div class="tab-pane fade" id="admin-pane-logs" role="tabpanel"></div>
+      <div id="admin-pane-users" role="tabpanel"></div>
+      <div id="admin-pane-logs" role="tabpanel" hidden></div>
     </div>
   `;
   document.location.hash = '';
@@ -133,11 +133,11 @@ describe('tabController', () => {
   it('blendet Navigationseintrag und Panel gemeinsam aus', () => {
     setzeTabSichtbar('Admin', false);
 
-    expect(document.querySelector('#admin-tab')?.closest('li')?.classList.contains('d-none')).toBe(true);
-    expect(document.querySelector('#Admin')?.classList.contains('d-none')).toBe(true);
+    expect(document.querySelector('#admin-tab')?.closest('li')?.hidden).toBe(true);
+    expect(document.querySelector('#Admin')?.hasAttribute('data-gesperrt')).toBe(true);
 
     setzeTabSichtbar('Admin', true);
 
-    expect(document.querySelector('#admin-tab')?.closest('li')?.classList.contains('d-none')).toBe(false);
+    expect(document.querySelector('#admin-tab')?.closest('li')?.hidden).toBe(false);
   });
 });

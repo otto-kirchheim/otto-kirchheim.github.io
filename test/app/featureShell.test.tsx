@@ -35,7 +35,7 @@ describe('Feature-Shell aus meta', () => {
     render(<StartTab />, container);
 
     const quick = container.querySelector('#quick-neben-tab');
-    expect(quick?.classList.contains('d-none')).toBe(true);
+    expect((quick as HTMLElement | null)?.hidden).toBe(true);
     expect(quick?.querySelector('[data-jump-tab="neben-tab"]')).not.toBeNull();
     for (const id of ['quick-bereitschaft-tab', 'quick-ewt-tab', 'quick-ea-tab'])
       expect(container.querySelector(`#${id}`)).not.toBeNull();

@@ -1,9 +1,9 @@
 /**
- * Sichtbarkeit der Hauptnavigation (Login-Zustand). `AppHeader.tsx` haengt dafuer reaktiv `d-none`
+ * Sichtbarkeit der Hauptnavigation (Login-Zustand). `AppHeader.tsx` setzt dafuer reaktiv `hidden`
  * an `<DBControlPanelNavigation>` und die Einstellungen-/Admin-/Logout-Elemente in `actions2`;
  * geschrieben wird aus `auth/index.ts`, `loadUserDaten.ts` und `logoutUser.ts`.
  *
- * WICHTIG: Die Navigation wird IMMER gerendert, nur die Klasse wechselt -- nicht bedingt
+ * WICHTIG: Die Navigation wird IMMER gerendert, nur `hidden` wechselt -- nicht bedingt
  * (`{sichtbar && <Navigation>}`). der Admin-Toggle und
  * die Klick-Listener greifen per `querySelector` auf Nav-Kinder (`#admin-tab`,
  * `#bereitschaft-tab`, ...) zu, bevor `setNavigationSichtbar(true)` lief; bei bedingtem Rendern

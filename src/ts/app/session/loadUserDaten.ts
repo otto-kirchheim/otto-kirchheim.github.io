@@ -201,7 +201,8 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
   // spaeterer PDF-Export auch nach Verbindungsabbruch funktioniert.
   warmeFormularCaches(vorgabenU.Einstellungen?.aktivierteTabs, monat, jahr);
   setNavigationSichtbar(true);
-  document.querySelector<HTMLDivElement>('#startSchnellzugriff')?.classList.remove('d-none');
+  const schnellzugriff = document.querySelector<HTMLDivElement>('#startSchnellzugriff');
+  if (schnellzugriff) schnellzugriff.hidden = false;
   createSnackBar({
     message: `Neue Daten geladen.`,
     status: 'success',

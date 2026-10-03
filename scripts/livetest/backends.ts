@@ -5,6 +5,7 @@
 import type { HTTPRequest } from 'puppeteer';
 import { VorgabenGeldMock, VorgabenUMock } from '../../test/mockData';
 import packageJson from '../../package.json';
+import { fakeAdminAntwort } from './adminDaten';
 
 export const JAHR = 2026;
 export const MONAT = 9;
@@ -256,6 +257,8 @@ export function fakeBackend(user: string, rolle = 'team-admin'): Backend {
       if (method === 'PUT') Object.assign(profil, body as object, { updatedAt: stamp() });
       return { status: 200, data: profil };
     }
+    const admin = fakeAdminAntwort(method, path);
+    if (admin) return admin;
     if (head === 'vorgaben')
       return { status: 200, data: { _id: Number(second), Vorgaben: [{ key: 1, value: VorgabenGeldMock[1] }] } };
 

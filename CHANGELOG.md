@@ -2,6 +2,21 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-03 (200)
+
+### refactor (Bootstrap-Rueckbau R0 + R1 Teil 1: Sichtbarkeit per `hidden`, Tab-Zustand ohne Bootstrap-Klassen)
+
+- Tab-Panels in `App.tsx`/Admin ohne `tab-pane fade show active`/`tab-content`: aktiver Tab per `hidden`, Berechtigung per
+  `data-gesperrt`; `tabController` erkennt Panels an `role="tabpanel"`. `.tab-pane`/`.fade` aus `utilities.scss` entfernt.
+- `d-none`-Umschaltungen in `app/session`, `main.tsx`, `logoutUser`, `actAsStatus`, `setLoading`/`clearLoading` und im
+  `AppHeader` auf `hidden`; totes `#loginDisplay` entfernt. Global `[hidden] { display: none !important }`.
+- Act-As-Hinweis: `DBNotification` mit `headline`, Text + Knopf im `DBStack` (vorher Bootstrap-Flex/`fw-semibold`/`small`).
+- Hilfedialog mit `DBStack`; `ThemeSwitcher` mit `aria-label` statt `visually-hidden`; Admin-Panes `admin-pane--<farbe>`,
+  Rahmen `admin-rahmen`, Hinweise `app-hinweise`, Start `start-schnellzugriff`/`start-ladeanzeige` (Token-Werte).
+- Werkzeug: Fake-Backend mit festen Admin-Daten (`scripts/livetest/adminDaten.ts`), Sichtvergleich um Impressum und
+  Start-Hilfe erweitert; Ratsche `test/app/bootstrapRueckbau.test.ts` (Grenze 2024).
+- Sichtvergleich gegen den Stand vorher: 88/96 gleich, abweichend nur der Hilfedialog (Fusszeile 12px hoeher).
+
 ## 2026-10-03 (199)
 
 ### fix (Monats-/Jahreswechsel reagierte nicht)

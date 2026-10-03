@@ -61,9 +61,9 @@ describe('logoutUser', () => {
     (Storage.check as ReturnType<typeof vi.fn>).mockReturnValue(true);
     setNavigationSichtbar(true);
     document.body.innerHTML = `
-      <div id="tabContent"><div class="tab-pane" id="start"></div></div>
+      <div id="tabContent"><div role="tabpanel" id="start"></div></div>
       <button id="start-tab" data-tab-target="start"></button>
-      <button id="btnLogin" class="d-none"></button>
+      <button id="btnLogin" hidden></button>
       <div id="admin"></div>
       <div id="admin"></div>
       <input id="Monat" />
@@ -101,7 +101,7 @@ describe('logoutUser', () => {
 
   it('scrollt nicht, wenn es das Start-Panel nicht gibt', () => {
     document.body.innerHTML = `
-      <button id="btnLogin" class="d-none"></button>
+      <button id="btnLogin" hidden></button>
     `;
     zeigeTabMock.mockReturnValue(false);
 
@@ -118,7 +118,7 @@ describe('logoutUser', () => {
     expect(isNavigationSichtbar()).toBe(false);
     const adminElemente = document.querySelectorAll<HTMLDivElement>('#admin');
     expect(adminElemente).toHaveLength(2);
-    adminElemente.forEach(el => expect(el.classList.contains('d-none')).toBe(true));
+    adminElemente.forEach(el => expect(el.hidden).toBe(true));
   });
 
   it('published version-mismatch reason when provided', () => {
@@ -130,7 +130,7 @@ describe('logoutUser', () => {
   it('setzt Willkommen-Text auch wenn Element fehlt (kein Fehler)', () => {
     document.body.innerHTML = `
       <button id="start-tab" data-tab-target="start"></button>
-      <button id="btnLogin" class="d-none"></button>
+      <button id="btnLogin" hidden></button>
     `;
     zeigeTabMock.mockReturnValue(true);
 

@@ -8,11 +8,11 @@ import { render } from '@test/reactRender';
 
 /** Nav-Eintrag ausgeblendet? (`<li>` des Nav-Knopfs; `DBHeader` rendert die Nav zweimal: Desktop + Drawer.) */
 function navVersteckt(container: Element, navId: string): boolean[] {
-  return [...container.querySelectorAll(`#${navId}`)].map(el => el.closest('li')!.classList.contains('d-none'));
+  return [...container.querySelectorAll(`#${navId}`)].map(el => el.closest('li')!.hidden === true);
 }
 
 const quickVersteckt = (container: Element, navId: string): boolean =>
-  container.querySelector(`#quick-${navId}`)!.classList.contains('d-none');
+  container.querySelector<HTMLElement>(`#quick-${navId}`)!.hidden === true;
 
 describe('updateTabVisibility', () => {
   let header: HTMLDivElement;

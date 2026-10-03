@@ -63,7 +63,7 @@ export default async function userLoginSuccess({
 
   // `querySelectorAll`, nicht `querySelector`: `#btnLogin`/`#Monat` existieren zweimal (Desktop-
   // und Mobile-Control-Panel in `AppHeader.tsx` rendern `actions1` beide).
-  document.querySelectorAll<HTMLButtonElement>('#btnLogin').forEach(element => element.classList.add('d-none'));
+  document.querySelectorAll<HTMLButtonElement>('#btnLogin').forEach(element => (element.hidden = true));
 
   const aktJahr = dayjs().year();
   const jahrInput = document.querySelector<HTMLInputElement>('#Jahr');
@@ -82,7 +82,7 @@ export default async function userLoginSuccess({
   await featureLifecycleRegistry.initializeAll({ isAdmin: userIsAdmin, userName: username });
   markStep('login', 'feature:lifecycle');
 
-  document.querySelectorAll<HTMLDivElement>('#MonatFeld').forEach(element => element.classList.remove('d-none'));
+  document.querySelectorAll<HTMLDivElement>('#MonatFeld').forEach(element => (element.hidden = false));
 
   console.log('Eingeloggt');
 

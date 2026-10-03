@@ -56,6 +56,37 @@ Display- oder Positions-Utilities.
 Komponenteneigene Klassen: kebab-case/BEM, in `styles.scss` (bzw. der vorhandenen Komponenten-Datei) beim Bereich der
 Komponente, nur `db-*`-Tokens.
 
+### Vorrang: Props der DB-Komponenten (User-Hinweis 2026-10-03)
+
+Reihenfolge je Stelle: (1) Prop der DB-Komponente, (2) passende DB-Komponente statt rohem Element, (3) DB-Klasse/Attribut,
+(4) erst dann eigene Klasse. Steuernde Props laut `@db-ux/react-core-components` 5.6 (`dist/components/*/model.d.ts`):
+
+| Komponente | Props für Größe/Abstand/Darstellung |
+| --- | --- |
+| `DBButton` | `size` small/medium, `width` full/auto, `variant` outlined/brand/filled/ghost, `noText`, `icon`/`iconLeading`/`iconTrailing`, `wrap` |
+| `DBLink` | `size` medium/small, `variant` adaptive/brand/inline, `content` external/internal, `wrap` |
+| `DBBadge` | `size`, `semantic`, `emphasis` weak/strong, `placement` inline/corner-*, `wrap` |
+| `DBTag` | `semantic`, `emphasis`, `behavior` static/removable, `overflow`, `noText` |
+| `DBCard` | `spacing` none/small/medium/large, `elevationLevel` 1–3, `behavior` static/interactive |
+| `DBSection` | `spacing` none/small/medium/large, `width` full/large/medium/small |
+| `DBStack` | `gap` none/3x-small…3x-large, `direction`, `alignment`, `justifyContent`, `wrap`, `variant` simple/divider |
+| `DBDivider` | `margin` none/_, `variant` horizontal/vertical, `emphasis`, `width` |
+| `DBHeading*` | `size` 3xs–3xl, `fontWeight` black/light, `alignment` start/center/end, `paragraphSpacing` |
+| `DBInfotext` | `size`, `semantic`, `icon`/`showIcon`, `wrap` -- Ersatz für Hinweistexte `small text-muted`/`text-body-secondary` |
+| `DBNotification` | `variant` docked/standalone/overlay, `semantic`, `linkVariant` |
+| `DBCheckbox`/`DBSwitch`/`DBRadio` | `size` |
+| `DBTooltip` | `placement`, `emphasis`, `width` auto/fixed, `variant`, `wrap` |
+| `DBTable` | `size` x-small…large, `variant` flat/zebra/spaced, `divider`, `mobileVariant` table/list, `stickyHeader`, `width` |
+| `DBDialog`/`DBDrawer` | `containerSize` small/medium/large/full, `backdrop`, `direction`/`position` (Drawer) |
+| `DBAccordion` | `variant` divider/card |
+
+Befund Bestand: Utilities direkt an DB-Komponenten 111 x `DBButton` (`py-0` 26, `p-0` 15 -- vermutlich Ersatz für
+`size="small"`, bisher nur 19 x genutzt; `ms-auto`, `d-flex`), 33+29+15+6 x `DBHeading*` (`mb-*`, `fw-*` -> `size`/
+`fontWeight`/`paragraphSpacing`), 28 x `DBStack` (`mb-*`/`my-*` -> `gap` am Eltern-Stack, `w-100`), 24 x `DBCard` (`shadow*`,
+`border-0`, `h-100` -> `elevationLevel`/`spacing`), 20 x `DBNotification` (`py-2`, `small` -> `variant`), 16 x `DBTag`
+(`text-success` -> `semantic`), 7 x `DBSection` (`text-center`), 7 x `DBCheckbox` (`m-0`/`mb-1`). Rohes Markup: `div` 977
+(`d-flex` 123 -> `DBStack`), `span` 249 und `p` 191 (`small`/`text-muted`/`fw-semibold` -> `DBInfotext` bzw. Typo-Klassen).
+
 ## Verifikation je Batch
 
 1. **Sichtvergleich**: Puppeteer-Skript (Fake-Backend aus `scripts/livetest.ts` wiederverwenden) fotografiert feste Ansichten
@@ -67,11 +98,29 @@ Komponente, nur `db-*`-Tokens.
 
 ## Batches
 
-- [ ] R0 Werkzeug + Spike (Stand 2026-10-03: `scripts/sichtvergleich.ts` fertig, 4 Browser parallel, voller Lauf ca. 85 s,
-      Baseline `.sichtvergleich/basis`; offen: Stabilitaetsvergleich zweier Laeufe, Spike, Schutztest): Sichtvergleich-Skript, Baseline-Fotos; Spike an `widgets/` + `app/App.tsx` (Werte von
-      `db-font-size-*`, `data-emphasis`, Textfarbe gedämpft, `DBStack`-Default-Gap/`inline-size`) -> Ersatz-Tabelle fixieren;
-      Schutztest mit heutiger Zahl
-- [ ] R1 `app/`, `widgets/`, `shared/model`, `shared/lib` (Tab-Zustand, `d-none`-Umschaltungen) – ca. 90
+- [x] R0 Werkzeug + Spike (2026-10-03): `scripts/sichtvergleich.ts` (4 Browser parallel, 24 Ansichten je Farbschema/
+      Viewport, voller Lauf ca. 85 s, zwei Laeufe ohne Aenderung 88/88 pixelgleich); Fake-Backend mit festen Admin-Daten
+      (`scripts/livetest/adminDaten.ts`, vorher waren alle Admin-Tabs leer); Schutztest `test/app/bootstrapRueckbau.test.ts`
+      (eingefrorene Klassenliste `bootstrapKlassen.json`, Grenze 2024).
+- [ ] R1 `app/`, `widgets/`, `shared/model`, `shared/lib` -- Teil 1 erledigt (2026-10-03): Tab-Zustand (`hidden` statt
+      `tab-pane fade show active`, Panel-Erkennung ueber `role="tabpanel"`, Berechtigung `data-gesperrt`), JS-Umschaltungen
+      `#admin`/`#MonatFeld`/`#btnLogin`/`#startSchnellzugriff`/`#ladeAnzeige`/`#actAsNotice` auf `hidden`, Act-As-Hinweis als
+      `DBNotification` mit `headline` + `DBStack`, Hilfedialog mit `DBStack`, `ThemeSwitcher` per `aria-label`, Admin-Panes
+      `admin-pane--<farbe>`. Sichtvergleich: alles gleich ausser Hilfedialog (Fusszeile 12px hoeher, leerer Abstand vor der
+      Fehlerzeile entfaellt). Rest R1: `shared/lib` (2 Dateien), uebrige `d-none`-Stellen ausserhalb (siehe Batches)
+
+### Festgelegt im Spike
+
+- **Sichtbarkeit:** `hidden`-Attribut (DB-Komponenten pruefen `:not([hidden])`; global `[hidden] { display: none !important }`
+  in `styles.scss` fuer eigene Klassen mit `display`). Kein `d-none` mehr, auch nicht per JS (`el.hidden = …`).
+- **Tab-Panels:** `hidden` = aktiver Tab (React), `data-gesperrt` = Berechtigung (JS); keine Klassen.
+- **`DBStack`-`gap`:** Namen entsprechen den Tokens (`x-small` = `xs`, `small` = `sm` …), Standard ohne Angabe `small`.
+- **Abstaende von `p`/`ul` im Stack:** nur unteren Rand der Elemente zuruecksetzen (`margin-block-end: 0` je Bereich), der
+  obere Rand gehoert zum bisherigen Bild.
+- **Knopf in `DBNotification`:** in den Inhalt (`DBStack`), nicht in den `link`-Slot (DB legt einen `.db-button` dort als
+  Schliessen-Knopf oben rechts ab).
+- **Responsiv:** `-md-` der alten Utilities = DB `md` (64em/1024px), in eigenen Klassen `@media (min-width: #{bp.$md}px)`.
+
 - [ ] R2 `shared/ui` – ca. 130
 - [ ] R3 `features/auth`, `features/onboarding` – ca. 110
 - [ ] R4 `features/ber` – ca. 180

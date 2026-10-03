@@ -27,14 +27,14 @@ describe('clearLoading', () => {
     setLoading('btnTest');
     clearLoading('btnTest');
 
-    expect(document.querySelector('#ladeAnzeige')!.classList.contains('d-none')).toBe(true);
+    expect(document.querySelector<HTMLElement>('#ladeAnzeige')!.hidden).toBe(true);
     expect(btn.innerHTML).toBe(originalMarkup);
     expect(btn.disabled).toBe(false);
   });
 
   it('versteckt Ladeanzeige nicht wenn resetLoader=false', () => {
     clearLoading('btnTest', false);
-    expect(document.querySelector('#ladeAnzeige')!.classList.contains('d-none')).toBe(false);
+    expect(document.querySelector<HTMLElement>('#ladeAnzeige')!.hidden).toBe(false);
   });
 
   it('verwendet textContent als Fallback wenn kein normaltext gesetzt', () => {

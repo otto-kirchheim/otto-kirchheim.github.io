@@ -58,7 +58,6 @@ registerAppStartTask(() => {
   const jahrEl = document.querySelector<HTMLInputElement>('#Jahr');
   const monatElemente = document.querySelectorAll<HTMLSelectElement>('#Monat');
   const monatFeldElemente = document.querySelectorAll<HTMLDivElement>('#MonatFeld');
-  const loginDisplayEl = document.querySelector<HTMLDivElement>('#loginDisplay');
   const actAsButtonEl = document.querySelector<HTMLButtonElement>('#actAsOwnDataButton');
 
   /** Aktualisiert Act-As-Banner und Begruessung (Vorname, im Act-As-Modus der Anmeldename). */
@@ -106,10 +105,9 @@ registerAppStartTask(() => {
       return;
     }
 
-    btnLoginElemente.forEach(el => el.classList.add('d-none'));
+    btnLoginElemente.forEach(el => (el.hidden = true));
 
     if (willkommenEl) willkommenEl.innerHTML = `Hallo, ${benutzer}.`;
-    if (loginDisplayEl) loginDisplayEl.classList.add('d-none');
 
     const { monat, jahr } = getStoredMonatJahr();
 
@@ -123,8 +121,8 @@ registerAppStartTask(() => {
     markStep('session-restore', 'sr:tab-visibility');
 
     const userIsAdmin = isAdmin();
-    adminElemente.forEach(el => el.classList.toggle('d-none', !userIsAdmin));
-    adminTabPaneEl?.classList.toggle('d-none', !userIsAdmin);
+    adminElemente.forEach(el => (el.hidden = !userIsAdmin));
+    adminTabPaneEl?.toggleAttribute('data-gesperrt', !userIsAdmin);
 
     if (!userIsAdmin) {
       Storage.remove('actAsUserId');
@@ -142,9 +140,10 @@ registerAppStartTask(() => {
     }
     markStep('session-restore', 'sr:admin-toggle');
 
-    monatFeldElemente.forEach(el => el.classList.remove('d-none'));
+    monatFeldElemente.forEach(el => (el.hidden = false));
     setNavigationSichtbar(true);
-    document.querySelector<HTMLDivElement>('#startSchnellzugriff')?.classList.remove('d-none');
+    const schnellzugriff = document.querySelector<HTMLDivElement>('#startSchnellzugriff');
+    if (schnellzugriff) schnellzugriff.hidden = false;
     markStep('session-restore', 'sr:nav-visible');
 
     initAutoSaveEventListener();
@@ -155,8 +154,8 @@ registerAppStartTask(() => {
     if (navigator.onLine) selectYear(monat, jahr);
     markStep('session-restore', 'sr:select-year');
   } else {
-    adminElemente.forEach(el => el.classList.add('d-none'));
-    adminTabPaneEl?.classList.add('d-none');
+    adminElemente.forEach(el => (el.hidden = true));
+    adminTabPaneEl?.setAttribute('data-gesperrt', '');
     updateActAsBanner();
   }
   markStep('boot', 'boot:auth');

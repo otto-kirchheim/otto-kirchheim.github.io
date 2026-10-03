@@ -1,7 +1,7 @@
 /**
  * Tab-Navigation der SPA ohne Router (Ersatz fuer Bootstraps `Tab`-Plugin).
  *
- * `#tabContent` enthaelt alle `.tab-pane`s; Schalter sind alle Elemente mit `data-tab-target="<Panel-Id>"`.
+ * `#tabContent` enthaelt alle Panels (`role="tabpanel"`); Schalter sind alle Elemente mit `data-tab-target="<Panel-Id>"`.
  * Sie werden per Delegation bedient, damit die Navigation zwischen Kopfzeile und Schublade umziehen darf.
  * Der Controller wechselt das Panel, schreibt den Hash und meldet den Wechsel als `tab:shown`-CustomEvent,
  * auf das der Feature-Lifecycle hoert.
@@ -45,7 +45,7 @@ const ZIEL_ATTRIBUT = 'data-tab-target';
 
 /**
  * Schreibt den Hash per `history.pushState` statt `location.hash = ...`: Letzteres loest nativ einen
- * Scroll zum gleichnamigen Element aus (die `.tab-pane`s tragen exakt diese Ids) und landet hinter dem
+ * Scroll zum gleichnamigen Element aus (die Panels tragen exakt diese Ids) und landet hinter dem
  * `position: sticky`-Header. `pushState` legt denselben History-Eintrag an, ohne zu scrollen;
  * `hashchange` feuert bei Back/Forward weiterhin.
  *
@@ -79,11 +79,11 @@ function sichtbareSchalter(): HTMLElement[] {
  * Sucht das Panel zu einer Id.
  *
  * @param id - Panel-Id.
- * @returns Das Element, sofern es die Klasse `tab-pane` traegt; sonst `null`.
+ * @returns Das Element, sofern es ein Panel (`role="tabpanel"`) ist; sonst `null`.
  */
 function panel(id: string): HTMLElement | null {
   const el = document.getElementById(id);
-  return el?.classList.contains('tab-pane') ? el : null;
+  return el?.getAttribute('role') === 'tabpanel' ? el : null;
 }
 
 /**
@@ -140,7 +140,7 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
   const hauptgruppe = istHauptgruppe(ziel);
   const gruppenStore = gruppenStoreFuer(ziel);
 
-  // Die Nav-/Einstellungen-Schalter sind per `d-none` versteckt (`AppHeader.tsx`), ein direkt
+  // Die Nav-/Einstellungen-Schalter sind per `hidden` versteckt (`AppHeader.tsx`), ein direkt
   // gesetzter Hash (Adressleiste, alter Link, Zurueck-Button) umgeht das aber. Admin hat
   // zusaetzlich den eigenen Rollen-Redirect in `auth/index.ts`.
   if (hauptgruppe && !istHauptTabErlaubt(id)) {
@@ -150,8 +150,8 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
   }
 
   const imHash = hashSchreiben && hauptgruppe;
-  // "Schon aktiv" kommt aus dem Gruppen-Store; die DOM-Klasse ist nur Fallback fuer Panes ohne Store.
-  const bereitsAktiv = gruppenStore ? gruppenStore.get() === id : ziel.classList.contains('active');
+  // "Schon aktiv" kommt aus dem Gruppen-Store; `hidden` ist nur Fallback fuer Panes ohne Store.
+  const bereitsAktiv = gruppenStore ? gruppenStore.get() === id : !ziel.hidden;
   if (bereitsAktiv) {
     if (imHash && document.location.hash.slice(1) !== id) schreibeHash(id);
     gruppenStore?.set(id);
@@ -192,7 +192,7 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
 export function zeigeTabAusHash(): boolean {
   const roh = decodeURIComponent(document.location.hash.replace(/^#/, ''));
   if (!roh) return false;
-  const treffer = Array.from(document.querySelectorAll<HTMLElement>('#tabContent > .tab-pane')).find(
+  const treffer = Array.from(document.querySelectorAll<HTMLElement>('#tabContent > [role="tabpanel"]')).find(
     pane => pane.id.toLowerCase() === roh.toLowerCase(),
   );
   if (!treffer) return false;
@@ -203,11 +203,15 @@ export function zeigeTabAusHash(): boolean {
  * Blendet einen Nav-Eintrag samt Panel ein oder aus (z. B. Admin ohne Adminrechte).
  *
  * @param id - Panel-Id.
- * @param sichtbar - `false` setzt `d-none` auf Listeneintrag der Schalter und Panel.
+ * @param sichtbar - `false` verbirgt die Listeneintraege der Schalter (`hidden`) und sperrt das Panel (`data-gesperrt`,
+ *   `styles.scss`; `hidden` des Panels gehoert dem aktiven Tab).
  */
 export function setzeTabSichtbar(id: string, sichtbar: boolean): void {
-  for (const el of schalter(id)) el.closest('li')?.classList.toggle('d-none', !sichtbar);
-  panel(id)?.classList.toggle('d-none', !sichtbar);
+  for (const el of schalter(id)) {
+    const eintrag = el.closest('li');
+    if (eintrag) eintrag.hidden = !sichtbar;
+  }
+  panel(id)?.toggleAttribute('data-gesperrt', !sichtbar);
 }
 
 /**

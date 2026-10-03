@@ -1,10 +1,10 @@
 /**
  * Sichtbarkeit der Feature-Tabs (Nav-Eintrag + Start-Schnellzugriff), geschrieben von `updateTabVisibility.ts`.
  * `AppHeader.tsx` und `StartTab.tsx` lesen reaktiv (`useFeatureTabsVisible.ts`); vorher schaltete `updateTabVisibility`
- * `d-none` per `querySelector` direkt im DOM.
+ * die Sichtbarkeit per `querySelector` direkt im DOM.
  *
  * Zustand `null` = noch nicht gesetzt (vor dem ersten Login): Nav-Eintraege erscheinen, Schnellzugriffe nicht --
- * wie das bisherige Markup (Nav ohne, Schnellzugriff mit `d-none`). Die gesamte Hauptnavigation blendet
+ * wie das bisherige Markup (Nav sichtbar, Schnellzugriff `hidden`). Die gesamte Hauptnavigation blendet
  * `navigationVisibleStore` davon unabhaengig aus.
  */
 

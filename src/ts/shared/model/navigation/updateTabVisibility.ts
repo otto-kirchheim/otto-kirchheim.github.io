@@ -18,7 +18,7 @@ export default function updateTabVisibility(aktivierteTabs?: string[]): void {
     .filter(meta => (useDefaults ? meta.legacyDefaultOn : aktivierteTabs.includes(meta.legacy.tabKey)))
     .map(meta => meta.legacy.navId);
 
-  // Synchron ins DOM, wie das bisherige direkte `d-none`-Toggeln (Aufrufer lesen die Sichtbarkeit danach z. B. per `closest('li')`).
+  // Synchron ins DOM, wie frueher das direkte Umschalten im DOM (Aufrufer lesen die Sichtbarkeit danach z. B. per `closest('li')`).
   flushExtern(() => setFeatureTabsVisible(navIds));
 }
 

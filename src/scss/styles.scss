@@ -819,25 +819,72 @@ body,
   --db-logo-url: url('/icons/192x192-icon.png');
 }
 
+// ── App-Schale (`App.tsx`) ──
+
+// `hidden` blendet immer aus, auch Elemente mit eigener `display`-Regel (`.raster-auto`, `#start`). DB-Komponenten pruefen
+// `:not([hidden])` selbst.
+[hidden] {
+  display: none !important;
+}
+
+// Panels ohne Berechtigung (`setzeTabSichtbar`, Admin): gesperrt unabhaengig davon, welcher Tab aktiv ist (`hidden` gehoert
+// dem aktiven Tab).
+[role='tabpanel'][data-gesperrt] {
+  display: none !important;
+}
+
+// Act-As-Hinweis ueber den Tabs.
+.app-hinweise {
+  inline-size: 100%;
+  padding-inline: var(--db-spacing-fixed-xs);
+  margin-block-start: var(--db-spacing-fixed-xs);
+
+  @media screen and (min-width: #{bp.$md}px) {
+    padding-inline: var(--db-spacing-fixed-sm);
+  }
+}
+
+// Abstand der Tabs zur Kopfzeile, ausser auf Start: Start reicht per `min-block-size` exakt bis zur Fusszeile.
+#tabContent {
+  margin-block-start: var(--db-spacing-fixed-sm);
+
+  &:has(> #start:not([hidden])) {
+    margin-block-start: 0;
+  }
+}
+
 // Startseite reicht exakt bis zur Fusszeile (kein senkrechter Scrollbalken), deshalb entfaellt hier die Reservierung -- aber
 // NUR ab der Fusszeilen-Bruchstelle: auf dem Handy blendet `#startSchnellzugriff` sechs Kacheln ein, der Bereich scrollt, und die
-// letzte Kachel verschwaende sonst hinter der fixierten Fusszeile. (Der `mt-3`-Abstand entfaellt fuer Start in `App.tsx`.)
+// letzte Kachel verschwaende sonst hinter der fixierten Fusszeile.
 @media (min-width: 48em) {
-  .db-shell-content:has(#start.active) {
+  .db-shell-content:has(#start:not([hidden])) {
     padding-block-end: 0;
   }
 }
 
-// Nur wenn der Startbereich sichtbar ist -- sonst bleibt der (per `opacity` versteckte) Panel als 100dvh hohe Leerflaeche im Layout.
-#start.active {
+// Schnellzugriff nur mobil: ab 64em (`md`) wechselt `DBHeader` von Mobile-Drawer auf Desktop-Navigation.
+.start-schnellzugriff {
+  margin-block-end: var(--db-spacing-fixed-md);
+
+  @media screen and (min-width: #{bp.$md}px) {
+    display: none;
+  }
+}
+
+.start-ladeanzeige {
+  margin-block-start: var(--db-spacing-fixed-md);
+}
+
+// Nur wenn der Startbereich sichtbar ist (`hidden` blendet ihn sonst aus).
+#start {
   display: flex;
   flex-direction: column;
 
   // Viewport minus Kopf- (Puppeteer gemessen:
   // .db-control-panel-desktop 73px bei regular-Dichte/1440px), Fusszeilenhoehe (41px) UND der
-  // stets vorhandene `.breit...mt-2`-Abstand des (meist leeren) `#actAsNotice`-Wrappers in
-  // `App.tsx` (8px, unconditional -- kollabiert mit nichts mehr, seit `#tabContent`s `mt-3` fuer
-  // Start selbst weggelassen wird, siehe dort) = 122px = 7.625rem bei 16px-Wurzel. Bei
+  // stets vorhandene Abstand des (meist leeren) `#actAsNotice`-Wrappers `.app-hinweise` in
+  // `App.tsx` (8px, unconditional -- kollabiert mit nichts mehr, seit `#tabContent`s Abstand fuer
+  // Start selbst entfaellt, siehe dort) = 122px = 7.625rem bei 16px-Wurzel. Bei
   // Aenderungen an Kopf-/Fusszeileninhalt oder dieser Wrapper-Struktur neu vermessen.
   min-block-size: calc(100dvh - 7.625rem);
 }
@@ -1005,4 +1052,36 @@ body,
 // Deaktivierte Felder mit Tooltip: Hover soll die Hülle treffen (disabled-Inputs liefern je nach Browser keine Events).
 .feld-hinweis :disabled {
   pointer-events: none;
+}
+
+// ── Admin (`App.tsx`, `pages/admin/index.tsx`) ──
+
+.admin-rahmen {
+  inline-size: 100%;
+  padding-inline: var(--db-spacing-fixed-sm);
+  margin-block-end: var(--db-spacing-fixed-sm);
+
+  @media screen and (min-width: #{bp.$md}px) {
+    padding-inline: var(--db-spacing-fixed-md);
+  }
+}
+
+// Unter-Tab-Panel mit Randfarbe je Bereich.
+.admin-pane {
+  padding: var(--db-spacing-fixed-sm);
+  margin-block-end: var(--db-spacing-fixed-md);
+  border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+  box-shadow: var(--db-elevation-sm);
+}
+
+@each $modifikator, $familie in (primary: brand, info: informational, warning: warning, danger: critical, success: successful) {
+  .admin-pane--#{$modifikator} {
+    border-color: var(--db-#{$familie}-on-bg-basic-emphasis-50-default);
+  }
+}
+
+// Hilfedialog (`MyHelpModal.tsx`): Abstaende zwischen den Abschnitten kommen aus dem `DBStack`, Absaetze und Listen ohne
+// eigenen unteren Rand.
+.hilfe-inhalt :is(p, ul, ol) {
+  margin-block-end: 0;
 }

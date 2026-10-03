@@ -82,8 +82,8 @@ describe('AdminTab Unternavigation', () => {
     await flush();
 
     expect(container.querySelector('#admin-tab-dashboard')?.closest('li')?.dataset.active).toBe('true');
-    expect(container.querySelector('#admin-pane-dashboard')?.className).toContain('show active');
-    expect(container.querySelector('#admin-pane-resources')?.className).not.toContain('show active');
+    expect(container.querySelector<HTMLElement>('#admin-pane-dashboard')?.hidden).toBe(false);
+    expect(container.querySelector<HTMLElement>('#admin-pane-resources')?.hidden).toBe(true);
 
     zeigeTab('admin-pane-resources');
     await flush();
@@ -91,8 +91,8 @@ describe('AdminTab Unternavigation', () => {
     expect(container.querySelector('#admin-tab-dashboard')?.getAttribute('aria-selected')).toBe('false');
     expect(container.querySelector('#admin-tab-resources')?.getAttribute('aria-selected')).toBe('true');
     expect(container.querySelector('#admin-tab-resources')?.closest('li')?.dataset.active).toBe('true');
-    expect(container.querySelector('#admin-pane-dashboard')?.className).not.toContain('show active');
-    expect(container.querySelector('#admin-pane-resources')?.className).toContain('show active');
+    expect(container.querySelector<HTMLElement>('#admin-pane-dashboard')?.hidden).toBe(true);
+    expect(container.querySelector<HTMLElement>('#admin-pane-resources')?.hidden).toBe(false);
   });
 
   it('behaelt den gewaehlten Unter-Tab nach einem fremden Re-Render (Nebenbug-Regression)', async () => {
@@ -101,7 +101,7 @@ describe('AdminTab Unternavigation', () => {
 
     zeigeTab('admin-pane-profiles');
     await flush();
-    expect(container.querySelector('#admin-pane-profiles')?.className).toContain('show active');
+    expect(container.querySelector<HTMLElement>('#admin-pane-profiles')?.hidden).toBe(false);
 
     // Re-Render aus anderem Grund (hier: Act-as-Status-Event, wie `AdminTab`s eigener Effekt es
     // abonniert) -- vorher berechnete `aktiverUnterTab` in diesem Fall wieder den hartkodierten
@@ -110,8 +110,8 @@ describe('AdminTab Unternavigation', () => {
     window.dispatchEvent(new Event('actAsStatusChanged'));
     await flush();
 
-    expect(container.querySelector('#admin-pane-profiles')?.className).toContain('show active');
-    expect(container.querySelector('#admin-pane-dashboard')?.className).not.toContain('show active');
+    expect(container.querySelector<HTMLElement>('#admin-pane-profiles')?.hidden).toBe(false);
+    expect(container.querySelector<HTMLElement>('#admin-pane-dashboard')?.hidden).toBe(true);
     expect(container.querySelector('#admin-tab-profiles')?.closest('li')?.dataset.active).toBe('true');
   });
 });

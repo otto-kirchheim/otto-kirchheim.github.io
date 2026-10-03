@@ -109,10 +109,10 @@ function setupDom(): void {
     <h1 id="Willkommen"></h1>
     <div id="loginDisplay"></div>
     <input id="Jahr" />
-    <input id="Monat" class="d-none" />
-    <div id="admin" class="d-none"></div>
-    <div id="admin" class="d-none"></div>
-    <div id="Admin" class="d-none"></div>
+    <input id="Monat" />
+    <div id="admin" hidden></div>
+    <div id="admin" hidden></div>
+    <div id="Admin" role="tabpanel" data-gesperrt></div>
     <button id="admin-tab"></button>
     <button id="admin-tab"></button>
     <button id="brand-start-tab"></button>
@@ -251,7 +251,7 @@ describe('auth/index.ts', () => {
     expect(isNavigationSichtbar()).toBe(true);
     const adminElemente = document.querySelectorAll<HTMLDivElement>('#admin');
     expect(adminElemente).toHaveLength(2);
-    adminElemente.forEach(el => expect(el.classList.contains('d-none')).toBe(false));
+    adminElemente.forEach(el => expect(el.hidden).toBe(false));
   });
 
   it('versteckt BEIDE #admin-Kopien, wenn kein Benutzer angemeldet ist', async () => {
@@ -261,7 +261,7 @@ describe('auth/index.ts', () => {
     await taskRef.fn?.();
 
     const adminElemente = document.querySelectorAll<HTMLDivElement>('#admin');
-    adminElemente.forEach(el => expect(el.classList.contains('d-none')).toBe(true));
+    adminElemente.forEach(el => expect(el.hidden).toBe(true));
   });
 
   it('fuehrt SESSION_RESTORE Steps in deklarierter Reihenfolge aus', async () => {

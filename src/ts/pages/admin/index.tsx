@@ -98,15 +98,15 @@ export default function AdminTab() {
   const aktiverUnterTab = useActiveAdminTab()?.replace(/^admin-pane-/, '') ?? (isSuperAdmin ? 'dashboard' : 'users');
 
   /**
-   * Klassenliste eines Tab-Panels, der aktive Zustand kommt aus dem Store. So überschreibt ein
-   * Re-Render aus anderem Grund den aktiven Tab nicht mit dem Default.
+   * Attribute eines Tab-Panels: sichtbar nur der aktive (aus dem Store, so überschreibt ein Re-Render aus anderem Grund den
+   * aktiven Tab nicht mit dem Default), Randfarbe je Bereich.
    *
    * @param id - Kurze Pane-Id (wie in `unterTabs`).
-   * @param randKlasse - Bootstrap-Klasse für die Randfarbe.
-   * @returns Vollständiger `className`-String.
+   * @param farbe - Randfarbe (`admin-pane--<farbe>` in `styles.scss`).
+   * @returns `className` und `hidden` für das Panel.
    */
-  function paneKlasse(id: string, randKlasse: string): string {
-    return `tab-pane fade${aktiverUnterTab === id ? ' show active' : ''} shadow-sm p-3 mb-4 border border-1 ${randKlasse}`;
+  function paneProps(id: string, farbe: 'primary' | 'info' | 'warning' | 'danger' | 'success' | 'secondary') {
+    return { className: `admin-pane admin-pane--${farbe}`, hidden: aktiverUnterTab !== id };
   }
 
   /**
@@ -164,10 +164,10 @@ export default function AdminTab() {
         </p>
       )}
 
-      <div className="tab-content" id="admin-tab-content">
+      <div id="admin-tab-content">
         {isSuperAdmin && (
           <div
-            className={paneKlasse('dashboard', 'border-primary-subtle')}
+            {...paneProps('dashboard', 'primary')}
             id="admin-pane-dashboard"
             role="tabpanel"
             aria-labelledby="admin-tab-dashboard"
@@ -178,7 +178,7 @@ export default function AdminTab() {
         )}
 
         <div
-          className={paneKlasse('users', 'border-primary-subtle')}
+          {...paneProps('users', 'primary')}
           id="admin-pane-users"
           role="tabpanel"
           aria-labelledby="admin-tab-users"
@@ -194,7 +194,7 @@ export default function AdminTab() {
 
         {canSeeVorgabenTab && (
           <div
-            className={paneKlasse('vorgaben', 'border-info-subtle')}
+            {...paneProps('vorgaben', 'info')}
             id="admin-pane-vorgaben"
             role="tabpanel"
             aria-labelledby="admin-tab-vorgaben"
@@ -206,7 +206,7 @@ export default function AdminTab() {
 
         {canSeeTemplatesTab && (
           <div
-            className={paneKlasse('templates', 'border-warning-subtle')}
+            {...paneProps('templates', 'warning')}
             id="admin-pane-templates"
             role="tabpanel"
             aria-labelledby="admin-tab-templates"
@@ -218,7 +218,7 @@ export default function AdminTab() {
 
         {canSeeFormulareTab && (
           <div
-            className={paneKlasse('formulare', 'border-info-subtle')}
+            {...paneProps('formulare', 'info')}
             id="admin-pane-formulare"
             role="tabpanel"
             aria-labelledby="admin-tab-formulare"
@@ -230,7 +230,7 @@ export default function AdminTab() {
 
         {isSuperAdmin && (
           <div
-            className={paneKlasse('resources', 'border-danger-subtle')}
+            {...paneProps('resources', 'danger')}
             id="admin-pane-resources"
             role="tabpanel"
             aria-labelledby="admin-tab-resources"
@@ -242,7 +242,7 @@ export default function AdminTab() {
 
         {isSuperAdmin && (
           <div
-            className={paneKlasse('profiles', 'border-success-subtle')}
+            {...paneProps('profiles', 'success')}
             id="admin-pane-profiles"
             role="tabpanel"
             aria-labelledby="admin-tab-profiles"
@@ -254,7 +254,7 @@ export default function AdminTab() {
 
         {isSuperAdmin && (
           <div
-            className={paneKlasse('logs', 'border-secondary-subtle')}
+            {...paneProps('logs', 'secondary')}
             id="admin-pane-logs"
             role="tabpanel"
             aria-labelledby="admin-tab-logs"

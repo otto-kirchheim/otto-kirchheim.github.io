@@ -11,7 +11,8 @@ import { takeOriginalButtonContent } from './loadingButtonState';
  * @param resetLoader - `true` (Standard) blendet zusaetzlich `#ladeAnzeige` aus.
  */
 export default function clearLoading(btn: string, resetLoader: boolean = true): void {
-  if (resetLoader) document.querySelector<HTMLDivElement>('#ladeAnzeige')?.classList.add('d-none');
+  const ladeAnzeige = document.querySelector<HTMLDivElement>('#ladeAnzeige');
+  if (resetLoader && ladeAnzeige) ladeAnzeige.hidden = true;
 
   const btnElement = document.querySelector<HTMLButtonElement>(`#${btn}`);
   if (!btnElement) return;

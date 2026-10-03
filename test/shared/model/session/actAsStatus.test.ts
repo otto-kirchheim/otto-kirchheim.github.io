@@ -10,7 +10,7 @@ import {
 describe('actAsStatus', () => {
   beforeEach(() => {
     document.body.innerHTML = `
-      <div id="actAsNotice" class="d-none">
+      <div id="actAsNotice" hidden>
         <div id="actAsNoticeText"></div>
         <button id="actAsOwnDataButton" type="button"></button>
       </div>
@@ -28,7 +28,7 @@ describe('actAsStatus', () => {
 
     expect(state.active).toBe(true);
     expect(getActAsState().userName).toBe('otto');
-    expect(document.querySelector('#actAsNotice')?.classList.contains('d-none')).toBe(false);
+    expect(document.querySelector<HTMLElement>('#actAsNotice')?.hidden).toBe(false);
     expect(document.querySelector('#actAsNoticeText')?.textContent).toContain('otto');
     expect(document.querySelector('#actAsNoticeText')?.textContent).toContain('Admin Jan');
   });
@@ -40,7 +40,7 @@ describe('actAsStatus', () => {
     const state = updateActAsBanner();
 
     expect(state.active).toBe(false);
-    expect(document.querySelector('#actAsNotice')?.classList.contains('d-none')).toBe(true);
+    expect(document.querySelector<HTMLElement>('#actAsNotice')?.hidden).toBe(true);
   });
 
   it('resets text and button label when inactive', () => {

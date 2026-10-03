@@ -62,7 +62,7 @@ export default function ImpressumDialog({ open, onClose }: { open: boolean; onCl
       }
     >
       <div className="impressum">
-        <p className="mb-4">Angaben gemäß § 5 TMG</p>
+        <p>Angaben gemäß § 5 TMG</p>
         <p>
           Jan Otto
           <br />

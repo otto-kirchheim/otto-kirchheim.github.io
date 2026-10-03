@@ -83,7 +83,7 @@ export function updateActAsBanner(): ActAsState {
   if (!noticeEl || !textEl) return state;
 
   if (!state.active) {
-    noticeEl.classList.add('d-none');
+    noticeEl.hidden = true;
     textEl.textContent = '';
     if (buttonEl) buttonEl.textContent = 'Eigene Daten laden';
     return state;
@@ -95,7 +95,7 @@ export function updateActAsBanner(): ActAsState {
 
   textEl.textContent = `Du siehst gerade die Daten von ${viewedUser}.${suffix}`;
   if (buttonEl) buttonEl.textContent = 'Eigene Daten laden';
-  noticeEl.classList.remove('d-none');
+  noticeEl.hidden = false;
 
   return state;
 }

@@ -9,7 +9,8 @@ import { rememberOriginalButtonContent } from './loadingButtonState';
  * @param btn - Id des Buttons (ohne `#`); ohne passendes Element wird nur die Ladeanzeige eingeblendet.
  */
 export default function setLoading(btn: string): void {
-  document.querySelector<HTMLDivElement>('#ladeAnzeige')?.classList.remove('d-none');
+  const ladeAnzeige = document.querySelector<HTMLDivElement>('#ladeAnzeige');
+  if (ladeAnzeige) ladeAnzeige.hidden = false;
 
   const btnElement = document.querySelector<HTMLButtonElement>(`#${btn}`);
   if (!btnElement) return;

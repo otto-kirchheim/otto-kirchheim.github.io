@@ -24,8 +24,9 @@ export default function ThemeSwitcher() {
       iconTrailing="sun"
       visualAid
       changeHandler={event => setTheme(event.target.checked ? 'dark' : 'light')}
+      aria-label="Dunkles Design"
     >
-      <span className="visually-hidden">Dunkles Design</span>
+      {null}
     </MyCheckbox>
   );
 }

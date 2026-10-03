@@ -91,6 +91,8 @@ const ANSICHTEN: Ansicht[] = [
   { name: 'ea', oeffnen: tab('EA') },
   { name: 'ea-dialog', ...dialog('EA', '#btnESEA') },
   { name: 'berechnung', oeffnen: tab('Berechnung') },
+  { name: 'impressum', ...dialog('start', '.app-footer .impressum') },
+  { name: 'start-hilfe', ...dialog('start', '#btnHelpStart') },
   {
     name: 'einstellungen',
     async oeffnen(page) {

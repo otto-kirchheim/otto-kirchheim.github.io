@@ -81,9 +81,9 @@ export default function AppHeader() {
         Anmelden
       </DBLoadingButton>
 
-      {/* `#MonatFeld`: `auth/index.ts` blendet den Wrapper erst nach erfolgreichem Login per
-          `classList.remove('d-none')` ein; `<DBSelect>` bringt selbst keinen Wrapper mit. */}
-      <div id="MonatFeld" className="d-none">
+      {/* `#MonatFeld`: `userLoginSuccess`/`app/session` blenden den Wrapper erst nach erfolgreichem Login
+          ein (`hidden = false`); `<DBSelect>` bringt selbst keinen Wrapper mit. */}
+      <div id="MonatFeld" hidden>
         <DBSelect
           className="db-select"
           id="Monat"
@@ -101,7 +101,8 @@ export default function AppHeader() {
           braucht dieselbe `navigationSichtbar`-Bedingung explizit, sonst bliebe er auch
           abgemeldet sichtbar. */}
       <a
-        className={navigationSichtbar ? 'db-button' : 'db-button d-none'}
+        className="db-button"
+        hidden={!navigationSichtbar}
         data-variant="ghost"
         data-icon="gear_wheel"
         data-no-text="true"
@@ -117,10 +118,10 @@ export default function AppHeader() {
       >
         <DBTooltip>Einstellungen</DBTooltip>
       </a>
-      {/* `#admin` (nicht `#admin-tab`): `auth/index.ts` blendet darueber den KOMPLETTEN Knopf
-          per `d-none` aus, solange der Benutzer kein Admin ist; `#admin-tab` dient dort als
+      {/* `#admin` (nicht `#admin-tab`): `app/session` blendet darueber den KOMPLETTEN Knopf
+          per `hidden` aus, solange der Benutzer kein Admin ist; `#admin-tab` dient dort als
           Ziel fuer Klick-Listener/Tab-Attribute. */}
-      <span id="admin" className="d-none">
+      <span id="admin" hidden>
         <a
           className="db-button"
           data-variant="ghost"
@@ -143,7 +144,7 @@ export default function AppHeader() {
           (wie `#einstellungen-tab`). Den Klick-Handler haengt `Einstellungen/index.ts` per Id an,
           unabhaengig vom Renderort. */}
       <DBButton
-        className={navigationSichtbar ? undefined : 'd-none'}
+        hidden={!navigationSichtbar}
         variant="ghost"
         type="button"
         id="btnLogout"
@@ -160,11 +161,11 @@ export default function AppHeader() {
   );
 
   const navigation = (
-    <DBControlPanelNavigation className={navigationSichtbar ? undefined : 'd-none'} aria-label="Hauptnavigation">
+    <DBControlPanelNavigation hidden={!navigationSichtbar} aria-label="Hauptnavigation">
       {featureRegistry.metas().map(({ label, legacy }) => (
         <DBControlPanelNavigationItem
           active={aktiverTab === legacy.paneId}
-          className={featureTabs.nav(legacy.navId) ? undefined : 'd-none'}
+          hidden={!featureTabs.nav(legacy.navId)}
           key={legacy.navId}
         >
           <a

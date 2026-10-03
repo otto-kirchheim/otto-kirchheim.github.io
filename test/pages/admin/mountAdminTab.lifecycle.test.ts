@@ -36,15 +36,15 @@ afterEach(() => {
 describe('Admin feature lifecycle registration', () => {
   beforeEach(() => {
     document.body.innerHTML = `
-      <div id="admin" class="d-none"></div>
-      <div id="Admin" class="d-none"></div>
+      <div id="admin" hidden></div>
+      <div id="Admin" role="tabpanel" data-gesperrt></div>
       <div id="admin-root"></div>
     `;
   });
 
   it('mountAdminTab shows admin nav elements and renders', () => {
-    document.querySelector('#admin')?.classList.remove('d-none');
-    document.querySelector('#Admin')?.classList.remove('d-none');
+    document.querySelector<HTMLElement>('#admin')!.hidden = false;
+    document.querySelector('#Admin')?.removeAttribute('data-gesperrt');
     mountAdminTab('AdminUser');
 
     expect(mockMount).toHaveBeenCalled();
@@ -61,8 +61,8 @@ describe('Admin feature lifecycle registration', () => {
       name: 'Admin',
       async register(ctx: FeatureContext): Promise<void> {
         if (ctx.isAdmin) {
-          document.querySelector<HTMLDivElement>('#admin')?.classList.remove('d-none');
-          document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
+          document.querySelectorAll<HTMLDivElement>('#admin').forEach(el => (el.hidden = false));
+          document.querySelector<HTMLDivElement>('#Admin')?.removeAttribute('data-gesperrt');
           mountAdminTab(ctx.userName);
         }
       },
@@ -72,7 +72,7 @@ describe('Admin feature lifecycle registration', () => {
     });
 
     await featureLifecycleRegistry.initializeAll({ isAdmin: true, userName: 'AdminUser' });
-    expect(document.querySelector('#admin')?.classList.contains('d-none')).toBe(false);
+    expect(document.querySelector<HTMLElement>('#admin')?.hidden).toBe(false);
     expect(mockMount).toHaveBeenCalled();
 
     mockUnmount.mockClear();
@@ -91,7 +91,7 @@ describe('Admin feature lifecycle registration', () => {
     });
 
     await featureLifecycleRegistry.initializeAll({ isAdmin: false, userName: 'RegularUser' });
-    expect(document.querySelector('#admin')?.classList.contains('d-none')).toBe(true);
+    expect(document.querySelector<HTMLElement>('#admin')?.hidden).toBe(true);
     expect(mockMount).not.toHaveBeenCalled();
   });
 });

@@ -61,9 +61,9 @@ describe('userLoginSuccess', () => {
       <h1 id="Willkommen"></h1>
       <button id="btnLogin" class="btn"></button>
       <input id="Jahr" />
-      <div id="MonatFeld" class="db-select d-none"><input id="Monat" /></div>
-      <div id="admin" class="d-none"></div>
-      <div id="Admin" class="d-none"></div>
+      <div id="MonatFeld" class="db-select" hidden><input id="Monat" /></div>
+      <div id="admin" hidden></div>
+      <div id="Admin" role="tabpanel" data-gesperrt></div>
     `;
     vi.clearAllMocks();
     isAdminMock.mockReturnValue(false);
@@ -74,8 +74,8 @@ describe('userLoginSuccess', () => {
       name: 'Admin',
       async register(ctx) {
         if (ctx.isAdmin) {
-          document.querySelector<HTMLDivElement>('#admin')?.classList.remove('d-none');
-          document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
+          document.querySelectorAll<HTMLDivElement>('#admin').forEach(el => (el.hidden = false));
+          document.querySelector<HTMLDivElement>('#Admin')?.removeAttribute('data-gesperrt');
           mountAdminTabMock(ctx.userName);
         }
       },
@@ -90,10 +90,10 @@ describe('userLoginSuccess', () => {
     expect(storageSetMock).toHaveBeenCalledWith('Benutzer', 'Otto');
     expect(storageRemoveMock).toHaveBeenCalledWith('actAsUserId');
     expect(storageRemoveMock).toHaveBeenCalledWith('actAsUserName');
-    expect(document.querySelector('#btnLogin')?.classList.contains('d-none')).toBe(true);
+    expect(document.querySelector<HTMLElement>('#btnLogin')?.hidden).toBe(true);
     expect(document.querySelector<HTMLInputElement>('#Jahr')?.value).not.toBe('');
     expect(document.querySelector<HTMLInputElement>('#Monat')?.value).not.toBe('');
-    expect(document.querySelector('#MonatFeld')?.classList.contains('d-none')).toBe(false);
+    expect(document.querySelector<HTMLElement>('#MonatFeld')?.hidden).toBe(false);
     expect(selectYearMock).toHaveBeenCalledTimes(1);
     expect(mountAdminTabMock).not.toHaveBeenCalled();
   });
@@ -101,8 +101,8 @@ describe('userLoginSuccess', () => {
   it('schaltet Admin-UI frei und mountet Admin-Tab bei Admin-Rolle', async () => {
     await userLoginSuccess({ username: 'otto', role: 'org-admin' });
 
-    expect(document.querySelector('#admin')?.classList.contains('d-none')).toBe(false);
-    expect(document.querySelector('#Admin')?.classList.contains('d-none')).toBe(false);
+    expect(document.querySelector<HTMLElement>('#admin')?.hidden).toBe(false);
+    expect(document.querySelector('#Admin')?.hasAttribute('data-gesperrt')).toBe(false);
     expect(mountAdminTabMock).toHaveBeenCalledTimes(1);
   });
 

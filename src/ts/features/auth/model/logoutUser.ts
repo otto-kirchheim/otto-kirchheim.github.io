@@ -15,14 +15,13 @@ import { publishEvent } from '@/shared/lib/events/appEvents';
 type LogoutReason = 'manual' | 'token-expired' | 'version-mismatch';
 
 /**
- * Schaltet eine CSS-Klasse an allen Treffern des Selektors. `querySelectorAll`, weil Elemente wie `#admin` in der Desktop- und Mobile-Kopie des `AppHeader` doppelt vorkommen.
+ * Blendet alle Treffer des Selektors aus oder ein (`hidden`). `querySelectorAll`, weil Elemente wie `#admin` in der Desktop- und Mobile-Kopie des `AppHeader` doppelt vorkommen.
  *
  * @param selector - CSS-Selektor der Elemente.
- * @param addClass - `true` setzt die Klasse, `false` entfernt sie.
- * @param className - Zu schaltende Klasse.
+ * @param verborgen - `true` blendet aus, `false` ein.
  */
-function toggleClassForElement(selector: string, addClass: boolean = true, className: string = 'd-none'): void {
-  document.querySelectorAll<HTMLElement>(selector).forEach(element => element.classList.toggle(className, addClass));
+function setzeVerborgen(selector: string, verborgen: boolean): void {
+  document.querySelectorAll<HTMLElement>(selector).forEach(element => (element.hidden = verborgen));
 }
 
 /**
@@ -58,11 +57,11 @@ export default function logoutUser({
   if (zeigeTab('start')) window.scrollTo(0, 1);
 
   setNavigationSichtbar(false);
-  for (const selector of ['#admin', '#MonatFeld', '#startSchnellzugriff']) toggleClassForElement(selector);
+  for (const selector of ['#admin', '#MonatFeld', '#startSchnellzugriff']) setzeVerborgen(selector, true);
   hideAllFeatureTabs();
 
   clearLoading('btnLogin', false);
-  toggleClassForElement('#btnLogin', false);
+  setzeVerborgen('#btnLogin', false);
 
   const willkommen = document.querySelector<HTMLHeadingElement>('#Willkommen');
   if (willkommen) willkommen.innerHTML = 'Willkommen';

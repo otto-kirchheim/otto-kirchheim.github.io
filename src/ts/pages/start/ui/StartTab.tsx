@@ -79,15 +79,11 @@ export default function StartTab() {
         </DBCard>
       </DBStack>
 
-      {/* d-md-none, nicht d-lg-none: DBHeader wechselt intern bei 64em/1024px (unser
-             md-Breakpoint) von Mobile-Drawer auf Desktop-Inline-Navigation. */}
-      <div className="raster-auto mb-4 d-md-none d-none abstand-3" id="startSchnellzugriff">
+      {/* Nur mobil (`.start-schnellzugriff`, bis 64em: dort wechselt DBHeader von Mobile-Drawer auf
+          Desktop-Navigation) und erst nach dem Login (`hidden`, `app/session`). */}
+      <div className="raster-auto abstand-3 start-schnellzugriff" id="startSchnellzugriff" hidden>
         {featureRegistry.metas().map(({ label, icon, legacy }) => (
-          <div
-            className={featureTabs.quick(legacy.navId) ? undefined : 'd-none'}
-            id={`quick-${legacy.navId}`}
-            key={legacy.navId}
-          >
+          <div hidden={!featureTabs.quick(legacy.navId)} id={`quick-${legacy.navId}`} key={legacy.navId}>
             <DBButton
               type="button"
               className="d-flex flex-column align-items-center gap-1 py-3"
@@ -131,8 +127,9 @@ export default function StartTab() {
         alignment="center"
         justifyContent="center"
         gap="none"
-        className="mt-4 d-none"
+        className="start-ladeanzeige"
         id="ladeAnzeige"
+        hidden
       >
         <strong role="status">Lädt...</strong>
         <span

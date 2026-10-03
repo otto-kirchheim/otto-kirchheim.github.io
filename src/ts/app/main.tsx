@@ -41,8 +41,8 @@ featureLifecycleRegistry.registerFeature({
     if (ctx.isAdmin) {
       // `#admin` existiert zweimal (Desktop-Kopfzeile + Drawer-Kopie von `DBHeader`) --
       // beide Vorkommen anfassen, nicht nur das erste.
-      document.querySelectorAll<HTMLDivElement>('#admin').forEach(el => el.classList.remove('d-none'));
-      document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
+      document.querySelectorAll<HTMLDivElement>('#admin').forEach(el => (el.hidden = false));
+      document.querySelector<HTMLDivElement>('#Admin')?.removeAttribute('data-gesperrt');
       const { mountAdminTab } = await import('@/pages/admin/mountAdminTab');
       mountAdminTab(ctx.userName);
     }
