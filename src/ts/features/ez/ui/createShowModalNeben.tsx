@@ -24,7 +24,7 @@ const createShowElement = (
   row: Row<IDatenN>,
   column_1: [columnName: string, className?: string],
   column_2: [columnName: string, className?: string],
-  classNameDiv: string = 'mb-2 col-12 text-center',
+  classNameDiv: string = 'anzeige-tag',
   separator: JSX.Element = <span className="db-icon db-font-size-lg" data-icon="arrow_right" />,
 ) => {
   const column1: Column<IDatenN> = getColumn(row, column_1[0]);
@@ -49,7 +49,7 @@ const createShowElement = (
  * @param classNameDiv - CSS-Klassen des umgebenden Divs.
  * @returns Div mit einer Zeile je Zulage.
  */
-const createZulagenElement = (row: Row<IDatenN>, classNameDiv: string = 'mb-2 col-12 text-center') => {
+const createZulagenElement = (row: Row<IDatenN>, classNameDiv: string = 'anzeige-tag') => {
   const lines = formatNebengeldZulagen(normalizeNebengeldZulagen(row.cells)).split('\n');
   return (
     <div className={classNameDiv}>
@@ -73,22 +73,16 @@ export default function ShowModalNeben(row: Row<IDatenN>, titel: string): void {
       Footer={<MyShowFooter row={row} />}
       errorMessage={row.isError ? (row._errorMessage ?? undefined) : undefined}
     >
-      <MyModalBody className="p-3">
+      <MyModalBody className="anzeige-koerper">
         {createTagElement(row)}
 
-        <DBHeadingH4 alignment="center" className="mb-0">
-          Auftragsnummer
-        </DBHeadingH4>
+        <DBHeadingH4 alignment="center">Auftragsnummer</DBHeadingH4>
         {createShowElement3(row, ['Auftragsnummer'])}
 
-        <DBHeadingH4 alignment="center" className="mb-0">
-          Arbeitszeit
-        </DBHeadingH4>
+        <DBHeadingH4 alignment="center">Arbeitszeit</DBHeadingH4>
         {createShowElement(row, ['Beginn'], ['Ende'])}
 
-        <DBHeadingH4 alignment="center" className="mb-0">
-          Zulagen
-        </DBHeadingH4>
+        <DBHeadingH4 alignment="center">Zulagen</DBHeadingH4>
         {createZulagenElement(row)}
       </MyModalBody>
     </MyDivModal>,

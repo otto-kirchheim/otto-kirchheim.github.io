@@ -20,22 +20,16 @@ export default function ShowModalEA(row: Row<IDatenEA>, titel: string): void {
       Footer={<MyShowFooter row={row} />}
       errorMessage={row.isError ? (row._errorMessage ?? undefined) : undefined}
     >
-      <MyModalBody className="p-3">
+      <MyModalBody className="anzeige-koerper">
         {createTagElement(row)}
 
-        <DBHeadingH4 alignment="center" className="mb-0">
-          Dauer
-        </DBHeadingH4>
+        <DBHeadingH4 alignment="center">Dauer</DBHeadingH4>
         {createShowElement3(row, ['Dauer'])}
 
-        <DBHeadingH4 alignment="center" className="mb-0">
-          Tätigkeit
-        </DBHeadingH4>
+        <DBHeadingH4 alignment="center">Tätigkeit</DBHeadingH4>
         {createShowElement3(row, ['Taetigkeit'])}
 
-        <DBHeadingH4 alignment="center" className="mb-0">
-          Entgeltgruppe
-        </DBHeadingH4>
+        <DBHeadingH4 alignment="center">Entgeltgruppe</DBHeadingH4>
         {createShowElement3(row, ['Entgeltgruppe'])}
       </MyModalBody>
     </MyDivModal>,

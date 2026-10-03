@@ -1,3 +1,4 @@
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { createRef, type ChangeEvent, type SubmitEvent } from 'react';
 
 import type { Column } from '@/shared/ui/custom-table/CustomTable';
@@ -212,8 +213,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
 
         {['Beginn', 'Ende'].map(value => createTimeElement(row, value, { required: true }))}
 
-        <div className="border p-2">
-          <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Zulagen</p>
+        <Gruppe titel="Zulagen">
           <div className="raster abstand-2">
             {configuredZulagen.map(zulage => {
               const currentValue = existingZulagen.find(item => item.Typ === zulage.code)?.Wert ?? 0;
@@ -236,7 +236,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
               );
             })}
           </div>
-        </div>
+        </Gruppe>
       </MyModalBody>
     </MyFormModal>,
   );

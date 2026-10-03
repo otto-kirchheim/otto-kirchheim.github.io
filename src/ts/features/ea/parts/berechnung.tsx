@@ -1,3 +1,4 @@
+import { DBStack } from '@db-ux/react-core-components';
 import type { FeatureParts } from '@/shared/lib/feature';
 import type { IDatenEA, IVorgabenBerechnungMonat } from '@/types';
 import { parseDauerToMinutes, timeConvert } from '@/shared/lib/ressource/berechnungWerte';
@@ -55,10 +56,10 @@ const berechnung: FeatureParts['berechnung'] = {
 
   karte: ergebnis =>
     ergebnis.eaMinuten === null ? null : (
-      <div className="d-flex justify-content-between gap-2 fw-bold pt-2 pb-1 berechnung-card-gruppe">
-        <span className="text-start">Entgeltausgleich</span>
-        <span className="text-end text-nowrap">{timeConvert(ergebnis.eaMinuten)}</span>
-      </div>
+      <DBStack direction="row" justifyContent="space-between" gap="x-small" className="berechnung-card-gruppe">
+        <strong>Entgeltausgleich</strong>
+        <strong className="nowrap">{timeConvert(ergebnis.eaMinuten)}</strong>
+      </DBStack>
     ),
 };
 

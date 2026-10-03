@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-03 (205)
+
+### refactor (Bootstrap-Rueckbau R5: `features/ewt`, `ez`, `ea`)
+
+- Tab-Koepfe, Fahrzeiten-Panel, EWT-/Neben-/EA-Dialoge und Zulagen-Einstellungen ohne Bootstrap-Klassen: `DBNotification` (Hinweis in Neben-Dialog), `Gruppe` (Zulagen), `DBStack`/`DBInfotext`, neue Klassen in `styles.scss` (`zeit-pfeile`, `zeit-kopf`, `zelle-zentriert`, `zulagen-*`, `anzeige-koerper` u. a.). Standard `anzeige-tag` ersetzt den Bootstrap-Rest in `showModalHelpers`.
+- Buchungstag-Hinweis der EWT-Dialoge wird per `hidden` statt `d-none` ein-/ausgeblendet (Tests angepasst). Ratsche 1454.
+
 ## 2026-10-03 (204)
 
 ### refactor (Bootstrap-Rueckbau R4: `features/ber`)

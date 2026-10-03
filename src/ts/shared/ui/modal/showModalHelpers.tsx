@@ -51,7 +51,7 @@ export function createTagElement<T extends CustomTableTypes>(row: Row<T>) {
 export function createShowElement3<T extends CustomTableTypes>(
   row: Row<T>,
   column: [columnName: string, className?: string],
-  classNameDiv: string = 'mb-2 col-12 text-center',
+  classNameDiv: string = 'anzeige-tag',
 ) {
   const column1 = getColumn(row, column[0]);
 

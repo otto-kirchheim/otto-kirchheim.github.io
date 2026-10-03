@@ -252,7 +252,10 @@
 .ewt-zeit-titel {
   grid-column: 2;
   margin: 0;
+  overflow: hidden;
   text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ewt-zeit-pfeile {
@@ -640,6 +643,83 @@ body,
     clip-path: inset(50%);
     white-space: nowrap;
   }
+}
+
+// Tabellenzelle/-zeile mittig, auch senkrecht (Fahrzeiten-Panel).
+.zelle-zentriert {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.fahrzeiten-panel {
+  margin-block-start: var(--db-spacing-fixed-md);
+}
+
+@media screen and (min-width: #{bp.$md}px) {
+  .fahrzeiten-neu {
+    margin-block-start: var(--db-spacing-fixed-xs);
+  }
+}
+
+// EWT-Dialoge (`createEditorModalEWT.tsx`, `createAddModalEWT.tsx`): Pfeilzeilen und Ueberschriften zwischen den Zeitgruppen.
+.zeit-pfeile {
+  position: relative;
+  display: flex;
+  color: var(--db-adaptive-on-bg-basic-emphasis-70-default);
+
+  > div {
+    inline-size: 50%;
+    text-align: center;
+  }
+}
+
+.zeit-pfeile__titel {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -50%);
+  text-transform: uppercase;
+}
+
+.zeit-kopf {
+  display: block;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.feld-abstand-oben {
+  margin-block-start: var(--db-spacing-fixed-md);
+}
+
+.checkbox-hinweis {
+  display: block;
+  margin-block-start: var(--db-spacing-fixed-2xs);
+}
+
+// Zulagen-Einstellungen (`ez/ui`): Mount-Ziel der Checkbox-Liste und eine Kategorie darin.
+.zulagen-liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--db-spacing-fixed-xs);
+  inline-size: 100%;
+}
+
+.zulagen-kategorie {
+  margin-block-end: var(--db-spacing-fixed-md);
+}
+
+.zulagen-kategorie__hinweis {
+  display: block;
+  margin-block-end: var(--db-spacing-fixed-xs);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+// Anzeige-Dialog mit Innenabstand (`MyModalBody className`), z. B. EA/Neben.
+.anzeige-koerper {
+  padding: var(--db-spacing-fixed-md);
 }
 
 // Aktionen-Spalte der Fahrzeiten-Tabelle: so schmal wie ihre Buttons.

@@ -3,7 +3,7 @@ import { type JSX, useEffect, useRef, useState } from 'react';
 import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 import type { IVorgabenUfZ } from '@/types';
 import { normalizeTimeString } from '@/shared/lib/validation/timeString';
-import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBInfotext, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { setFahrzeitPanelState } from './fahrzeitPanelState';
 
 interface PanelProps {
@@ -152,7 +152,7 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
 
   return (
     <div
-      className="db-table mt-3"
+      className="db-table fahrzeiten-panel"
       data-width="full"
       data-variant="zebra"
       data-divider="both"
@@ -192,7 +192,7 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
       </DBStack>
       <table aria-describedby="titelTkgSt">
         <thead>
-          <tr className="align-middle text-center" data-sub-header-emphasis="weak">
+          <tr className="zelle-zentriert" data-sub-header-emphasis="weak">
             <th id="titelTkgSt">
               <button type="button" style={SORT_BUTTON_STYLE} onClick={() => toggleSort('key')}>
                 Tätigkeitsstätte
@@ -212,8 +212,8 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
         <tbody ref={tbodyRef}>
           {rows.length === 0 && (
             <tr>
-              <td colSpan={4} className="text-body-secondary text-center">
-                Keine Fahrzeiten hinterlegt.
+              <td colSpan={4} className="zelle-zentriert">
+                <DBInfotext showIcon={false}>Keine Fahrzeiten hinterlegt.</DBInfotext>
               </td>
             </tr>
           )}
@@ -242,7 +242,7 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
                     />
                   </td>
                 ))}
-                <td className="text-center align-middle">
+                <td className="zelle-zentriert">
                   <DBStack
                     direction="row"
                     wrap={false}
@@ -293,7 +293,8 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
       </table>
       <DBButton
         type="button"
-        className="d-flex align-items-center gap-1 mt-md-2"
+        className="fahrzeiten-neu"
+        width="full"
         variant="filled"
         size="small"
         icon="plus"

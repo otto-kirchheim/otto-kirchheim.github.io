@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { DBCheckbox } from '@db-ux/react-core-components';
+import { DBCheckbox, DBInfotext } from '@db-ux/react-core-components';
 import { ZULAGEN_CATALOG, ZULAGEN_CATEGORY_MAX_SELECTIONS, ZulageCategory } from '@/shared/lib/zulagen/zulagenCatalog';
 
 const categoryDisplayOrder: ZulageCategory[] = [
@@ -85,9 +85,11 @@ export default function ZulagenCheckboxList({ benoetigteZulagen }: { benoetigteZ
         const disableUnchecked = selectedCount >= maxSelections;
 
         return (
-          <div key={category} className="mb-3" data-zulage-category-section={category}>
-            <div className="fw-semibold">{getCategoryLabel(category)}</div>
-            <small className="text-body-secondary d-block mb-2">Max. {maxSelections} gleichzeitig</small>
+          <div key={category} className="zulagen-kategorie" data-zulage-category-section={category}>
+            <strong>{getCategoryLabel(category)}</strong>
+            <DBInfotext showIcon={false} className="zulagen-kategorie__hinweis">
+              Max. {maxSelections} gleichzeitig
+            </DBInfotext>
             <div>
               {ZULAGEN_CATALOG.filter(zulage => zulage.category === category).map(zulage => {
                 const checked = Boolean(checkedByCode[zulage.code]);

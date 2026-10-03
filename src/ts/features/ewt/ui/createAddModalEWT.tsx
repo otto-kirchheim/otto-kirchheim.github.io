@@ -1,4 +1,4 @@
-import { DBButton, DBCheckbox } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBInfotext } from '@db-ux/react-core-components';
 import { createRef, type ChangeEvent, type MouseEvent, type SubmitEvent } from 'react';
 
 import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
@@ -73,7 +73,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
     const Tag = tagInput.value;
     if (!Tag) {
       if (buchungstagHinweisRef.current) {
-        buchungstagHinweisRef.current.classList.add('d-none');
+        buchungstagHinweisRef.current.hidden = true;
       }
       return;
     }
@@ -110,11 +110,11 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
       if (buchungstagHinweisTextRef.current) {
         buchungstagHinweisTextRef.current.value = dayjs(buchungstag).format('YYYY-MM-DD');
       }
-      buchungstagHinweisRef.current.classList.remove('d-none');
+      buchungstagHinweisRef.current.hidden = false;
       return;
     }
 
-    buchungstagHinweisRef.current.classList.add('d-none');
+    buchungstagHinweisRef.current.hidden = true;
   };
 
   /**
@@ -145,7 +145,6 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
       <MyModalBody>
         <DBButton
           type="button"
-          className="text-start"
           variant="filled"
           size="medium"
           id="btnNaechsterTag"
@@ -169,7 +168,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
           min={datum.format('YYYY-MM-DD')}
           max={maxDate}
         ></MyInput>
-        <div ref={buchungstagHinweisRef} id="buchungstagHinweis" className="d-none">
+        <div ref={buchungstagHinweisRef} id="buchungstagHinweis" hidden>
           <MyInput
             type="date"
             myRef={buchungstagHinweisTextRef}
@@ -196,16 +195,18 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
           ]}
         />
         <MySelect title="Schicht" id="Schicht" required myRef={SchichtRef} options={buildSchichtOptionen(vorgabenU)} />
-        <div className="mt-3">
+        <div className="feld-abstand-oben">
           <DBCheckbox id="berechnen1" ref={berechnenRef} defaultChecked>
             Berechnen
           </DBCheckbox>
         </div>
-        <div className="mt-3">
+        <div className="feld-abstand-oben">
           <MyCheckbox id="berechnen2" changeHandler={changeBuero} myRef={bueroRef}>
             <span>
               Büro
-              <small className="d-block mt-1">(Keine Fahrt zu einem Einsatzort)</small>
+              <DBInfotext showIcon={false} className="checkbox-hinweis">
+                (Keine Fahrt zu einem Einsatzort)
+              </DBInfotext>
             </span>
           </MyCheckbox>
         </div>

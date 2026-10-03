@@ -151,13 +151,12 @@ export function EaTab() {
   }, []);
 
   return (
-    <DBSection width="large" spacing="none" className="text-center">
-      <div className="raster justify-content-center">
-        <DBHeadingH1 className="d-inline-flex align-items-center justify-content-center gap-2">
+    <DBSection width="large" spacing="none" className="tab-abschnitt">
+      <div className="raster">
+        <DBHeadingH1 className="titel-mit-hilfe">
           Entgeltausgleich
           <DBButton
             type="button"
-            className="p-0"
             variant="ghost"
             size="small"
             id="btnHelpEA"
@@ -172,7 +171,7 @@ export function EaTab() {
       </div>
 
       <div>
-        <DBStack direction="row" wrap justifyContent="center" gap="medium" className="my-3 knopfreihe">
+        <DBStack direction="row" wrap justifyContent="center" gap="medium" className="knopfreihe knopfreihe-luft">
           <DBButton type="button" variant="brand" icon="plus" id="btnESEA" data-disabler>
             Hinzufügen
           </DBButton>
@@ -197,7 +196,6 @@ export function EaTab() {
       <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
         <table
           id="tableEA"
-          className="align-middle"
           aria-label="Entgeltausgleich"
           ref={(el: HTMLTableElement | null) => {
             if (el) ftEA.attachElement(el as CustomHTMLTableElement<IDatenEA>);

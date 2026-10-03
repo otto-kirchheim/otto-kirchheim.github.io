@@ -1,4 +1,4 @@
-import { DBButton } from '@db-ux/react-core-components';
+import { DBButton, DBInfotext } from '@db-ux/react-core-components';
 import { createRef, type SubmitEvent } from 'react';
 
 import { Row } from '@/shared/ui/custom-table/CustomTable';
@@ -45,6 +45,38 @@ import {
   persistEwtTableData,
   validateEwtZeitenReihenfolge,
 } from '../model';
+
+/**
+ * Pfeilzeile zwischen den Zeitgruppen (Hinfahrt runter, Rueckfahrt hoch), optional mit mittiger Beschriftung.
+ *
+ * @param props - `titel`: Beschriftung in der Mitte (z. B. "Wohnung").
+ */
+const ZeitPfeile = ({ titel }: { titel?: string }) => (
+  <div className="zeit-pfeile">
+    <div>
+      <span className="db-icon db-font-size-sm" data-icon="arrow_down" />
+    </div>
+    <div>
+      <span className="db-icon db-font-size-sm" data-icon="arrow_up" />
+    </div>
+    {titel && (
+      <DBInfotext showIcon={false} className="zeit-pfeile__titel">
+        <strong>{titel}</strong>
+      </DBInfotext>
+    )}
+  </div>
+);
+
+/**
+ * Zentrierte Gruppenueberschrift ueber zwei Zeitfeldern.
+ *
+ * @param props - `children`: Text der Ueberschrift.
+ */
+const ZeitKopf = ({ children }: { children: string }) => (
+  <DBInfotext showIcon={false} className="zeit-kopf">
+    <strong>{children}</strong>
+  </DBInfotext>
+);
 
 const ZEITFELDER = ['abWE', 'beginE', 'ab1E', 'anEE', 'abEE', 'an1E', 'endeE', 'anWE'] as const;
 /**
@@ -140,7 +172,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           {row.columns.array.find(column => column.name === 'Tag')?.title ?? 'Tag'}
         </MyInput>
 
-        <div ref={buchungstagHinweisRef} id="buchungstagHinweisEdit" className="sp-sm-6 d-none">
+        <div ref={buchungstagHinweisRef} id="buchungstagHinweisEdit" className="sp-sm-6" hidden>
           <MyInput
             myRef={buchungstagHinweisTextRef}
             disabled
@@ -181,38 +213,23 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           </MyCheckbox>
         </div>
 
-        <div className="position-relative d-flex text-muted">
-          <div className="w-50 text-center">
-            <span className="db-icon db-font-size-sm" data-icon="arrow_down" />
-          </div>
-          <div className="w-50 text-center">
-            <span className="db-icon db-font-size-sm" data-icon="arrow_up" />
-          </div>
-          <span className="fw-semibold text-uppercase position-absolute top-50 start-50 translate-middle">Wohnung</span>
-        </div>
+        <ZeitPfeile titel="Wohnung" />
         {createTimeElement(row, 'abWE')}
         {createTimeElement(row, 'anWE')}
 
-        <p className="text-center text-muted fw-semibold text-uppercase mb-0">Arbeitszeit</p>
+        <ZeitKopf>Arbeitszeit</ZeitKopf>
         {createTimeElement(row, 'beginE')}
         {createTimeElement(row, 'endeE')}
 
-        <p className="text-center text-muted fw-semibold text-uppercase mb-0">1. Tätigkeitsstätte</p>
+        <ZeitKopf>1. Tätigkeitsstätte</ZeitKopf>
         {createTimeElement(row, 'ab1E')}
         {createTimeElement(row, 'an1E')}
 
-        <p className="text-center text-muted fw-semibold text-uppercase mb-0">Einsatzort</p>
+        <ZeitKopf>Einsatzort</ZeitKopf>
         {createTimeElement(row, 'anEE')}
         {createTimeElement(row, 'abEE')}
 
-        <div className="position-relative d-flex text-muted">
-          <div className="w-50 text-center">
-            <span className="db-icon db-font-size-sm" data-icon="arrow_down" />
-          </div>
-          <div className="w-50 text-center">
-            <span className="db-icon db-font-size-sm" data-icon="arrow_up" />
-          </div>
-        </div>
+        <ZeitPfeile />
       </MyModalBody>
     </MyFormModal>,
   );
@@ -258,7 +275,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
 
     const tag = form.querySelector<HTMLInputElement>('#Tag')?.value ?? '';
     if (!tag) {
-      buchungstagHinweisRef.current.classList.add('d-none');
+      buchungstagHinweisRef.current.hidden = true;
       return;
     }
 
@@ -266,14 +283,14 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
     const istGleich = dayjs(values.Buchungstag).isSame(dayjs(values.Tag), 'day');
 
     if (istGleich) {
-      buchungstagHinweisRef.current.classList.add('d-none');
+      buchungstagHinweisRef.current.hidden = true;
       return;
     }
 
     if (buchungstagHinweisTextRef.current) {
       buchungstagHinweisTextRef.current.value = dayjs(values.Buchungstag).format('YYYY-MM-DD');
     }
-    buchungstagHinweisRef.current.classList.remove('d-none');
+    buchungstagHinweisRef.current.hidden = false;
   };
 
   /** Setzt die Validierungsfehler aller Zeitfelder zurück. */

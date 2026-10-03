@@ -258,13 +258,12 @@ export function EwtTab() {
   }, []);
 
   return (
-    <DBSection width="large" spacing="none" className="text-center">
-      <div className="raster justify-content-center">
-        <DBHeadingH1 className="d-inline-flex align-items-center justify-content-center gap-2">
+    <DBSection width="large" spacing="none" className="tab-abschnitt">
+      <div className="raster">
+        <DBHeadingH1 className="titel-mit-hilfe">
           EWT
           <DBButton
             type="button"
-            className="p-0"
             variant="ghost"
             size="small"
             id="btnHelpEWT"
@@ -279,7 +278,7 @@ export function EwtTab() {
       </div>
 
       <div>
-        <DBStack direction="row" wrap justifyContent="center" gap="medium" className="my-3 knopfreihe">
+        <DBStack direction="row" wrap justifyContent="center" gap="medium" className="knopfreihe knopfreihe-luft">
           <DBButton type="button" variant="brand" icon="plus" id="btnESEE" data-disabler>
             Anwesenheit
           </DBButton>
@@ -307,7 +306,6 @@ export function EwtTab() {
       <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
         <table
           id="tableE"
-          className="align-middle"
           aria-label="EWT"
           ref={(el: HTMLTableElement | null) => {
             if (el) ftE.attachElement(el as CustomHTMLTableElement<IDatenEWT>);

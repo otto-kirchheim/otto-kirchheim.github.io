@@ -1,4 +1,5 @@
-import { DBButton } from '@db-ux/react-core-components';
+import { DBButton, DBNotification } from '@db-ux/react-core-components';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { createRef, type SubmitEvent } from 'react';
 
 import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
@@ -138,9 +139,9 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
       customButtons={customFooterButton}
     >
       <MyModalBody>
-        <div>
-          <p className="text-center text-bg-warning p-1 mb-0">!!! Erst EWT Eingeben und Berechnen !!!</p>
-        </div>
+        <DBNotification semantic="warning" variant="docked">
+          !!! Erst EWT Eingeben und Berechnen !!!
+        </DBNotification>
         <MySelect className="sp-sm-6" title="Tag (Aus EWT)" id="Tag" required options={getTagOptions(dataE)} />
         <MyInput
           divClass="sp-12 sp-sm-6"
@@ -153,8 +154,7 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
         >
           Auftragsnummer
         </MyInput>
-        <div className="border p-2">
-          <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Zulagen</p>
+        <Gruppe titel="Zulagen">
           <div className="raster abstand-2">
             {configuredZulagen.map(zulage => (
               <MyInput
@@ -174,7 +174,7 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
               </MyInput>
             ))}
           </div>
-        </div>
+        </Gruppe>
       </MyModalBody>
     </MyFormModal>,
   );

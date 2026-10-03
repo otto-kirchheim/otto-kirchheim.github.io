@@ -288,7 +288,7 @@ describe('EWT utils extra', () => {
     tagInput.dispatchEvent(new Event('change', { bubbles: true }));
 
     const hinweis = document.querySelector<HTMLDivElement>('#buchungstagHinweisEdit');
-    expect(hinweis?.classList.contains('d-none')).toBe(true);
+    expect(hinweis?.hidden).toBe(true);
   });
 
   it('zeigt den abweichenden Buchungstag bei einer Nachtschicht mit Tagesübertrag an', () => {
@@ -320,7 +320,7 @@ describe('EWT utils extra', () => {
     const hinweis = document.querySelector<HTMLDivElement>('#buchungstagHinweisEdit');
     const hinweisInput = document.querySelector<HTMLInputElement>('#Buchungstag');
 
-    expect(hinweis?.classList.contains('d-none')).toBe(false);
+    expect(hinweis?.hidden).toBe(false);
     expect(hinweisInput?.value).toBe('2026-03-21');
   });
 

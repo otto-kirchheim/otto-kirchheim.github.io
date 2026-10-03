@@ -98,7 +98,7 @@ const createZeitBlock = (
   return (
     <div className="ewt-zeit">
       <span className="ewt-zeit-links">{vor}</span>
-      <DBHeadingH5 paragraphSpacing className="ewt-zeit-titel text-truncate">
+      <DBHeadingH5 paragraphSpacing className="ewt-zeit-titel">
         {titel}
       </DBHeadingH5>
       <span className="ewt-zeit-rechts">{nach}</span>
