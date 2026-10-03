@@ -9,7 +9,7 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 - Bereitschafts-Dialoge und -Tab ohne Bootstrap-Klassen: Hinweise per `DBNotification` (Sync-Hinweis in einer Huelle, die Ein-/Ausblenden uebernimmt), Zeitgruppen per `Gruppe` (jetzt mit optionalem `titel`, `id`, `style`), Zeilen per `DBStack`/`DBInfotext`, Wochentag-Raster und Tab-Kopf ueber neue Klassen in `styles.scss` (`zeitzeile*`, `wochentag-*`, `tab-abschnitt`, `titel-mit-hilfe`, `knopfreihe-luft`, `knopf-rechts`).
 - Sichtbare Abweichungen: Gruppen-Rahmen enger (Token `xs` statt `p-3`), Gruppen-Titel dunkler/fett, Hinweise als DB-Notification mit Symbol, Knopfreihe der Tabs 3px tiefer. Unbenutztes leeres `#schichtHinweisText` entfernt. Ratsche 1768 auf 1593.
 - Begruessung `#Willkommen` per `textContent` (siehe 203).
-- Fusszeilen-Reservierung als `margin-block-end` statt `padding-block-end` an `.db-shell-content`: der Scrollbalken endet ueber der fixierten Fusszeile statt dahinter.
+- Fusszeilen-Reservierung als `margin-block-end` statt `padding-block-end` an `.db-shell-content`: der Scrollbalken endet ueber der fixierten Fusszeile statt dahinter. Die Hoehe misst `AppFooter` per `ResizeObserver` (`--app-footer-hoehe`), damit weder Luecke noch Ueberdeckung bleibt (feste 3rem/5rem liessen eine Luecke).
 
 ## 2026-10-03 (203)
 

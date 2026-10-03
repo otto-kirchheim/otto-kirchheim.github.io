@@ -509,7 +509,7 @@ td > .db-switch {
 // `padding-block-end` auf `body` machte zusaetzlich das Dokument scrollbar (zwei gestapelte Scrollbalken). Als Aussenabstand
 // (nicht Innenabstand) endet der Scrollbalken des Inhalts ueber der fixierten Fusszeile statt dahinter.
 .db-shell-content {
-  margin-block-end: var(--db-spacing-fixed-2xl);
+  margin-block-end: var(--app-footer-hoehe, var(--db-spacing-fixed-2xl));
 }
 
 // Chromes eigenes Zum-Aktualisieren-Ziehen aus (`pullToRefresh.ts` ersetzt es): sonst reicht der Container die Geste an den
@@ -520,11 +520,11 @@ body,
   overscroll-behavior-y: contain;
 }
 
-// `DBFooterMeta` stapelt Copyright/Knopf unter dieser Breite (Footer 41px -> 69px); die `3rem`-Reservierung reicht dann nicht.
-// An derselben Bruchstelle auf 5rem erhoehen, statt den Footer einzeilig zu erzwingen (Handys waeren sonst gequetscht).
+// `DBFooterMeta` stapelt Copyright/Knopf unter dieser Breite (Footer 41px -> 69px). Die gemessene Hoehe (`AppFooter`) deckt das ab;
+// die Token sind nur der Rueckfall vor dem ersten Messen.
 @media (max-width: 47.9375em) {
   .db-shell-content {
-    margin-block-end: var(--db-spacing-fixed-3xl);
+    margin-block-end: var(--app-footer-hoehe, var(--db-spacing-fixed-3xl));
   }
 }
 

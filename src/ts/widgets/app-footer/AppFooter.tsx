@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DBButton, DBFooter, DBFooterMeta } from '@db-ux/react-core-components';
 import dayjs from '@/shared/lib/date/configDayjs';
 import ImpressumDialog from './ImpressumDialog';
@@ -17,6 +17,19 @@ export default function AppFooter({ startYear = 2021 }: { startYear?: number }) 
   const [impressumOffen, setImpressumOffen] = useState(false);
   const currentYear = dayjs().year();
   const yearLabel = startYear < currentYear ? `${startYear}-${currentYear}` : `${currentYear}`;
+
+  // Hoehe der fixierten Fusszeile als `--app-footer-hoehe` (styles.scss reserviert sie am Inhalt): sie ist je Breite einzeilig
+  // oder gestapelt, ein fester Wert liesse eine Luecke oder verdeckte den Scrollbalken.
+  useEffect(() => {
+    const footer = document.querySelector<HTMLElement>('.app-footer');
+    if (!footer) return;
+    const setzeHoehe = () =>
+      document.documentElement.style.setProperty('--app-footer-hoehe', `${footer.offsetHeight}px`);
+    setzeHoehe();
+    const beobachter = new ResizeObserver(setzeHoehe);
+    beobachter.observe(footer);
+    return () => beobachter.disconnect();
+  }, []);
 
   return (
     <>
