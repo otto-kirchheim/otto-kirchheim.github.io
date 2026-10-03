@@ -72,6 +72,21 @@ describe('confirmDialog', () => {
     abbrechen();
   });
 
+  it('maskiert HTML in Nachricht, Titel und Labels (kein XSS ueber Benutzernamen)', async () => {
+    confirmDialog('Benutzer "<img src=x onerror=alert(1)>" loeschen?', {
+      title: '<b>T</b>',
+      confirmLabel: '<i>Ja</i>',
+      cancelLabel: '<u>Nein</u>',
+    });
+    const modal = getModalEl()!;
+    expect(modal.querySelector('img')).toBeNull();
+    expect(modal.querySelector('b, i, u')).toBeNull();
+    expect(modal.querySelector('.dialog-koerper p')!.textContent).toBe(
+      'Benutzer "<img src=x onerror=alert(1)>" loeschen?',
+    );
+    abbrechen();
+  });
+
   it('entfernt den Dialog aus dem DOM, sobald er geschlossen wird', async () => {
     const promise = confirmDialog('Test');
     abbrechen();

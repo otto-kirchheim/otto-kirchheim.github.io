@@ -68,7 +68,7 @@ registerAppStartTask(() => {
 
     const localVorgabenU = Storage.get<IVorgabenU | null>('VorgabenU', { default: null });
     const displayName = actAsState.active ? storedUserName : localVorgabenU?.Pers?.Vorname || storedUserName;
-    willkommenEl.innerHTML = `Hallo, ${displayName}.`;
+    willkommenEl.textContent = `Hallo, ${displayName}.`;
   };
 
   const adminElemente = document.querySelectorAll<HTMLDivElement>('#admin');
@@ -107,7 +107,7 @@ registerAppStartTask(() => {
 
     btnLoginElemente.forEach(el => (el.hidden = true));
 
-    if (willkommenEl) willkommenEl.innerHTML = `Hallo, ${benutzer}.`;
+    if (willkommenEl) willkommenEl.textContent = `Hallo, ${benutzer}.`;
 
     const { monat, jahr } = getStoredMonatJahr();
 

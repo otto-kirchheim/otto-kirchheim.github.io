@@ -1,3 +1,4 @@
+import { escapeHtml } from '@/shared/lib/autosave/errorHandling';
 import { erzeugeDbDialog } from './dbDialog';
 
 export interface ConfirmDialogOptions {
@@ -15,8 +16,7 @@ export interface ConfirmDialogOptions {
 
 /**
  * Async-Ersatz für `window.confirm()` als DB-Drawer über einem nativen `<dialog>`. `message`, `title`
- * und Labels gehen als HTML in den Dialog (nur `\n` wird zu `<br>`), dürfen also keine
- * ungeprüften Nutzereingaben enthalten.
+ * und Labels werden HTML-maskiert (Nutzereingaben wie Benutzernamen sind damit sicher); `\n` wird zu `<br>`.
  *
  * @param message - Dialogtext.
  * @param options - Titel, Button-Beschriftungen und -Look (siehe `ConfirmDialogOptions`).
@@ -32,22 +32,22 @@ export function confirmDialog(message: string, options: ConfirmDialogOptions = {
   } = options;
 
   return new Promise<boolean>(resolve => {
-    const escapedMessage = message.replace(/\n/g, '<br>');
+    const escapedMessage = escapeHtml(message).replace(/\n/g, '<br>');
 
     let ergebnis = false;
     const { inhalt, schliessen } = erzeugeDbDialog(() => resolve(ergebnis));
 
     inhalt.innerHTML = `
       <div class="db-drawer-header">
-        <h5>${title}</h5>
+        <h5>${escapeHtml(title)}</h5>
         <button type="button" class="db-button" data-icon="cross" data-variant="ghost" data-no-text="true" data-dialog-dismiss="modal">Schließen</button>
       </div>
       <div class="dialog-koerper"><p>${escapedMessage}</p></div>
       <div class="dialog-fuss">
-        <button type="button" class="db-button" data-variant="filled" data-dialog-dismiss="modal">${cancelLabel}</button>
+        <button type="button" class="db-button" data-variant="filled" data-dialog-dismiss="modal">${escapeHtml(cancelLabel)}</button>
         <button type="button" class="db-button" data-variant="${confirmVariant}"${
           confirmColor ? ` data-color="${confirmColor}"` : ''
-        } data-confirm="true">${confirmLabel}</button>
+        } data-confirm="true">${escapeHtml(confirmLabel)}</button>
       </div>
     `;
 

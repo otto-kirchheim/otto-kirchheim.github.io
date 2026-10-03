@@ -97,7 +97,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
 
   const willkommen = document.querySelector<HTMLHeadingElement>('#Willkommen');
   if (willkommen) {
-    willkommen.innerHTML = `Hallo, ${vorgabenU.Pers.Vorname}.`;
+    willkommen.textContent = `Hallo, ${vorgabenU.Pers.Vorname}.`;
   }
 
   Storage.set('VorgabenGeld', datenGeld);
