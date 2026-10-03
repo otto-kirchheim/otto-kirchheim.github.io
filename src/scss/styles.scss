@@ -6,9 +6,10 @@
   max-inline-size: var(--db-container-2xs);
 }
 
-// Gleich breite Knoepfe einer `<DBStack>`-Reihe: feste Breite, sonst zieht der laengste Text die anderen schief.
+// Gleich breite Knoepfe einer `<DBStack>`-Reihe: feste Breite, sonst zieht der laengste Text die anderen schief. Zwei
+// Elemente plus Abstand muessen auf 360px-Handys passen (`sizing-2xl` = 10rem).
 .knopfreihe-gleich > * {
-  inline-size: var(--db-container-3xs);
+  inline-size: var(--db-sizing-2xl);
 }
 
 // Kacheln fuellen die Zeile gleichmaessig (wachsen/schrumpfen), mindestens `container-3xs` (14rem).
