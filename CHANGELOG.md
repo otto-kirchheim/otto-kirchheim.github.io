@@ -2,6 +2,16 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-03 (197)
+
+### refactor (Wertelisten und Ja/Nein-Felder des Formular-Editors je Feature, Audit-Rest)
+
+- `KatalogEintrag.werte`/`boolean`: die Werteliste von `LRE` steht im Katalog von `ber`, die sechs vorberechneten
+  Ja/Nein-Felder (`Wohnung8bis14` … `TkgStUeber24`) im Katalog von `ewt`. `datenKatalog.ts` ohne `WERTE`/`BOOLEAN_FELDER`;
+  `werteAuswahl(feld)`/`istBooleanFeld(feld)` suchen in den geladenen Admin-Anteilen, Signaturen unverändert (keine
+  Konsumenten angepasst). Ohne den Admin-Anteil von `ber`/`ewt` entfallen Werteliste bzw. Ja/Nein-Vorschlag.
+- Test `datenKatalog.test.ts`: Entfernbarkeit `ber`/`ewt`, LRE-Werte exakt.
+
 ## 2026-09-27 (196)
 
 ### refactor (Formular-Katalog und Storage-Ressourcen ohne feste Feature-Listen, Audit F/G)

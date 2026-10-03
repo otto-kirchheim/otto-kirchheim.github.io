@@ -96,6 +96,7 @@ const katalog: FeatureKatalog = {
       gruppe: 'Zeile BE',
       quelle: 'Daten.BE',
       beispiel: i => Object.values(LreType)[i % Object.values(LreType).length],
+      werte: Object.values(LreType),
     },
     { pfad: 'PrivatKm', label: 'Privat-km', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: i => 8 + i * 2 },
     // Vorberechnet (`bzAbgeleiteteWerte`/`beAbgeleiteteWerte`), je Quelle eine eigene Gruppe. Beide heißen

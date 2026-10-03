@@ -1,4 +1,4 @@
-import { LreType, ZULAGEN_CATALOG } from '@otto-kirchheim/nebengeld-shared';
+import { ZULAGEN_CATALOG } from '@otto-kirchheim/nebengeld-shared';
 import type { FormatName, Schriftfamilie, ZulageCategory } from '@otto-kirchheim/nebengeld-shared';
 import type { FeatureKatalog, FormularCode, KatalogEintrag, ListenVorlage } from './katalogTypen';
 import { getAdminFeaturesState } from '../../adminFeatures';
@@ -172,44 +172,38 @@ export function katalogZeilenFelder(formular: FormularCode, quelle?: string): Ka
 }
 
 /**
- * Bekannte Wertelisten je Zeilenfeld (Tabellen-Filter und Ankreuz-Spalten zum Ankreuzen statt Tippen).
- * Nur Felder mit fester Auswahl.
+ * Zeilenfeld-Eintrag ueber alle geladenen Formulare (Werteliste/`boolean` haengen am Feldnamen, nicht am Formular).
+ *
+ * @param feld - Zeilenfeld.
+ * @param passt - Eigenschaft, die der Eintrag tragen muss.
+ * @returns Erster passender Eintrag; ohne geladenes Feature `undefined`.
  */
-const WERTE: Record<string, string[]> = {
-  LRE: Object.values(LreType),
-};
+function zeilenFeld(feld: string, passt: (eintrag: KatalogEintrag) => boolean): KatalogEintrag | undefined {
+  for (const katalog of featureKataloge().values()) {
+    const eintrag = katalog.zeilenFelder.find(e => e.pfad === feld && passt(e));
+    if (eintrag) return eintrag;
+  }
+  return undefined;
+}
 
 /**
- * Auswählbare Werte eines Zeilenfeldes (siehe `WERTE`).
+ * Auswählbare Werte eines Zeilenfeldes (`KatalogEintrag.werte`).
  *
  * @param feld - Zeilenfeld.
  * @returns Die auswählbaren Werte; leer für Freitext-Felder.
  */
 export function werteAuswahl(feld: string): string[] {
-  return WERTE[feld] ?? [];
+  return zeilenFeld(feld, e => e.werte !== undefined)?.werte ?? [];
 }
 
 /**
- * Zeilenfelder mit echtem `boolean` (vorberechnete Ankreuz-Quellen aus `ewtAbgeleiteteWerte`): die
- * Ankreuz-Bedingung bietet Ja/Nein (`werte: [true]`/`[false]`) statt Werte-Liste/Wertebereich.
- */
-const BOOLEAN_FELDER = new Set([
-  'Wohnung8bis14',
-  'Wohnung14bis24',
-  'WohnungUeber24',
-  'BeamterUeber8Wohnung',
-  'TkgSt8bis24',
-  'TkgStUeber24',
-]);
-
-/**
- * Liefert das Feld einen echten `boolean` (siehe `BOOLEAN_FELDER`)?
+ * Liefert das Feld einen echten `boolean` (`KatalogEintrag.boolean`)?
  *
  * @param feld - Zeilenfeld.
  * @returns `true` für Felder mit echtem `boolean`-Wert.
  */
 export function istBooleanFeld(feld: string): boolean {
-  return BOOLEAN_FELDER.has(feld);
+  return zeilenFeld(feld, e => e.boolean === true) !== undefined;
 }
 
 /**

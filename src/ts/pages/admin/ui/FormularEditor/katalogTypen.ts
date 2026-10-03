@@ -29,6 +29,13 @@ export interface KatalogEintrag {
   quelle?: string;
   /** Wert für die Beispieldaten-Vorschau; ohne Angabe greift der generische Platzhalter. */
   beispiel?: BeispielWert;
+  /** Feste Werteliste (Tabellen-Filter, Ankreuz-Spalten zum Ankreuzen statt Tippen); ohne Angabe Freitext. */
+  werte?: string[];
+  /**
+   * Echter `boolean` (vorberechnete Ankreuz-Quellen): die Ankreuz-Bedingung bietet Ja/Nein (`werte: [true]`/`[false]`)
+   * statt Werte-Liste/Wertebereich.
+   */
+  boolean?: true;
 }
 
 /**

@@ -203,7 +203,7 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
   - [x] Tests: Registry (`fehlende`), Helfer, `featureAbnahme` (ohne `ewt`: `benoetigt`-Ids, Add-Modal manuell, kein EWT-Select), `createAddModalEA.test.tsx` anpassen
   - [x] Doku (`CLAUDE.md` Feature-Contract), CHANGELOG 189; Gate: typecheck 0, lint 0, Tests 2296/2296, format, build i.o. (2026-09-26)
   - [ ] Browser-Check (User): `ewt`-Zeile in `app/features.ts` entfernen → Zulagen/EA ohne Zuordnung nutzbar, "Hinzufügen" in Zulagen öffnet manuelle Zeile
-- [ ] Feature-Logik nur bei den Features (Audit 2026-09-26; Feature-Code, der noch in `shared`/`pages`/`app` liegt).
+- [x] Feature-Logik nur bei den Features (Audit 2026-09-26; Feature-Code, der noch in `shared`/`pages`/`app` liegt).
       Schritt A (Punkte 1-5, ein Zug, mechanisch) -- Budget: L (viele Dateien, kein Verhaltenswechsel)
   - [x] A1 `shared/lib/ressource/fieldMapper.ts`: `bz/be/ewt/nebengeld/ea` `From`/`ToBackend` + `Backend*`-Typen -> je `features/<id>/model/backendMapper.ts`; User-/Vorgaben-/Arbeitszeit-Mapping bleibt (`nebengeldZulagen` zieht mit nach `features/ez`, falls kein anderer Nutzer)
   - [x] A2 `shared/api/dataApi.ts`: `bereitschaftszeitraumApi`/`bereitschaftseinsatzApi`/`ewtApi`/`nebengeldApi`/`eaApi` -> je `features/<id>/model/api.ts`; `profileApi`/`vorgabenApi`/`loadAllYearData` bleiben (Jahres-Laden geht ueber `meta.resources[].api`); Ressourcennamen-Union in `apiFetchHelper.ts` pruefen
@@ -270,6 +270,10 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
     F: `AdminFeature.formular.katalog`, `datenKatalog.ts` ohne Feature-Importe (`zeilenQuellen()`/`listenVorlagen()`/
     `vorlagenKategorie()` statt Konstanten), `FormularCode = string`. Nicht angefasst: `WERTE` (LRE) und
     `BOOLEAN_FELDER` (EWT) in `datenKatalog.ts` -- ebenfalls Feature-Wissen, Kandidat fuer `FeatureKatalog`.
+  - [x] H `WERTE` (LRE) und `BOOLEAN_FELDER` (EWT) aus `datenKatalog.ts` in die Feature-Kataloge (`KatalogEintrag.werte`/
+        `boolean`; `werteAuswahl`/`istBooleanFeld` mit unveraenderter Signatur ueber die geladenen Admin-Anteile).
+        Stand 2026-10-03: Tests 2324/2324 (+1 Entfernbarkeit ber/ewt), typecheck/lint/build 0, format; CHANGELOG 197.
+        Browser-Check offen (Dev-Server lief nicht): Formular-Editor, Bedingung auf `LRE` (Checkboxen) und `Wohnung8bis14` (Ja/Nein).
   - Bewusst in shared (Audit): `resolveSchichtDay`/`arbeitszeit-editor`, `zulagenCatalog`, `berechnungWerte`/`-Bausteine`, `confirmDeleteAllRows`, `resourceApi`, `createDatenGetter`, ewt-Zugriff fuer ez/ea (`getEwtDaten`, `getEwtDatenFuerZuordnung`, `syncFieldsFromEwtRows`, `unlinkEwtRefs`, Events `ewt:*`)
 - [ ] DB UX 5.6 neue Komponenten einbauen (Hinweis User 2026-09-26, nach Update auf 5.6.0, CHANGELOG 191):
   - [ ] `DBDialog`/`DBDialogHeader`/`DBDialogFooter` (nativer, zentrierter `<dialog>`, `backdrop`, `containerSize`,

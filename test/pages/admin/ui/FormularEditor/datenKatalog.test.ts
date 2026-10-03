@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from 'bun:test';
-import { ZulageCategory } from '@otto-kirchheim/nebengeld-shared';
+import { LreType, ZulageCategory } from '@otto-kirchheim/nebengeld-shared';
 import {
   beispielWert,
   gruppiere,
@@ -108,6 +108,22 @@ describe('datenKatalog: Zusammenfuehrung der Feature-Beitraege', () => {
     await ladeAdminFeatures();
   });
 
+  it('Entfernbarkeit: Werteliste (LRE, ber) und Ja/Nein-Felder (ewt) kommen aus dem Katalog ihres Features', async () => {
+    const original = featureRegistry.metas.bind(featureRegistry);
+    const spion = vi
+      .spyOn(featureRegistry, 'metas')
+      .mockImplementation(() => original().filter(meta => meta.id !== 'ber' && meta.id !== 'ewt'));
+    resetAdminFeatures();
+    await ladeAdminFeatures();
+
+    expect(werteAuswahl('LRE')).toEqual([]);
+    expect(istBooleanFeld('Wohnung8bis14')).toBe(false);
+
+    spion.mockRestore();
+    resetAdminFeatures();
+    await ladeAdminFeatures();
+  });
+
   it('beispielWert findet formular- und quellenspezifische Beispiele', () => {
     expect(beispielWert('bereitschaft', 'Bereitschaftszulage.TarifBeamter', 0)).toBe('Tarifkraft');
     expect(beispielWert('ez', 'Bereitschaftszulage.TarifBeamter', 0)).toBeUndefined();
@@ -117,7 +133,7 @@ describe('datenKatalog: Zusammenfuehrung der Feature-Beitraege', () => {
   });
 
   it('werteAuswahl/istBooleanFeld/gruppiere bleiben unveraendert', () => {
-    expect(werteAuswahl('LRE').length).toBeGreaterThan(0);
+    expect(werteAuswahl('LRE')).toEqual(Object.values(LreType));
     expect(werteAuswahl('unbekannt')).toEqual([]);
     expect(istBooleanFeld('Wohnung8bis14')).toBe(true);
     expect(istBooleanFeld('Buchungstag')).toBe(false);
