@@ -180,4 +180,20 @@ describe('initPullToRefresh', () => {
 
     expect(transformBeimZiehen).toBe('');
   });
+
+  it('ignoriert Beruehrungen in einem offenen Dialog (der <dialog> haengt im Container)', () => {
+    container().innerHTML = '<dialog open><div id="im-dialog">Inhalt</div></dialog>';
+    const ziel = document.querySelector<HTMLElement>('#im-dialog')!;
+    const feuere = (typ: string, y: number): void => {
+      const punkt = new Touch({ identifier: 1, target: ziel, clientX: 100, clientY: y });
+      ziel.dispatchEvent(
+        new TouchEvent(typ, { bubbles: true, cancelable: true, touches: [punkt], changedTouches: [punkt] }),
+      );
+    };
+
+    feuere('touchstart', 100);
+    feuere('touchmove', 100 + AUSLOESE_DISTANZ_PX * 2);
+
+    expect(container().style.transform).toBe('');
+  });
 });

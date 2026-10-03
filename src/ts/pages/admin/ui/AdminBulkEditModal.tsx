@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 
+import MyDialogFooter from '@/shared/ui/modal/MyDialogFooter';
 import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import MyDivModal from '@/shared/ui/modal/MyDivModal';
 import MyModalBody from '@/shared/ui/modal/MyModalBody';
@@ -343,7 +344,7 @@ export function AdminBulkEditModal({
   }
 
   const footer = (
-    <div className="dialog-fuss">
+    <MyDialogFooter>
       {step === 'preview' && (
         <DBButton type="button" variant="outlined" disabled={busy} onClick={() => setStep('form')}>
           Zurück
@@ -373,7 +374,7 @@ export function AdminBulkEditModal({
           Fertig
         </DBButton>
       )}
-    </div>
+    </MyDialogFooter>
   );
 
   return (

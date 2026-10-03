@@ -1,9 +1,10 @@
 import { useState } from 'react';
 
+import MyDialogFooter from '@/shared/ui/modal/MyDialogFooter';
 import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { DbFeld } from '@/shared/ui/form/DbFeld';
-import MyModalHeader from '@/shared/ui/modal/MyModalHeader';
+import MyDivModal from '@/shared/ui/modal/MyDivModal';
 import { DBButton, DBLoadingIndicator, DBStack } from '@db-ux/react-core-components';
 import { issueVerificationLink, issuePasswordResetLink, type AdminIssuedLink } from '../api/api';
 
@@ -206,8 +207,16 @@ export function AdminUserLinksModal({
   emailVerified: boolean;
 }) {
   return (
-    <div className="dialog-rumpf">
-      <MyModalHeader title={`Login-Hilfe: ${userName}`} />
+    <MyDivModal
+      title={`Login-Hilfe: ${userName}`}
+      Footer={
+        <MyDialogFooter>
+          <DBButton variant="filled" type="button" data-dialog-dismiss="modal">
+            Schließen
+          </DBButton>
+        </MyDialogFooter>
+      }
+    >
       <div className="dialog-koerper">
         <p className="zelle-klein farbe-gedaempft">
           Die Links werden nur einmal angezeigt und nicht gespeichert. Bitte per DB-Mail oder Teams an den Benutzer
@@ -221,11 +230,6 @@ export function AdminUserLinksModal({
         />
         <LinkSection kind="reset" userId={userId} userName={userName} />
       </div>
-      <div className="dialog-fuss">
-        <DBButton variant="filled" type="button" data-dialog-dismiss="modal">
-          Schließen
-        </DBButton>
-      </div>
-    </div>
+    </MyDivModal>
   );
 }

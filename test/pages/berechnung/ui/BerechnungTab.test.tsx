@@ -23,7 +23,7 @@ describe('BerechnungTab: Hilfe-Knopf', () => {
     container.querySelector<HTMLButtonElement>('#btnHelpBerechnung')!.click();
     await tick();
 
-    const modal = document.body.querySelector<HTMLDialogElement>('dialog.db-drawer');
+    const modal = document.body.querySelector<HTMLDialogElement>('dialog.db-dialog');
     expect(modal).not.toBeNull();
     expect(modal?.textContent).toContain('Berechnung');
     expect(modal?.textContent).toContain('Monatsfenster');

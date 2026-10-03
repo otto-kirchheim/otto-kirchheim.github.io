@@ -2,6 +2,16 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-03 (212)
+
+### refactor (`DBDialog` fuer Add-/Editor-/Show-Dialoge)
+
+- `MyFormModal`/`MyDivModal` rendern einen zentrierten `DBDialog` (Header-/Footer-Slot) statt im `DBDrawer`: `MyModalHeader` ist ein `DBDialogHeader` (Titel, Hilfe-Knopf im `endSlot`, Schliessen-Knopf; `aria-labelledby` macht DB), Fusszeilen sind `DBDialogFooter` (`MyEditorFooter`, `MyShowFooter`, neu `MyDialogFooter` fuer eigene Footer). Formular-Dialoge liegen als `<form><dialog>`, damit Submit-Knoepfe in den Slots zum Formular gehoeren. Neu: `MyDialog`, `DialogKontext` (liefert `onClose` und `vollbild`), `oeffneDialog` in `showModal.tsx`. Auch Login, Passwort-Dialoge, Hilfe, Massenaenderung und Login-Hilfe laufen so.
+- Unter `sm` (Handy) oeffnet statt des Dialogs ein nativer Vollbild-`DBDrawer` (`containerSize="full"`; Header/Footer per `DialogKontext` als `DBDrawerHeader`/`DBDrawerFooter`), ab `sm` der zentrierte `DBDialog` (Breite ueber `TMyModal.size`: `lg` = `large`, `xl` = `full`, 8px Randabstand). Die Wahl faellt einmal beim Oeffnen. Alle Fusszeilen (`db-dialog-footer`, `db-drawer-footer`, `.dialog-fuss`) stehen einheitlich als Zeile, gleichmaessig verteilt.
+- Weiterhin `DBDrawer`: Impressum, Schriftart-Dialog, Admin-Bearbeiten-Dialoge (Ressource, Profil), Platzhalter-Hilfe; HTML-Dialoge (`confirmDialog`, `signaturDialog`, `errorHandling`) bleiben Vanilla-Drawer.
+- Pull-to-Refresh startet nicht mehr in offenen Dialogen/Drawern (`touchstart` im `dialog[open]` wird ignoriert).
+- Livetest um Dialog-Pruefungen (Fokus, Abbrechen, Escape, Schliessen-Knopf) erweitert (50/50).
+
 ## 2026-10-03 (211)
 
 ### refactor (`DBLoadingIndicator` statt eigener Ladeanzeigen)

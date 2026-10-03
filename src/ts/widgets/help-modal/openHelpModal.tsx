@@ -1,7 +1,7 @@
 import { unmount } from '@/shared/lib/react-root/reactRoot';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 
-import { oeffneDrawer } from '@/shared/ui/modal/showModal';
+import { oeffneDialog } from '@/shared/ui/modal/showModal';
 import MyHelpModal from './MyHelpModal';
 import { getHelpContent, type HelpContent, type HelpContextKey } from '@/shared/lib/help/helpContent';
 
@@ -36,7 +36,7 @@ export async function openHelpModal(key: HelpContextKey): Promise<void> {
   const container = document.createElement('div');
   document.body.appendChild(container);
 
-  oeffneDrawer(container, <MyHelpModal content={content} />, () => {
+  oeffneDialog(container, <MyHelpModal content={content} />, () => {
     unmount(container);
     container.remove();
   });

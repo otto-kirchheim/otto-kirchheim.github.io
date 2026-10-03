@@ -14,8 +14,8 @@ describe('MyModalHeader', () => {
   it('renders title and close button without a help trigger by default', () => {
     const container = renderMyModalHeader({ title: 'Test Titel' });
 
-    expect(container.querySelector('.db-drawer-header h2')?.textContent).toBe('Test Titel');
-    expect(container.querySelector('[data-action="close"]')).not.toBeNull();
+    expect(container.querySelector('.db-dialog-header h2')?.textContent).toBe('Test Titel');
+    expect(container.querySelector('[data-dialog-close-button]')).not.toBeNull();
     expect(container.querySelector('[data-icon="question_mark_circle"]')).toBeNull();
   });
 
@@ -35,11 +35,8 @@ describe('MyModalHeader', () => {
     render(<MyModalHeader title="Test Titel" />, container);
     for (let i = 0; i < 5; i++) await new Promise(resolve => setTimeout(resolve, 0));
 
-    const h2 = container.querySelector('h2')!;
-    expect(h2.id).not.toBe('');
-    expect(dialog.getAttribute('aria-labelledby')).toBe(h2.id);
-
-    render(null, container);
-    expect(dialog.getAttribute('aria-labelledby')).toBeNull();
+    const ueberschrift = container.querySelector('.db-dialog-header-content')!;
+    expect(ueberschrift.id).not.toBe('');
+    expect(dialog.getAttribute('aria-labelledby')).toBe(ueberschrift.id);
   });
 });

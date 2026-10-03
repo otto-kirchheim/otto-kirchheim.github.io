@@ -1300,6 +1300,22 @@ body,
   --db-drawer-max-width: 64rem;
 }
 
+// Breitenstufen: die Vorgabe steht am `<dialog>`, der Rumpf liegt darin -- `:has()` hebt sie hoch, damit der Dialog-Inhalt seine
+// Breite selbst mitbringen kann (`TMyModal.size`).
+.db-drawer:has([data-breite='lg']) {
+  --db-drawer-max-width: 48rem;
+}
+
+.db-drawer:has([data-breite='xl']) {
+  --db-drawer-max-width: 64rem;
+}
+
+// Dialoge: kleiner Randabstand (DB-Standard 40px liesse Formulare zu schmal); auf dem Handy oeffnet stattdessen ein
+// Vollbild-`DBDrawer` (`MyDialog`).
+.db-dialog {
+  --db-dialog-viewport-inset: var(--db-spacing-fixed-xs);
+}
+
 // Rumpf, Kopf, Koerper und Fusszeile eines Dialogs: nur die innere Gliederung.
 .dialog-rumpf {
   display: flex;
@@ -1340,6 +1356,15 @@ body,
 
 .schriftwahl-zeile {
   display: contents;
+}
+
+// Fusszeilen aller Dialoge/Drawer einheitlich: Knoepfe nebeneinander, gleichmaessig verteilt (DB-Standard waere beim Drawer eine
+// Spalte, beim Dialog rechtsbuendig). Der Login-Dialog baut seine Fusszeile selbst auf (`.login-fuss`).
+.db-drawer-footer:not(.login-fuss),
+.db-dialog-footer:not(.login-fuss) {
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: space-evenly;
 }
 
 .dialog-fuss {

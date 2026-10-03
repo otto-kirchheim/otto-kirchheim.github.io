@@ -1,4 +1,5 @@
 import { DBButton } from '@db-ux/react-core-components';
+import MyDialogFooter from '@/shared/ui/modal/MyDialogFooter';
 import type { CustomTableTypes, Row } from '@/shared/ui/custom-table/CustomTable';
 
 /**
@@ -21,7 +22,7 @@ function MyShowFooter<T extends CustomTableTypes>({ row }: { row: Row<T> }) {
   };
 
   return (
-    <div className="dialog-fuss">
+    <MyDialogFooter>
       {/* Farb-Konvention: Primaeraktion = `brand`, destruktiv = `outlined`+`critical`
           (weniger Gewicht als die Primaeraktion), neutral/schliessen = `filled`. */}
       <DBButton type="button" variant="brand" data-dialog-dismiss="modal" onClick={editClickHandler}>
@@ -39,7 +40,7 @@ function MyShowFooter<T extends CustomTableTypes>({ row }: { row: Row<T> }) {
       <DBButton type="button" variant="filled" data-dialog-dismiss="modal">
         Schließen
       </DBButton>
-    </div>
+    </MyDialogFooter>
   );
 }
 export default MyShowFooter;

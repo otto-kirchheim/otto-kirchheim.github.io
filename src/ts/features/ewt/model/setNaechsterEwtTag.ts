@@ -41,7 +41,9 @@ export default function setNaechsterEwtTag(
 
   if (vorhandeneTage.size >= letzterTag) {
     document
-      .querySelector<HTMLButtonElement>('#modal .dialog-fuss > button[data-variant="brand"]')
+      .querySelector<HTMLButtonElement>(
+        '#modal :is(.db-dialog-footer, .db-drawer-footer) > button[data-variant="brand"]',
+      )
       ?.setAttribute('disabled', 'true');
     showAllDaysOccupiedMessage();
     throw new Error('Alle Tage im Monat sind bereits belegt');
@@ -56,7 +58,7 @@ export default function setNaechsterEwtTag(
   }
 
   document
-    .querySelector<HTMLButtonElement>('#modal .dialog-fuss > button[data-variant="brand"]')
+    .querySelector<HTMLButtonElement>('#modal :is(.db-dialog-footer, .db-drawer-footer) > button[data-variant="brand"]')
     ?.setAttribute('disabled', 'true');
   showAllDaysOccupiedMessage();
   throw new Error('Fehler beim Finden eines Freien Tages');

@@ -96,6 +96,9 @@ export default function initPullToRefresh(): void {
       // Nur aus der Ruhelage am oberen Rand und nur einfingrig -- sonst ist es ein normales
       // Scrollen oder eine Zoom-/Mehrfingergeste.
       if (event.touches.length !== 1 || container.scrollTop > 0) return;
+      // Beruehrungen in einem offenen Dialog/Drawer bubblen durch den Container (der `<dialog>` haengt im DOM darin),
+      // gehoeren aber dem Dialog -- dort darf nichts neu laden.
+      if (event.target instanceof Element && event.target.closest('dialog[open]')) return;
       const beruehrung = event.touches[0]!;
       startY = beruehrung.clientY;
       startX = beruehrung.clientX;

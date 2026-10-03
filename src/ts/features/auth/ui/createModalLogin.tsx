@@ -1,4 +1,5 @@
 import { DBButton, DBDivider, DBInfotext, DBStack } from '@db-ux/react-core-components';
+import MyDialogFooter from '@/shared/ui/modal/MyDialogFooter';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import { createRef, type SubmitEvent } from 'react';
 
@@ -23,7 +24,7 @@ export default function createModalLogin(): void {
   const supportsPasskeys = browserSupportsWebAuthn();
 
   const footer = (
-    <div className="dialog-fuss login-fuss">
+    <MyDialogFooter className="login-fuss">
       <DBStack direction="row" justifyContent="center" className="login-fuss__bereich login-fuss__bereich--oben">
         <DBLoadingButton variant="brand" type="submit" id="btnLoginModal">
           Einloggen
@@ -85,7 +86,7 @@ export default function createModalLogin(): void {
           </DBButton>
         </DBStack>
       </DBStack>
-    </div>
+    </MyDialogFooter>
   );
 
   const modal = showModal(

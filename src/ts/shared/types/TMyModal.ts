@@ -6,8 +6,8 @@ export type TMyModal<T> = {
   title: string;
   helpContext?: HelpContextKey;
   /**
-   * Breite des Dialogs. Ohne Angabe 36 rem; `lg` 48 rem, `xl` 64 rem. Auf schmalen Geraeten
-   * fuellt der Drawer ohnehin die volle Breite, deshalb gibt es keine Fullscreen-Stufen mehr.
+   * Breite des Dialogs (`DBDialog` `containerSize`): ohne Angabe `medium`, `lg` = `large`, `xl` = `full`. Auf dem Handy
+   * oeffnet statt des Dialogs ein Vollbild-`DBDrawer`.
    */
   size?: 'lg' | 'xl';
   submitText?: string;

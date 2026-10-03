@@ -1,12 +1,15 @@
 import { DBDrawer } from '@db-ux/react-core-components';
 import { type ReactNode } from 'react';
 import { mount, unmount } from '@/shared/lib/react-root/reactRoot';
+import { BREAKPOINTS } from '@/shared/ui/custom-table/breakpoints';
+import { DialogKontext } from '@/shared/ui/modal/DialogKontext';
 
 import type { CustomHTMLDivElement } from '@/types';
 import type { CustomTableTypes } from '@/shared/ui/custom-table/CustomTable';
 
 /**
- * Dialoge laufen ueber `DBDrawer` (DB UX v5 hat keine Modal-Komponente). Er baut auf nativem
+ * Dialoge laufen ueber `DBDialog` (zentriert ab `sm`) bzw. `DBDrawer` (Vollbild auf dem Handy, Seitenleiste fuer freie Inhalte,
+ * `oeffneDrawer`). Beide bauen auf nativem
  * `<dialog>`: Escape, Backdrop-Klick, Fokus-Falle und Scroll-Sperre kommen vom Browser.
  *
  * Vertrag der Aufrufstellen: `showModal(children)` gibt `#modal` synchron zurueck, `#modal.row`
@@ -71,6 +74,25 @@ export function oeffneDrawer(container: HTMLElement, inhalt: ReactNode, beimSchl
   );
 }
 
+/**
+ * Oeffnet einen Dialog in `container` und merkt sich `beimSchliessen` fuer `data-dialog-dismiss`. Der Inhalt bringt seine
+ * Huelle mit (`MyDialog`: `DBDialog`, auf dem Handy ein Vollbild-`DBDrawer`; Breite ueber `TMyModal.size`).
+ *
+ * @param container - Element, in das der Dialog gemountet wird.
+ * @param inhalt - Dialog-Inhalt (Header, Body, Footer).
+ * @param beimSchliessen - Wird beim Schliessen des Dialogs und bei `data-dialog-dismiss` aufgerufen.
+ */
+export function oeffneDialog(container: HTMLElement, inhalt: ReactNode, beimSchliessen: () => void): void {
+  schliesser.set(container, beimSchliessen);
+  // Den `DBDialog` selbst rendert `MyDialog` (Header-/Footer-Slot); der Kontext liefert ihm das Schliessen.
+  // Handy-Breite (unter `sm`): statt des zentrierten Dialogs oeffnet ein Vollbild-Drawer. Einmal beim Oeffnen entschieden.
+  const vollbild = window.matchMedia?.(`(max-width: ${BREAKPOINTS.sm - 0.05}px)`)?.matches ?? false;
+  mount(
+    container,
+    <DialogKontext.Provider value={{ schliessen: beimSchliessen, vollbild }}>{inhalt}</DialogKontext.Provider>,
+  );
+}
+
 /** Schliesst den geteilten Dialog (`#modal`), falls einer offen ist: Aufraeumer, Unmount, Reset. */
 export function schliesseModal(): void {
   const modal = document.querySelector<CustomHTMLDivElement<CustomTableTypes>>('#modal');
@@ -117,7 +139,7 @@ export default function showModal<T extends CustomTableTypes>(children: ReactNod
   }
   if (modal.row !== null || modal.childElementCount > 0) zuruecksetzen(modal);
 
-  oeffneDrawer(modal, children, schliesseModal);
+  oeffneDialog(modal, children, schliesseModal);
 
   return modal;
 }
@@ -126,7 +148,9 @@ export default function showModal<T extends CustomTableTypes>(children: ReactNod
 // Dokument erfasst auch gestapelte Dialoge und spaeter nachgerenderte Schaltflaechen.
 document.addEventListener('click', event => {
   const knopf = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-dialog-dismiss="modal"]');
-  const container = knopf?.closest<HTMLElement>('.db-drawer')?.parentElement;
+  // Der Dialog liegt nicht immer direkt im Container (Formular-Dialoge: `<form><dialog>`): bis zum registrierten Container hochgehen.
+  let container = knopf?.closest<HTMLElement>('.db-drawer, .db-dialog')?.parentElement ?? null;
+  while (container && !schliesser.has(container)) container = container.parentElement;
   const schliessen = container ? schliesser.get(container) : undefined;
   if (!schliessen) return;
 

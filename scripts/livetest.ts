@@ -294,6 +294,33 @@ try {
   // Urspruenglichen Wert wiederherstellen (Backend-Modus: Profil des Testbenutzers).
   check('Ursprungswert wiederhergestellt', await speichereEntgeltgruppe(alt));
 
+  // 5b. Dialoge: Fokus, Abbrechen im Footer, Escape, Schliessen-Knopf im Kopf
+  console.log('5b. Dialoge');
+  await page.evaluate(() => (document.querySelector('[data-tab-target="Bereitschaft"]') as HTMLElement | null)?.click());
+  const dialogOffen = (): Promise<boolean> => page.evaluate(() => Boolean(document.querySelector('#modal dialog[open]')));
+  const oeffneDialog = async (): Promise<boolean> => {
+    await page.evaluate(() => (document.querySelector('#btnESZ') as HTMLElement | null)?.click());
+    return warteBis(page, () => Boolean(document.querySelector('#modal dialog[open]')), '', 5000);
+  };
+  const dialogZu = (): Promise<boolean> => warteBis(page, () => !document.querySelector('#modal dialog[open]'), '', 3000);
+  check('Dialog oeffnet', await oeffneDialog());
+  check(
+    'Dialog: Fokus nicht auf einem Knopf im Kopf (kein offener Tooltip)',
+    await page.evaluate(() => !document.activeElement?.closest('.db-dialog-header, .db-drawer-header')),
+  );
+  await page.evaluate(() =>
+    (document.querySelector('#modal .db-dialog-footer [data-dialog-dismiss="modal"]') as HTMLElement | null)?.click(),
+  );
+  check('Dialog: "Abbrechen" im Footer schliesst', await dialogZu(), await dialogOffen());
+  await oeffneDialog();
+  await page.keyboard.press('Escape');
+  check('Dialog: Escape schliesst', await dialogZu(), await dialogOffen());
+  await oeffneDialog();
+  await page.evaluate(() =>
+    (document.querySelector('#modal .db-dialog-header [data-dialog-close-button]') as HTMLElement | null)?.click(),
+  );
+  check('Dialog: Schliessen-Knopf im Kopf schliesst', await dialogZu(), await dialogOffen());
+
   // 6. Admin: Profil-Vorlagen mit Feature-Abschnitten (nur Fake-Backend, dort ist der Benutzer Team-Admin)
   if (backend.gespeicherteVorlage) {
     console.log('6. Admin: Profil-Vorlagen');

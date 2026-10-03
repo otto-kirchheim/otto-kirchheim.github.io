@@ -1,4 +1,5 @@
 import { DBButton, DBHeadingH6, DBInfotext, DBStack } from '@db-ux/react-core-components';
+import MyDialogFooter from '@/shared/ui/modal/MyDialogFooter';
 import { type FC } from 'react';
 
 import type { HelpContent } from '@/shared/lib/help/helpContent';
@@ -16,11 +17,11 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
   <MyDivModal
     title={content.title}
     Footer={
-      <div className="dialog-fuss">
+      <MyDialogFooter>
         <DBButton type="button" variant="filled" data-dialog-dismiss="modal">
           Schließen
         </DBButton>
-      </div>
+      </MyDialogFooter>
     }
   >
     <MyModalBody className="hilfe-inhalt">

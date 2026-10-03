@@ -4,7 +4,7 @@ import '@/app/features';
 import { openHelpModal } from '@/widgets/help-modal/openHelpModal';
 
 function getModalEl() {
-  return document.body.querySelector<HTMLDialogElement>('dialog.db-drawer');
+  return document.body.querySelector<HTMLDialogElement>('dialog.db-dialog');
 }
 
 describe('openHelpModal', () => {
