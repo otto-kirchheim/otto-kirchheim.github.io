@@ -91,7 +91,7 @@ describe('AdminLogBrowser', () => {
     await flush();
 
     expect(container.textContent).toContain('Max Mustermann');
-    expect(container.querySelector('code.text-muted')?.textContent).toBe('…id-12345');
+    expect(container.querySelector('code.farbe-gedaempft')?.textContent).toBe('…id-12345');
   });
 
   it('zeigt eine gekürzte Ressourcen-ID', async () => {

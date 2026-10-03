@@ -2,7 +2,16 @@ import { useState } from 'react';
 
 import dayjs from '@/shared/lib/date/configDayjs';
 import { triggerAdminHeapSnapshot, type MetricPoint, type HeapData } from '../api/api';
-import { DBButton, DBCard, DBCheckbox, DBHeadingH6, DBTag, DBTooltip } from '@db-ux/react-core-components';
+import {
+  DBButton,
+  DBCard,
+  DBCheckbox,
+  DBHeadingH6,
+  DBInfotext,
+  DBStack,
+  DBTag,
+  DBTooltip,
+} from '@db-ux/react-core-components';
 import { DbAuswahl } from '@/shared/ui/form/DbFeld';
 import { formatUptime } from '../model/formatUptime';
 
@@ -45,7 +54,11 @@ function MemorySparkline({
   const filtered = history.filter(p => p.environment && visibleEnvironments.has(p.environment));
 
   if (filtered.length < 2) {
-    return <div className="text-body-secondary small py-3 text-center">Noch keine Verlaufsdaten</div>;
+    return (
+      <DBInfotext showIcon={false} className="infotext-block admin-leer">
+        Noch keine Verlaufsdaten
+      </DBInfotext>
+    );
   }
 
   const W = 400,
@@ -322,18 +335,17 @@ export function MemoryCard({
   const lastSnap = (heap?.history.length ?? 0) > 0 ? heap!.history[heap!.history.length - 1] : null;
 
   return (
-    <DBCard className="border-0 shadow-sm">
+    <DBCard className="admin-karte admin-karte--auto">
       {/* ── Header ── */}
-      <div className="d-flex align-items-center justify-content-between mb-2 gap-2">
-        <DBHeadingH6 className="fw-semibold mb-0 text-nowrap">
-          <span className="db-icon me-1 db-font-size-sm" data-icon="pulse_wave" style={{ verticalAlign: 'middle' }} />
+      <DBStack direction="row" alignment="center" justifyContent="space-between" gap="x-small" className="admin-kopf">
+        <DBHeadingH6 className="nowrap">
+          <span className="db-icon db-font-size-sm symbol-vor-text" data-icon="pulse_wave" />
           Memory-Verlauf
         </DBHeadingH6>
-        <div className="d-flex gap-2 flex-shrink-0">
+        <DBStack direction="row" gap="x-small" className="nicht-schrumpfen">
           <DbAuswahl
             beschriftung="Zeitraum des Memory-Verlaufs"
             dicht
-            className="w-auto"
             value={days}
             disabled={loading}
             title="Zeitraum des Memory-Verlaufs"
@@ -370,11 +382,11 @@ export function MemoryCard({
           >
             <DBTooltip>Aktualisieren</DBTooltip>
           </DBButton>
-        </div>
-      </div>
+        </DBStack>
+      </DBStack>
 
       {/* ── Environment Toggles ── */}
-      <div className="mb-2 d-flex gap-2" style={{ fontSize: '.85rem' }}>
+      <DBStack direction="row" gap="x-small" className="admin-kopf">
         <DBCheckbox size="small" checked={visibleEnvironments.has('gcp')} onChange={() => toggleEnvironment('gcp')}>
           <span
             style={{
@@ -405,29 +417,26 @@ export function MemoryCard({
           />
           HomeServer
         </DBCheckbox>
-      </div>
+      </DBStack>
 
       {loading && !heap ? (
-        <div className="text-center py-3">
-          <span className="laedt text-primary" data-size="small" />
+        <div className="admin-laden admin-laden--klein">
+          <span className="laedt farbe-primary" data-size="small" />
         </div>
       ) : (
         <>
           {/* ── Aktuelle Werte – eine kompakte Zeile ── */}
           {cur && (
-            <div className="small text-body-secondary mb-2">
-              <div className="mb-1">
+            <div className="heap-aktuell">
+              <div className="heap-aktuell__umgebung">
                 {cur.environment && (
                   <DBTag style={{ backgroundColor: ENV_COLORS[cur.environment] }}>{ENV_LABELS[cur.environment]}</DBTag>
                 )}
               </div>
-              <p className="mb-0">
-                <span className="fw-semibold text-primary">Heap</span> {cur.heapUsed}/{cur.heapTotal} MB
+              <p>
+                <strong className="farbe-primary">Heap</strong> {cur.heapUsed}/{cur.heapTotal} MB
                 {' · '}
-                <span className="fw-semibold" style={{ color: 'var(--db-warning-origin-default)' }}>
-                  RSS
-                </span>{' '}
-                {cur.rss} MB
+                <strong style={{ color: 'var(--db-warning-origin-default)' }}>RSS</strong> {cur.rss} MB
                 {' · '}Extern {cur.external} MB
                 {lastSnap && (
                   <>
@@ -443,8 +452,11 @@ export function MemoryCard({
           <MemorySparkline history={heap?.history ?? []} visibleEnvironments={visibleEnvironments} />
 
           {/* ── Legende ── */}
-          <div
-            className="d-flex gap-2 mt-1 flex-wrap"
+          <DBStack
+            direction="row"
+            gap="x-small"
+            wrap
+            className="heap-legende"
             style={{ fontSize: '.72rem', color: 'var(--db-adaptive-on-bg-basic-emphasis-70-default)' }}
           >
             {(
@@ -458,7 +470,7 @@ export function MemoryCard({
                 ['var(--db-critical-origin-default)', true, 'Shutdown'],
               ] as [string, boolean, string, boolean?][]
             ).map(([color, dashed, label, reduced]) => (
-              <span key={label} className="d-flex align-items-center gap-1">
+              <span key={label} className="heap-legende__eintrag">
                 <span
                   style={{
                     width: '14px',
@@ -473,37 +485,39 @@ export function MemoryCard({
                 {label}
               </span>
             ))}
-          </div>
+          </DBStack>
 
           {/* ── Ereignisse ── */}
           {history.length > 0 && (
-            <div className="mt-2 pt-2 border-top">
-              <div className="small text-body-secondary mb-1">Ereignisse ({history.length}):</div>
-              <ul className="list-unstyled mb-0">
+            <div className="heap-ereignisse">
+              <DBInfotext showIcon={false} className="infotext-block">
+                Ereignisse ({history.length}):
+              </DBInfotext>
+              <ul className="trennliste">
                 {pagedEvents.map((p, i) => {
                   const icon = p.event === 'startup' ? 'start' : p.event === 'shutdown' ? 'stop' : 'line_chart';
                   const ts = dayjs(p.timestamp).format('DD.MM., HH:mm');
                   return (
-                    <li key={i} className="py-1 border-bottom">
-                      <div className="d-flex align-items-center gap-2">
+                    <li key={i} className="heap-ereignis">
+                      <DBStack direction="row" alignment="center" gap="x-small">
                         <span
-                          className="db-icon flex-shrink-0 db-font-size-xs"
+                          className="db-icon nicht-schrumpfen db-font-size-xs"
                           data-icon={icon}
                           style={{ color: EVENT_COLORS[p.event] }}
                         />
-                        <span className="small fw-medium" style={{ color: EVENT_COLORS[p.event] }}>
+                        <strong className="heap-ereignis__name" style={{ color: EVENT_COLORS[p.event] }}>
                           {EVENT_LABELS[p.event]}
-                        </span>
+                        </strong>
                         {p.environment && (
                           <DBTag
-                            className="ms-auto"
+                            className="knopf-rechts"
                             style={{ backgroundColor: ENV_COLORS[p.environment], fontSize: '.7rem' }}
                           >
                             {ENV_LABELS[p.environment].split(' ')[0]}
                           </DBTag>
                         )}
-                      </div>
-                      <div className="text-body-secondary" style={{ fontSize: '.72rem', paddingLeft: '1.6rem' }}>
+                      </DBStack>
+                      <div className="heap-ereignis__meta">
                         {ts} · {p.rss} MB RSS · {p.heapUsed} MB Heap
                       </div>
                     </li>
@@ -511,10 +525,9 @@ export function MemoryCard({
                 })}
               </ul>
               {eventPageCount > 1 && (
-                <div className="d-flex align-items-center justify-content-between mt-2" style={{ fontSize: '.75rem' }}>
+                <DBStack direction="row" alignment="center" justifyContent="space-between" className="heap-seiten">
                   <DBButton
                     type="button"
-                    className="p-0 text-body-secondary"
                     variant="ghost"
                     size="small"
                     icon="chevron_left"
@@ -524,12 +537,11 @@ export function MemoryCard({
                   >
                     <DBTooltip>Vorherige Seite</DBTooltip>
                   </DBButton>
-                  <span className="text-body-secondary">
+                  <span className="farbe-gedaempft">
                     {eventsPage + 1} / {eventPageCount}
                   </span>
                   <DBButton
                     type="button"
-                    className="p-0 text-body-secondary"
                     variant="ghost"
                     size="small"
                     icon="chevron_right"
@@ -539,7 +551,7 @@ export function MemoryCard({
                   >
                     <DBTooltip>Nächste Seite</DBTooltip>
                   </DBButton>
-                </div>
+                </DBStack>
               )}
             </div>
           )}

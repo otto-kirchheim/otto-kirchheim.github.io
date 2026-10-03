@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type SubmitEvent } from 'react';
 
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
 import { FormularEditor, type Konfig } from './FormularEditor/FormularEditor';
@@ -17,7 +18,7 @@ import {
   type VersionNutzdaten,
   type VersionUebersicht,
 } from '../api/formularVersionenApi';
-import { DBButton, DBHeadingH5, DBHeadingH6 } from '@db-ux/react-core-components';
+import { DBButton, DBHeadingH5, DBHeadingH6, DBStack } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 import { useAdminFeatures } from '../adminFeatures';
 
@@ -282,18 +283,18 @@ export function FormularUpload() {
   }
 
   return (
-    <form className="d-flex flex-column gap-3" onSubmit={e => void handleSubmit(e)}>
-      <DBHeadingH5 className="mb-0">
+    <form className="formular-spalte" onSubmit={e => void handleSubmit(e)}>
+      <DBHeadingH5 className="ohne-luft-unten">
         {bearbeiteId ? 'Formular-Version bearbeiten' : 'Formular-Vorlage hochladen'}
       </DBHeadingH5>
-      <p className="small text-body-secondary mb-0">
+      <p className="zelle-klein farbe-gedaempft ohne-luft-unten">
         Version anlegen: eine fertige PDF-Vorlage (reines Text-Layout, in LibreOffice aus dem xlsx exportiert) plus die
         Koordinaten-Config. Bestehende Versionen lassen sich unten bearbeiten oder löschen — beides prüft, ob die
         Gültigkeitszeiträume danach lückenlos aneinander anschließen, und fragt sonst nach.
       </p>
 
-      <div className="border p-2">
-        <DBHeadingH6 paragraphSpacing className="small fw-semibold">
+      <Gruppe>
+        <DBHeadingH6 paragraphSpacing className="zelle-klein fett">
           Vorhandene Versionen ({formular})
         </DBHeadingH6>
         <FormularVersionenListe
@@ -303,7 +304,7 @@ export function FormularUpload() {
           onBearbeiten={v => void beginneBearbeiten(v)}
           onLoeschen={v => void handleLoeschen(v)}
         />
-      </div>
+      </Gruppe>
 
       <div className="raster abstand-2">
         <div className="sp-md-3">
@@ -372,15 +373,15 @@ export function FormularUpload() {
         />
       </div>
 
-      <details className="border p-2 bg-body-secondary">
-        <summary className="small fw-semibold" style={{ cursor: 'pointer' }}>
+      <details className="admin-details">
+        <summary className="zelle-klein fett" style={{ cursor: 'pointer' }}>
           Hilfe zur Koordinaten-Config
         </summary>
-        <div className="small mt-2">
-          <p className="mb-2">
+        <div className="zelle-klein luft-oben-xs">
+          <p className="luft-unten-xs">
             Koordinatensystem: PDF-Punkte (1pt = 1/72 Zoll), Ursprung <strong>unten links</strong>. A4 = 595×842pt.
           </p>
-          <p className="mb-1">
+          <p className="luft-unten-2xs">
             <strong>Die PDF-Vorlage ist EINE Datei mit allen Seiten</strong> — nicht je Seite eine eigene Datei. Ist das
             Formular dreiseitig, enthält die hochgeladene PDF genau diese drei Seiten (im xlsx alle Blätter zusammen
             nach PDF exportieren). Im Editor legst du darüber die <strong>Seitenfolge</strong> an: „+ Seite" hängt eine
@@ -388,7 +389,7 @@ export function FormularUpload() {
             hochgeladenen PDF sie benutzt. Zwei Seitendefinitionen dürfen dieselbe PDF-Seite nutzen, wenn sie nur anders
             befüllt werden.
           </p>
-          <p className="mb-1">
+          <p className="luft-unten-2xs">
             Welche Seiten im Ergebnis landen, entscheiden die Daten: Seite 1 kommt immer, jede weitere nur, wenn ihre
             Tabellen Zeilen haben (oder sie gar keine Tabelle trägt). Eine Seite mit{' '}
             <em>„Diese Seite bei Überlauf wiederholen"</em> wird so oft gedruckt, wie noch Zeilen übrig sind — bei EA
@@ -397,13 +398,13 @@ export function FormularUpload() {
             <em>Einstellungen übernehmen von</em> kopiert eine bestehende Seite (Felder, Tabellenbereiche, Signatur) auf
             die aktuelle — die Vorlagenseite bleibt dabei, wie sie ist.
           </p>
-          <p className="mb-1">
+          <p className="luft-unten-2xs">
             Eintrag in der Liste rechts <em>scharf schalten</em>, dann links auf dem PDF ein{' '}
             <strong>Rechteck über die Zelle ziehen</strong> (Maustaste gedrückt halten — die Lupe zeigt den vergrößerten
             Ausschnitt). Der Text wird laut Ausrichtung in dieser Zelle platziert, bei „zentriert" mittig zwischen den
             beiden Kanten.
           </p>
-          <ul className="mb-2">
+          <ul className="luft-unten-xs">
             <li>
               <strong>Felder</strong> — alles außerhalb der Datentabelle: Kopfangaben, Summen, Übertrag, Seitenzahl. Es
               gibt bewusst nur einen Bereich, denn die Position bestimmt allein die gezogene Zelle. Je Feld wählbar:
@@ -471,7 +472,7 @@ export function FormularUpload() {
               ist dafür nichts zu hinterlegen — es genügt, im Formular Platz für die Unterschriften freizulassen.
             </li>
           </ul>
-          <p className="mb-1">
+          <p className="luft-unten-2xs">
             Schriftgröße, Ausrichtung und Format gelten je Zelle; <em>Schrift automatisch verkleinern</em> passt zu
             lange Werte in die Zelle ein, <em>Zeilenumbruch</em> bricht an Wortgrenzen um. Senkrecht wird der Text immer
             in der Zelle zentriert, sobald sie als Rechteck aufgezogen wurde — ein Feld ohne Ober-/Unterkante sitzt
@@ -479,7 +480,7 @@ export function FormularUpload() {
             Eintrags lässt sich aufklappen, um die Kanten nachträglich exakt anzugleichen (z.B. gleiche Höhe wie das
             Feld daneben).
           </p>
-          <p className="mb-0">
+          <p className="ohne-luft-unten">
             Zwei Vorschauen erzeugen jeweils ein echtes PDF: <em>Beispieldaten</em> füllt fachlich passende Werte ein
             (Name, Personalnummer, Auftragsnummern, Datum) und sieht damit aus wie ein ausgefülltes Formular;{' '}
             <em>Platzhalter</em> setzt generische Füllwerte und zeigt vor allem, welche Zelle zu welchem Eintrag gehört.
@@ -492,10 +493,10 @@ export function FormularUpload() {
       {datei ? (
         <FormularEditor formular={formular} datei={datei} value={konfig} onChange={setKonfig} />
       ) : (
-        <p className="text-body-secondary small">PDF-Vorlage zuerst auswählen, um Koordinaten setzen zu können.</p>
+        <p className="farbe-gedaempft zelle-klein">PDF-Vorlage zuerst auswählen, um Koordinaten setzen zu können.</p>
       )}
 
-      <div className="d-flex gap-2">
+      <DBStack direction="row" gap="x-small">
         <DBButton type="submit" variant="brand" disabled={speichert}>
           {speichert ? 'Speichert…' : bearbeiteId ? 'Änderungen speichern' : 'Version anlegen'}
         </DBButton>
@@ -520,7 +521,7 @@ export function FormularUpload() {
             </DBButton>
           </>
         )}
-      </div>
+      </DBStack>
     </form>
   );
 }

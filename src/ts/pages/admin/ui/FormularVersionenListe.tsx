@@ -18,19 +18,21 @@ type Props = {
  *   `onBearbeiten`/`onLoeschen`.
  */
 export function FormularVersionenListe({ versionen, bearbeiteId, laedt, onBearbeiten, onLoeschen }: Props) {
-  if (laedt) return <p className="small text-body-secondary mb-0">Versionen werden geladen…</p>;
+  if (laedt) return <p className="zelle-klein farbe-gedaempft ohne-luft-unten">Versionen werden geladen…</p>;
   if (versionen.length === 0)
-    return <p className="small text-body-secondary mb-0">Für dieses Formular gibt es noch keine Version.</p>;
+    return (
+      <p className="zelle-klein farbe-gedaempft ohne-luft-unten">Für dieses Formular gibt es noch keine Version.</p>
+    );
 
   return (
     <div className="db-table" data-width="full" data-size="small" data-divider="both">
-      <table className="align-middle mb-0">
+      <table className="ohne-luft-unten">
         <thead>
           <tr>
             <th scope="col">Version</th>
             <th scope="col">Gültig ab</th>
             <th scope="col">Gültig bis</th>
-            <th scope="col" className="text-end">
+            <th scope="col" className="zelle-rechts">
               Aktion
             </th>
           </tr>
@@ -40,8 +42,8 @@ export function FormularVersionenListe({ versionen, bearbeiteId, laedt, onBearbe
             <tr key={v.id} className={v.id === bearbeiteId ? 'table-active' : undefined}>
               <td>{v.version}</td>
               <td>{v.gueltigVon}</td>
-              <td>{v.gueltigBis ?? <span className="text-body-secondary">offen</span>}</td>
-              <td className="text-end">
+              <td>{v.gueltigBis ?? <span className="farbe-gedaempft">offen</span>}</td>
+              <td className="zelle-rechts">
                 <DBStack direction="row" wrap={false} gap="2x-small">
                   <DBButton type="button" variant="outlined" onClick={() => onBearbeiten(v)}>
                     Bearbeiten

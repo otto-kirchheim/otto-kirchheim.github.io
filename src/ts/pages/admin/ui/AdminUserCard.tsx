@@ -6,7 +6,8 @@ import createAdminUserPasswordModal from './createAdminUserPasswordModal';
 import { OeLevelBoxes } from './OeLevelBoxes';
 import { OeTagInput } from './OeTagInput';
 import { ROLE_LABELS, type UserEditState } from './adminUserListTypen';
-import { DBButton, DBCheckbox, DBTag, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBInfotext, DBStack, DBTag, DBTooltip } from '@db-ux/react-core-components';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { DbAuswahl } from '@/shared/ui/form/DbFeld';
 
 type Props = {
@@ -60,20 +61,19 @@ export function AdminUserCard({
   return (
     <div className="admin-user-card-col">
       <div
-        className={`db-card ${isSelfRow ? 'border-primary' : ''} ${changed ? 'border-warning' : ''}`}
+        className={`db-card admin-user-card ${isSelfRow ? 'admin-user-card--ich' : ''} ${changed ? 'admin-user-card--geaendert' : ''}`}
         data-spacing="none"
         style={{ overflow: 'hidden' }}
       >
         <div
-          className="d-flex justify-content-between align-items-center py-2 px-3 bg-body-secondary border-bottom"
-          style={{ cursor: 'pointer' }}
+          className="admin-user-card__kopf"
           onClick={onToggleExpand}
           title={isExpanded ? 'Details einklappen' : 'Details ausklappen'}
         >
-          <div className="d-flex align-items-center gap-2 text-truncate">
+          <DBStack direction="row" alignment="center" gap="x-small" className="abschneiden">
             {isSuperAdmin && !isSelfRow && (
               <DBCheckbox
-                className="flex-shrink-0"
+                className="nicht-schrumpfen"
                 size="small"
                 label={`${currentUser.userName} für Massenänderung auswählen`}
                 showLabel={false}
@@ -82,30 +82,34 @@ export function AdminUserCard({
                 onChange={onToggleSelection}
               />
             )}
-            <span className="db-icon text-body-secondary db-font-size-md" data-icon="person" />
-            <span className="text-truncate">
-              <span className="fw-semibold d-block text-truncate">{currentUser.fullName || currentUser.userName}</span>
+            <span className="db-icon farbe-gedaempft db-font-size-md" data-icon="person" />
+            <span className="abschneiden">
+              <strong className="abschneiden admin-user-card__name">
+                {currentUser.fullName || currentUser.userName}
+              </strong>
               {currentUser.fullName && (
-                <span className="small text-body-secondary d-block text-truncate">{currentUser.userName}</span>
+                <DBInfotext showIcon={false} className="infotext-block abschneiden">
+                  {currentUser.userName}
+                </DBInfotext>
               )}
             </span>
-          </div>
-          <div className="d-flex align-items-center gap-2 flex-shrink-0">
+          </DBStack>
+          <DBStack direction="row" alignment="center" gap="x-small" className="nicht-schrumpfen">
             <DBTag semantic={roleInfo.semantic} emphasis="strong" className="rollen-tag">
               {roleInfo.label}
             </DBTag>
             <span
-              className="db-icon text-body-secondary db-font-size-md"
+              className="db-icon farbe-gedaempft db-font-size-md"
               data-icon={isExpanded ? 'chevron_up' : 'chevron_down'}
               style={{ transition: 'transform 0.2s' }}
             />
-          </div>
+          </DBStack>
         </div>
 
-        <div className="py-2 px-3">
-          <div className="d-flex flex-wrap gap-2 align-items-center small">
-            <span className="text-body-secondary">OE:</span>
-            <span className="fw-medium">{joinOeLevels(currentUser.oe) || '–'}</span>
+        <div className="admin-user-card__zeile">
+          <DBStack direction="row" wrap gap="x-small" alignment="center" className="zelle-klein">
+            <DBInfotext showIcon={false}>OE:</DBInfotext>
+            <strong className="admin-user-card__wert">{joinOeLevels(currentUser.oe) || '–'}</strong>
 
             <DBTag
               semantic={currentUser.emailVerified ? 'successful' : 'critical'}
@@ -116,7 +120,9 @@ export function AdminUserCard({
 
             {currentUser.adminForTeamOes.length > 0 && (
               <>
-                <span className="text-body-secondary ms-2">Team:</span>
+                <DBInfotext showIcon={false} className="admin-user-card__abschnitt">
+                  Team:
+                </DBInfotext>
                 {currentUser.adminForTeamOes.map(oe => (
                   <DBTag key={oe} semantic="informational">
                     {oe}
@@ -126,7 +132,9 @@ export function AdminUserCard({
             )}
             {currentUser.adminForOrganizationOes.length > 0 && (
               <>
-                <span className="text-body-secondary ms-2">Org:</span>
+                <DBInfotext showIcon={false} className="admin-user-card__abschnitt">
+                  Org:
+                </DBInfotext>
                 {currentUser.adminForOrganizationOes.map(oe => (
                   <DBTag key={oe} semantic="warning">
                     {oe}
@@ -134,12 +142,12 @@ export function AdminUserCard({
                 ))}
               </>
             )}
-          </div>
+          </DBStack>
         </div>
 
         {isExpanded && (
-          <div className="border-top pt-3 pb-3 px-3">
-            <div className="mb-3">
+          <DBStack gap="small" className="admin-user-card__detail">
+            <div>
               <DbAuswahl
                 beschriftung="Rolle"
                 beschriftungZeigen
@@ -155,8 +163,8 @@ export function AdminUserCard({
               </DbAuswahl>
             </div>
 
-            <div className="mb-3">
-              <label className="fw-semibold small mb-1">OE</label>
+            <div>
+              <label className="admin-label">OE</label>
               <OeLevelBoxes value={edit.oe} onChange={value => updateEdit({ oe: value })} disabled={!editable} />
             </div>
 
@@ -178,82 +186,86 @@ export function AdminUserCard({
               defaultLevelCount={splitOeInput(edit.oe).length}
             />
 
-            <div className="border p-2 mt-2">
-              <div className="small fw-semibold mb-2">Spezielle Admin-Berechtigungen</div>
+            <Gruppe titel="Spezielle Admin-Berechtigungen">
+              <DBStack gap="2x-small">
+                <div>
+                  <DBCheckbox
+                    size="small"
+                    id={`perm-vorgaben-${currentUser._id}`}
+                    label="Darf VorgabenGeld bearbeiten"
+                    checked={edit.canEditVorgabenGeld}
+                    onChange={e => updateEdit({ canEditVorgabenGeld: (e.target as HTMLInputElement).checked })}
+                    disabled={!permissionEditable}
+                  />
+                </div>
 
-              <div className="mb-1">
-                <DBCheckbox
-                  size="small"
-                  id={`perm-vorgaben-${currentUser._id}`}
-                  label="Darf VorgabenGeld bearbeiten"
-                  checked={edit.canEditVorgabenGeld}
-                  onChange={e => updateEdit({ canEditVorgabenGeld: (e.target as HTMLInputElement).checked })}
-                  disabled={!permissionEditable}
-                />
-              </div>
+                <div>
+                  <DBCheckbox
+                    size="small"
+                    id={`perm-templates-${currentUser._id}`}
+                    label="Darf Profile-Templates bearbeiten"
+                    checked={edit.canEditProfileTemplates}
+                    onChange={e => {
+                      const checked = (e.target as HTMLInputElement).checked;
+                      updateEdit({
+                        canEditProfileTemplates: checked,
+                        canEditOwnTeamTemplatesOnly: checked ? edit.canEditOwnTeamTemplatesOnly : false,
+                      });
+                    }}
+                    disabled={!permissionEditable}
+                  />
+                </div>
 
-              <div className="mb-1">
-                <DBCheckbox
-                  size="small"
-                  id={`perm-templates-${currentUser._id}`}
-                  label="Darf Profile-Templates bearbeiten"
-                  checked={edit.canEditProfileTemplates}
-                  onChange={e => {
-                    const checked = (e.target as HTMLInputElement).checked;
-                    updateEdit({
-                      canEditProfileTemplates: checked,
-                      canEditOwnTeamTemplatesOnly: checked ? edit.canEditOwnTeamTemplatesOnly : false,
-                    });
-                  }}
-                  disabled={!permissionEditable}
-                />
-              </div>
+                <div>
+                  <DBCheckbox
+                    size="small"
+                    id={`perm-teamonly-${currentUser._id}`}
+                    label="Profile-Templates nur im eigenen Team/OE-Scope"
+                    checked={edit.canEditOwnTeamTemplatesOnly}
+                    onChange={e => updateEdit({ canEditOwnTeamTemplatesOnly: (e.target as HTMLInputElement).checked })}
+                    disabled={!permissionEditable || !edit.canEditProfileTemplates}
+                  />
+                </div>
 
-              <div className="mb-1">
-                <DBCheckbox
-                  size="small"
-                  id={`perm-teamonly-${currentUser._id}`}
-                  label="Profile-Templates nur im eigenen Team/OE-Scope"
-                  checked={edit.canEditOwnTeamTemplatesOnly}
-                  onChange={e => updateEdit({ canEditOwnTeamTemplatesOnly: (e.target as HTMLInputElement).checked })}
-                  disabled={!permissionEditable || !edit.canEditProfileTemplates}
-                />
-              </div>
+                <div>
+                  <DBCheckbox
+                    size="small"
+                    id={`perm-formulare-erstellen-${currentUser._id}`}
+                    label="Darf Formular-Vorlagen erstellen"
+                    checked={edit.canCreateFormularVorlagen}
+                    onChange={e => updateEdit({ canCreateFormularVorlagen: (e.target as HTMLInputElement).checked })}
+                    disabled={!permissionEditable}
+                  />
+                  <DBInfotext showIcon={false} className="infotext-block">
+                    Erstellen beinhaltet automatisch Bearbeiten.
+                  </DBInfotext>
+                </div>
 
-              <div className="mb-1">
-                <DBCheckbox
-                  size="small"
-                  id={`perm-formulare-erstellen-${currentUser._id}`}
-                  label="Darf Formular-Vorlagen erstellen"
-                  checked={edit.canCreateFormularVorlagen}
-                  onChange={e => updateEdit({ canCreateFormularVorlagen: (e.target as HTMLInputElement).checked })}
-                  disabled={!permissionEditable}
-                />
-                <div className="small text-body-secondary">Erstellen beinhaltet automatisch Bearbeiten.</div>
-              </div>
+                <div>
+                  <DBCheckbox
+                    size="small"
+                    id={`perm-formulare-bearbeiten-${currentUser._id}`}
+                    label="Darf Formular-Vorlagen bearbeiten"
+                    checked={edit.canEditFormularVorlagen}
+                    onChange={e => updateEdit({ canEditFormularVorlagen: (e.target as HTMLInputElement).checked })}
+                    disabled={!permissionEditable}
+                  />
+                </div>
 
-              <div>
-                <DBCheckbox
-                  size="small"
-                  id={`perm-formulare-bearbeiten-${currentUser._id}`}
-                  label="Darf Formular-Vorlagen bearbeiten"
-                  checked={edit.canEditFormularVorlagen}
-                  onChange={e => updateEdit({ canEditFormularVorlagen: (e.target as HTMLInputElement).checked })}
-                  disabled={!permissionEditable}
-                />
-              </div>
+                {!permissionEditable && (
+                  <DBInfotext showIcon={false} className="infotext-block">
+                    Nur Super-Admin kann diese Flags ändern.
+                  </DBInfotext>
+                )}
+              </DBStack>
+            </Gruppe>
 
-              {!permissionEditable && (
-                <div className="small text-body-secondary mt-2">Nur Super-Admin kann diese Flags ändern.</div>
-              )}
-            </div>
-
-            <div className="d-flex flex-wrap gap-2 mt-3 pt-2 border-top">
+            <DBStack direction="row" wrap gap="x-small" className="admin-user-card__aktionen">
               {editable && (
                 <>
                   <DBButton
                     type="button"
-                    className="flex-grow-1"
+                    className="waechst"
                     variant="brand"
                     size="small"
                     icon={isSaving ? undefined : 'save'}
@@ -262,7 +274,7 @@ export function AdminUserCard({
                     disabled={!changed || isSaving}
                     data-disabler
                   >
-                    {isSaving && <span className="laedt me-1" data-size="small" role="status" />}
+                    {isSaving && <span className="laedt symbol-vor-text" data-size="small" role="status" />}
                     {isSaving ? 'Speichern…' : 'Speichern'}
                   </DBButton>
                   {changed && (
@@ -283,7 +295,7 @@ export function AdminUserCard({
               )}
               <DBButton
                 type="button"
-                className="flex-grow-1"
+                className="waechst"
                 variant="outlined"
                 size="small"
                 icon={isSelfRow ? 'house' : 'eye'}
@@ -340,8 +352,8 @@ export function AdminUserCard({
                   <DBTooltip>Benutzer löschen</DBTooltip>
                 </DBButton>
               )}
-            </div>
-          </div>
+            </DBStack>
+          </DBStack>
         )}
       </div>
     </div>

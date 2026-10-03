@@ -21,7 +21,7 @@ import {
   toEditState,
   type TemplateEditState,
 } from './adminProfileTemplatesManagerGemeinsam';
-import { DBButton, DBHeadingH5, DBTag } from '@db-ux/react-core-components';
+import { DBButton, DBHeadingH5, DBTag, DBStack } from '@db-ux/react-core-components';
 import { DbFeld } from '@/shared/ui/form/DbFeld';
 
 /**
@@ -321,19 +321,19 @@ export function AdminProfileTemplatesManager() {
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <DBHeadingH5 className="mb-0">Profile-Templates</DBHeadingH5>
+      <DBStack direction="row" gap="none" alignment="center" justifyContent="space-between" className="luft-unten-sm">
+        <DBHeadingH5 className="ohne-luft-unten">Profile-Templates</DBHeadingH5>
         <DBButton type="button" variant="outlined" size="small" onClick={handleCreate} data-disabler>
           Hinzufügen
         </DBButton>
-      </div>
+      </DBStack>
 
-      {(loading || !adminFeatures.geladen) && <div className="text-body-secondary">Lädt Templates...</div>}
+      {(loading || !adminFeatures.geladen) && <div className="farbe-gedaempft">Lädt Templates...</div>}
       {!loading && sortedTemplates.length === 0 && (
-        <p className="text-body-secondary mb-0">Keine Templates vorhanden.</p>
+        <p className="farbe-gedaempft ohne-luft-unten">Keine Templates vorhanden.</p>
       )}
 
-      <div className="d-flex flex-column gap-2">
+      <DBStack direction="column" gap="x-small">
         {sortedTemplates.map(template => {
           const edit = edits[template._id] ?? toEditState(template, abschnitte);
           const expanded = expandedId === template._id;
@@ -342,10 +342,10 @@ export function AdminProfileTemplatesManager() {
           const templateContent = edit.templateContent;
 
           return (
-            <div key={template._id} className={`border ${changed ? 'border-warning' : 'border-secondary-subtle'}`}>
+            <div key={template._id} className={`vorlagen-karte ${changed ? 'vorlagen-karte--geaendert' : ''}`}>
               <DBButton
                 type="button"
-                className="text-start d-flex justify-content-between align-items-center"
+                className="vorlagen-karte__kopf"
                 variant="filled"
                 width="full"
                 onClick={() => setExpandedId(expanded ? null : template._id)}
@@ -359,8 +359,8 @@ export function AdminProfileTemplatesManager() {
               </DBButton>
 
               {expanded && (
-                <div className="p-3 border-top">
-                  <div className="raster mb-2 abstand-2">
+                <div className="vorlagen-karte__inhalt">
+                  <div className="raster luft-unten-xs abstand-2">
                     <div className="sp-md-4">
                       <DbFeld
                         beschriftung="Code"
@@ -381,7 +381,7 @@ export function AdminProfileTemplatesManager() {
                     </div>
                   </div>
 
-                  <div className="mb-2">
+                  <div className="luft-unten-xs">
                     <DbFeld
                       beschriftung="Beschreibung"
                       beschriftungZeigen
@@ -391,7 +391,7 @@ export function AdminProfileTemplatesManager() {
                     />
                   </div>
 
-                  <div className="mb-2">
+                  <div className="luft-unten-xs">
                     <AdminProfileTemplateContentEditor
                       templateId={template._id}
                       templateContent={templateContent}
@@ -406,7 +406,7 @@ export function AdminProfileTemplatesManager() {
                     />
                   </div>
 
-                  <div className="d-flex flex-wrap gap-2 mt-2">
+                  <DBStack direction="row" wrap gap="x-small" className="luft-oben-xs">
                     <DBButton
                       type="button"
                       variant="brand"
@@ -454,13 +454,13 @@ export function AdminProfileTemplatesManager() {
                     >
                       Löschen
                     </DBButton>
-                  </div>
+                  </DBStack>
                 </div>
               )}
             </div>
           );
         })}
-      </div>
+      </DBStack>
     </div>
   );
 }

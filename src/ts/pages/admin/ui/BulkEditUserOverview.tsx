@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { joinOeLevels } from '@/shared/lib/ressource/oeLevels';
 import { useDebouncedValue, matchesOeQuery } from '../model/adminUserListHelpers';
 import type { AdminUserRow } from '../api/api';
-import { DBButton, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBTooltip, DBStack } from '@db-ux/react-core-components';
 import { DbFeld } from '@/shared/ui/form/DbFeld';
 
 /**
@@ -31,9 +31,9 @@ export function BulkEditUserOverview({
     : selectedUsers;
 
   return (
-    <div className="mb-3">
-      <div className="d-flex justify-content-between align-items-center mb-1">
-        <span className="fw-semibold small">Ausgewählte Benutzer ({selectedUsers.length})</span>
+    <div className="luft-unten-sm">
+      <DBStack direction="row" gap="none" alignment="center" justifyContent="space-between" className="luft-unten-2xs">
+        <span className="fett zelle-klein">Ausgewählte Benutzer ({selectedUsers.length})</span>
         {selectedUsers.length > 5 && (
           <DbFeld
             beschriftung="Ausgewählte Benutzer filtern"
@@ -45,16 +45,16 @@ export function BulkEditUserOverview({
             onChange={e => setFilter((e.target as HTMLInputElement).value)}
           />
         )}
-      </div>
+      </DBStack>
       <div className="db-table" data-width="full" data-size="small" data-divider="both" style={{ maxHeight: '30vh' }}>
-        <table className="align-middle mb-0">
-          <thead className="sticky-top bg-body">
+        <table className="ohne-luft-unten">
+          <thead className="tabellenkopf-fix">
             <tr>
               <th scope="col">Benutzer</th>
               <th scope="col">OE</th>
               <th scope="col">Betrieb</th>
-              <th scope="col" className="text-end">
-                <span className="visually-hidden">Abwählen</span>
+              <th scope="col" className="zelle-rechts">
+                <span className="nur-screenreader">Abwählen</span>
               </th>
             </tr>
           </thead>
@@ -64,10 +64,10 @@ export function BulkEditUserOverview({
                 <td>{user.fullName || user.userName}</td>
                 <td>{joinOeLevels(user.oe) || '–'}</td>
                 <td>{user.betrieb || '–'}</td>
-                <td className="text-end">
+                <td className="zelle-rechts">
                   <DBButton
                     type="button"
-                    className="text-danger p-0"
+                    className="farbe-gefahr"
                     variant="ghost"
                     size="small"
                     icon="cross"
@@ -82,7 +82,7 @@ export function BulkEditUserOverview({
             ))}
             {visibleUsers.length === 0 && (
               <tr>
-                <td colSpan={4} className="text-body-secondary fst-italic">
+                <td colSpan={4} className="farbe-gedaempft kursiv">
                   Keine Treffer
                 </td>
               </tr>

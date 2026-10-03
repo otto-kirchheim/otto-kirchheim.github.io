@@ -1,6 +1,7 @@
 import { CATEGORY_LABELS } from '../model/bulkEditOe';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import type { AdminUserRow, BackendProfileTemplate, BulkApplyCategory } from '../api/api';
-import { DBCheckbox, DBRadio } from '@db-ux/react-core-components';
+import { DBCheckbox, DBRadio, DBStack } from '@db-ux/react-core-components';
 import { DbAuswahl } from '@/shared/ui/form/DbFeld';
 
 export type ApplySource = 'none' | 'template' | 'user';
@@ -44,10 +45,10 @@ export function BulkEditApplySourceBlock({
   onToggleCategory,
 }: Props) {
   return (
-    <div className="border p-3">
-      <div className="fw-semibold mb-2">Daten übernehmen von</div>
+    <Gruppe>
+      <div className="fett luft-unten-xs">Daten übernehmen von</div>
 
-      <div className="d-flex flex-column gap-2">
+      <DBStack direction="column" gap="x-small">
         {SOURCE_OPTIONS.map(([value, label]) => (
           <div key={value}>
             <DBRadio
@@ -60,7 +61,7 @@ export function BulkEditApplySourceBlock({
             />
 
             {value === 'template' && applySource === 'template' && (
-              <div className="mt-1 ms-4">
+              <div className="luft-oben-2xs luft-links-md">
                 <DbAuswahl
                   beschriftung="Vorlage wählen"
                   dicht
@@ -78,7 +79,7 @@ export function BulkEditApplySourceBlock({
             )}
 
             {value === 'user' && applySource === 'user' && (
-              <div className="mt-1 ms-4">
+              <div className="luft-oben-2xs luft-links-md">
                 <DbAuswahl
                   beschriftung="Muster-Benutzer wählen"
                   dicht
@@ -96,14 +97,14 @@ export function BulkEditApplySourceBlock({
             )}
           </div>
         ))}
-      </div>
+      </DBStack>
 
       {applySource !== 'none' && (
-        <div className="mt-3">
-          <div className="small text-body-secondary mb-1">
+        <div className="luft-oben-sm">
+          <div className="zelle-klein farbe-gedaempft luft-unten-2xs">
             Persönliche Daten (Name, Personalnummer, Adresse) werden nie übernommen.
           </div>
-          <div className="d-flex gap-3 flex-wrap">
+          <DBStack direction="row" wrap gap="small">
             {(Object.keys(CATEGORY_LABELS) as BulkApplyCategory[]).map(category => (
               <div key={category}>
                 <DBCheckbox
@@ -114,9 +115,9 @@ export function BulkEditApplySourceBlock({
                 />
               </div>
             ))}
-          </div>
+          </DBStack>
         </div>
       )}
-    </div>
+    </Gruppe>
   );
 }

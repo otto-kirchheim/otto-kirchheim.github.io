@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { DBButton, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBTooltip, DBStack } from '@db-ux/react-core-components';
 import { DbFeld } from '@/shared/ui/form/DbFeld';
 import { MAX_OE_LEVELS } from '../model/bulkEditOe';
 
@@ -68,31 +68,30 @@ export function OeLevelInputs({
   const canRemove = onRemoveLevel && !disabled && levels.length > 1;
 
   return (
-    <div className="d-flex flex-wrap align-items-center gap-1">
+    <DBStack direction="row" wrap gap="2x-small" alignment="center">
       {levels.map((level, index) => {
         const placeholder = placeholders[index] ?? '';
         const changed = highlightFilled && level.trim() !== '';
         return (
-          <div key={index} className="d-flex align-items-center gap-1">
-            {index > 0 && <span className="text-body-secondary">{separatorBefore(levels, index)}</span>}
+          <DBStack key={index} direction="row" alignment="center" gap="2x-small">
+            {index > 0 && <span className="farbe-gedaempft">{separatorBefore(levels, index)}</span>}
             <DbFeld
               type="text"
               beschriftung={ariaLabel(index)}
               dicht
-              feldKlasse={`oe-level-input${changed ? ' border-warning border-2 fw-semibold' : ''}`}
+              feldKlasse={`oe-level-input${changed ? ' oe-level-input--gefuellt' : ''}`}
               huelleStyle={widthFor(level, placeholder)}
               placeholder={placeholder}
               value={level}
               disabled={disabled}
               onChange={e => onChangeLevel(index, e.target.value)}
             />
-          </div>
+          </DBStack>
         );
       })}
       {canRemove && (
         <DBButton
           type="button"
-          className="px-1 py-0"
           variant="outlined"
           size="small"
           icon="minus"
@@ -106,7 +105,6 @@ export function OeLevelInputs({
       {canAdd && (
         <DBButton
           type="button"
-          className="px-1 py-0"
           variant="outlined"
           size="small"
           icon="plus"
@@ -117,6 +115,6 @@ export function OeLevelInputs({
           <DBTooltip>Ebene hinzufügen</DBTooltip>
         </DBButton>
       )}
-    </div>
+    </DBStack>
   );
 }

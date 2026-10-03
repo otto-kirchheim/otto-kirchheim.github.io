@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import MyDivModal from '@/shared/ui/modal/MyDivModal';
 import MyModalBody from '@/shared/ui/modal/MyModalBody';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
@@ -353,13 +354,13 @@ export function AdminBulkEditModal({
       </DBButton>
       {step === 'form' && (
         <DBButton type="button" variant="brand" disabled={busy} onClick={() => void runPreview()}>
-          {busy && <span className="laedt me-2" data-size="small" aria-hidden="true" />}
+          {busy && <span className="laedt luft-rechts-xs" data-size="small" aria-hidden="true" />}
           Vorschau
         </DBButton>
       )}
       {step === 'preview' && (
         <DBButton type="button" variant="filled" data-color="critical" disabled={busy} onClick={() => void runApply()}>
-          {busy && <span className="laedt me-2" data-size="small" aria-hidden="true" />}
+          {busy && <span className="laedt luft-rechts-xs" data-size="small" aria-hidden="true" />}
           {preview ? `${preview.summary.ok} Profile ändern` : 'Änderungen anwenden'}
         </DBButton>
       )}
@@ -381,13 +382,13 @@ export function AdminBulkEditModal({
       <MyModalBody>
         {step === 'form' && (
           <div className="raster abstand-3">
-            <div className="">
+            <div>
               <BulkEditUserOverview selectedUsers={selectedUsers} onRemoveUser={removeSelectedUser} />
             </div>
 
             <div className="sp-xl-6">
-              <div className="border p-3 h-100 d-flex flex-column gap-3">
-                <div className="fw-semibold">OE ändern</div>
+              <Gruppe className="gruppe--voll gruppe--spalte">
+                <div className="fett">OE ändern</div>
 
                 <BulkEditOeLevelsEditor
                   levelValues={oeLevelValues}
@@ -417,14 +418,14 @@ export function AdminBulkEditModal({
                   defaultLevelCount={maxLevels}
                   placeholders={organizationOePlaceholders}
                 />
-              </div>
+              </Gruppe>
             </div>
 
             <div className="sp-xl-6">
               <BulkEditSimpleFieldsBlock fields={simpleFields} onChange={updateSimpleField} />
             </div>
 
-            <div className="">
+            <div>
               <BulkEditApplySourceBlock
                 applySource={applySource}
                 onApplySourceChange={source => {
@@ -445,7 +446,7 @@ export function AdminBulkEditModal({
         )}
 
         {step === 'preview' && preview && (
-          <div className="">
+          <div>
             <BulkEditPreviewTable
               preview={preview}
               activeFields={previewFields.activeFields}
@@ -455,8 +456,8 @@ export function AdminBulkEditModal({
         )}
 
         {step === 'result' && result && (
-          <div className="">
-            <p className="fw-semibold">
+          <div>
+            <p className="fett">
               {result.summary.ok} aktualisiert, {result.summary.skipped} übersprungen, {result.summary.errors} Fehler
             </p>
             {result.results.some(entry => entry.status !== 'ok') && (
@@ -464,16 +465,16 @@ export function AdminBulkEditModal({
                 {result.results
                   .filter(entry => entry.status !== 'ok')
                   .map(entry => (
-                    <li className="trennliste-eintrag px-0" key={entry.userId}>
+                    <li className="trennliste-eintrag" key={entry.userId}>
                       <DBTag
-                        className="me-2"
+                        className="luft-rechts-xs"
                         semantic={entry.status === 'error' ? 'critical' : 'neutral'}
                         emphasis="strong"
                       >
                         {entry.status === 'error' ? 'Fehler' : 'Übersprungen'}
                       </DBTag>
                       {entry.userName}
-                      {entry.message && <span className="text-body-secondary"> — {entry.message}</span>}
+                      {entry.message && <span className="farbe-gedaempft"> — {entry.message}</span>}
                     </li>
                   ))}
               </ul>

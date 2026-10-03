@@ -42,7 +42,7 @@ function userName(map: Record<string, string>, id: string | null): React.JSX.Ele
   if (!id) return '—';
   const name = map[id];
   if (name) return name;
-  return <code className="text-muted">{truncateId(id)}</code>;
+  return <code className="farbe-gedaempft">{truncateId(id)}</code>;
 }
 
 /**
@@ -105,7 +105,7 @@ export function AdminLogBrowser() {
 
   return (
     <div>
-      <div className="d-flex gap-2 mb-3 flex-wrap align-items-center">
+      <DBStack direction="row" wrap alignment="center" gap="x-small" className="admin-leiste">
         <DbFeld
           beschriftung="Aktion filtern (z.B. update, delete)…"
           dicht
@@ -136,7 +136,7 @@ export function AdminLogBrowser() {
         )}
         <DBButton
           type="button"
-          className="ms-auto"
+          className="knopf-rechts"
           variant="outlined"
           size="small"
           icon="circular_arrows"
@@ -144,37 +144,33 @@ export function AdminLogBrowser() {
         >
           Aktualisieren
         </DBButton>
-      </div>
+      </DBStack>
 
-      {loadError && (
-        <DBNotification semantic="critical" className="py-2 small">
-          {loadError}
-        </DBNotification>
-      )}
+      {loadError && <DBNotification semantic="critical">{loadError}</DBNotification>}
 
       <div className="db-table" data-width="full" data-size="small" data-divider="both" data-interactive="true">
-        <table className="align-middle mb-0">
+        <table>
           <thead>
             <tr>
               <th>Zeitstempel</th>
               <th>Aktion</th>
               <th>Admin</th>
-              <th className="d-none d-md-table-cell">Ziel-User</th>
-              <th className="d-none d-lg-table-cell">Ressource-ID</th>
-              <th className="text-end">Details</th>
+              <th className="spalte-ab-md">Ziel-User</th>
+              <th className="spalte-ab-lg">Ressource-ID</th>
+              <th className="zelle-rechts">Details</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={6} className="text-center py-4">
+                <td colSpan={6} className="zelle-mitte zelle-luft">
                   <div className="laedt" data-size="small" role="status" />
                 </td>
               </tr>
             )}
             {!loading && (!logs || logs.data.length === 0) && (
               <tr>
-                <td colSpan={6} className="text-center py-3 text-muted">
+                <td colSpan={6} className="zelle-mitte zelle-luft-klein farbe-gedaempft">
                   Keine Log-Einträge
                 </td>
               </tr>
@@ -190,20 +186,23 @@ export function AdminLogBrowser() {
                 return (
                   <Fragment key={id}>
                     <tr>
-                      <td className="small text-nowrap">{formatTs(entry['timestamp'])}</td>
+                      <td className="zelle-klein nowrap">{formatTs(entry['timestamp'])}</td>
                       <td>
-                        <code className="small text-break">{String(entry['action'] ?? '')}</code>
+                        <code className="zelle-klein umbrechen">{String(entry['action'] ?? '')}</code>
                       </td>
-                      <td className="small">{userName(userNameMap, adminId)}</td>
-                      <td className="small d-none d-md-table-cell">{userName(userNameMap, targetUserId)}</td>
-                      <td className="small d-none d-lg-table-cell">
-                        {targetResourceId ? <code className="text-muted">{truncateId(targetResourceId)}</code> : '—'}
+                      <td className="zelle-klein">{userName(userNameMap, adminId)}</td>
+                      <td className="zelle-klein spalte-ab-md">{userName(userNameMap, targetUserId)}</td>
+                      <td className="zelle-klein spalte-ab-lg">
+                        {targetResourceId ? (
+                          <code className="farbe-gedaempft">{truncateId(targetResourceId)}</code>
+                        ) : (
+                          '—'
+                        )}
                       </td>
-                      <td className="text-end">
+                      <td className="zelle-rechts">
                         {payload !== null && (
                           <DBButton
                             type="button"
-                            className="p-0"
                             variant="ghost"
                             size="small"
                             icon={open ? 'chevron_up' : 'chevron_down'}
@@ -218,10 +217,8 @@ export function AdminLogBrowser() {
                     </tr>
                     {open && (
                       <tr>
-                        <td colSpan={6} className="bg-body-tertiary">
-                          <pre className="small mb-0 text-break" style={{ whiteSpace: 'pre-wrap' }}>
-                            {JSON.stringify(payload, null, 2)}
-                          </pre>
+                        <td colSpan={6} className="zelle-hinterlegt">
+                          <pre className="admin-pre">{JSON.stringify(payload, null, 2)}</pre>
                         </td>
                       </tr>
                     )}
@@ -233,8 +230,15 @@ export function AdminLogBrowser() {
       </div>
 
       {totalPages > 1 && (
-        <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="x-small" className="mt-3">
-          <small className="text-muted">
+        <DBStack
+          direction="row"
+          wrap
+          alignment="center"
+          justifyContent="space-between"
+          gap="x-small"
+          className="luft-oben-sm"
+        >
+          <small className="farbe-gedaempft">
             Gesamt: {logs?.total ?? 0} · Seite {currentPage}/{totalPages}
           </small>
           <DBStack direction="row" wrap gap="2x-small">

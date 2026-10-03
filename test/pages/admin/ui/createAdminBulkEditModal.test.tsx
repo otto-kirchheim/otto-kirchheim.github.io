@@ -128,7 +128,7 @@ describe('AdminBulkEditModal', () => {
     await flush();
 
     const highlighted = felderMitBeschriftung<HTMLInputElement>(container, / ersetzen$/).filter(input =>
-      input.classList.contains('border-warning'),
+      input.classList.contains('oe-level-input--gefuellt'),
     );
     expect(highlighted.map(input => input.closest('.db-input')?.querySelector('label')?.textContent)).toEqual([
       'Ebene 2 ersetzen',

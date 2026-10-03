@@ -1,7 +1,7 @@
 import { OE_TARGET_LABELS } from '../model/bulkEditOe';
 import { OeLevelInputs } from './OeLevelInputs';
 import type { BulkOeTargetField } from '../api/api';
-import { DBCheckbox } from '@db-ux/react-core-components';
+import { DBCheckbox, DBStack } from '@db-ux/react-core-components';
 
 const TARGETS: BulkOeTargetField[] = ['pers', 'teamOes', 'organizationOes'];
 
@@ -35,9 +35,9 @@ export function BulkEditOeLevelsEditor({
 }: Props) {
   return (
     <div>
-      <div className="fw-semibold small mb-1">Ebenen ersetzen in</div>
+      <div className="fett zelle-klein luft-unten-2xs">Ebenen ersetzen in</div>
 
-      <div className="d-flex flex-wrap gap-3 mb-2">
+      <DBStack direction="row" wrap gap="small" className="luft-unten-xs">
         {TARGETS.map(target => (
           <div key={target}>
             <DBCheckbox
@@ -49,7 +49,7 @@ export function BulkEditOeLevelsEditor({
             />
           </div>
         ))}
-      </div>
+      </DBStack>
 
       {applyTo.size > 0 && (
         <>
@@ -62,9 +62,9 @@ export function BulkEditOeLevelsEditor({
             onAddLevel={onAddLevel}
             onRemoveLevel={onRemoveLevel}
           />
-          <div className="small text-body-secondary mt-1">
-            Nur <span className="fw-semibold text-warning">hervorgehobene</span> Ebenen werden ersetzt — in Listen bei
-            jedem Eintrag, der die Ebene hat.
+          <div className="zelle-klein farbe-gedaempft luft-oben-2xs">
+            Nur <span className="fett farbe-warnung">hervorgehobene</span> Ebenen werden ersetzt — in Listen bei jedem
+            Eintrag, der die Ebene hat.
           </div>
         </>
       )}

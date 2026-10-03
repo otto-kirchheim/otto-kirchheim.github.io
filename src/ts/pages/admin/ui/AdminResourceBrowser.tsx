@@ -282,7 +282,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
           : 'Keine Ressourcen verfügbar.'}
       </DBNotification>
     ) : (
-      <p className="text-muted">Ressourcen werden geladen …</p>
+      <p className="farbe-gedaempft">Ressourcen werden geladen …</p>
     );
   }
 
@@ -293,7 +293,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
 
   return (
     <div>
-      <nav className="db-navigation admin-unternavigation mb-3" role="tablist" aria-label="Ressourcen">
+      <nav className="db-navigation admin-unternavigation luft-unten-sm" role="tablist" aria-label="Ressourcen">
         <menu>
           {resources.map((r, i) => (
             <li
@@ -303,21 +303,21 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
               role="presentation"
             >
               <button onClick={() => setActiveIdx(i)} type="button" role="tab" aria-selected={i === activeIdx}>
-                <span className="d-none d-md-inline">{r.label}</span>
-                <span className="d-md-none">{r.shortLabel}</span>
+                <span className="ab-md-inline">{r.label}</span>
+                <span className="nur-unter-md">{r.shortLabel}</span>
               </button>
             </li>
           ))}
         </menu>
       </nav>
 
-      <DBCard className="bg-body-secondary border-0 mb-3" spacing="none">
-        <div className="py-2 px-3">
-          <div className="d-flex flex-wrap gap-2 align-items-end">
+      <DBCard className="admin-filterkarte" spacing="none">
+        <div className="admin-filterkarte__inhalt">
+          <DBStack direction="row" wrap gap="x-small" alignment="end">
             {/* Benutzer: Text-Input mit Datalist (Suche) */}
-            <div className="flex-grow-1" style={{ minWidth: '180px', maxWidth: '300px' }}>
-              <label className="small mb-1">Benutzer</label>
-              <div className="position-relative">
+            <div className="waechst" style={{ minWidth: '180px', maxWidth: '300px' }}>
+              <label className="zelle-klein luft-unten-2xs">Benutzer</label>
+              <div className="feld-mit-knopf">
                 <DbFeld
                   beschriftung="Alle Benutzer (Name eingeben…)"
                   dicht
@@ -335,7 +335,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                 {filterUserId && (
                   <DBButton
                     type="button"
-                    className="position-absolute end-0 top-50 translate-middle-y p-0 pe-2 text-muted"
+                    className="feld-mit-knopf__loeschen farbe-gedaempft"
                     variant="ghost"
                     size="small"
                     style={{ lineHeight: '1' }}
@@ -391,7 +391,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
               </DbAuswahl>
             </div>
 
-            <div className="d-flex gap-2 ms-auto align-items-end">
+            <DBStack direction="row" gap="x-small" alignment="end" className="knopf-rechts">
               <DBButton type="button" variant="brand" size="small" icon="funnel" onClick={applyFilter}>
                 Filtern
               </DBButton>
@@ -400,11 +400,11 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                   Zurücksetzen
                 </DBButton>
               )}
-            </div>
-          </div>
+            </DBStack>
+          </DBStack>
 
           {hasActiveFilter && (
-            <div className="mt-2 d-flex flex-wrap gap-2">
+            <DBStack direction="row" wrap gap="x-small" className="luft-oben-xs">
               {activeFilter.userId && (
                 <DBTag semantic="informational" emphasis="strong">
                   User: {userNameMap[activeFilter.userId] ?? truncateId(activeFilter.userId)}
@@ -420,13 +420,13 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                   Monat: {MONATE[(activeFilter.monat ?? 1) - 1]}
                 </DBTag>
               )}
-            </div>
+            </DBStack>
           )}
         </div>
       </DBCard>
 
       {loadError && (
-        <DBNotification semantic="critical" className="py-2">
+        <DBNotification semantic="critical">
           <DBStack direction="row" alignment="center" justifyContent="space-between" gap="x-small">
             {loadError}
             <DBButton
@@ -443,7 +443,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
       )}
 
       <div className="db-table" data-width="full" data-size="small" data-divider="both" data-interactive="true">
-        <table className="align-middle mb-0">
+        <table className="ohne-luft-unten">
           <thead>
             <tr>
               <th style={{ width: '6rem' }}>ID</th>
@@ -451,11 +451,11 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                 <th key={f}>{f === 'User' ? 'Benutzer' : f}</th>
               ))}
               {resource.extraFields?.map(f => (
-                <th key={f} className="d-none d-lg-table-cell">
+                <th key={f} className="spalte-ab-lg">
                   {f === 'createdAt' ? 'Erstellt' : f}
                 </th>
               ))}
-              <th style={{ width: '7rem' }} className="text-end">
+              <th style={{ width: '7rem' }} className="zelle-rechts">
                 Aktionen
               </th>
             </tr>
@@ -463,14 +463,14 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={totalCols} className="text-center py-4">
+                <td colSpan={totalCols} className="zelle-mitte zelle-luft">
                   <div className="laedt" data-size="small" role="status" />
                 </td>
               </tr>
             )}
             {!loading && (!page || page.data.length === 0) && (
               <tr>
-                <td colSpan={totalCols} className="text-center py-3 text-muted">
+                <td colSpan={totalCols} className="zelle-mitte zelle-luft-klein farbe-gedaempft">
                   Keine Einträge {hasActiveFilter && '(Filter aktiv)'}
                 </td>
               </tr>
@@ -479,20 +479,20 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
               page?.data.map(doc => (
                 <tr key={String(doc['_id'])}>
                   <td style={{ cursor: 'pointer' }} title="Klicken zum Bearbeiten" onClick={() => openEdit(doc)}>
-                    <code className="small text-primary-emphasis">{truncateId(doc['_id'])}</code>
+                    <code className="zelle-klein farbe-primary">{truncateId(doc['_id'])}</code>
                   </td>
                   {resource.tableFields.map(f => {
                     if (f === 'User') {
                       const userId = String(doc[f] ?? '');
                       const name = userNameMap[userId];
                       return (
-                        <td key={f} className="small">
-                          <div className="d-flex align-items-center gap-1 flex-nowrap">
-                            <span>{name ?? <code className="text-muted">{truncateId(userId)}</code>}</span>
+                        <td key={f} className="zelle-klein">
+                          <DBStack direction="row" gap="2x-small" alignment="center">
+                            <span>{name ?? <code className="farbe-gedaempft">{truncateId(userId)}</code>}</span>
                             {onNavigateToUser && (
                               <DBButton
                                 type="button"
-                                className="p-0 text-info flex-shrink-0"
+                                className="farbe-info nicht-schrumpfen"
                                 variant="ghost"
                                 size="small"
                                 icon="magnifying_glass"
@@ -506,25 +506,25 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                                 <DBTooltip>Zum Profil</DBTooltip>
                               </DBButton>
                             )}
-                          </div>
+                          </DBStack>
                         </td>
                       );
                     }
                     return (
-                      <td key={f} className="small">
+                      <td key={f} className="zelle-klein">
                         {formatCell(resource, f, doc[f])}
                       </td>
                     );
                   })}
                   {resource.extraFields?.map(f => (
-                    <td key={f} className="small d-none d-lg-table-cell">
+                    <td key={f} className="zelle-klein spalte-ab-lg">
                       {formatCell(resource, f, doc[f])}
                     </td>
                   ))}
-                  <td className="text-end">
+                  <td className="zelle-rechts">
                     <DBButton
                       type="button"
-                      className="me-1 py-0"
+                      className="luft-rechts-2xs"
                       variant="outlined"
                       size="small"
                       icon="pen"
@@ -535,7 +535,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                     </DBButton>
                     <DBButton
                       type="button"
-                      className="py-0"
+
                       variant="outlined"
                       data-color="critical"
                       size="small"
@@ -552,8 +552,15 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
         </table>
       </div>
 
-      <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="x-small" className="mt-3">
-        <small className="text-muted">
+      <DBStack
+        direction="row"
+        wrap
+        alignment="center"
+        justifyContent="space-between"
+        gap="x-small"
+        className="luft-oben-sm"
+      >
+        <small className="farbe-gedaempft">
           {page ? `${page.total} Einträge · Seite ${currentPage}/${totalPages}` : ''}
         </small>
         {totalPages > 1 && (

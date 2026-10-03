@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { ArbeitszeiteingabePanel } from '@/shared/ui/arbeitszeit-editor/ArbeitszeiteingabePanel';
 import { PERS_FIELDS, tabOptions, type TemplateContentDraft, type TemplateField } from './profileTemplates.shared';
 import type { AdminVorlagenAbschnitt } from '../adminFeatures';
@@ -90,8 +91,8 @@ export function AdminProfileTemplateContentEditor({
 
   return (
     <div>
-      <label className="small fw-semibold mb-1">Template-Inhalt</label>
-      <DBStack direction="row" wrap gap="x-small" className="mb-2">
+      <label className="zelle-klein fett luft-unten-2xs">Template-Inhalt</label>
+      <DBStack direction="row" wrap gap="x-small" className="luft-unten-xs">
         {sectionButton('Pers', 'Pers')}
         {sectionButton('Arbeitszeit', 'Arbeitszeit')}
         {abschnitte.map(abschnitt => sectionButton(abschnitt.id, abschnitt.label))}
@@ -99,13 +100,13 @@ export function AdminProfileTemplateContentEditor({
       </DBStack>
 
       {activeSection === 'Pers' && (
-        <div className="border p-2 mb-2">
+        <Gruppe className="luft-unten-xs">
           <div className="raster abstand-2">
             {persFelder.map(field => (
               <div className="sp-md-6" key={`${templateId}-pers-${field.key}`}>
                 {field.key === 'OE' ? (
                   <>
-                    <span className="small">{field.label}</span>
+                    <span className="zelle-klein">{field.label}</span>
                     <OeLevelBoxes
                       value={templateContent.Pers[field.key] ?? ''}
                       onChange={value => onUpdatePersField(field.key, value)}
@@ -138,11 +139,11 @@ export function AdminProfileTemplateContentEditor({
               </div>
             ))}
           </div>
-        </div>
+        </Gruppe>
       )}
 
       {activeSection === 'Arbeitszeit' && (
-        <div className="border p-2 mb-2">
+        <Gruppe className="luft-unten-xs">
           {templateContent.Arbeitszeit ? (
             <ArbeitszeiteingabePanel
               key={`${templateId}-arbeitszeit`}
@@ -151,13 +152,13 @@ export function AdminProfileTemplateContentEditor({
             />
           ) : (
             <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="none">
-              <small className="text-body-secondary">Keine Arbeitszeit hinterlegt.</small>
+              <small className="farbe-gedaempft">Keine Arbeitszeit hinterlegt.</small>
               <DBButton type="button" variant="outlined" size="small" onClick={onEnableArbeitszeit} disabled={isSaving}>
                 Arbeitszeit aktivieren
               </DBButton>
             </DBStack>
           )}
-        </div>
+        </Gruppe>
       )}
 
       {offenerAbschnitt && offenerAbschnitt.id in templateContent.abschnitte && (
@@ -171,13 +172,13 @@ export function AdminProfileTemplateContentEditor({
       )}
 
       {activeSection === 'Einstellungen' && (
-        <div className="border p-2">
+        <Gruppe>
           <div>
-            <label className="small mb-1">Sichtbare Bereiche</label>
+            <label className="zelle-klein luft-unten-2xs">Sichtbare Bereiche</label>
             <DBStack direction="row" wrap gap="x-small">
               {tabOptions().map(option => (
                 <DBCheckbox
-                  className="m-0"
+                  className="ohne-luft"
                   size="small"
                   key={`${templateId}-tab-${option.key}`}
                   label={option.label}
@@ -187,7 +188,7 @@ export function AdminProfileTemplateContentEditor({
               ))}
             </DBStack>
           </div>
-        </div>
+        </Gruppe>
       )}
     </div>
   );

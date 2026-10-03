@@ -19,8 +19,7 @@ function DiffCell({ before, after }: { before: string; after: string }) {
   if (before === after) return <>{before || '–'}</>;
   return (
     <>
-      <span className="text-body-secondary text-decoration-line-through">{before}</span>{' '}
-      <span className="fw-semibold">{after}</span>
+      <span className="farbe-gedaempft durchgestrichen">{before}</span> <span className="fett">{after}</span>
     </>
   );
 }
@@ -52,12 +51,12 @@ export function BulkEditPreviewTable({ preview, activeFields, showApplyFrom }: P
 
   return (
     <div>
-      <p className="mb-2">
+      <p className="luft-unten-xs">
         {preview.summary.ok} von {preview.summary.total} Benutzern werden geändert
         {preview.summary.skipped > 0 && `, ${preview.summary.skipped} übersprungen`}.
       </p>
       <div className="db-table" data-width="full" data-size="small" data-divider="both" style={{ maxHeight: '50vh' }}>
-        <table className="align-middle">
+        <table>
           <thead>
             <tr>
               <th scope="col">Benutzer</th>
@@ -74,7 +73,7 @@ export function BulkEditPreviewTable({ preview, activeFields, showApplyFrom }: P
               <tr key={entry.userId} className={entry.status === 'skipped' ? 'text-body-secondary' : undefined}>
                 <td>{entry.userName}</td>
                 {entry.status === 'skipped' ? (
-                  <td colSpan={columnCount} className="fst-italic">
+                  <td colSpan={columnCount} className="kursiv">
                     {entry.message}
                   </td>
                 ) : (
@@ -85,7 +84,7 @@ export function BulkEditPreviewTable({ preview, activeFields, showApplyFrom }: P
                         <td key={field}>
                           <DiffCell before={diff.before} after={diff.after} />
                           {field === 'oe' && entry.message && (
-                            <div className="small text-body-secondary fst-italic">{entry.message}</div>
+                            <div className="zelle-klein farbe-gedaempft kursiv">{entry.message}</div>
                           )}
                         </td>
                       );

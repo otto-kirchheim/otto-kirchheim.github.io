@@ -1,4 +1,4 @@
-import { DBButton, DBCheckbox, DBInfotext, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBInfotext, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Role, ROLE_HIERARCHY } from '@otto-kirchheim/nebengeld-shared';
@@ -369,7 +369,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
 
   return (
     <div>
-      <div className="raster mb-3 abstand-2">
+      <div className="raster admin-leiste abstand-2">
         <div className="sp-sm-4">
           <div>
             <DbFeld
@@ -419,7 +419,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
             </DbAuswahl>
           </div>
         </div>
-        <div className="d-flex justify-content-end gap-2">
+        <DBStack direction="row" justifyContent="end" gap="x-small">
           <DBButton
             variant="outlined"
             size="small"
@@ -438,28 +438,30 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
             disabled={!filter.name && !filter.oe && !filter.role}
           >
             <DBTooltip placement="top">Setzt Name-, OE- und Rollenfilter zurück</DBTooltip>
-            <span className="app-icon app-icon--filter-off me-1 db-font-size-sm" style={{ verticalAlign: 'middle' }} />
+            <span className="app-icon app-icon--filter-off db-font-size-sm symbol-vor-text" />
             Filter zurücksetzen
           </DBButton>
-        </div>
+        </DBStack>
       </div>
 
       {loading && (
-        <div className="text-center py-4">
-          <div className="laedt text-primary" role="status">
-            <span className="visually-hidden">Laden…</span>
+        <div className="admin-laden">
+          <div className="laedt farbe-primary" role="status">
+            <span className="nur-screenreader">Laden…</span>
           </div>
         </div>
       )}
 
       {!loading && visibleUsers.length === 0 && (
-        <p className="text-body-secondary text-center">Keine Benutzer gefunden.</p>
+        <DBInfotext showIcon={false} className="infotext-block admin-leer">
+          Keine Benutzer gefunden.
+        </DBInfotext>
       )}
 
       {!loading && visibleUsers.length > 0 && (
-        <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <DBStack direction="row" wrap alignment="center" gap="x-small" className="luft-unten-xs">
           {isSuperAdmin && selectableUsers.length > 0 && (
-            <div className="mb-0">
+            <div>
               <DBCheckbox
                 size="small"
                 id="adminUserSelectAll"
@@ -469,20 +471,20 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
               />
             </div>
           )}
-          <span className="text-body-secondary small">{visibleUsers.length} Benutzer gefunden</span>
-        </div>
+          <DBInfotext showIcon={false}>{visibleUsers.length} Benutzer gefunden</DBInfotext>
+        </DBStack>
       )}
 
       {isSuperAdmin && selectedUsers.length > 0 && (
-        <div className="d-flex flex-wrap align-items-center gap-2 mb-3 p-2 border bg-body-tertiary sticky-top">
-          <span className="fw-semibold small">{selectedUsers.length} ausgewählt</span>
+        <DBStack direction="row" wrap alignment="center" gap="x-small" className="auswahl-leiste">
+          <strong className="zelle-klein">{selectedUsers.length} ausgewählt</strong>
           <DBButton variant="brand" size="small" type="button" icon="pen" onClick={openBulkEdit}>
             Massenänderung
           </DBButton>
           <DBButton variant="outlined" size="small" type="button" onClick={() => setSelectedIds(new Set())}>
             Auswahl aufheben
           </DBButton>
-        </div>
+        </DBStack>
       )}
 
       <div className="admin-user-cards">

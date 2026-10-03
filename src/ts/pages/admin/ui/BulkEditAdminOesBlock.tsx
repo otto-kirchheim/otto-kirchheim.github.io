@@ -1,6 +1,6 @@
 import { joinOeLevels } from '@/shared/lib/ressource/oeLevels';
 import { OeLevelInputs } from './OeLevelInputs';
-import { DBRadio } from '@db-ux/react-core-components';
+import { DBRadio, DBStack } from '@db-ux/react-core-components';
 import { DbAuswahl } from '@/shared/ui/form/DbFeld';
 
 export type AdminOeActionMode = 'none' | 'add' | 'remove';
@@ -70,8 +70,8 @@ export function BulkEditAdminOesBlock({
 
   return (
     <div>
-      <div className="fw-semibold small mb-1">{label}</div>
-      <div className="d-flex gap-3 mb-1 flex-wrap">
+      <div className="fett zelle-klein luft-unten-2xs">{label}</div>
+      <DBStack direction="row" wrap gap="small" className="luft-unten-2xs">
         {MODE_OPTIONS.map(([mode, modeLabel]) => (
           <div key={mode}>
             <DBRadio
@@ -84,7 +84,7 @@ export function BulkEditAdminOesBlock({
             />
           </div>
         ))}
-      </div>
+      </DBStack>
 
       {action.mode === 'add' && (
         <>
@@ -99,10 +99,10 @@ export function BulkEditAdminOesBlock({
             onAddLevel={() => updateLevels([...action.levels, ''])}
             onRemoveLevel={() => updateLevels(action.levels.slice(0, -1))}
           />
-          <div className="small text-body-secondary mt-1">
+          <div className="zelle-klein farbe-gedaempft luft-oben-2xs">
             {action.value ? (
               <>
-                Wird hinzugefügt: <span className="fw-semibold">{action.value}</span>
+                Wird hinzugefügt: <span className="fett">{action.value}</span>
               </>
             ) : (
               'Leere Ebenen werden aus dem Platzhalter übernommen.'

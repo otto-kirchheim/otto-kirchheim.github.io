@@ -386,7 +386,7 @@ export function AdminUserProfileEditor({
 
   return (
     <div>
-      <div className="mb-3">
+      <div className="luft-unten-sm">
         <DbFeld
           beschriftung="Name oder OE suchen…"
           dicht
@@ -397,20 +397,16 @@ export function AdminUserProfileEditor({
         />
       </div>
 
-      {loadError && (
-        <DBNotification semantic="critical" className="py-2 small">
-          {loadError}
-        </DBNotification>
-      )}
+      {loadError && <DBNotification semantic="critical">{loadError}</DBNotification>}
 
       <div className="db-table" data-width="full" data-size="small" data-divider="both" data-interactive="true">
-        <table className="align-middle mb-0">
+        <table className="ohne-luft-unten">
           <thead>
             <tr>
               <th>Name</th>
               <th>OE</th>
               <th>User-ID</th>
-              <th style={{ width: '5rem' }} className="text-end">
+              <th style={{ width: '5rem' }} className="zelle-rechts">
                 Aktion
               </th>
             </tr>
@@ -418,14 +414,14 @@ export function AdminUserProfileEditor({
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={4} className="text-center py-4">
+                <td colSpan={4} className="zelle-mitte zelle-luft">
                   <div className="laedt" data-size="small" role="status" />
                 </td>
               </tr>
             )}
             {!loading && filteredRows.length === 0 && (
               <tr>
-                <td colSpan={4} className="text-center py-3 text-muted">
+                <td colSpan={4} className="zelle-mitte zelle-luft-klein farbe-gedaempft">
                   Keine Profile
                 </td>
               </tr>
@@ -433,21 +429,21 @@ export function AdminUserProfileEditor({
             {!loading &&
               filteredRows.map(row => (
                 <tr key={row._id}>
-                  <td className="small">
+                  <td className="zelle-klein">
                     {row.vorname || row.nachname ? (
                       `${row.vorname} ${row.nachname}`.trim()
                     ) : (
-                      <em className="text-muted">kein Name</em>
+                      <em className="farbe-gedaempft">kein Name</em>
                     )}
                   </td>
-                  <td className="small">{row.oe || <em className="text-muted">—</em>}</td>
+                  <td className="zelle-klein">{row.oe || <em className="farbe-gedaempft">—</em>}</td>
                   <td>
-                    <code className="small text-muted">…{row.User.slice(-8)}</code>
+                    <code className="zelle-klein farbe-gedaempft">…{row.User.slice(-8)}</code>
                   </td>
-                  <td className="text-end">
+                  <td className="zelle-rechts">
                     <DBButton
                       type="button"
-                      className="py-0"
+
                       variant="outlined"
                       size="small"
                       icon="pen"
@@ -464,8 +460,15 @@ export function AdminUserProfileEditor({
       </div>
 
       {totalPages > 1 && (
-        <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="x-small" className="mt-3">
-          <small className="text-muted">
+        <DBStack
+          direction="row"
+          wrap
+          alignment="center"
+          justifyContent="space-between"
+          gap="x-small"
+          className="luft-oben-sm"
+        >
+          <small className="farbe-gedaempft">
             Gesamt: {page?.total ?? 0} · Seite {currentPage}/{totalPages}
           </small>
           <DBStack direction="row" wrap gap="2x-small">
@@ -491,7 +494,7 @@ export function AdminUserProfileEditor({
         </DBStack>
       )}
 
-      <div className="text-end mt-2">
+      <div className="zelle-rechts luft-oben-xs">
         <DBButton
           type="button"
           variant="outlined"
@@ -521,19 +524,15 @@ export function AdminUserProfileEditor({
           >
             <div className="dialog-rumpf" data-breite="xl">
               <div className="dialog-koerper">
-                {edit.saveError && (
-                  <DBNotification semantic="critical" className="py-2 small">
-                    {edit.saveError}
-                  </DBNotification>
-                )}
+                {edit.saveError && <DBNotification semantic="critical">{edit.saveError}</DBNotification>}
 
                 <div className="raster abstand-4">
                   <div className="sp-md-6">
-                    <DBHeadingH6 className="fw-semibold mb-3 border-bottom pb-2">Persönliche Daten</DBHeadingH6>
+                    <DBHeadingH6 className="admin-ueberschrift">Persönliche Daten</DBHeadingH6>
                     {Object.entries(edit.pers).map(([key, val]) => {
                       const selectOpts = PERS_SELECT_FIELDS[key];
                       return (
-                        <div key={key} className="mb-2">
+                        <div key={key} className="luft-unten-xs">
                           {selectOpts ? (
                             <DbAuswahl
                               beschriftung={PERS_FIELD_LABELS[key] ?? key}
@@ -557,7 +556,7 @@ export function AdminUserProfileEditor({
                             </DbAuswahl>
                           ) : key === 'OE' ? (
                             <>
-                              <span className="small fw-semibold">{PERS_FIELD_LABELS[key] ?? key}</span>
+                              <span className="zelle-klein fett">{PERS_FIELD_LABELS[key] ?? key}</span>
                               <OeLevelBoxes
                                 value={persFieldToInput(key, val)}
                                 onChange={value => handlePersChange(key, value)}
@@ -579,10 +578,10 @@ export function AdminUserProfileEditor({
                   </div>
 
                   <div className="sp-md-6">
-                    <DBHeadingH6 className="fw-semibold mb-3 border-bottom pb-2">Komplexe Felder (JSON)</DBHeadingH6>
+                    <DBHeadingH6 className="admin-ueberschrift">Komplexe Felder (JSON)</DBHeadingH6>
                     {JSON_SECTIONS.map(section => (
-                      <div key={section} className="mb-3">
-                        <label className="small fw-semibold mb-1">{section}</label>
+                      <div key={section} className="luft-unten-sm">
+                        <label className="zelle-klein fett luft-unten-2xs">{section}</label>
                         <JsonEditor
                           value={edit.jsonRaw[section] ?? ''}
                           onChange={raw => handleJsonChange(section, raw)}
@@ -593,11 +592,11 @@ export function AdminUserProfileEditor({
                   </div>
                 </div>
 
-                <div className="border-top mt-4 pt-3">
-                  <DBHeadingH6 className="fw-semibold mb-3">Benutzer-Aktionen</DBHeadingH6>
-                  <div className="d-flex flex-wrap gap-3 align-items-start">
+                <div className="admin-abschnitt-oben">
+                  <DBHeadingH6 className="fett luft-unten-sm">Benutzer-Aktionen</DBHeadingH6>
+                  <DBStack direction="row" wrap gap="small" alignment="start">
                     <div>
-                      <div className="small text-muted mb-1">emailVerified</div>
+                      <div className="zelle-klein farbe-gedaempft luft-unten-2xs">emailVerified</div>
                       <DBButton
                         type="button"
                         variant={edit.emailVerified ? 'filled' : 'outlined'}
@@ -612,26 +611,34 @@ export function AdminUserProfileEditor({
                             : 'false – umschalten'}
                       </DBButton>
                       {edit.emailVerified === null && (
-                        <div className="small text-muted mt-1">Klicken zum Setzen auf true</div>
+                        <div className="zelle-klein farbe-gedaempft luft-oben-2xs">Klicken zum Setzen auf true</div>
                       )}
                     </div>
 
-                    <div className="flex-grow-1">
-                      <div className="small text-muted mb-1">
+                    <div className="waechst">
+                      <div className="zelle-klein farbe-gedaempft luft-unten-2xs">
                         Passkeys
-                        {edit.passkeysLoading && <span className="laedt ms-2" data-size="small" role="status" />}
+                        {edit.passkeysLoading && (
+                          <span className="laedt luft-links-xs" data-size="small" role="status" />
+                        )}
                       </div>
                       {edit.passkeys.length === 0 && !edit.passkeysLoading && (
-                        <div className="small text-muted">Keine Passkeys</div>
+                        <div className="zelle-klein farbe-gedaempft">Keine Passkeys</div>
                       )}
                       {edit.passkeys.map(pk => (
-                        <div key={pk.credentialId} className="d-flex align-items-center gap-2 mb-1">
-                          <span className="small">
-                            {pk.name ?? 'Passkey'} <code className="text-muted">…{pk.credentialId.slice(-8)}</code>
+                        <DBStack
+                          key={pk.credentialId}
+                          direction="row"
+                          alignment="center"
+                          gap="x-small"
+                          className="luft-unten-2xs"
+                        >
+                          <span className="zelle-klein">
+                            {pk.name ?? 'Passkey'} <code className="farbe-gedaempft">…{pk.credentialId.slice(-8)}</code>
                           </span>
                           <DBButton
                             type="button"
-                            className="py-0"
+
                             variant="outlined"
                             data-color="critical"
                             size="small"
@@ -641,10 +648,10 @@ export function AdminUserProfileEditor({
                           >
                             <DBTooltip>Passkey löschen</DBTooltip>
                           </DBButton>
-                        </div>
+                        </DBStack>
                       ))}
                     </div>
-                  </div>
+                  </DBStack>
                 </div>
               </div>
 
@@ -655,7 +662,7 @@ export function AdminUserProfileEditor({
                 <DBButton type="button" variant="brand" onClick={saveEdit} disabled={edit.saving}>
                   {edit.saving ? (
                     <>
-                      <span className="laedt me-1" data-size="small" role="status" />
+                      <span className="laedt luft-rechts-2xs" data-size="small" role="status" />
                       Speichern…
                     </>
                   ) : (

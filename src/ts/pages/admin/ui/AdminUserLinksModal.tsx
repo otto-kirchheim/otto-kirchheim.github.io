@@ -1,9 +1,10 @@
 import { useState } from 'react';
 
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { DbFeld } from '@/shared/ui/form/DbFeld';
 import MyModalHeader from '@/shared/ui/modal/MyModalHeader';
-import { DBButton } from '@db-ux/react-core-components';
+import { DBButton, DBStack } from '@db-ux/react-core-components';
 import { issueVerificationLink, issuePasswordResetLink, type AdminIssuedLink } from '../api/api';
 
 type LinkKind = 'verification' | 'reset';
@@ -118,14 +119,14 @@ function LinkSection({
   }
 
   return (
-    <div className="border p-2 mb-2">
-      <p className="fw-semibold mb-1">{config.heading}</p>
-      <p className="small text-body-secondary mb-2">
+    <Gruppe className="luft-unten-xs">
+      <p className="fett luft-unten-2xs">{config.heading}</p>
+      <p className="zelle-klein farbe-gedaempft luft-unten-xs">
         {config.description} Gültigkeit: {config.validity}.
       </p>
 
       {disabledHint ? (
-        <p className="small text-success mb-0">{disabledHint}</p>
+        <p className="zelle-klein farbe-erfolg ohne-luft-unten">{disabledHint}</p>
       ) : (
         <>
           {!link && (
@@ -138,7 +139,7 @@ function LinkSection({
             >
               {loading ? (
                 <>
-                  <span className="laedt me-1" data-size="small" role="status" />
+                  <span className="laedt luft-rechts-2xs" data-size="small" role="status" />
                   Erzeugen…
                 </>
               ) : (
@@ -152,14 +153,14 @@ function LinkSection({
               <DbFeld
                 beschriftung="Einladungslink"
                 dicht
-                className="mb-2"
-                feldKlasse="font-monospace"
+                className="luft-unten-xs"
+                feldKlasse="schrift-mono"
                 type="text"
                 readOnly
                 value={link.url}
                 onFocus={e => e.target.select()}
               />
-              <div className="d-flex flex-wrap gap-2">
+              <DBStack direction="row" wrap gap="x-small">
                 <DBButton
                   variant="outlined"
                   size="small"
@@ -178,19 +179,19 @@ function LinkSection({
                 >
                   Text kopieren
                 </DBButton>
-              </div>
+              </DBStack>
               {!link.mailSent && (
-                <p className="small text-warning-emphasis mt-2 mb-0">
+                <p className="zelle-klein farbe-warnung luft-oben-xs ohne-luft-unten">
                   E-Mail-Versand fehlgeschlagen oder deaktiviert – bitte den Link manuell weitergeben.
                 </p>
               )}
             </>
           )}
 
-          {error && <p className="small text-danger mt-2 mb-0">{error}</p>}
+          {error && <p className="zelle-klein farbe-gefahr luft-oben-xs ohne-luft-unten">{error}</p>}
         </>
       )}
-    </div>
+    </Gruppe>
   );
 }
 
@@ -212,7 +213,7 @@ export function AdminUserLinksModal({
     <div className="dialog-rumpf">
       <MyModalHeader title={`Login-Hilfe: ${userName}`} />
       <div className="dialog-koerper">
-        <p className="small text-body-secondary">
+        <p className="zelle-klein farbe-gedaempft">
           Die Links werden nur einmal angezeigt und nicht gespeichert. Bitte per DB-Mail oder Teams an den Benutzer
           weitergeben – so umgehst du den Konzern-Spamfilter.
         </p>

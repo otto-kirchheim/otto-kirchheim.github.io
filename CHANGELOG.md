@@ -2,6 +2,14 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-03 (207)
+
+### refactor (Bootstrap-Rueckbau R7: `pages/admin/ui` ohne FormularEditor)
+
+- Admin-Dashboard, Benutzerliste/-karten, Profil-/Ressourcen-Browser, Bearbeiten-Dialoge, Vorlagen-/Vorgaben-Editor, Massenaenderung, JSON-Editor, Log-Browser ohne Bootstrap-Klassen: `DBStack`, `DBInfotext`, `Gruppe`, neue Datei `src/scss/admin.scss` (Farben `farbe-*`, Abstaende `luft-*`, Zellen `zelle-*`, Karten-/Editor-Bausteine). Mechanische Umstellung per Skript (Klassen-Abbildung, `<div class="d-flex ...">` zu `DBStack`, `border p-N` zu `Gruppe`), danach von Hand nachgezogen.
+- Tests auf die neuen Klassen angepasst. Ratsche 527.
+- Sichtbare Abweichungen: Zeilentexte in Dashboard-Karten (Rollen, Ressourcen, Auth) grau statt schwarz (`DBInfotext`), Kartenueberschriften etwas dichter, einzelne Abstaende um wenige px.
+
 ## 2026-10-03 (206)
 
 ### refactor (Bootstrap-Rueckbau R6: `pages/start`, `berechnung`, `einstellungen`)

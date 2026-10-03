@@ -7,6 +7,7 @@ import {
   DBNotification,
   DBTag,
   DBTooltip,
+  DBStack,
 } from '@db-ux/react-core-components';
 import { createPortal } from 'react-dom';
 
@@ -71,18 +72,14 @@ export function AdminResourceEditModal({
         <DBDrawerHeader closeButtonText="Schließen">
           <DBHeadingH2 paragraphSpacing>
             {resource.label} bearbeiten
-            <code className="ms-2 fs-6 text-muted">{truncateId(edit.doc['_id'])}</code>
+            <code className="luft-links-xs farbe-gedaempft titel-code">{truncateId(edit.doc['_id'])}</code>
           </DBHeadingH2>
         </DBDrawerHeader>
       }
     >
       <div className="dialog-rumpf" data-breite="lg">
         <div className="dialog-koerper">
-          {edit.saveError && (
-            <DBNotification semantic="critical" className="py-2 small">
-              {edit.saveError}
-            </DBNotification>
-          )}
+          {edit.saveError && <DBNotification semantic="critical">{edit.saveError}</DBNotification>}
 
           {Object.entries(edit.values).map(([key, val]) => {
             const immutable = IMMUTABLE_FIELDS.has(key);
@@ -101,16 +98,16 @@ export function AdminResourceEditModal({
             const isTimeString = typeof val === 'string' && !looksLikeIso(val) && istZeitFeld(resource, key);
 
             return (
-              <div key={key} className="mb-3">
-                <label className="fw-semibold small mb-1">
+              <div key={key} className="luft-unten-sm">
+                <label className="fett zelle-klein luft-unten-2xs">
                   {key}
-                  {immutable && <span className="fw-normal text-muted ms-1">(nicht änderbar)</span>}
-                  {readonly && <span className="fw-normal text-muted ms-1">(nur lesen)</span>}
-                  {isUserRef && <span className="fw-normal text-muted ms-1">(Benutzerreferenz)</span>}
-                  {crossRef && <span className="fw-normal text-info ms-1">→ {crossTarget?.label}</span>}
+                  {immutable && <span className="normal-fett farbe-gedaempft luft-links-2xs">(nicht änderbar)</span>}
+                  {readonly && <span className="normal-fett farbe-gedaempft luft-links-2xs">(nur lesen)</span>}
+                  {isUserRef && <span className="normal-fett farbe-gedaempft luft-links-2xs">(Benutzerreferenz)</span>}
+                  {crossRef && <span className="normal-fett farbe-info luft-links-2xs">→ {crossTarget?.label}</span>}
                   {isNull && !disabled && !isUserRef && (
                     <DBTag
-                      className="text-dark ms-1"
+                      className="luft-links-2xs"
                       semantic="warning"
                       emphasis="strong"
                       style={{ fontSize: '0.65em' }}
@@ -121,13 +118,13 @@ export function AdminResourceEditModal({
                 </label>
 
                 {isUserRef ? (
-                  <div className="d-flex align-items-center gap-2 flex-wrap">
-                    <code className="small bg-body-secondary px-2 py-1">{String(val ?? '')}</code>
-                    {userNameMap[String(val)] && <span className="small fw-semibold">{userNameMap[String(val)]}</span>}
+                  <DBStack direction="row" wrap gap="x-small" alignment="center">
+                    <code className="code-feld">{String(val ?? '')}</code>
+                    {userNameMap[String(val)] && <span className="zelle-klein fett">{userNameMap[String(val)]}</span>}
                     {onNavigateToUser && (
                       <DBButton
                         type="button"
-                        className="ms-auto"
+                        className="knopf-rechts"
                         variant="outlined"
                         data-color="informational"
                         size="small"
@@ -140,13 +137,13 @@ export function AdminResourceEditModal({
                         Zum Profil
                       </DBButton>
                     )}
-                  </div>
+                  </DBStack>
                 ) : disabled ? (
                   <DbFeld
                     beschriftung={key}
                     dicht
-                    className="bg-body-secondary text-muted"
-                    feldKlasse="font-monospace"
+                    className="code-feld-sperre"
+                    feldKlasse="schrift-mono"
                     readOnly
                     value={
                       isDateOnly
@@ -160,30 +157,32 @@ export function AdminResourceEditModal({
                   />
                 ) : crossRef ? (
                   crossRef.isArray && Array.isArray(val) ? (
-                    <div className="d-flex flex-column gap-1">
-                      {(val as string[]).length === 0 && <em className="text-muted small">Keine Verknüpfungen</em>}
+                    <DBStack direction="column" gap="2x-small">
+                      {(val as string[]).length === 0 && (
+                        <em className="farbe-gedaempft zelle-klein">Keine Verknüpfungen</em>
+                      )}
                       {(val as string[]).map((id, i) => (
-                        <div key={i} className="d-flex align-items-center gap-2 bg-body-secondary px-2 py-1">
-                          <code className="small flex-grow-1">{truncateId(id)}</code>
+                        <DBStack key={i} direction="row" alignment="center" gap="x-small" className="code-feld">
+                          <code className="zelle-klein waechst">{truncateId(id)}</code>
                           <DBButton
                             type="button"
-                            className="py-0"
+
                             variant="outlined"
                             data-color="informational"
                             size="small"
                             icon="arrow_up_right"
                             onClick={() => void navigateToEntry(crossRef.endpoint, id)}
                           >
-                            <span className="ms-1 d-none d-sm-inline">{crossTarget?.shortLabel}</span>
+                            <span className="luft-links-2xs ab-sm-inline">{crossTarget?.shortLabel}</span>
                           </DBButton>
-                        </div>
+                        </DBStack>
                       ))}
-                    </div>
+                    </DBStack>
                   ) : isNull ? (
-                    <em className="text-muted small">Keine Verknüpfung (null)</em>
+                    <em className="farbe-gedaempft zelle-klein">Keine Verknüpfung (null)</em>
                   ) : (
-                    <div className="d-flex align-items-center gap-2">
-                      <code className="small bg-body-secondary px-2 py-1 flex-grow-1">{truncateId(val)}</code>
+                    <DBStack direction="row" gap="x-small" alignment="center">
+                      <code className="code-feld waechst">{truncateId(val)}</code>
                       <DBButton
                         type="button"
                         variant="outlined"
@@ -194,11 +193,11 @@ export function AdminResourceEditModal({
                       >
                         {crossTarget?.label}
                       </DBButton>
-                    </div>
+                    </DBStack>
                   )
                 ) : typeof val === 'boolean' ? (
                   <DBCheckbox
-                    className="mt-1"
+                    className="luft-oben-2xs"
                     size="small"
                     label={key}
                     checked={val}
@@ -208,7 +207,7 @@ export function AdminResourceEditModal({
                   <DbFeld
                     beschriftung="(leer – Wert eingeben oder leer lassen)"
                     dicht
-                    className="border-warning"
+                    className="feld-leer-hinweis"
                     type="text"
                     placeholder="(leer – Wert eingeben oder leer lassen)"
                     onChange={e => {
@@ -274,8 +273,8 @@ export function AdminResourceEditModal({
                     onChange={e => handleValueChange(key, parseFloat(e.target.value) || 0)}
                   />
                 ) : isObjectId(val) ? (
-                  <div className="d-flex align-items-center gap-2">
-                    <code className="small bg-body-secondary px-2 py-1 flex-grow-1">{val}</code>
+                  <DBStack direction="row" gap="x-small" alignment="center">
+                    <code className="code-feld waechst">{val}</code>
                     <DBButton
                       type="button"
                       variant="outlined"
@@ -286,7 +285,7 @@ export function AdminResourceEditModal({
                     >
                       <DBTooltip>Kopieren</DBTooltip>
                     </DBButton>
-                  </div>
+                  </DBStack>
                 ) : (
                   <DbFeld
                     beschriftung={key}
@@ -308,7 +307,7 @@ export function AdminResourceEditModal({
           <DBButton type="button" variant="brand" onClick={saveEdit} disabled={edit.saving}>
             {edit.saving ? (
               <>
-                <span className="laedt me-1" data-size="small" role="status" />
+                <span className="laedt luft-rechts-2xs" data-size="small" role="status" />
                 Speichern…
               </>
             ) : (

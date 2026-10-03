@@ -15,7 +15,7 @@ function renderEditor(props: Partial<Parameters<typeof JsonEditor>[0]> = {}): HT
 }
 
 function header(container: HTMLDivElement): HTMLDivElement {
-  return container.querySelector('.d-flex.align-items-center.gap-2') as HTMLDivElement;
+  return container.querySelector('.json-editor__kopf') as HTMLDivElement;
 }
 
 function badge(container: HTMLDivElement): HTMLSpanElement | null {
@@ -81,7 +81,7 @@ describe('JsonEditor', () => {
   describe('Fehleranzeige', () => {
     it('markiert den Rahmen rot, wenn error gesetzt ist, auch bei validem JSON', () => {
       const container = renderEditor({ value: '{}', error: 'Server-Validierungsfehler' });
-      expect(container.querySelector('.border-danger')).not.toBeNull();
+      expect(container.querySelector('.json-editor--fehler')).not.toBeNull();
     });
 
     it('zeigt die Fehlermeldung im geöffneten Zustand', async () => {
@@ -95,7 +95,7 @@ describe('JsonEditor', () => {
       const container = renderEditor({ value: '{kaputt' });
       await click(header(container));
 
-      const errorDiv = Array.from(container.querySelectorAll('.text-danger')).find(el =>
+      const errorDiv = Array.from(container.querySelectorAll('.farbe-gefahr')).find(el =>
         el.textContent?.includes('Ungültiges JSON'),
       );
       expect(errorDiv).toBeDefined();

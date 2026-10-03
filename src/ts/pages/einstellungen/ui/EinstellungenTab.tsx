@@ -162,8 +162,8 @@ export default function EinstellungenTab() {
       node: (
         <Abschnitt id="collapseFive" titel="Einstellungen & Bereiche">
           <div>
-            <DBStack gap="large" alignment="stretch">
-              <DBStack gap="medium">
+            <DBStack gap="medium" alignment="stretch">
+              <DBStack gap="small">
                 <DBHeadingH6>Sichtbare Bereiche</DBHeadingH6>
                 <DBInfotext showIcon={false}>Welche Bereiche sollen in der Navigation sichtbar sein?</DBInfotext>
                 <DBStack gap="x-small">
@@ -180,9 +180,9 @@ export default function EinstellungenTab() {
 
               <DBDivider width="full" margin="none" />
 
-              <DBStack gap="medium">
+              <DBStack gap="small">
                 <DBHeadingH6>AutoSave</DBHeadingH6>
-                <DBStack gap="medium">
+                <DBStack gap="small">
                   <DBCheckbox id="autoSaveEnabled" label="AutoSave aktivieren" data-settings-key="autoSaveEnabled" />
                   <div>
                     <label htmlFor="autoSaveDelay">

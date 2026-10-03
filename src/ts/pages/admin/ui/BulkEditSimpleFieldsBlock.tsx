@@ -1,5 +1,6 @@
 import { FIELD_LABELS, SIMPLE_FIELD_KEYS, type SimpleFieldKey } from '../model/bulkEditOe';
-import { DBCheckbox } from '@db-ux/react-core-components';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
+import { DBCheckbox, DBStack } from '@db-ux/react-core-components';
 import { DbFeld } from '@/shared/ui/form/DbFeld';
 
 export type SimpleFieldState = { enabled: boolean; value: string };
@@ -16,9 +17,9 @@ type Props = {
  */
 export function BulkEditSimpleFieldsBlock({ fields, onChange }: Props) {
   return (
-    <div className="border p-3">
-      <div className="fw-semibold mb-2">Weitere Felder setzen</div>
-      <div className="d-flex flex-column gap-2">
+    <Gruppe>
+      <div className="fett luft-unten-xs">Weitere Felder setzen</div>
+      <DBStack direction="column" gap="x-small">
         {SIMPLE_FIELD_KEYS.map(key => (
           <div key={key}>
             <div>
@@ -31,7 +32,7 @@ export function BulkEditSimpleFieldsBlock({ fields, onChange }: Props) {
               />
             </div>
             {fields[key].enabled && (
-              <div className="mt-1 ms-4">
+              <div className="luft-oben-2xs luft-links-md">
                 <DbFeld
                   type="text"
                   beschriftung={`Neuer Wert für ${FIELD_LABELS[key]}`}
@@ -44,7 +45,7 @@ export function BulkEditSimpleFieldsBlock({ fields, onChange }: Props) {
             )}
           </div>
         ))}
-      </div>
-    </div>
+      </DBStack>
+    </Gruppe>
   );
 }

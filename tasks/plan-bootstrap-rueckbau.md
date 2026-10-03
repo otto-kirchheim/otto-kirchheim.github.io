@@ -136,7 +136,7 @@ Befund Bestand: Utilities direkt an DB-Komponenten 111 x `DBButton` (`py-0` 26, 
 - [x] R4 `features/ber` (2026-10-03): Hinweise `DBNotification`, Gruppen `Gruppe`, Zeilen `DBStack`; Ratsche 1593. Offen fuer R10: `db-table` (DB-Klasse, steht wegen Regel in `utilities.scss` in der Ratschen-Liste) aus Liste nehmen und Regel nach `styles.scss`
 - [x] R5 `features/ewt`, `features/ez`, `features/ea` (2026-10-03): Tab-Koepfe, Dialoge, Zulagen-Einstellungen. Ratsche 1454
 - [x] R6 `pages/start`, `pages/berechnung`, `pages/einstellungen` (2026-10-03): Start pixelgleich. Ratsche 1311
-- [ ] R7 `pages/admin/ui` ohne FormularEditor, in 2–3 Teilen – ca. 770
+- [x] R7 `pages/admin/ui` ohne FormularEditor (2026-10-03): Skript-Umstellung + Nacharbeit, `admin.scss`. Ratsche 527
 - [ ] R8 `pages/admin/ui/FormularEditor` – ca. 430
 - [ ] R9 `pages/admin/features`, `pages/admin/index.tsx` – ca. 75
 - [ ] R10 Abschluss: `utilities.scss` auf den Rest prüfen und löschen, Tests/`mockData.ts`, Kommentare, `CLAUDE.md`,

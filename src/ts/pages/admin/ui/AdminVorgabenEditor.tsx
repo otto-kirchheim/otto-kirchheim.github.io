@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
 import dayjs from '@/shared/lib/date/configDayjs';
@@ -10,7 +11,7 @@ import {
   upsertVorgabeByYear,
   type BackendVorgabe,
 } from '../api/api';
-import { DBButton, DBHeadingH5 } from '@db-ux/react-core-components';
+import { DBButton, DBHeadingH5, DBStack } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
 
@@ -270,14 +271,14 @@ export function AdminVorgabenEditor() {
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <DBHeadingH5 className="mb-0">VorgabenGeld</DBHeadingH5>
+      <DBStack direction="row" gap="none" alignment="center" justifyContent="space-between" className="luft-unten-sm">
+        <DBHeadingH5 className="ohne-luft-unten">VorgabenGeld</DBHeadingH5>
         <DBButton type="button" variant="outlined" size="small" onClick={handleCreateYear} data-disabler>
           Jahr anlegen
         </DBButton>
-      </div>
+      </DBStack>
 
-      <div className="raster mb-3 abstand-2">
+      <div className="raster luft-unten-sm abstand-2">
         <div className="sp-md-4">
           <DbAuswahl
             beschriftung="Jahr"
@@ -301,8 +302,8 @@ export function AdminVorgabenEditor() {
         </div>
       </div>
 
-      <div className="d-flex justify-content-between align-items-center mb-2">
-        <label className="mb-0">Monatswerte</label>
+      <DBStack direction="row" gap="none" alignment="center" justifyContent="space-between" className="luft-unten-xs">
+        <label className="ohne-luft-unten">Monatswerte</label>
         <DBButton
           type="button"
           variant="outlined"
@@ -313,15 +314,21 @@ export function AdminVorgabenEditor() {
         >
           Monat hinzufügen
         </DBButton>
-      </div>
+      </DBStack>
 
-      <div className="d-flex flex-column gap-3">
-        {monthEntries.length === 0 && <p className="text-body-secondary mb-0">Keine Monatswerte vorhanden.</p>}
+      <DBStack direction="column" gap="small">
+        {monthEntries.length === 0 && <p className="farbe-gedaempft ohne-luft-unten">Keine Monatswerte vorhanden.</p>}
 
         {monthEntries.map((entry, index) => (
-          <div key={`${entry.key}-${index}`} className="border p-3">
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <div className="d-flex align-items-center gap-2">
+          <Gruppe key={`${entry.key}-${index}`}>
+            <DBStack
+              direction="row"
+              gap="none"
+              alignment="center"
+              justifyContent="space-between"
+              className="luft-unten-xs"
+            >
+              <DBStack direction="row" gap="x-small" alignment="center">
                 <DbFeld
                   beschriftung="Monat"
                   beschriftungZeigen
@@ -334,7 +341,7 @@ export function AdminVorgabenEditor() {
                   onChange={e => updateMonthKey(index, Number((e.target as HTMLInputElement).value))}
                   disabled={loading || saving || !selectedYear || entry.key === 1}
                 />
-              </div>
+              </DBStack>
 
               <DBButton
                 type="button"
@@ -347,7 +354,7 @@ export function AdminVorgabenEditor() {
               >
                 Entfernen
               </DBButton>
-            </div>
+            </DBStack>
 
             <div className="raster abstand-2">
               {GELD_FIELDS.map(field => (
@@ -366,11 +373,11 @@ export function AdminVorgabenEditor() {
                 </div>
               ))}
             </div>
-          </div>
+          </Gruppe>
         ))}
-      </div>
+      </DBStack>
 
-      <div className="d-flex gap-2 mt-3">
+      <DBStack direction="row" gap="x-small" className="luft-oben-sm">
         <DBButton
           type="button"
           variant="brand"
@@ -390,7 +397,7 @@ export function AdminVorgabenEditor() {
         >
           Löschen
         </DBButton>
-      </div>
+      </DBStack>
     </div>
   );
 }

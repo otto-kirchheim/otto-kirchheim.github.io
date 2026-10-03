@@ -23,7 +23,7 @@ export default function createAdminUserPasswordModal(userId: string, userName: s
     <MyFormModal myRef={ref} title={`Passwort setzen: ${userName}`} submitText="Passwort setzen" onSubmit={onSubmit()}>
       <MyModalBody>
         <div>
-          <p className="small text-body-secondary mb-0">
+          <p className="zelle-klein farbe-gedaempft ohne-luft-unten">
             Das Passwort wird direkt für diesen Benutzer gesetzt. Der Benutzer muss sich danach mit dem neuen Passwort
             anmelden.
           </p>

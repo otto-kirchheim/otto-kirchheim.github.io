@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DBButton, DBTag, DBTextarea, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBTag, DBTextarea, DBTooltip, DBStack } from '@db-ux/react-core-components';
 
 type Props = {
   value: string;
@@ -81,38 +81,40 @@ export function JsonEditor({ value, onChange, error }: Props) {
   }
 
   return (
-    <div
-      className={`border ${hasError ? 'border-danger' : open ? 'border-primary-subtle' : 'border-secondary-subtle'}`}
-    >
+    <div className={`json-editor ${hasError ? 'json-editor--fehler' : open ? 'json-editor--offen' : ''}`}>
       {/* Kopfzeile: immer sichtbar, klappt den Editor auf/zu */}
       <div
-        className={`d-flex align-items-center gap-2 px-2 py-1 ${hasError ? 'bg-danger-subtle' : 'bg-body-secondary'} ${open ? 'border-bottom' : ''}`}
-        style={{ cursor: 'pointer', userSelect: 'none', borderRadius: 'inherit' }}
+        className={`json-editor__kopf ${hasError ? 'json-editor__kopf--fehler' : ''} ${open ? 'json-editor__kopf--offen' : ''}`}
         onClick={() => setOpen(o => !o)}
       >
         <span
-          className="db-icon text-muted flex-shrink-0 db-font-size-xs"
+          className="db-icon farbe-gedaempft nicht-schrumpfen db-font-size-xs"
           data-icon={open ? 'chevron_up' : 'chevron_down'}
         />
 
-        <DBTag className="flex-shrink-0" semantic={hasError ? 'critical' : 'neutral'} emphasis="strong">
+        <DBTag className="nicht-schrumpfen" semantic={hasError ? 'critical' : 'neutral'} emphasis="strong">
           {label}
         </DBTag>
 
         {!open && hint && (
           <span
-            className="text-muted text-truncate"
+            className="farbe-gedaempft abschneiden"
             style={{ fontSize: '0.7rem', fontFamily: 'monospace', minWidth: '0' }}
           >
             {hint}
           </span>
         )}
 
-        <div className="ms-auto d-flex gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+        <DBStack
+          direction="row"
+          gap="2x-small"
+          className="knopf-rechts nicht-schrumpfen"
+          onClick={e => e.stopPropagation()}
+        >
           {open && (
             <DBButton
               type="button"
-              className="py-0"
+
               variant="outlined"
               size="small"
               style={{ fontSize: '0.75rem' }}
@@ -120,12 +122,12 @@ export function JsonEditor({ value, onChange, error }: Props) {
               onClick={handleFormat}
               title="JSON formatieren"
             >
-              <span className="ms-1 d-none d-sm-inline">Format</span>
+              <span className="luft-links-2xs ab-sm-inline">Format</span>
             </DBButton>
           )}
           <DBButton
             type="button"
-            className="py-0"
+
             variant="outlined"
             size="small"
             style={{ fontSize: '0.75rem' }}
@@ -135,13 +137,13 @@ export function JsonEditor({ value, onChange, error }: Props) {
           >
             <DBTooltip>{open ? 'Einklappen' : 'Bearbeiten'}</DBTooltip>
           </DBButton>
-        </div>
+        </DBStack>
       </div>
 
       {open && (
-        <div className="p-2">
+        <div className="json-editor__inhalt">
           <DBTextarea
-            className="w-100"
+            className="json-editor__textarea"
             data-density="functional"
             id={`json-${label}`}
             label={label}
@@ -164,9 +166,9 @@ export function JsonEditor({ value, onChange, error }: Props) {
             autoCorrect="off"
           />
           {hasError && (
-            <div className="small mt-1 text-danger">
+            <div className="zelle-klein luft-oben-2xs farbe-gefahr">
               <span
-                className="db-icon me-1 db-font-size-xs"
+                className="db-icon luft-rechts-2xs db-font-size-xs"
                 data-icon="exclamation_mark_circle"
                 style={{ verticalAlign: 'middle' }}
               />

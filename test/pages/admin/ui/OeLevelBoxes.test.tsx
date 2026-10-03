@@ -137,7 +137,7 @@ describe('OeLevelBoxes', () => {
   it('setzt vor eine numerische letzte Ebene kein Minus', () => {
     const container = renderBoxes('V.IW-MI 03', () => {});
 
-    const separators = Array.from(container.querySelectorAll('span.text-body-secondary')).map(el => el.textContent);
+    const separators = Array.from(container.querySelectorAll('span.farbe-gedaempft')).map(el => el.textContent);
     expect(separators).toEqual(['.', '-', '']);
   });
 
@@ -153,7 +153,7 @@ describe('OeLevelBoxes', () => {
     container.querySelector<HTMLButtonElement>('button[aria-label="Ebene hinzufügen"]')!.click();
     await flush();
     const separatorTexts = () =>
-      Array.from(container.querySelectorAll('span.text-body-secondary')).map(el => el.textContent);
+      Array.from(container.querySelectorAll('span.farbe-gedaempft')).map(el => el.textContent);
     expect(separatorTexts()).toEqual(['.', '-', '']);
 
     setValue(boxes(container)[3], '07');

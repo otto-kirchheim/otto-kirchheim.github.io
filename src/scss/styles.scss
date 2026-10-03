@@ -1,5 +1,6 @@
 @use 'breakpoints' as bp;
 @import 'raster';
+@import 'admin';
 
 // Knopfreihen der Tabs: jeder Knopf begrenzt, sonst zieht er ueber die halbe Seite.
 .knopfreihe > * {
@@ -18,7 +19,6 @@
   min-inline-size: var(--db-container-3xs);
 }
 
-// Start-Karten-Titel: zwei Zeilen Platz, damit die Absaetze darunter auf einer Hoehe beginnen.
 // Start-Tab (`pages/start/ui/StartTab.tsx`).
 .start-kopf {
   margin-block-end: var(--db-spacing-fixed-md);
@@ -68,6 +68,7 @@
   padding-block: var(--db-spacing-fixed-sm);
 }
 
+// Start-Karten-Titel: zwei Zeilen Platz, damit die Absaetze darunter auf einer Hoehe beginnen.
 .karten-titel {
   display: flex;
   align-items: center;
@@ -341,7 +342,7 @@ td:has(.SchichtBereitschaft) {
 
 // Berechnung (`BerechnungTab.tsx`, `BerechnungMobileCards.tsx`): unter sm Monatskarten, ab sm Tabelle mit Monatsfenster.
 .berechnung-tab {
-  margin-block-end: var(--db-spacing-fixed-md);
+  margin-block-end: var(--db-spacing-fixed-sm);
 }
 
 .berechnung-karten {
@@ -359,7 +360,7 @@ td:has(.SchichtBereitschaft) {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--db-spacing-fixed-md);
+    gap: var(--db-spacing-fixed-sm);
     margin-block-end: var(--db-spacing-fixed-xs);
   }
 }
@@ -404,8 +405,8 @@ td:has(.SchichtBereitschaft) {
 .passkey-kopf {
   display: flex;
   flex-direction: column;
-  gap: var(--db-spacing-fixed-md);
-  margin-block-end: var(--db-spacing-fixed-md);
+  gap: var(--db-spacing-fixed-sm);
+  margin-block-end: var(--db-spacing-fixed-sm);
 
   @media screen and (min-width: #{bp.$md}px) {
     flex-direction: row;
@@ -808,7 +809,7 @@ body,
 }
 
 .fahrzeiten-panel {
-  margin-block-start: var(--db-spacing-fixed-md);
+  margin-block-start: var(--db-spacing-fixed-sm);
 }
 
 @media screen and (min-width: #{bp.$md}px) {
@@ -844,7 +845,7 @@ body,
 }
 
 .feld-abstand-oben {
-  margin-block-start: var(--db-spacing-fixed-md);
+  margin-block-start: var(--db-spacing-fixed-sm);
 }
 
 .checkbox-hinweis {
@@ -861,7 +862,7 @@ body,
 }
 
 .zulagen-kategorie {
-  margin-block-end: var(--db-spacing-fixed-md);
+  margin-block-end: var(--db-spacing-fixed-sm);
 }
 
 .zulagen-kategorie__hinweis {

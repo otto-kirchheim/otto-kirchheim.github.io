@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { DBButton, DBTag, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBTag, DBTooltip, DBStack } from '@db-ux/react-core-components';
 import { OeLevelBoxes } from './OeLevelBoxes';
 
 type OeTagInputProps = {
@@ -59,14 +59,13 @@ export function OeTagInput({
   }
 
   return (
-    <div className="mb-2">
-      <label className="fw-semibold small mb-1">{label}</label>
-      <div className="d-flex flex-wrap gap-1 mb-1">
-        {values.length === 0 && <span className="text-body-secondary small fst-italic">Keine</span>}
+    <div className="luft-unten-xs">
+      <label className="fett zelle-klein luft-unten-2xs">{label}</label>
+      <DBStack direction="row" wrap gap="2x-small" className="luft-unten-2xs">
+        {values.length === 0 && <span className="farbe-gedaempft zelle-klein kursiv">Keine</span>}
         {values.map((oe, index) => (
           <DBTag
             key={`${oe}-${index}`}
-            className="d-inline-flex align-items-center gap-1 py-1 px-2"
             style={disabled ? undefined : { cursor: 'pointer' }}
             title={disabled ? undefined : 'Zum Bearbeiten anklicken'}
             semantic="informational"
@@ -79,10 +78,10 @@ export function OeTagInput({
             {oe}
           </DBTag>
         ))}
-      </div>
+      </DBStack>
       {!disabled && (
-        <div className="d-flex flex-wrap align-items-center gap-2">
-          <span className="text-body-secondary small">{placeholder}</span>
+        <DBStack direction="row" wrap gap="x-small" alignment="center">
+          <span className="farbe-gedaempft zelle-klein">{placeholder}</span>
           <OeLevelBoxes value={inputValue} onChange={setInputValue} defaultLevelCount={defaultLevelCount} />
           <DBButton
             variant="outlined"
@@ -96,7 +95,7 @@ export function OeTagInput({
           >
             <DBTooltip>Wert hinzufügen</DBTooltip>
           </DBButton>
-        </div>
+        </DBStack>
       )}
     </div>
   );
