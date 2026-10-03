@@ -4,6 +4,7 @@ import {
   DBCard,
   DBHeadingH1,
   DBHeadingH5,
+  DBInfotext,
   DBSection,
   DBStack,
   DBTooltip,
@@ -32,14 +33,13 @@ export default function StartTab() {
 
   return (
     <DBSection width="medium" spacing="small">
-      <div className="text-center mb-4 mb-md-5">
-        <div className="d-inline-flex align-items-center justify-content-center gap-2">
-          <DBHeadingH1 className="mt-2 mb-0" id="Willkommen">
+      <div className="start-kopf">
+        <div className="titel-mit-hilfe">
+          <DBHeadingH1 className="start-titel" id="Willkommen">
             Willkommen
           </DBHeadingH1>
           <DBButton
             type="button"
-            className="p-0"
             variant="ghost"
             size="small"
             id="btnHelpStart"
@@ -50,32 +50,34 @@ export default function StartTab() {
             <DBTooltip>Hilfe anzeigen</DBTooltip>
           </DBButton>
         </div>
-        <p className="text-body-secondary mb-0">Nebengeld digital erfassen, berechnen und als PDF erzeugen.</p>
+        <DBInfotext showIcon={false} className="infotext-block start-untertitel">
+          Nebengeld digital erfassen, berechnen und als PDF erzeugen.
+        </DBInfotext>
       </div>
 
-      <DBStack direction="row" wrap gap="medium" className="mb-4 karten-gleich">
+      <DBStack direction="row" wrap gap="medium" className="start-karten karten-gleich">
         {/* `.karten-titel` (`min-block-size: 3.5rem`) reserviert zwei Titelzeilen, damit der
             Fliesstext in allen Karten auf gleicher Hoehe beginnt, auch wenn ein Titel umbricht. */}
-        <DBCard className="h-100 text-start">
-          <DBHeadingH5 paragraphSpacing className="d-flex align-items-center gap-2 karten-titel">
-            <span className="db-icon text-primary" data-icon="sliders_horizontal" />
+        <DBCard className="start-karte">
+          <DBHeadingH5 paragraphSpacing className="karten-titel">
+            <span className="db-icon start-icon" data-icon="sliders_horizontal" />
             1. Einstellungen prüfen
           </DBHeadingH5>
-          <p className="mb-0">Persönliche Daten, Arbeitszeiten und Vorgaben aktuell halten.</p>
+          <p>Persönliche Daten, Arbeitszeiten und Vorgaben aktuell halten.</p>
         </DBCard>
-        <DBCard className="h-100 text-start">
-          <DBHeadingH5 paragraphSpacing className="d-flex align-items-center gap-2 karten-titel">
-            <span className="db-icon text-primary" data-icon="pen" />
+        <DBCard className="start-karte">
+          <DBHeadingH5 paragraphSpacing className="karten-titel">
+            <span className="db-icon start-icon" data-icon="pen" />
             2. Monate erfassen
           </DBHeadingH5>
-          <p className="mb-0">{featureListe} eintragen und speichern.</p>
+          <p>{featureListe} eintragen und speichern.</p>
         </DBCard>
-        <DBCard className="h-100 text-start">
-          <DBHeadingH5 paragraphSpacing className="d-flex align-items-center gap-2 karten-titel">
-            <span className="db-icon text-primary" data-icon="document" />
+        <DBCard className="start-karte">
+          <DBHeadingH5 paragraphSpacing className="karten-titel">
+            <span className="db-icon start-icon" data-icon="document" />
             3. Ergebnis exportieren
           </DBHeadingH5>
-          <p className="mb-0">Berechnung prüfen und die Formulare als PDF erzeugen.</p>
+          <p>Berechnung prüfen und die Formulare als PDF erzeugen.</p>
         </DBCard>
       </DBStack>
 
@@ -86,7 +88,7 @@ export default function StartTab() {
           <div hidden={!featureTabs.quick(legacy.navId)} id={`quick-${legacy.navId}`} key={legacy.navId}>
             <DBButton
               type="button"
-              className="d-flex flex-column align-items-center gap-1 py-3"
+              className="start-schnell-knopf"
               variant="outlined"
               width="full"
               data-jump-tab={legacy.navId}
@@ -99,7 +101,7 @@ export default function StartTab() {
         <div>
           <DBButton
             type="button"
-            className="d-flex flex-column align-items-center gap-1 py-3"
+            className="start-schnell-knopf"
             variant="outlined"
             width="full"
             data-jump-tab="berechnung-tab"
@@ -111,7 +113,7 @@ export default function StartTab() {
         <div>
           <DBButton
             type="button"
-            className="d-flex flex-column align-items-center gap-1 py-3"
+            className="start-schnell-knopf"
             variant="outlined"
             width="full"
             data-jump-tab="einstellungen-tab"
@@ -133,7 +135,7 @@ export default function StartTab() {
       >
         <strong role="status">Lädt...</strong>
         <span
-          className="laedt text-primary"
+          className="laedt start-icon"
           style={{ '--db-icon-font-size': '3rem' } as React.CSSProperties}
           role="status"
         />

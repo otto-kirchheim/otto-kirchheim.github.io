@@ -69,18 +69,16 @@ function renderPasskeyList(passkeys: PasskeyListItem[]): void {
 
   sortedPasskeys.forEach(passkey => {
     const item = document.createElement('div');
-    item.className =
-      'trennliste-eintrag d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3';
+    item.className = 'trennliste-eintrag passkey-eintrag';
 
     const info = document.createElement('div');
-    info.className = 'text-start';
+    info.className = 'passkey-eintrag__info';
 
-    const title = document.createElement('div');
-    title.className = 'fw-semibold';
+    const title = document.createElement('strong');
     title.textContent = passkey.name;
 
     const badgeRow = document.createElement('div');
-    badgeRow.className = 'd-flex flex-wrap gap-2 mt-2';
+    badgeRow.className = 'passkey-eintrag__tags';
 
     const deviceBadge = document.createElement('span');
     deviceBadge.className = 'db-tag';
@@ -96,8 +94,9 @@ function renderPasskeyList(passkeys: PasskeyListItem[]): void {
     backupBadge.textContent = passkey.backedUp ? 'Synchronisiert' : 'Nur lokal';
     badgeRow.appendChild(backupBadge);
 
-    const meta = document.createElement('div');
-    meta.className = 'small text-body-secondary mt-2';
+    const meta = document.createElement('span');
+    meta.className = 'db-infotext passkey-eintrag__meta';
+    meta.dataset['showIconLeading'] = 'false';
     meta.textContent = `Zuletzt genutzt: ${formatPasskeyTimestamp(passkey.lastUsedAt)} · Hinzugefügt: ${formatPasskeyTimestamp(passkey.createdAt)}`;
 
     info.append(title, badgeRow, meta);

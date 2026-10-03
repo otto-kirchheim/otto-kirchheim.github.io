@@ -1,3 +1,4 @@
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { createRef, type SubmitEvent } from 'react';
 
 import MyFormModal from '@/shared/ui/modal/MyFormModal';
@@ -28,8 +29,7 @@ export default function createModalChangePassword(): void {
         >
           Altes Passwort
         </MyInput>
-        <div className="border p-2">
-          <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Neues Passwort</p>
+        <Gruppe titel="Neues Passwort">
           <div className="raster abstand-2">
             <MyInput
               myRef={passwortRef}
@@ -74,7 +74,7 @@ export default function createModalChangePassword(): void {
               Neues Passwort wiederholen
             </MyInput>
           </div>
-        </div>
+        </Gruppe>
       </MyModalBody>
     </MyFormModal>,
   );

@@ -12,7 +12,7 @@ import { ENTGELTGRUPPE_LABEL } from '../model/entgeltgruppe';
  */
 export default function EntgeltgruppeFeld({ versteckt }: { versteckt: boolean }) {
   return (
-    <div className={versteckt ? 'sp-md-6 d-none' : 'sp-md-6'}>
+    <div className="sp-md-6" hidden={versteckt}>
       <DBInput
         id="Entgeltgruppe"
         label={ENTGELTGRUPPE_LABEL}

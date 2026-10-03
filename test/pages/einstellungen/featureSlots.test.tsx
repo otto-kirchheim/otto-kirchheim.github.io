@@ -68,7 +68,7 @@ describe('Einstellungen ueber Feature-Slots', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     render(<EinstellungenTab />, container);
-    const ausgeblendet = (id: string) => container.querySelector(`#${id}`)!.classList.contains('d-none');
+    const ausgeblendet = (id: string) => container.querySelector(`#${id}`)!.classList.contains('abschnitt-versteckt');
 
     // Vor dem ersten Setzen (nicht angemeldet) sind alle sichtbar.
     expect(['collapseThree', 'collapseFour', 'collapseSix'].map(ausgeblendet)).toEqual([false, false, false]);
@@ -206,15 +206,15 @@ describe('Einstellungen ueber Feature-Slots', () => {
       const { container, ea: slot } = await zeichnePanel();
       const ea = slot!;
       const input = container.querySelector<HTMLInputElement>('#Entgeltgruppe')!;
-      const zelle = () => container.querySelector('#Entgeltgruppe')!.closest('.sp-md-6')!;
+      const zelle = () => container.querySelector('#Entgeltgruppe')!.closest<HTMLElement>('.sp-md-6')!;
       input.value = '105';
 
       updateTabVisibility(['bereitschaft', 'ewt', 'neben']);
-      expect(zelle().classList.contains('d-none')).toBe(true);
+      expect(zelle().hidden).toBe(true);
       expect(ea.collect(VorgabenUMock).Pers?.Entgeltgruppe).toBe('105');
 
       updateTabVisibility(['bereitschaft', 'ewt', 'neben', 'ea']);
-      expect(zelle().classList.contains('d-none')).toBe(false);
+      expect(zelle().hidden).toBe(false);
       resetFeatureTabsVisible();
       render(null, container);
     });

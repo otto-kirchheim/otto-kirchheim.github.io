@@ -19,7 +19,59 @@
 }
 
 // Start-Karten-Titel: zwei Zeilen Platz, damit die Absaetze darunter auf einer Hoehe beginnen.
+// Start-Tab (`pages/start/ui/StartTab.tsx`).
+.start-kopf {
+  margin-block-end: var(--db-spacing-fixed-md);
+  text-align: center;
+
+  @media screen and (min-width: #{bp.$md}px) {
+    margin-block-end: var(--db-spacing-fixed-xl);
+  }
+}
+
+.start-titel {
+  margin-block-start: var(--db-spacing-fixed-xs);
+}
+
+.infotext-block {
+  display: block;
+}
+
+.start-untertitel {
+  margin-block-start: var(--db-spacing-fixed-md);
+  padding: 0;
+  font-size: inherit;
+  line-height: inherit;
+  color: var(--db-adaptive-on-bg-basic-emphasis-70-default);
+}
+
+.start-karten {
+  margin-block-end: var(--db-spacing-fixed-md);
+}
+
+.start-karte {
+  block-size: 100%;
+  text-align: start;
+
+  p {
+    margin-block-end: 0;
+  }
+}
+
+.start-icon {
+  color: var(--db-brand-origin-default);
+}
+
+.start-schnell-knopf {
+  flex-direction: column;
+  gap: var(--db-spacing-fixed-2xs);
+  padding-block: var(--db-spacing-fixed-sm);
+}
+
 .karten-titel {
+  display: flex;
+  align-items: center;
+  gap: var(--db-spacing-fixed-xs);
   min-block-size: var(--db-sizing-lg);
 }
 
@@ -285,6 +337,110 @@ td:has(.SchichtBereitschaft) {
   &:last-child {
     border-block-end: 0;
   }
+}
+
+// Berechnung (`BerechnungTab.tsx`, `BerechnungMobileCards.tsx`): unter sm Monatskarten, ab sm Tabelle mit Monatsfenster.
+.berechnung-tab {
+  margin-block-end: var(--db-spacing-fixed-md);
+}
+
+.berechnung-karten {
+  text-align: start;
+
+  @media screen and (min-width: #{bp.$sm}px) {
+    display: none;
+  }
+}
+
+.berechnung-monatsnav {
+  display: none;
+
+  @media screen and (min-width: #{bp.$sm}px) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--db-spacing-fixed-md);
+    margin-block-end: var(--db-spacing-fixed-xs);
+  }
+}
+
+.berechnung-tabelle {
+  display: none;
+
+  @media screen and (min-width: #{bp.$sm}px) {
+    display: block;
+  }
+}
+
+.monatskarte-kopf {
+  display: flex;
+  justify-content: space-between;
+  inline-size: 100%;
+  margin-inline-end: var(--db-spacing-fixed-xs);
+}
+
+.monatskarte-inhalt {
+  padding-block: var(--db-spacing-fixed-xs);
+}
+
+.abschnitt-versteckt {
+  display: none;
+}
+
+.ausrichtung-start {
+  text-align: start;
+}
+
+.titel-mit-tag {
+  display: flex;
+  align-items: center;
+  gap: var(--db-spacing-fixed-xs);
+}
+
+.passkey-info {
+  margin-block-start: var(--db-spacing-fixed-sm);
+}
+
+.passkey-kopf {
+  display: flex;
+  flex-direction: column;
+  gap: var(--db-spacing-fixed-md);
+  margin-block-end: var(--db-spacing-fixed-md);
+
+  @media screen and (min-width: #{bp.$md}px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.einstellungen-speichern {
+  margin-block-end: var(--db-spacing-fixed-md);
+}
+
+.passkey-eintrag {
+  display: flex;
+  flex-direction: column;
+  gap: var(--db-spacing-fixed-md);
+
+  @media screen and (min-width: #{bp.$md}px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.passkey-eintrag__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--db-spacing-fixed-xs);
+  text-align: start;
+}
+
+.passkey-eintrag__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--db-spacing-fixed-xs);
 }
 
 .db-table > table {

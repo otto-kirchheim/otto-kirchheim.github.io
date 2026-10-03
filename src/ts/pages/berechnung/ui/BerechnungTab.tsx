@@ -18,13 +18,12 @@ export default function BerechnungTab() {
   useEffect(() => bindClickHandlers([['btnHelpBerechnung', () => openHelpModal('tab.berechnung')]]), []);
 
   return (
-    <DBSection width="large" spacing="none" className="text-center mb-3">
+    <DBSection width="large" spacing="none" className="tab-abschnitt berechnung-tab">
       <div>
-        <DBHeadingH1 id="titelBerechnung" className="d-inline-flex align-items-center justify-content-center gap-2">
+        <DBHeadingH1 id="titelBerechnung" className="titel-mit-hilfe">
           Berechnung
           <DBButton
             type="button"
-            className="p-0"
             variant="ghost"
             size="small"
             id="btnHelpBerechnung"
@@ -38,9 +37,9 @@ export default function BerechnungTab() {
         <MonatUeberschrift id="MonatBerechnung" art="jahr" />
       </div>
 
-      <div id="berechnungMobileCards" className="d-sm-none text-start" aria-describedby="titelBerechnung"></div>
+      <div id="berechnungMobileCards" className="berechnung-karten" aria-describedby="titelBerechnung"></div>
 
-      <div className="d-none d-sm-flex justify-content-center align-items-center gap-3 mb-2" id="berechnungMonatsNav">
+      <div className="berechnung-monatsnav" id="berechnungMonatsNav">
         <DBButton
           variant="outlined"
           size="small"
@@ -52,7 +51,7 @@ export default function BerechnungTab() {
         >
           <DBTooltip>Frühere Monate anzeigen</DBTooltip>
         </DBButton>
-        <span id="berechnungMonatsFensterLabel" className="small"></span>
+        <span id="berechnungMonatsFensterLabel" className="db-infotext" data-show-icon-leading="false"></span>
         <DBButton
           variant="outlined"
           size="small"
@@ -67,15 +66,15 @@ export default function BerechnungTab() {
       </div>
 
       <div
-        className="db-table d-none d-sm-block"
+        className="db-table berechnung-tabelle"
         data-width="full"
         data-variant="zebra"
         data-divider="both"
         data-size="small"
       >
-        <table className="align-middle table-Berechnung" aria-describedby="titelBerechnung">
-          <thead className="align-middle">
-            <tr className="align-middle" data-sub-header-emphasis="weak">
+        <table className="table-Berechnung" aria-describedby="titelBerechnung">
+          <thead>
+            <tr data-sub-header-emphasis="weak">
               <th></th>
               <th className="sp-1" data-monat="1">
                 Jan

@@ -104,7 +104,7 @@ export default function PersoenlicheDatenPanel() {
   });
 
   return (
-    <div className="raster text-start abstand-3">
+    <div className="raster ausrichtung-start abstand-3">
       <div className="sp-md-6">
         <Feld id="Vorname" label="Vorname" icon="person" placeholder="Max" required />
       </div>

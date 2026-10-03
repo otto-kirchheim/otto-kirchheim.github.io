@@ -135,7 +135,7 @@ Befund Bestand: Utilities direkt an DB-Komponenten 111 x `DBButton` (`py-0` 26, 
 - [x] R3 `features/auth`, `features/onboarding` (2026-10-03): Login-/Registrieren-/Reset-Dialog (`Gruppe` in `shared/ui/gruppe`), Konflikt-Banner, Ersteinrichtungs-Panel. Ratsche 1768. Nebenbei: Rollen-Abzeichen einzeilig (`rollen-tag`), Berechnung-Labelspalte wieder 11.5rem, Tabellen-Knopfleiste sticky
 - [x] R4 `features/ber` (2026-10-03): Hinweise `DBNotification`, Gruppen `Gruppe`, Zeilen `DBStack`; Ratsche 1593. Offen fuer R10: `db-table` (DB-Klasse, steht wegen Regel in `utilities.scss` in der Ratschen-Liste) aus Liste nehmen und Regel nach `styles.scss`
 - [x] R5 `features/ewt`, `features/ez`, `features/ea` (2026-10-03): Tab-Koepfe, Dialoge, Zulagen-Einstellungen. Ratsche 1454
-- [ ] R6 `pages/start`, `pages/berechnung`, `pages/einstellungen` – ca. 145
+- [x] R6 `pages/start`, `pages/berechnung`, `pages/einstellungen` (2026-10-03): Start pixelgleich. Ratsche 1311
 - [ ] R7 `pages/admin/ui` ohne FormularEditor, in 2–3 Teilen – ca. 770
 - [ ] R8 `pages/admin/ui/FormularEditor` – ca. 430
 - [ ] R9 `pages/admin/features`, `pages/admin/index.tsx` – ca. 75

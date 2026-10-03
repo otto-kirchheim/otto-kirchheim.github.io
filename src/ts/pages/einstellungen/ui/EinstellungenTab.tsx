@@ -9,6 +9,7 @@ import {
   DBDivider,
   DBHeadingH1,
   DBHeadingH6,
+  DBInfotext,
   DBInput,
   DBSection,
   DBStack,
@@ -26,7 +27,7 @@ import useFeatureTabsVisible from '@/shared/model/navigation/useFeatureTabsVisib
  * `offenerAbschnittStore` (genau ein Abschnitt offen, von aussen oeffenbar) statt in
  * `behavior="single"` -- siehe dort zur Begruendung.
  *
- * @param props - `id` des Abschnitts, `titel` der Kopfzeile, `children` als Inhalt; `versteckt` blendet den Abschnitt aus (`d-none`),
+ * @param props - `id` des Abschnitts, `titel` der Kopfzeile, `children` als Inhalt; `versteckt` blendet den Abschnitt aus (`abschnitt-versteckt`; `hidden` landet bei `DBAccordionItem` auf dem inneren `<details>`, nicht auf dem Listenelement),
  *   ohne ihn abzubauen (Felder und Werte bleiben erhalten, `saveEinstellungen` sammelt sie weiter).
  */
 function Abschnitt({
@@ -44,7 +45,7 @@ function Abschnitt({
   return (
     <DBAccordionItem
       id={id}
-      className={versteckt ? 'd-none' : undefined}
+      className={versteckt ? 'abschnitt-versteckt' : undefined}
       headlinePlain={titel}
       open={offen}
       onToggle={istOffen => setOffenenAbschnitt(istOffen ? id : null)}
@@ -109,22 +110,22 @@ export default function EinstellungenTab() {
       key: 'collapsePasskeys',
       node: (
         <Abschnitt id="collapsePasskeys" titel="Sicherheit">
-          <div className="text-start">
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
-              <div>
-                <DBHeadingH6 className="mb-1 d-flex align-items-center gap-2">
+          <div className="ausrichtung-start">
+            <div className="passkey-kopf">
+              <DBStack gap="2x-small" alignment="start">
+                <DBHeadingH6 className="titel-mit-tag">
                   Registrierte Biometrie-Anmeldungen
                   <DBTag semantic="neutral" emphasis="strong" id="PasskeyAccordionCount">
                     0
                   </DBTag>
                 </DBHeadingH6>
-                <p className="text-body-secondary small mb-1">
+                <DBInfotext showIcon={false} className="infotext-block passkey-info">
                   Login ohne Passwort per Fingerprint, Face ID oder Geräte-PIN.
-                </p>
+                </DBInfotext>
                 <span id="PasskeyStatus" className="db-infotext" data-size="small" data-show-icon-leading="false">
                   Biometrie-Status wird geladen...
                 </span>
-              </div>
+              </DBStack>
               <DBStack direction="column" gap="x-small">
                 {/* Haupt-Aktion als gefuellter Knopf, Zweit-Aktionen nur umrandet. Kein Rot: das
                          DB-Regelwerk laesst roten Text nur fuer Links und Warnungen zu. */}
@@ -161,11 +162,11 @@ export default function EinstellungenTab() {
       node: (
         <Abschnitt id="collapseFive" titel="Einstellungen & Bereiche">
           <div>
-            <div className="d-flex flex-column gap-4">
-              <div>
-                <DBHeadingH6 className="fw-bold mb-3">Sichtbare Bereiche</DBHeadingH6>
-                <p className="text-muted small mb-3">Welche Bereiche sollen in der Navigation sichtbar sein?</p>
-                <div className="d-flex flex-column gap-2">
+            <DBStack gap="large" alignment="stretch">
+              <DBStack gap="medium">
+                <DBHeadingH6>Sichtbare Bereiche</DBHeadingH6>
+                <DBInfotext showIcon={false}>Welche Bereiche sollen in der Navigation sichtbar sein?</DBInfotext>
+                <DBStack gap="x-small">
                   {featureRegistry.metas().map(({ label, legacy }) => (
                     <DBCheckbox
                       id={`tab-${legacy.tabKey}`}
@@ -174,21 +175,18 @@ export default function EinstellungenTab() {
                       key={legacy.tabKey}
                     />
                   ))}
-                </div>
-              </div>
+                </DBStack>
+              </DBStack>
 
               <DBDivider width="full" margin="none" />
 
-              <div>
-                <DBHeadingH6 className="fw-bold mb-3">AutoSave</DBHeadingH6>
-                <div className="d-flex flex-column gap-3">
+              <DBStack gap="medium">
+                <DBHeadingH6>AutoSave</DBHeadingH6>
+                <DBStack gap="medium">
                   <DBCheckbox id="autoSaveEnabled" label="AutoSave aktivieren" data-settings-key="autoSaveEnabled" />
                   <div>
                     <label htmlFor="autoSaveDelay">
-                      Verzögerung:{' '}
-                      <span id="autoSaveDelayLabel" className="fw-semibold">
-                        10 s
-                      </span>
+                      Verzögerung: <strong id="autoSaveDelayLabel">10 s</strong>
                     </label>
                     <input
                       type="range"
@@ -199,11 +197,13 @@ export default function EinstellungenTab() {
                       defaultValue="9"
                       step="1"
                     />
-                    <div className="text-muted small">1 Sekunde bis 5 Minuten</div>
+                    <DBInfotext showIcon={false} className="infotext-block">
+                      1 Sekunde bis 5 Minuten
+                    </DBInfotext>
                   </div>
-                </div>
-              </div>
-            </div>
+                </DBStack>
+              </DBStack>
+            </DBStack>
           </div>
         </Abschnitt>
       ),
@@ -212,8 +212,8 @@ export default function EinstellungenTab() {
   const abschnitte = [...globaleAbschnitte, ...featureAbschnitte].sort((a, b) => a.order - b.order);
 
   return (
-    <DBSection width="medium" spacing="none" className="text-center">
-      <DBHeadingH1 className="d-inline-flex align-items-center justify-content-center">
+    <DBSection width="medium" spacing="none" className="tab-abschnitt">
+      <DBHeadingH1 className="titel-mit-hilfe">
         Einstellungen
         <DBButton
           variant="ghost"
@@ -268,7 +268,7 @@ export default function EinstellungenTab() {
           icon="save"
           data-disabler
           autoSaveResources={['settings']}
-          className="mb-4"
+          className="einstellungen-speichern"
         >
           Speichern
         </DBLoadingButton>

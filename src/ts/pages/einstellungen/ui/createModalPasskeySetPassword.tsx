@@ -1,3 +1,4 @@
+import { DBInfotext } from '@db-ux/react-core-components';
 import { createRef, type SubmitEvent } from 'react';
 
 import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
@@ -25,10 +26,10 @@ export default function createModalPasskeySetPassword(): void {
     <MyFormModal myRef={ref} title="Passwort per Passkey neu setzen" submitText="Passwort setzen" onSubmit={onSubmit()}>
       <MyModalBody>
         <div>
-          <p className="small text-body-secondary mb-0">
+          <DBInfotext showIcon={false} className="infotext-block">
             Du bestätigst die Änderung mit deinem Passkey (Fingerprint, Face ID oder Geräte-PIN) – dein altes Passwort
             wird nicht benötigt. Andere Sitzungen werden abgemeldet.
-          </p>
+          </DBInfotext>
         </div>
         <MyInput
           myRef={passwortRef}

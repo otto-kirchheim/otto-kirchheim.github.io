@@ -68,7 +68,7 @@ export function wendeMonatsFensterAn(): void {
   );
   for (const zelle of Array.from(zellen)) {
     const monat = Number(zelle.dataset.monat);
-    zelle.classList.toggle('d-none', !sichtbar(monat));
+    zelle.hidden = !sichtbar(monat);
   }
 
   // Spaltenanzahl als CSS-Variable; die zugehörige width-Regel in styles.scss greift nur unter 1200px

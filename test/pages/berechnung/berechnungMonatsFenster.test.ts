@@ -17,7 +17,7 @@ describe('#berechnungMonatsFenster', () => {
     Storage.set('Monat', 1); // Fenster startet bei Jan
 
     document.body.innerHTML =
-      '<div id="berechnungMonatsNav" class="d-none d-sm-flex"></div>' +
+      '<div id="berechnungMonatsNav" class="berechnung-monatsnav"></div>' +
       '<button id="btnBerechnungMonatePrev"></button>' +
       '<span id="berechnungMonatsFensterLabel"></span>' +
       '<button id="btnBerechnungMonateNext"></button>' +
@@ -42,15 +42,15 @@ describe('#berechnungMonatsFenster', () => {
     expect(groesse).toBeLessThanOrEqual(12);
   });
 
-  it('blendet Monate außerhalb des Fensters aus (d-none)', async () => {
-    expect(kopfzelle(1).classList.contains('d-none')).toBe(false);
-    expect(kopfzelle(groesse).classList.contains('d-none')).toBe(false);
+  it('blendet Monate außerhalb des Fensters aus (hidden)', async () => {
+    expect(kopfzelle(1).hidden).toBe(false);
+    expect(kopfzelle(groesse).hidden).toBe(false);
 
     if (groesse < 12) {
-      expect(kopfzelle(groesse + 1).classList.contains('d-none')).toBe(true);
+      expect(kopfzelle(groesse + 1).hidden).toBe(true);
 
       const tdVersteckt = document.querySelector<HTMLElement>(`#tbodyBerechnung td[data-monat="${groesse + 1}"]`);
-      expect(tdVersteckt?.classList.contains('d-none')).toBe(true);
+      expect(tdVersteckt?.hidden).toBe(true);
     }
 
     expect(document.querySelector('#berechnungMonatsFensterLabel')?.textContent).toBe(
@@ -64,8 +64,8 @@ describe('#berechnungMonatsFenster', () => {
 
     document.querySelector<HTMLButtonElement>('#btnBerechnungMonateNext')?.click();
 
-    expect(kopfzelle(1).classList.contains('d-none')).toBe(true);
-    expect(kopfzelle(groesse + 1).classList.contains('d-none')).toBe(false);
+    expect(kopfzelle(1).hidden).toBe(true);
+    expect(kopfzelle(groesse + 1).hidden).toBe(false);
     expect(document.querySelector('#berechnungMonatsFensterLabel')?.textContent).toBe(`Feb – ${MONATSNAMEN[groesse]}`);
     expect(document.querySelector<HTMLButtonElement>('#btnBerechnungMonatePrev')?.disabled).toBe(false);
   });
@@ -75,7 +75,7 @@ describe('#berechnungMonatsFenster', () => {
     for (let i = 0; i < 15; i++) next.click();
 
     expect(next.disabled).toBe(true);
-    expect(kopfzelle(12).classList.contains('d-none')).toBe(false);
+    expect(kopfzelle(12).hidden).toBe(false);
     expect(document.querySelector('#berechnungMonatsFensterLabel')?.textContent).toBe(
       `${MONATSNAMEN[12 - groesse]} – Dez`,
     );

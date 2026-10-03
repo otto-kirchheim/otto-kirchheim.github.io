@@ -2,6 +2,14 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-03 (206)
+
+### refactor (Bootstrap-Rueckbau R6: `pages/start`, `berechnung`, `einstellungen`)
+
+- Start-Tab (Kopf, Karten, Schnellzugriff), Berechnung (Karten unter sm, Tabelle ab sm, Monatsfenster) und Einstellungen (Sicherheit, Sichtbare Bereiche, AutoSave, Passkey-Liste, Passwort-Dialoge) ohne Bootstrap-Klassen; neue Klassen in `styles.scss` (`start-*`, `berechnung-*`, `passkey-*`, `monatskarte-*`, `infotext-block`, `ausrichtung-start` u. a.).
+- Ein-/Ausblenden per `hidden` statt `d-none` (Monatsfenster-Spalten, Entgeltgruppe-Feld; Tests angepasst). Deaktivierte Einstellungen-Abschnitte per `abschnitt-versteckt`, weil `hidden` bei `DBAccordionItem` am inneren `<details>` landet. Ratsche 1311.
+- Sichtvergleich: Start-Tab pixelgleich; Einstellungen-Sicherheit bis etwa 6px Abstandsabweichung, Titel mit Hilfeknopf mit kleinem Abstand.
+
 ## 2026-10-03 (205)
 
 ### refactor (Bootstrap-Rueckbau R5: `features/ewt`, `ez`, `ea`)

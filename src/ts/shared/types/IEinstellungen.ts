@@ -30,7 +30,7 @@ export interface IFeatureEinstellungen {
   /**
    * Zusaetzliche Felder im Panel „Persönliche Daten“ (nach „Tätigkeit“), je Feld eine Rasterzelle (`sp-md-6`). Befuellen und
    * Einsammeln uebernehmen `read`/`collect` des Features. `versteckt` ist gesetzt, wenn der Bereich des Features in den
-   * Einstellungen abgewaehlt ist: dann `d-none`, aber im DOM lassen (der Wert wird weiter eingesammelt und bleibt erhalten).
+   * Einstellungen abgewaehlt ist: dann `hidden`, aber im DOM lassen (der Wert wird weiter eingesammelt und bleibt erhalten).
    */
   PersFelder?: ComponentType<{ versteckt: boolean }>;
   /** Befuellt die Felder des Features aus den Benutzer-Vorgaben (die Abschnitte sind dann gerendert). */

@@ -273,7 +273,7 @@ try {
     );
   };
   const eaAus = await setzeEa(false);
-  const ausgeblendet = await page.$eval('#Entgeltgruppe', el => Boolean(el.closest('.d-none')));
+  const ausgeblendet = await page.$eval('#Entgeltgruppe', el => Boolean(el.closest('[hidden]')));
   const nachAbwahl = (await storage<{ Pers: { Entgeltgruppe?: string } }>(page, 'VorgabenU'))?.Pers.Entgeltgruppe;
   check(
     'EA abgewaehlt + gespeichert: Feld ausgeblendet, Entgeltgruppe bleibt',
@@ -286,7 +286,7 @@ try {
     eaAn &&
       (await page.$eval(
         '#Entgeltgruppe',
-        (el, w) => !el.closest('.d-none') && (el as HTMLInputElement).value === w,
+        (el, w) => !el.closest('[hidden]') && (el as HTMLInputElement).value === w,
         neuerWert,
       )),
   );

@@ -58,13 +58,13 @@ function MonatsKarte({
       open={offen}
       onToggle={onToggle}
       headline={
-        <span className="d-flex justify-content-between w-100 me-2">
+        <span className="monatskarte-kopf">
           <span>{monatsName}</span>
           <span>{ergebnis.summeGesamt === null ? '' : formatCurrency(ergebnis.summeGesamt)}</span>
         </span>
       }
     >
-      <div className="py-2">
+      <div className="monatskarte-inhalt">
         {gruppen.filter(zeigeGruppe).map(gruppe => (
           <div key={gruppe.id}>{gruppe.part.karte(ergebnis, gruppe.extra)}</div>
         ))}
