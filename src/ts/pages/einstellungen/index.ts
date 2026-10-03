@@ -308,12 +308,12 @@ function applyEinstellungenToRuntime(): void {
 }
 
 registerAppStartTask(async () => {
-  // `#Monat` existiert zweimal (Desktop- und Mobile-Kopie im `AppHeader`) -- `querySelectorAll`,
-  // sonst reagiert nur die zuerst gefundene Kopie auf Änderungen.
-  document.querySelectorAll<HTMLInputElement>('#Monat').forEach(el => el.addEventListener('change', changeMonatJahr));
-
-  const Jahr = document.querySelector<HTMLInputElement>('#Jahr');
-  Jahr?.addEventListener('change', changeMonatJahr);
+  // Delegiert statt am Element: `DBSelect`/`DBInput` setzen die `id` erst nach dem Mount, zum Startzeitpunkt findet
+  // `querySelector('#Monat')` noch nichts. `#Monat` existiert zweimal (Desktop- und Mobile-Kopie im `AppHeader`).
+  document.addEventListener('change', event => {
+    const ziel = event.target;
+    if (ziel instanceof HTMLElement && (ziel.id === 'Monat' || ziel.id === 'Jahr')) changeMonatJahr(event);
+  });
 
   const formSelectMonatJahr = document.querySelector<HTMLFormElement>('#formSelectMonatJahr');
   formSelectMonatJahr?.addEventListener('submit', e => {
