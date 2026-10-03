@@ -173,7 +173,7 @@ describe('VorgabenBWeekRangeEditor', () => {
       container,
     );
     await flush();
-    const grid = container.querySelector('.d-grid') as HTMLElement;
+    const grid = container.querySelector('.wochentag-raster') as HTMLElement;
 
     pointerDown(buttons(container)[1], 'mouse'); // Di
     await flush();

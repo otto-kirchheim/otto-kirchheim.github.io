@@ -64,7 +64,7 @@ export function SpalteZeile({
           />
           <DBButton
             type="button"
-            className="py-0"
+
             variant="outlined"
             size="small"
             icon="arrow_up"
@@ -75,7 +75,7 @@ export function SpalteZeile({
           </DBButton>
           <DBButton
             type="button"
-            className="py-0"
+
             variant="outlined"
             size="small"
             icon="arrow_down"
@@ -86,7 +86,7 @@ export function SpalteZeile({
           </DBButton>
           <DBButton
             type="button"
-            className="py-0"
+
             variant="outlined"
             data-color="critical"
             size="small"
@@ -99,11 +99,11 @@ export function SpalteZeile({
         </>
       }
     >
-      <div className="mb-1">
+      <div className="luft-unten-2xs">
         <Zellkoordinaten wert={spalte} onChange={onChange} nurX />
       </div>
 
-      <DBStack direction="row" wrap gap="2x-small" className="w-100 mb-1">
+      <DBStack direction="row" wrap gap="2x-small" className="volle-breite luft-unten-2xs">
         <DBButton
           type="button"
           variant={modus === 'daten' ? 'brand' : 'outlined'}
@@ -165,8 +165,8 @@ export function SpalteZeile({
           beschriftung="Schlüssel"
           beschriftungZeigen
           dicht
-          className="mb-1"
-          feldKlasse="font-monospace"
+          className="luft-unten-2xs"
+          feldKlasse="schrift-mono"
           title="Schlüssel, unter dem der Wert dieser Spalte in die Zeile geschrieben wird -- darüber ist er in Ankreuz-Bedingungen und Summenfeldern anderer Spalten wiederverwendbar. Muss sich von anderen Spalten unterscheiden, sonst überschreiben sie sich gegenseitig."
           placeholder="z.B. dauer"
           value={spalte.key}
@@ -181,7 +181,7 @@ export function SpalteZeile({
       )}
 
       {spalte.listenPlatz ? (
-        <div className="raster mb-1 abstand-1">
+        <div className="raster luft-unten-2xs abstand-1">
           <div className="sp-8">
             <DbAuswahl
               beschriftung="Listen-Gruppe"
@@ -236,7 +236,7 @@ export function SpalteZeile({
           onChange={berechnet => onChange({ ...spalte, berechnet })}
         />
       ) : (
-        <div className="mb-1">
+        <div className="luft-unten-2xs">
           <DatenpfadWahl
             wert={spalte.key}
             eintraege={zeilenFelder}
@@ -253,7 +253,7 @@ export function SpalteZeile({
       <DbFeld
         beschriftung="Anzeigename (nur für diese Liste)"
         dicht
-        className="mb-1"
+        className="luft-unten-2xs"
         placeholder="Anzeigename (nur für diese Liste)"
         value={spalte.label ?? ''}
         onChange={e => onChange({ ...spalte, label: (e.target as HTMLInputElement).value || undefined })}

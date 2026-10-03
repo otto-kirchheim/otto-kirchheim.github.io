@@ -1,5 +1,6 @@
 import { DBCheckbox, DBStack } from '@db-ux/react-core-components';
 
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { ZULAGEN_CATALOG } from '@/shared/lib/zulagen/zulagenCatalog';
 import type { AdminVorlagenEditorProps } from '../../adminFeatures';
 
@@ -18,12 +19,12 @@ export default function ZulagenEditor({ templateId, value, onChange }: AdminVorl
     onChange(value.includes(code) ? value.filter(c => c !== code) : [...value, code].sort());
 
   return (
-    <div className="border p-2 mb-2">
-      <label className="small mb-1">Benötigte Zulagen</label>
+    <Gruppe className="luft-unten-xs">
+      <label className="zelle-klein luft-unten-2xs">Benötigte Zulagen</label>
       <DBStack direction="row" wrap gap="x-small">
         {ZULAGEN_CATALOG.map(zulage => (
           <DBCheckbox
-            className="m-0"
+            className="ohne-luft"
             size="small"
             key={`${templateId}-zulage-${zulage.code}`}
             label={zulage.code}
@@ -32,6 +33,6 @@ export default function ZulagenEditor({ templateId, value, onChange }: AdminVorl
           />
         ))}
       </DBStack>
-    </div>
+    </Gruppe>
   );
 }

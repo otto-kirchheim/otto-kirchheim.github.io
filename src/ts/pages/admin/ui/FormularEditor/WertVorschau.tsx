@@ -5,9 +5,9 @@
  */
 export function WertVorschau({ text }: { text: string }) {
   return (
-    <div className="small text-body-secondary mb-0">
+    <div className="zelle-klein farbe-gedaempft ohne-luft-unten">
       Vorschau:{' '}
-      {text === '' ? <em className="text-body-secondary">(leer)</em> : <span className="font-monospace">{text}</span>}
+      {text === '' ? <em className="farbe-gedaempft">(leer)</em> : <span className="schrift-mono">{text}</span>}
     </div>
   );
 }

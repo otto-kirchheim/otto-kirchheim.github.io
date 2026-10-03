@@ -178,5 +178,5 @@ initializeAppBootstrap();
 // Reihenfolge ist bedeutsam: erst die Layer-Deklaration, dann DB UX, dann die App-Styles.
 import '../../scss/layers.scss';
 import '../../scss/db-ux.css';
-import '../../scss/utilities.scss';
+import '../../scss/db-gegenregeln.scss';
 import '../../scss/styles.scss';

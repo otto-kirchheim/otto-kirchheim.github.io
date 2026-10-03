@@ -28,7 +28,7 @@ function aufbau(): void {
         </li>
       </menu>
     </nav>
-    <div class="tab-content" id="tabContent">
+    <div id="tabContent">
       <div id="start" role="tabpanel"></div>
       <div id="EWT" role="tabpanel" hidden></div>
       <div id="Admin" role="tabpanel" hidden></div>
@@ -43,7 +43,7 @@ function aufbau(): void {
         </li>
       </menu>
     </nav>
-    <div class="tab-content" id="admin-tab-content">
+    <div id="admin-tab-content">
       <div id="admin-pane-users" role="tabpanel"></div>
       <div id="admin-pane-logs" role="tabpanel" hidden></div>
     </div>

@@ -54,7 +54,7 @@ function FeldZeile({
     <KlappZeile
       offen={aktiv}
       titel={
-        <span className="font-monospace" title={keyName}>
+        <span className="schrift-mono" title={keyName}>
           {feld.label ?? keyName}
         </span>
       }
@@ -63,7 +63,7 @@ function FeldZeile({
           <ScharfButton aktiv={aktiv} onClick={onArm} />
           <DBButton
             type="button"
-            className="py-0"
+
             variant="outlined"
             data-color="critical"
             size="small"
@@ -76,11 +76,11 @@ function FeldZeile({
         </>
       }
     >
-      <div className="mb-1">
+      <div className="luft-unten-2xs">
         <Zellkoordinaten wert={feld} onChange={onChange} />
       </div>
 
-      <DBStack direction="row" wrap gap="2x-small" className="w-100 mb-1">
+      <DBStack direction="row" wrap gap="2x-small" className="volle-breite luft-unten-2xs">
         <DBButton
           type="button"
           variant={
@@ -195,7 +195,7 @@ function FeldZeile({
       </DBStack>
 
       {feld.listenKopf ? (
-        <div className="raster mb-1 abstand-1">
+        <div className="raster luft-unten-2xs abstand-1">
           <div className="sp-4">
             <DbAuswahl
               beschriftung="Tabelle"
@@ -259,7 +259,7 @@ function FeldZeile({
       ) : feld.quellen ? (
         <ZusammengesetzteQuellen feld={feld} formular={formular} onChange={onChange} />
       ) : festerText ? (
-        <div className="mb-1">
+        <div className="luft-unten-2xs">
           <PlatzhalterPicker
             formular={formular}
             inputRef={textRef}
@@ -274,7 +274,7 @@ function FeldZeile({
             value={feld.text}
             onChange={e => onChange({ ...feld, text: (e.target as HTMLInputElement).value })}
           />
-          <div className="small text-body-secondary">
+          <div className="zelle-klein farbe-gedaempft">
             Platzhalter in <code>{'{ }'}</code>: <code>{'{seite}'}</code>, <code>{'{seiten}'}</code>,{' '}
             <code>{'{heute}'}</code> oder jeder Datenpfad (z.B. <code>{'{Monat}'}</code>, oder oben aus der Liste
             einfügen) -- auch mehrere gemischt, z.B. <code>{'{Nachname}, {Vorname}'}</code>. Für Trennzeichen, die bei
@@ -282,7 +282,7 @@ function FeldZeile({
             Format erzwingen mit <code>{'{Pfad:Format}'}</code>, z.B. <code>{'{heute:datumKurz}'}</code>.{' '}
             <DBButton
               type="button"
-              className="p-0 align-baseline"
+
               variant="ghost"
               size="small"
               onClick={openPlatzhalterHilfe}
@@ -299,7 +299,7 @@ function FeldZeile({
           onChange={berechnet => onChange({ ...feld, berechnet })}
         />
       ) : (
-        <div className="mb-1">
+        <div className="luft-unten-2xs">
           <DatenpfadWahl
             wert={keyName}
             eintraege={katalogFelder(formular)}
@@ -312,7 +312,7 @@ function FeldZeile({
       <DbFeld
         beschriftung="Anzeigename (nur für diese Liste)"
         dicht
-        className="mb-1"
+        className="luft-unten-2xs"
         placeholder="Anzeigename (nur für diese Liste)"
         value={feld.label ?? ''}
         onChange={e => onChange({ ...feld, label: (e.target as HTMLInputElement).value || undefined })}
@@ -403,7 +403,7 @@ export function FeldListe({
 
   return (
     <div>
-      <div className="small text-body-secondary mb-1">
+      <div className="zelle-klein farbe-gedaempft luft-unten-2xs">
         Alles außerhalb der Datentabelle — Kopfangaben, Summen, Übertrag, Seitenzahl. Die Position bestimmt allein die
         Zelle, bei Summen der gewählte Bezug (diese Seite / Vorseiten / alle Zeilen).
       </div>
@@ -432,7 +432,7 @@ export function FeldListe({
             }}
           />
         ))}
-      <div className="d-flex flex-wrap gap-1">
+      <DBStack direction="row" wrap gap="2x-small">
         {VORLAGEN.map(v => (
           <DBButton
             key={v.key}
@@ -444,7 +444,7 @@ export function FeldListe({
             {v.label}
           </DBButton>
         ))}
-      </div>
+      </DBStack>
     </div>
   );
 }

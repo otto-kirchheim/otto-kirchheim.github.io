@@ -39,7 +39,7 @@ function ZahlEingabe({
       beschriftung={label}
       beschriftungZeigen
       dicht
-      className="w-auto"
+
       type="number"
       step={schritt}
       huelleStyle={{ maxWidth: '5.5rem' }}
@@ -70,16 +70,16 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
     onChange({ faktoren: { ...faktoren, ...teil }, gekoppelt: g });
 
   return (
-    <div className="border border-primary p-2 mb-2 bg-primary-subtle small">
+    <div className="skalierleiste">
       <DBStack direction="row" wrap alignment="center" gap="x-small">
-        <strong className="me-1">Koordinaten anpassen</strong>
+        <strong className="luft-rechts-2xs">Koordinaten anpassen</strong>
         {alt && (
-          <span className="text-body-secondary">
+          <span className="farbe-gedaempft">
             {alt.w.toFixed(0)}×{alt.h.toFixed(0)}
             {neu ? ` → ${neu.w.toFixed(0)}×${neu.h.toFixed(0)}` : ''} pt
           </span>
         )}
-        <div className="mb-0">
+        <div className="ohne-luft-unten">
           <DBCheckbox
             size="small"
             id="skalier-gekoppelt"
@@ -105,7 +105,7 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
           beschriftung="Drehen"
           beschriftungZeigen
           dicht
-          className="w-auto"
+
           huelleStyle={{ maxWidth: '5rem' }}
           value={String(drehung)}
           onChange={e => onChange({ drehung: Number(e.target.value) as Drehwinkel })}
@@ -115,7 +115,7 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
           <option value="180">180°</option>
           <option value="270">270°</option>
         </DbAuswahl>
-        <DBStack direction="row" wrap gap="2x-small" className="ms-auto">
+        <DBStack direction="row" wrap gap="2x-small" className="knopf-rechts">
           <DBButton type="button" variant="brand" onClick={onAnwenden}>
             Anwenden
           </DBButton>
@@ -124,7 +124,7 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
           </DBButton>
         </DBStack>
       </DBStack>
-      <div className="text-body-secondary mt-1">
+      <div className="farbe-gedaempft luft-oben-2xs">
         Jede Koordinate wird <code>Wert × Faktor + Versatz</code> (Versatz in PDF-Punkten). Schriftgröße und
         Tabellen-Zeilenhöhe folgen dem Y-Faktor. Die Vorschau zeigt das Ergebnis live.
         {drehung !== 0 && (

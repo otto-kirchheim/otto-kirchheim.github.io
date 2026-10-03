@@ -99,7 +99,7 @@ export function FeldPanel({
     <div>
       <Abschnitt
         titel="Felder"
-        zusatz={<span className="text-body-secondary">{Object.keys(seite.felder).length}</span>}
+        zusatz={<span className="farbe-gedaempft">{Object.keys(seite.felder).length}</span>}
         offen
       >
         <FeldListe
@@ -115,10 +115,10 @@ export function FeldPanel({
 
       <Abschnitt
         titel="Datentabellen"
-        zusatz={<span className="text-body-secondary">{Object.keys(tabellen).length}</span>}
+        zusatz={<span className="farbe-gedaempft">{Object.keys(tabellen).length}</span>}
         offen
       >
-        <div className="small text-body-secondary mb-1">
+        <div className="zelle-klein farbe-gedaempft luft-unten-2xs">
           Mehrere Tabellen dürfen dieselbe Quelle nutzen und sich nur im Filter unterscheiden (z.B. Einsätze getrennt
           nach LRE). Startposition und Zeilenzahl gelten immer je Seite; Zeilenhöhe und Spalten gelten standardmäßig für
           die ganze Tabelle, lassen sich aber je Seite überschreiben ("eigene je Seite").
@@ -162,17 +162,17 @@ export function FeldPanel({
       </Abschnitt>
 
       <Abschnitt titel="Signatur & Unterschriftsdatum">
-        <div className="small fw-semibold mb-1">Signatur-Fläche</div>
-        <div className="d-flex align-items-center gap-2">
+        <div className="zelle-klein fett luft-unten-2xs">Signatur-Fläche</div>
+        <DBStack direction="row" gap="x-small" alignment="center">
           <ScharfButton
             aktiv={signaturAktiv}
             onClick={() => onArm(signaturAktiv ? null : { bereich: 'signaturBild' })}
           />
-          <span className="small flex-grow-1">{seite.signaturBild ? 'Fläche gesetzt' : 'nicht gesetzt'}</span>
+          <span className="zelle-klein waechst">{seite.signaturBild ? 'Fläche gesetzt' : 'nicht gesetzt'}</span>
           {seite.signaturBild && (
             <DBButton
               type="button"
-              className="py-0"
+
               variant="outlined"
               data-color="critical"
               size="small"
@@ -181,9 +181,9 @@ export function FeldPanel({
               Löschen
             </DBButton>
           )}
-        </div>
+        </DBStack>
         {seite.signaturBild && (
-          <div className="raster mt-1 abstand-1">
+          <div className="raster luft-oben-2xs abstand-1">
             <ZahlFeld
               label="x"
               wert={seite.signaturBild.x}
@@ -207,22 +207,22 @@ export function FeldPanel({
           </div>
         )}
 
-        <div className="small fw-semibold mt-3 mb-1">Unterschriftsdatum</div>
-        <div className="small text-body-secondary mb-1">
+        <div className="zelle-klein fett luft-oben-sm luft-unten-2xs">Unterschriftsdatum</div>
+        <div className="zelle-klein farbe-gedaempft luft-unten-2xs">
           Druckt nur, wenn tatsächlich eine (nicht-digitale) Unterschrift vorliegt.
         </div>
         {datumKey && datumFeld ? (
           <>
-            <div className="d-flex align-items-center gap-2">
+            <DBStack direction="row" gap="x-small" alignment="center">
               <ScharfButton
                 aktiv={datumArmed}
                 onClick={() => onArm(datumArmed ? null : { bereich: 'feld', key: datumKey })}
                 titel="Position auf dem PDF aufziehen"
               />
-              <span className="small flex-grow-1">Feld gesetzt</span>
+              <span className="zelle-klein waechst">Feld gesetzt</span>
               <DBButton
                 type="button"
-                className="py-0"
+
                 variant="outlined"
                 data-color="critical"
                 size="small"
@@ -230,11 +230,11 @@ export function FeldPanel({
               >
                 Löschen
               </DBButton>
-            </div>
+            </DBStack>
             <DbAuswahl
               beschriftung="Datenfeld für das Unterschriftsdatum"
               dicht
-              className="mt-1"
+              className="luft-oben-2xs"
               value={datumFeld.berechnet?.feld ?? ''}
               onChange={e =>
                 datumAendern({
@@ -253,13 +253,13 @@ export function FeldPanel({
                 </optgroup>
               ))}
             </DbAuswahl>
-            <div className="mt-1">
+            <div className="luft-oben-2xs">
               <Zellkoordinaten wert={datumFeld} onChange={datumAendern} />
             </div>
-            <div className="mt-1">
+            <div className="luft-oben-2xs">
               <DarstellungsFelder wert={datumFeld} onChange={datumAendern} />
             </div>
-            <div className="d-flex align-items-center gap-2 mt-1">
+            <DBStack direction="row" gap="x-small" alignment="center" className="luft-oben-2xs">
               <DbFeld
                 beschriftung="Tage"
                 dicht
@@ -275,8 +275,8 @@ export function FeldPanel({
                   });
                 }}
               />
-              <span className="small text-body-secondary">Tage Frist — sonst gilt das heutige Datum.</span>
-            </div>
+              <span className="zelle-klein farbe-gedaempft">Tage Frist — sonst gilt das heutige Datum.</span>
+            </DBStack>
           </>
         ) : (
           <DBButton type="button" variant="outlined" size="small" onClick={datumHinzufuegen}>

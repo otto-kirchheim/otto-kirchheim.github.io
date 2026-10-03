@@ -3,7 +3,7 @@
 $stufen: bp.$px;
 
 /* Die `db-table`-Huelle legt ihre Linien per `border-block-end` an `tr` -- das rendert nur bei
-   `border-collapse: collapse`. Weil `utilities.scss` das native `display: table` erzwingt (statt
+   `border-collapse: collapse`. Weil `db-gegenregeln.scss` das native `display: table` erzwingt (statt
    DBs Grid), stuende die Tabelle sonst auf `separate`: keine Zeilentrenner, keine Abschlusslinie
    unten. */
 table.customtable {

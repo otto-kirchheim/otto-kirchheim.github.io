@@ -1,4 +1,5 @@
 import type { Bedingung, Feld, FeldBedingung, Spalte, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { AggregationEditor, Rechnung } from './aggregationUndRechnung';
 import {
   gruppiere,
@@ -53,7 +54,7 @@ function VergleichWahl({
   if (istBoolean) {
     const aktuell = wenn.werte?.[0] !== false;
     return (
-      <div className="raster mb-1 abstand-1">
+      <div className="raster luft-unten-2xs abstand-1">
         <div className="sp-8">
           <DbAuswahl
             beschriftung="Bedingung"
@@ -80,9 +81,9 @@ function VergleichWahl({
 
   return (
     <>
-      <div className="raster mb-1 abstand-1">
+      <div className="raster luft-unten-2xs abstand-1">
         <div className="sp-8">
-          <DBStack direction="row" wrap gap="2x-small" className="w-100">
+          <DBStack direction="row" wrap gap="2x-small" className="volle-breite">
             <DBButton
               type="button"
               variant={!wenn.bereich ? 'brand' : 'outlined'}
@@ -146,7 +147,7 @@ function VergleichWahl({
         <DbFeld
           beschriftung="Werte, durch Komma getrennt"
           dicht
-          feldKlasse="font-monospace"
+          feldKlasse="schrift-mono"
           placeholder="Werte, durch Komma getrennt"
           value={(wenn.werte ?? []).join(', ')}
           onChange={e =>
@@ -202,8 +203,8 @@ export function AnkreuzBedingung({
   }
 
   return (
-    <div className="mb-1">
-      <DBStack direction="row" wrap gap="2x-small" className="w-100 mb-1">
+    <div className="luft-unten-2xs">
+      <DBStack direction="row" wrap gap="2x-small" className="volle-breite luft-unten-2xs">
         <DBButton
           type="button"
           variant={!wenn.berechnet ? 'brand' : 'outlined'}
@@ -229,18 +230,18 @@ export function AnkreuzBedingung({
       </DBStack>
 
       {wenn.berechnet ? (
-        <div className="border p-2 mb-1">
+        <Gruppe className="luft-unten-2xs">
           <Rechnung
             wert={wenn.berechnet}
             zeilenFelder={zeilenFelder}
             onChange={berechnet => setzeWenn({ berechnet })}
           />
-        </div>
+        </Gruppe>
       ) : (
         <DbAuswahl
           beschriftung="Geprüftes Feld"
           dicht
-          className="mb-1"
+          className="luft-unten-2xs"
           value={wenn.feld ?? ''}
           onChange={e => {
             const feld = (e.target as HTMLSelectElement).value;
@@ -306,8 +307,8 @@ export function FeldAnkreuzBedingung({
   }
 
   return (
-    <div className="mb-1">
-      <DBStack direction="row" wrap gap="2x-small" className="w-100 mb-1">
+    <div className="luft-unten-2xs">
+      <DBStack direction="row" wrap gap="2x-small" className="volle-breite luft-unten-2xs">
         <DBButton
           type="button"
           variant={!wenn.berechnet ? 'brand' : 'outlined'}
@@ -333,19 +334,19 @@ export function FeldAnkreuzBedingung({
       </DBStack>
 
       {wenn.berechnet ? (
-        <div className="border p-2 mb-1">
+        <Gruppe className="luft-unten-2xs">
           <AggregationEditor
             wert={wenn.berechnet}
             formular={formular}
             tabellen={tabellen}
             onChange={berechnet => setzeWenn({ berechnet })}
           />
-        </div>
+        </Gruppe>
       ) : (
         <DbAuswahl
           beschriftung="Geprüftes Feld"
           dicht
-          className="mb-1"
+          className="luft-unten-2xs"
           value={wenn.feld ?? ''}
           onChange={e => {
             const pfad = (e.target as HTMLSelectElement).value;

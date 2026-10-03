@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 
 import type { Ausrichtung, Drehung, FormatName } from '@otto-kirchheim/nebengeld-shared';
 import { FORMATE } from './datenKatalog';
-import { DBButton, DBCheckbox, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBTooltip, DBStack } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 /**
@@ -24,15 +24,15 @@ export function Abschnitt({
   children: ReactNode;
 }) {
   return (
-    <details className="klapp-abschnitt border p-2 mb-2 bg-body" open={offen}>
-      <summary className="small fw-semibold d-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
+    <details className="klapp-abschnitt rahmen-box hinterlegt-1 luft-unten-xs" open={offen}>
+      <summary className="zelle-klein fett summary-zeile">
         <span className="klapp-pfeil" aria-hidden="true">
           ▸
         </span>
-        <span className="flex-grow-1">{titel}</span>
+        <span className="waechst">{titel}</span>
         {zusatz}
       </summary>
-      <div className="mt-2">{children}</div>
+      <div className="luft-oben-xs">{children}</div>
     </details>
   );
 }
@@ -62,23 +62,19 @@ export function KlappZeile({
   children: ReactNode;
 }) {
   return (
-    <details className="klapp-zeile border p-2 mb-1" open={offen || undefined}>
-      <summary className="d-flex align-items-center flex-wrap gap-1" style={{ cursor: 'pointer' }}>
-        <span className="klapp-pfeil small" aria-hidden="true">
+    <details className="klapp-zeile rahmen-box luft-unten-2xs" open={offen || undefined}>
+      <summary className="summary-zeile summary-zeile--eng">
+        <span className="klapp-pfeil zelle-klein" aria-hidden="true">
           ▸
         </span>
-        <span className="small text-truncate flex-grow-1">{titel}</span>
+        <span className="zelle-klein abschneiden waechst">{titel}</span>
         {aktionen !== undefined && (
-          <span
-            className="d-flex align-items-center flex-wrap gap-1"
-            role="presentation"
-            onClick={e => e.preventDefault()}
-          >
+          <span className="summary-zeile summary-zeile--eng" role="presentation" onClick={e => e.preventDefault()}>
             {aktionen}
           </span>
         )}
       </summary>
-      <div className="mt-2">{children}</div>
+      <div className="luft-oben-xs">{children}</div>
     </details>
   );
 }
@@ -92,7 +88,7 @@ export function ScharfButton({ aktiv, onClick, titel }: { aktiv: boolean; onClic
   return (
     <DBButton
       type="button"
-      className="py-0"
+
       variant={aktiv ? 'filled' : 'outlined'}
       data-color={aktiv ? 'critical' : undefined}
       size="small"
@@ -183,7 +179,7 @@ export function Zellkoordinaten<T extends { x: number; y?: number; x2?: number; 
     <>
       <DBButton
         type="button"
-        className="p-0 small text-muted text-nowrap text-decoration-none"
+        className="zelle-klein farbe-gedaempft nowrap ohne-unterstrich"
         variant="ghost"
         size="small"
         iconTrailing={offen ? 'chevron_up' : 'chevron_down'}
@@ -195,7 +191,7 @@ export function Zellkoordinaten<T extends { x: number; y?: number; x2?: number; 
         {breite !== null && `, ${breite.toFixed(0)}${hoehe === null ? ' br.' : `×${hoehe.toFixed(0)}`}`}
       </DBButton>
       {offen && (
-        <div className="raster w-100 mt-1 abstand-1">
+        <div className="raster volle-breite luft-oben-2xs abstand-1">
           <ZahlFeld label="x" wert={wert.x} onChange={v => onChange({ ...wert, x: v ?? 0 })} />
           <ZahlFeld label="x2" wert={wert.x2} onChange={v => onChange({ ...wert, x2: v })} />
           {!nurX && (
@@ -239,7 +235,7 @@ export function DarstellungsFelder<
   return (
     <>
       {/* Schrift: Größe neben Fett/Kursiv/Unterstrichen. */}
-      <div className="raster align-items-center abstand-1">
+      <div className="raster ausrichtung-mitte abstand-1">
         <div className="sp-3">
           <DbFeld
             beschriftung={wert.autoGroesse ? 'Maximale Schriftgröße' : 'Schriftgröße'}
@@ -250,7 +246,7 @@ export function DarstellungsFelder<
             onChange={e => onChange({ ...wert, size: Number(e.target.value) })}
           />
         </div>
-        <div className="sp-3 mb-0">
+        <div className="sp-3 ohne-luft-unten">
           <DBCheckbox
             size="small"
             label="Fett"
@@ -258,7 +254,7 @@ export function DarstellungsFelder<
             onChange={e => onChange({ ...wert, fett: (e.target as HTMLInputElement).checked || undefined })}
           />
         </div>
-        <div className="sp-3 mb-0">
+        <div className="sp-3 ohne-luft-unten">
           <DBCheckbox
             size="small"
             label="Kursiv"
@@ -266,7 +262,7 @@ export function DarstellungsFelder<
             onChange={e => onChange({ ...wert, kursiv: (e.target as HTMLInputElement).checked || undefined })}
           />
         </div>
-        <div className="sp-3 mb-0">
+        <div className="sp-3 ohne-luft-unten">
           <DBCheckbox
             size="small"
             label="Unterstr."
@@ -276,7 +272,7 @@ export function DarstellungsFelder<
         </div>
       </div>
       {/* Ausrichtung: Textausrichtung und Drehung steuern beide die Textrichtung in der Zelle. */}
-      <div className="raster mt-1 abstand-1">
+      <div className="raster luft-oben-2xs abstand-1">
         <div className="sp-5">
           <DbAuswahl
             beschriftung="Ausrichtung"
@@ -309,7 +305,7 @@ export function DarstellungsFelder<
         </div>
       </div>
       {/* Format: eigene Zeile, unabhängig von Ausrichtung/Drehung. */}
-      <div className="raster mt-1 abstand-1">
+      <div className="raster luft-oben-2xs abstand-1">
         <div>
           <DbAuswahl
             beschriftung="Format"
@@ -331,7 +327,7 @@ export function DarstellungsFelder<
         </div>
       </div>
       {/* Verhalten: Auto-Verkleinerung und Umbruch steuern beide, wie der Text in die Zelle passt. */}
-      <div className="d-flex gap-3 mt-1">
+      <DBStack direction="row" gap="small" className="luft-oben-2xs">
         <div>
           <DBCheckbox
             size="small"
@@ -348,7 +344,7 @@ export function DarstellungsFelder<
             onChange={e => onChange({ ...wert, umbruch: (e.target as HTMLInputElement).checked || undefined })}
           />
         </div>
-      </div>
+      </DBStack>
     </>
   );
 }

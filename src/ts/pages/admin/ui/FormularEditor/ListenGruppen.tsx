@@ -1,4 +1,5 @@
 import type { ListenGruppe, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import {
   listenVorlagen,
   vorlagenKategorie,
@@ -6,7 +7,7 @@ import {
   zulagenKurztexte,
   type FormularCode,
 } from './datenKatalog';
-import { DBButton, DBCheckbox, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBTooltip, DBStack } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 type Props = {
@@ -46,21 +47,21 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
   if (gruppen.length === 0 && vorlagen.length === 0) return null;
 
   return (
-    <div className="mb-2">
-      <div className="small fw-semibold mb-1">Dynamische Spalten</div>
+    <div className="luft-unten-xs">
+      <div className="zelle-klein fett luft-unten-2xs">Dynamische Spalten</div>
 
       {gruppen.map(([name, gruppe]) => {
         const kategorie = vorlagenKategorie(name);
         const kurztexte = Boolean(gruppe.beschriftungen);
         return (
-          <div key={name} className="border p-2 mb-1 bg-body">
-            <div className="d-flex align-items-center gap-1 mb-1">
-              <span className="small fw-semibold flex-grow-1">
-                {name} <span className="text-body-secondary">— {gruppe.auswahl?.length ?? 0} mögliche Schlüssel</span>
+          <Gruppe key={name} className="hinterlegt-1 luft-unten-2xs">
+            <DBStack direction="row" gap="2x-small" alignment="center" className="luft-unten-2xs">
+              <span className="zelle-klein fett waechst">
+                {name} <span className="farbe-gedaempft">— {gruppe.auswahl?.length ?? 0} mögliche Schlüssel</span>
               </span>
               <DBButton
                 type="button"
-                className="py-0"
+
                 variant="outlined"
                 data-color="critical"
                 size="small"
@@ -70,9 +71,9 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
               >
                 <DBTooltip>Gruppe löschen</DBTooltip>
               </DBButton>
-            </div>
+            </DBStack>
 
-            <div className="raster mb-1 abstand-1">
+            <div className="raster luft-unten-2xs abstand-1">
               <div className="sp-6">
                 <DbAuswahl
                   beschriftung="Zeilenfeld mit der Liste"
@@ -92,7 +93,7 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
                 <DbFeld
                   beschriftung="Feld im Listeneintrag, das den Schlüssel trägt"
                   dicht
-                  feldKlasse="font-monospace"
+                  feldKlasse="schrift-mono"
                   title="Feld im Listeneintrag, das den Schlüssel trägt"
                   value={gruppe.schluessel}
                   onChange={e => setzeGruppe(name, { ...gruppe, schluessel: (e.target as HTMLInputElement).value })}
@@ -102,7 +103,7 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
                 <DbFeld
                   beschriftung="Feld im Listeneintrag mit dem anzuzeigenden Wert"
                   dicht
-                  feldKlasse="font-monospace"
+                  feldKlasse="schrift-mono"
                   title="Feld im Listeneintrag mit dem anzuzeigenden Wert"
                   value={gruppe.wert}
                   onChange={e => setzeGruppe(name, { ...gruppe, wert: (e.target as HTMLInputElement).value })}
@@ -113,8 +114,8 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
             <DbFeld
               beschriftung="Schlüssel, durch Komma getrennt"
               dicht
-              className="mb-1"
-              feldKlasse="font-monospace"
+              className="luft-unten-2xs"
+              feldKlasse="schrift-mono"
               title="Erlaubte Schlüssel, durch Komma getrennt — diese Reihenfolge bestimmt die Platzvergabe"
               placeholder="Schlüssel, durch Komma getrennt"
               value={(gruppe.auswahl ?? []).join(', ')}
@@ -142,7 +143,7 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
                 />
               </div>
             )}
-          </div>
+          </Gruppe>
         );
       })}
 
@@ -150,7 +151,7 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
         <DBButton
           key={v.name}
           type="button"
-          className="me-1"
+          className="luft-rechts-2xs"
           variant="outlined"
           size="small"
           title={`Legt die Gruppe „${v.name}" plus ${v.plaetze} Spaltenplätze an`}

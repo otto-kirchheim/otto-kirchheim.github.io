@@ -1,4 +1,4 @@
-import { DBButton } from '@db-ux/react-core-components';
+import { DBButton, DBStack } from '@db-ux/react-core-components';
 import { useState, type PointerEvent as ReactPointerEvent } from 'react';
 
 const WEEKDAY_SLOTS: Array<{ tag: number; short: string }> = [
@@ -205,15 +205,15 @@ export function VorgabenBWeekRangeEditor({
     endSlot === null ? `${getSlotLabel(startSlot)} -> ...` : `${getSlotLabel(startSlot)} -> ${getSlotLabel(endSlot)}`;
 
   return (
-    <div className="mb-2">
-      <div className="d-flex flex-wrap gap-2 align-items-baseline mb-2">
-        <span className="small fw-semibold mb-0">{label}</span>
-        <span className="small text-body-secondary">Auswahl: {rangeText}</span>
-      </div>
+    <div className="luft-unten-xs">
+      <DBStack direction="row" wrap gap="x-small" className="ausrichtung-basis luft-unten-xs">
+        <span className="zelle-klein fett ohne-luft-unten">{label}</span>
+        <span className="zelle-klein farbe-gedaempft">Auswahl: {rangeText}</span>
+      </DBStack>
 
       <div
-        className="d-grid"
-        style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '.375rem', userSelect: 'none' }}
+        className="wochentag-raster"
+        style={{ userSelect: 'none' }}
         onPointerUp={clearDrag}
         onPointerLeave={clearDrag}
       >
@@ -231,7 +231,6 @@ export function VorgabenBWeekRangeEditor({
             <DBButton
               key={`${selectorKey}-${slot}`}
               type="button"
-              className="py-2"
               variant={variante}
               data-color={farbe}
               size="small"

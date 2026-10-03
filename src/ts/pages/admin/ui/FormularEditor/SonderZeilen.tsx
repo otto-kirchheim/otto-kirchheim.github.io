@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import type {
   Ausrichtung,
   FormatName,
@@ -12,7 +13,7 @@ import { sonderZeileZelleWert, zeilenFuerUeber } from '@/shared/lib/pdf/wert';
 import { FORMATE } from './datenKatalog';
 import { WertVorschau } from './WertVorschau';
 import type { Vorschau } from './FeldPanel';
-import { DBButton, DBCheckbox, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBTooltip, DBStack } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 type Props = {
@@ -54,8 +55,8 @@ function SonderZeileName({
     <DbFeld
       beschriftung="Name der Sonderzeile"
       dicht
-      className="flex-grow-1"
-      feldKlasse="fw-semibold"
+      className="waechst"
+      feldKlasse="fett"
       value={entwurf}
       onChange={e => setEntwurf(e.target.value)}
       onKeyDown={e => {
@@ -129,18 +130,18 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
   }
 
   return (
-    <div className="mb-2">
-      <div className="d-flex align-items-center gap-1 mb-1">
-        <span className="small fw-semibold flex-grow-1">Sonderzeilen (Überschrift/Summe über mehrere Spalten)</span>
-      </div>
+    <div className="luft-unten-xs">
+      <DBStack direction="row" gap="2x-small" alignment="center" className="luft-unten-2xs">
+        <span className="zelle-klein fett waechst">Sonderzeilen (Überschrift/Summe über mehrere Spalten)</span>
+      </DBStack>
 
       {zeilen.map(([name, zeile], zeileIndex) => {
         // Kartenvorschau immer über alle Zeilen -- der tatsächliche Zeilenbezug ist je Seite/
         // Platzierung verschieden (`TabellenBereich.sonderzeilen[].ueber`) und wird dort angezeigt.
         const rows = zeilenFuerUeber('$alle', tabelleName, vorschau.kontext);
         return (
-          <div key={zeileIndex} className="border p-2 mb-1 bg-body">
-            <div className="d-flex align-items-center gap-1 mb-1">
+          <Gruppe key={zeileIndex} className="hinterlegt-1 luft-unten-2xs">
+            <DBStack direction="row" gap="2x-small" alignment="center" className="luft-unten-2xs">
               <SonderZeileName
                 name={name}
                 vergeben={zeilen.map(([n]) => n).filter(n => n !== name)}
@@ -148,7 +149,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
               />
               <DBButton
                 type="button"
-                className="py-0"
+
                 variant="outlined"
                 data-color="critical"
                 size="small"
@@ -158,9 +159,9 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
               >
                 <DBTooltip>Sonderzeile löschen</DBTooltip>
               </DBButton>
-            </div>
+            </DBStack>
 
-            <div className="small text-body-secondary mb-1">
+            <div className="zelle-klein farbe-gedaempft luft-unten-2xs">
               Hier steht nur, WAS die Sonderzeile zeigt. WO sie auf einer Seite sitzt und welcher Zeilenbezug
               ($alle/$seite/…) dort gilt, legt „Sonderzeilen auf dieser Seite“ je Seite fest. Die Vorschau unten rechnet
               mit „alle Zeilen“.
@@ -174,8 +175,8 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
                 ? sonderZeileZelleWert(zelle, spalte, tabelleName, rows, vorschau.daten, vorschau.kontext)
                 : undefined;
               return (
-                <div key={index} className="raster mb-1 align-items-center abstand-1">
-                  <div className="sp-4 small text-truncate" title={bezeichnung}>
+                <div key={index} className="raster luft-unten-2xs ausrichtung-mitte abstand-1">
+                  <div className="sp-4 zelle-klein abschneiden" title={bezeichnung}>
                     {bezeichnung}
                   </div>
                   <div className="sp-8">
@@ -204,7 +205,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
 
                   {zelle && (
                     <>
-                      <div className="mt-1">
+                      <div className="luft-oben-2xs">
                         <DbAuswahl
                           beschriftung="Format dieser Zelle -- ohne Auswahl gilt das Format der Spalte"
                           dicht
@@ -225,7 +226,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
                         </DbAuswahl>
                       </div>
 
-                      <div className="sp-3 mt-1">
+                      <div className="sp-3 luft-oben-2xs">
                         <DbFeld
                           beschriftung="Schriftgröße dieser Zelle -- ohne Angabe gilt die Größe der Spalte"
                           dicht
@@ -239,7 +240,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
                           }}
                         />
                       </div>
-                      <div className="sp-3 mt-1 mb-0">
+                      <div className="sp-3 luft-oben-2xs ohne-luft-unten">
                         <DBCheckbox
                           size="small"
                           label="Fett"
@@ -252,7 +253,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
                           }
                         />
                       </div>
-                      <div className="sp-3 mt-1 mb-0">
+                      <div className="sp-3 luft-oben-2xs ohne-luft-unten">
                         <DBCheckbox
                           size="small"
                           label="Kursiv"
@@ -265,7 +266,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
                           }
                         />
                       </div>
-                      <div className="sp-3 mt-1 mb-0">
+                      <div className="sp-3 luft-oben-2xs ohne-luft-unten">
                         <DBCheckbox
                           size="small"
                           label="Unterstr."
@@ -280,7 +281,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
                       </div>
 
                       {/* Verhalten: Ausrichtung und Auto-Verkleinerung steuern beide, wie der Text in die Zelle passt. */}
-                      <div className="sp-8 mt-1">
+                      <div className="sp-8 luft-oben-2xs">
                         <DbAuswahl
                           beschriftung="Ausrichtung dieser Zelle -- ohne Auswahl gilt die Ausrichtung der Spalte"
                           dicht
@@ -299,7 +300,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
                           <option value="rechts">rechts</option>
                         </DbAuswahl>
                       </div>
-                      <div className="sp-4 mt-1 mb-0">
+                      <div className="sp-4 luft-oben-2xs ohne-luft-unten">
                         <DBCheckbox
                           size="small"
                           label="auto. verkleinern"
@@ -322,7 +323,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
                 </div>
               );
             })}
-          </div>
+          </Gruppe>
         );
       })}
 

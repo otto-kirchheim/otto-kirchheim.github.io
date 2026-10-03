@@ -1,0 +1,27 @@
+// Gegenregeln zum DB-Layer (`@layer app`, schlagen `db-ux`). Vorher Teil der Bootstrap-kompatiblen
+// Hilfsklassen-Datei (`utilities.scss`), die mit dem Bootstrap-Rueckbau entfallen ist.
+
+@layer app {
+  // DB setzt `list-style-type: var(--db-list-bullet)` auf Listen; ohne Gegenregel steht vor
+  // jedem Eintrag der App-Listen ein Aufzaehlungspunkt.
+  .trennliste {
+    list-style: none;
+  }
+
+  // `<DBHeadingH1>` ... `<DBHeadingH6>` (`.db-heading`) setzen die Ausrichtung auf `start`, statt sie
+  // vom Elternteil zu erben -- die Tab-Titel sind aber ueber `.tab-abschnitt` (`text-align: center`) zentriert.
+  // `:where()` haelt die Spezifitaet bei 0: ein `alignment`-Prop an der Stelle gewinnt weiterhin.
+  :where(.db-heading:not([data-alignment])) {
+    text-align: inherit;
+  }
+
+  // DB rechnet `.db-table table` als CSS-Grid (`display: grid` plus `:has()`-Spaltenzaehlung).
+  // Die Tabellen im Bestand arbeiten mit `colspan` (Fusszeile, Leer-Meldung, Inline-Editor),
+  // mit Zeilenkoepfen und mit je Breakpoint ausgeblendeten Spalten -- im Grid-Modell rutschen
+  // diese Zellen in eine einzige Spalte (Berechnungstabelle: Kopf und Rumpf laufen auseinander).
+  // Deshalb bleibt das native Table-Layout; Farben, Abstaende und Rahmen kommen aus dem DB-Layer.
+  .db-table > table {
+    display: table;
+    inline-size: 100%;
+  }
+}

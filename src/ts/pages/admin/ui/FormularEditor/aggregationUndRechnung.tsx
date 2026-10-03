@@ -144,7 +144,7 @@ export function AggregationEditor({
   }
 
   return (
-    <div className="raster mb-1 abstand-1">
+    <div className="raster luft-unten-2xs abstand-1">
       <div className="sp-3">
         <DbAuswahl
           beschriftung="Rechenart"
@@ -227,9 +227,9 @@ export function AggregationEditor({
           )}
         </DbAuswahl>
       </div>
-      <div className="d-flex flex-wrap align-items-center gap-2">
+      <DBStack direction="row" wrap gap="x-small" alignment="center">
         <span
-          className="small text-body-secondary"
+          className="zelle-klein farbe-gedaempft"
           title="Grenzt die Aggregation auf eine oder mehrere Teiltabellen ein -- ohne Auswahl laufen alle Tabellen zusammen"
         >
           Tabellen:
@@ -243,9 +243,9 @@ export function AggregationEditor({
             onChange={() => schalteTabelle(name)}
           />
         ))}
-      </div>
+      </DBStack>
       {wert.op === 'letztesDatum' && (
-        <div className="d-flex align-items-center gap-2">
+        <DBStack direction="row" gap="x-small" alignment="center">
           <DbFeld
             beschriftung="Tage"
             dicht
@@ -259,11 +259,11 @@ export function AggregationEditor({
               onChange({ ...wert, maxTage: roh === '' ? undefined : Number(roh) });
             }}
           />
-          <span className="small text-body-secondary">
+          <span className="zelle-klein farbe-gedaempft">
             Tage Frist — liegt der letzte Eintrag länger zurück (oder fehlt er), wird das heutige Datum gesetzt. Leer
             lassen: immer der letzte Eintrag.
           </span>
-        </div>
+        </DBStack>
       )}
     </div>
   );
@@ -317,8 +317,8 @@ export function Rechnung({
   }
 
   return (
-    <div className="mb-1">
-      <DBStack direction="row" alignment="end" gap="x-small" className="feldgruppe mb-1">
+    <div className="luft-unten-2xs">
+      <DBStack direction="row" alignment="end" gap="x-small" className="feldgruppe luft-unten-2xs">
         <DbAuswahl
           beschriftung="Rechenart"
           dicht
@@ -343,14 +343,14 @@ export function Rechnung({
           </DBButton>
         )}
       </DBStack>
-      <div className="small text-body-secondary mb-1">
+      <div className="zelle-klein farbe-gedaempft luft-unten-2xs">
         Operanden der Reihe nach verrechnet — für gemischte Rechnungen eine Zwischenrechnung einsetzen.
       </div>
 
       {wert.operanden.map((operand, i) =>
         typeof operand === 'object' ? (
           // Index als Key: Operanden haben keine eigene ID, ihre Reihenfolge ist Teil der Rechnung.
-          <div key={i} className="border-start border-2 ps-2 ms-1 mb-1">
+          <div key={i} className="einzug-linie">
             <Rechnung
               wert={operand}
               zeilenFelder={zeilenFelder}
@@ -360,7 +360,7 @@ export function Rechnung({
           </div>
         ) : (
           // Index als Key, siehe oben.
-          <DBStack key={i} direction="row" alignment="end" gap="x-small" className="feldgruppe mb-1">
+          <DBStack key={i} direction="row" alignment="end" gap="x-small" className="feldgruppe luft-unten-2xs">
             <DbAuswahl
               beschriftung="Operand"
               dicht
@@ -397,7 +397,7 @@ export function Rechnung({
         ),
       )}
 
-      <div className="d-flex gap-1">
+      <DBStack direction="row" gap="2x-small">
         <DBButton
           type="button"
           variant="outlined"
@@ -415,7 +415,7 @@ export function Rechnung({
         >
           + Zwischenrechnung
         </DBButton>
-      </div>
+      </DBStack>
     </div>
   );
 }

@@ -7,6 +7,6 @@ export type DbButtonLook = {
   color?: 'critical' | 'informational' | 'successful' | 'warning';
   size?: 'small' | 'medium';
   width?: 'full';
-  /** Layout-Klassen ohne DB-Entsprechung (z. B. `text-start`), von `utilities.scss` bedient. */
+  /** Zusaetzliche Klassen ohne DB-Entsprechung (Layout), von `styles.scss`/`admin.scss` bedient. */
   rest?: string;
 };

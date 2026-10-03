@@ -6,10 +6,10 @@ import bootstrapKlassen from './bootstrapKlassen.json';
 /**
  * Ratsche fuer den Bootstrap-Rueckbau (`tasks/plan-bootstrap-rueckbau.md`): zaehlt Klassen mit Bootstrap-Namen in
  * `className` (auch `divClass`/`feldKlasse`/... der My*-Wrapper), `class: [...]` und `classList.*` unter `src/ts`. `bootstrapKlassen.json` ist die eingefrorene Liste aller
- * Klassen aus `src/scss/utilities.scss` (Stand 2026-10-03) plus `tab-pane`/`fade`/`tab-content`, damit das Zaehlen auch nach dem Loeschen der Datei greift. Die
+ * Klassen der inzwischen geloeschten `src/scss/utilities.scss` (Stand 2026-10-03) plus `tab-pane`/`fade`/`tab-content`, damit das Zaehlen auch nach dem Loeschen der Datei greift. Die
  * Grenze sinkt mit jedem Batch und steht am Ende auf 0; neue Bootstrap-Klassen brechen den Test sofort.
  */
-const GRENZE = 527;
+const GRENZE = 0;
 
 const KLASSEN = new Set<string>(bootstrapKlassen);
 const QUELLEN = [

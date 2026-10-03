@@ -52,7 +52,7 @@ export function DatenpfadWahl({
           <DbFeld
             beschriftung="Freier Datenpfad"
             dicht
-            feldKlasse="font-monospace"
+            feldKlasse="schrift-mono"
             ungueltig={belegt.has(wert)}
             placeholder="Datenpfad"
             value={wert === '__frei' ? '' : wert}
@@ -61,7 +61,7 @@ export function DatenpfadWahl({
         )}
       </DBStack>
       {!bekannt && belegt.has(wert) && (
-        <div className="small text-danger">Dieser Datenpfad wird schon von einem anderen Feld verwendet.</div>
+        <div className="zelle-klein farbe-gefahr">Dieser Datenpfad wird schon von einem anderen Feld verwendet.</div>
       )}
     </div>
   );
@@ -99,10 +99,10 @@ export function ZusammengesetzteQuellen({
   const bekannterTrenner = TRENNER.some(t => t.wert === (feld.trenner ?? ' '));
 
   return (
-    <div className="mb-1">
+    <div className="luft-unten-2xs">
       {quellen.map((pfad, i) => (
-        <DBStack key={i} direction="row" gap="2x-small" className="mb-1">
-          <div className="flex-grow-1">
+        <DBStack key={i} direction="row" gap="2x-small" className="luft-unten-2xs">
+          <div className="waechst">
             <DatenpfadWahl
               wert={pfad}
               eintraege={eintraege}
@@ -111,7 +111,7 @@ export function ZusammengesetzteQuellen({
           </div>
           <DBButton
             type="button"
-            className="py-0"
+
             variant="outlined"
             data-color="critical"
             size="small"
@@ -131,11 +131,11 @@ export function ZusammengesetzteQuellen({
         >
           + Teil
         </DBButton>
-        <span className="small text-muted">getrennt durch</span>
+        <span className="zelle-klein farbe-gedaempft">getrennt durch</span>
         <DbAuswahl
           beschriftung="Trennzeichen"
           dicht
-          className="w-auto"
+
           value={bekannterTrenner ? (feld.trenner ?? ' ') : '__frei'}
           onChange={e => {
             const v = e.target.value;
@@ -153,8 +153,8 @@ export function ZusammengesetzteQuellen({
           <DbFeld
             beschriftung="Zeichen"
             dicht
-            className="w-auto"
-            feldKlasse="font-monospace"
+
+            feldKlasse="schrift-mono"
             huelleStyle={{ maxWidth: '6rem' }}
             placeholder="Zeichen"
             value={feld.trenner ?? ''}
@@ -209,7 +209,7 @@ export function PlatzhalterPicker({
     <DbAuswahl
       beschriftung="Datenpfad an der Cursorposition einfügen"
       dicht
-      className="mb-1"
+      className="luft-unten-2xs"
       value=""
       title="Datenpfad an der Cursorposition einfügen"
       onChange={e => {

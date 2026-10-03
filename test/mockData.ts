@@ -590,7 +590,7 @@ export const mockNeben = (): void => {
   document.body.insertAdjacentHTML(
     'beforeend',
     '<div class="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">' +
-      '<table id="tableN" class="align-middle" aria-label="Nebengeld"></table>' +
+      '<table id="tableN" aria-label="Nebengeld"></table>' +
       '</div>',
   );
 
@@ -612,7 +612,7 @@ export const mockEWT = (): void => {
   document.body.insertAdjacentHTML(
     'beforeend',
     '<div class="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">' +
-      '<table id="tableE" class="align-middle" aria-label="EWT"></table>' +
+      '<table id="tableE" aria-label="EWT"></table>' +
       '</div>',
   );
 
@@ -659,11 +659,11 @@ export const mockBereitschaft = (): void => {
     'beforeend',
     '<div class="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">' +
       '<h4 id="titelBZ">Bereitschaftszeitraum</h4>' +
-      '<table id="tableBZ" class="align-middle" aria-describedby="TitelBZ"></table>' +
+      '<table id="tableBZ" aria-describedby="TitelBZ"></table>' +
       '</div>' +
       '<div class="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">' +
       '<h4 id="titelBE">Bereitschaftseinsätze</h4>' +
-      '<table id="tableBE" class="align-middle" aria-describedby="titelBE"></table>' +
+      '<table id="tableBE" aria-describedby="titelBE"></table>' +
       '</div>',
   );
 
@@ -944,7 +944,7 @@ export const mockEA = (): void => {
   document.body.insertAdjacentHTML(
     'beforeend',
     '<div class="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">' +
-      '<table id="tableEA" class="align-middle" aria-label="Entgeltausgleich"></table>' +
+      '<table id="tableEA" aria-label="Entgeltausgleich"></table>' +
       '</div>',
   );
 
@@ -977,7 +977,7 @@ export const datenEAMock: Required<IDaten>['EA'] = [
 export const mockEinstellungen = (): void => {
   document.body.insertAdjacentHTML(
     'beforeend',
-    '<form class="text-center" id="formEinstellungen">' +
+    '<form id="formEinstellungen">' +
       '<button type="submit" class="btn btn-success" name="btnES" id="btnSaveEinstellungen" data-disabler><span class="db-icon db-font-size-lg big-icons" data-icon="save"></span>Speichern</button>' +
       '<input type="Text" placeholder="Max" id="Vorname" class="form-control validate" required /><label for="Vorname">Vorname</label>' +
       '<input type="Text" placeholder="Mustermann" id="Nachname" class="form-control validate" required /><label for="Nachname">Nachname</label>' +
@@ -1002,7 +1002,7 @@ export const mockEinstellungen = (): void => {
       '<input type="time" id="eN" class="form-control validate" required /><label for="eN">Arbeitsende Nacht</label>' +
       '<input type="time" id="bS" class="form-control validate" required /><label for="bS">Arbeitsbeginn Sonderschicht</label>' +
       '<input type="time" id="eS" class="form-control validate" required /><label for="eS">Arbeitsende Sonderschicht</label>' +
-      '<table id="tableVE" class="align-middle"	aria-label="Voreinstellungen Bereitschaft"></table>' +
+      '<table id="tableVE"	aria-label="Voreinstellungen Bereitschaft"></table>' +
       '<div id="fahrzeiten-panel"></div></form>',
   );
 };

@@ -1,5 +1,5 @@
 /**
- * Tab-Navigation der SPA ohne Router (Ersatz fuer Bootstraps `Tab`-Plugin).
+ * Tab-Navigation der SPA ohne Router (Ersatz fuer das fruehere Tab-Plugin).
  *
  * `#tabContent` enthaelt alle Panels (`role="tabpanel"`); Schalter sind alle Elemente mit `data-tab-target="<Panel-Id>"`.
  * Sie werden per Delegation bedient, damit die Navigation zwischen Kopfzeile und Schublade umziehen darf.

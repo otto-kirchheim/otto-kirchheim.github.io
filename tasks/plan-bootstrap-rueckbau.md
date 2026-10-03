@@ -137,10 +137,9 @@ Befund Bestand: Utilities direkt an DB-Komponenten 111 x `DBButton` (`py-0` 26, 
 - [x] R5 `features/ewt`, `features/ez`, `features/ea` (2026-10-03): Tab-Koepfe, Dialoge, Zulagen-Einstellungen. Ratsche 1454
 - [x] R6 `pages/start`, `pages/berechnung`, `pages/einstellungen` (2026-10-03): Start pixelgleich. Ratsche 1311
 - [x] R7 `pages/admin/ui` ohne FormularEditor (2026-10-03): Skript-Umstellung + Nacharbeit, `admin.scss`. Ratsche 527
-- [ ] R8 `pages/admin/ui/FormularEditor` – ca. 430
-- [ ] R9 `pages/admin/features`, `pages/admin/index.tsx` – ca. 75
-- [ ] R10 Abschluss: `utilities.scss` auf den Rest prüfen und löschen, Tests/`mockData.ts`, Kommentare, `CLAUDE.md`,
-      Schutztest auf 0
+- [x] R8 `pages/admin/ui/FormularEditor` (2026-10-03): Skript-Umstellung. Ratsche 91; Editor visuell vom User zu pruefen
+- [x] R9 `pages/admin/features`, `pages/admin/index.tsx` (2026-10-03)
+- [x] R10 Abschluss (2026-10-03): `utilities.scss` geloescht, Gegenregeln nach `db-gegenregeln.scss`, Schutztest auf 0, Doku
 
 ## Risiken
 

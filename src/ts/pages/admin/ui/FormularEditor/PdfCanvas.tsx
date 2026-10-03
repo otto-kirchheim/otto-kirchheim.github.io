@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 
 
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { ladePdfjs } from './pdfjsLoader';
-import { DBButton, DBTag } from '@db-ux/react-core-components';
+import { DBButton, DBTag, DBStack } from '@db-ux/react-core-components';
 import { DbAuswahl } from '@/shared/ui/form/DbFeld';
 
 // pdfjs liefert `convertToPdfPoint`/`convertToViewportPoint` nicht typisiert genug fuer unsere
@@ -549,10 +549,10 @@ export function PdfCanvas({
 
   return (
     <div>
-      <div className="d-flex align-items-center flex-wrap gap-2 mb-1 small">
+      <DBStack direction="row" wrap gap="x-small" alignment="center" className="luft-unten-2xs zelle-klein">
         <DBButton
           type="button"
-          className="py-0"
+
           variant="outlined"
           size="small"
           disabled={!pdf || angezeigt <= 0}
@@ -565,7 +565,7 @@ export function PdfCanvas({
         </span>
         <DBButton
           type="button"
-          className="py-0"
+
           variant="outlined"
           size="small"
           disabled={!pdf || angezeigt >= (pdf?.numPages ?? 1) - 1}
@@ -575,7 +575,7 @@ export function PdfCanvas({
         </DBButton>
         <DBButton
           type="button"
-          className="py-0"
+
           variant="outlined"
           size="small"
           disabled={!pdf}
@@ -583,12 +583,12 @@ export function PdfCanvas({
         >
           Als Quelle für „{aktiveSeiteLabel}“ verwenden
         </DBButton>
-        <div className="ms-auto d-flex align-items-center gap-1">
-          <span className="text-muted">Zoom</span>
+        <DBStack direction="row" gap="2x-small" alignment="center" className="knopf-rechts">
+          <span className="farbe-gedaempft">Zoom</span>
           <DbAuswahl
             beschriftung="Zoom"
             dicht
-            className="py-0 w-auto"
+
             value={String(zoom)}
             onChange={e => setZoom(Number(e.target.value))}
           >
@@ -598,29 +598,35 @@ export function PdfCanvas({
               </option>
             ))}
           </DbAuswahl>
-        </div>
-      </div>
-      {fehler && <div className="text-danger small mb-1">{fehler}</div>}
+        </DBStack>
+      </DBStack>
+      {fehler && <div className="farbe-gefahr zelle-klein luft-unten-2xs">{fehler}</div>}
       {scharfGeschaltet && (
-        <div className="small text-primary mb-1 d-flex flex-wrap gap-2 align-items-center">
+        <DBStack
+          direction="row"
+          wrap
+          gap="x-small"
+          alignment="center"
+          className="zelle-klein farbe-primary luft-unten-2xs"
+        >
           <span>{ziehHinweis()}</span>
           {liveText && (
-            <DBTag className="font-monospace" semantic="informational" emphasis="strong">
+            <DBTag className="schrift-mono" semantic="informational" emphasis="strong">
               {liveText}
             </DBTag>
           )}
-        </div>
+        </DBStack>
       )}
       {messModus && (
-        <div className="small text-primary mb-1">
+        <div className="zelle-klein farbe-primary luft-unten-2xs">
           Ein Textstück der PDF anklicken — die gemessene Schriftgröße wird übernommen (mit scharfgeschaltetem Feld
           direkt in dessen Größe).
         </div>
       )}
-      <div className="position-relative">
-        <div className="border overflow-auto" style={{ maxHeight: '70vh' }}>
+      <div className="canvas-huelle">
+        <div className="canvas-rahmen" style={{ maxHeight: '70vh' }}>
           <div
-            className="position-relative"
+            className="canvas-huelle"
             style={{
               width: 'max-content',
               cursor: messModus ? 'help' : scharfGeschaltet ? 'crosshair' : 'default',
@@ -632,14 +638,14 @@ export function PdfCanvas({
             onClick={handleMessKlick}
           >
             <canvas ref={canvasRef} style={{ display: 'block' }} />
-            <canvas ref={overlayRef} className="position-absolute top-0 start-0" style={{ pointerEvents: 'none' }} />
+            <canvas ref={overlayRef} className="canvas-overlay" style={{ pointerEvents: 'none' }} />
           </div>
         </div>
         <canvas
           ref={lupeRef}
           width={LUPE_GROESSE}
           height={LUPE_GROESSE}
-          className="position-absolute border border-2 border-danger rounded-circle bg-body shadow"
+          className="canvas-marker"
           style={{
             display: scharfGeschaltet && lupeSichtbar ? 'block' : 'none',
             right: '12px',

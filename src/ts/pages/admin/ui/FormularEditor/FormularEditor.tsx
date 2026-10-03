@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { hoeheFuer, maxZeilenFuer, spaltenFuer, startYFuer } from '@/shared/lib/pdf/spaltenFuer';
 import type { Feld, Schriftart, SeitenDef, Spalte, Version } from '@otto-kirchheim/nebengeld-shared';
 import { build } from '@/shared/lib/pdf/build';
@@ -644,9 +645,9 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
   }
 
   return (
-    <div className="border p-2">
-      <DBStack direction="row" alignment="center" gap="x-small" className="mb-2">
-        <nav className="db-navigation admin-unternavigation flex-grow-1" aria-label="Seiten der Vorlage">
+    <Gruppe>
+      <DBStack direction="row" alignment="center" gap="x-small" className="luft-unten-xs">
+        <nav className="db-navigation admin-unternavigation waechst" aria-label="Seiten der Vorlage">
           <menu>
             {value.seiten.map((s, i) => (
               <li className="db-navigation-item" data-active={String(i === seitenIndex)} key={i}>
@@ -735,7 +736,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       )}
 
       {aktiveSeite && (
-        <div className="d-flex flex-wrap align-items-center gap-3 mb-2 small">
+        <DBStack direction="row" wrap gap="small" alignment="center" className="luft-unten-xs zelle-klein">
           <DBCheckbox
             size="small"
             id="seite-wiederholt"
@@ -746,13 +747,13 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
           />
 
           {value.seiten.length > 1 && (
-            <div className="d-flex align-items-center gap-1">
+            <DBStack direction="row" gap="2x-small" alignment="center">
               <DbAuswahl
                 beschriftung="Einstellungen übernehmen von"
                 beschriftungZeigen
                 id="seite-kopieren"
                 dicht
-                className="w-auto"
+
                 value=""
                 onChange={e => {
                   const quelle = value.seiten[Number(e.target.value)];
@@ -772,9 +773,9 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
                   ),
                 )}
               </DbAuswahl>
-            </div>
+            </DBStack>
           )}
-        </div>
+        </DBStack>
       )}
 
       {skalier && anzeigeSeite && (
@@ -807,8 +808,8 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       )}
 
       {aktiveSeite && anzeigeSeite && (
-        <div className="d-lg-flex gap-2" ref={splitRef}>
-          <div className="mb-2 mb-lg-0" style={{ flex: `1 1 ${splitAnteil}%`, minWidth: 0 }}>
+        <div className="split-layout" ref={splitRef}>
+          <div className="split-links" style={{ flex: `1 1 ${splitAnteil}%`, minWidth: 0 }}>
             <PdfCanvas
               datei={datei}
               seiteIndex={anzeigeSeite.quelle}
@@ -830,7 +831,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
             {value.seiten.length > 1 && (
               <DBButton
                 type="button"
-                className="mt-2"
+                className="luft-oben-xs"
                 variant="outlined"
                 data-color="critical"
                 size="small"
@@ -844,13 +845,13 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
             )}
           </div>
           <div
-            className="d-none d-lg-flex align-items-stretch"
+            className="split-griff"
             style={{ width: '10px', cursor: 'col-resize', touchAction: 'none' }}
             onMouseDown={starteSplitZiehen}
             title="Breite ziehen"
           >
             <div
-              className="mx-auto"
+              className="mitte-auto"
               style={{ width: '2px', background: 'var(--db-adaptive-on-bg-basic-emphasis-60-default)' }}
             />
           </div>
@@ -874,7 +875,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       )}
 
       <KonfigJson value={value} onChange={onChange} />
-    </div>
+    </Gruppe>
   );
 }
 
@@ -905,12 +906,12 @@ function KonfigJson({ value, onChange }: { value: Konfig; onChange: (value: Konf
   }
 
   return (
-    <details className="mt-2">
-      <summary className="small fw-semibold" style={{ cursor: 'pointer' }}>
+    <details className="luft-oben-xs">
+      <summary className="zelle-klein fett" style={{ cursor: 'pointer' }}>
         Konfiguration als JSON (kopieren / einfügen)
       </summary>
       <DBTextarea
-        className="mt-1"
+        className="luft-oben-2xs"
         data-density="functional"
         id="konfig-json"
         label="Konfiguration als JSON"
@@ -925,7 +926,7 @@ function KonfigJson({ value, onChange }: { value: Konfig; onChange: (value: Konf
           setFehler(null);
         }}
       />
-      <div className="d-flex gap-1 mt-1">
+      <DBStack direction="row" gap="2x-small" className="luft-oben-2xs">
         <DBButton type="button" variant="brand" size="small" disabled={entwurf === null} onClick={uebernehmen}>
           Übernehmen
         </DBButton>
@@ -940,14 +941,14 @@ function KonfigJson({ value, onChange }: { value: Konfig; onChange: (value: Konf
         </DBButton>
         <DBButton
           type="button"
-          className="ms-auto"
+          className="knopf-rechts"
           variant="outlined"
           size="small"
           onClick={() => void navigator.clipboard?.writeText(angezeigt)}
         >
           In Zwischenablage
         </DBButton>
-      </div>
+      </DBStack>
     </details>
   );
 }

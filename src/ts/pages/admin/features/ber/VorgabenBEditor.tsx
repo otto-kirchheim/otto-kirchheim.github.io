@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { DBButton, DBCheckbox, DBStack, DBTag } from '@db-ux/react-core-components';
 
 import type { BereitschaftSchichtTyp } from '@/types';
@@ -118,15 +119,22 @@ export default function VorgabenBEditor({
   const alsStandard = (index: number) => onChange(normalizeVorgabenBRows([...rows], index));
 
   return (
-    <div className="border p-2 mb-2">
-      <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="none" className="mb-2">
-        <label className="small fw-semibold mb-0">Bereitschaftszeitraum-Vorgaben</label>
+    <Gruppe className="luft-unten-xs">
+      <DBStack
+        direction="row"
+        wrap
+        alignment="center"
+        justifyContent="space-between"
+        gap="none"
+        className="luft-unten-xs"
+      >
+        <label className="zelle-klein fett ohne-luft-unten">Bereitschaftszeitraum-Vorgaben</label>
         <DBButton type="button" variant="outlined" size="small" onClick={hinzufuegen} disabled={disabled} data-disabler>
           Vorgabe hinzufügen
         </DBButton>
       </DBStack>
 
-      {rows.length === 0 && <small className="text-body-secondary">Keine VorgabenB-Einträge vorhanden.</small>}
+      {rows.length === 0 && <small className="farbe-gedaempft">Keine VorgabenB-Einträge vorhanden.</small>}
 
       {rows.length > 0 &&
         (() => {
@@ -155,7 +163,7 @@ export default function VorgabenBEditor({
                     Weiter
                   </DBButton>
                 </DBStack>
-                <small className="text-body-secondary">
+                <small className="farbe-gedaempft">
                   Vorgabe {currentIndex + 1} von {rows.length}
                 </small>
               </DBStack>
@@ -175,16 +183,16 @@ export default function VorgabenBEditor({
                 ))}
               </DbAuswahl>
 
-              <div className="border p-2" key={`${templateId}-vb-${currentIndex}`}>
+              <Gruppe key={`${templateId}-vb-${currentIndex}`}>
                 <DBStack
                   direction="row"
                   wrap
                   alignment="center"
                   justifyContent="space-between"
                   gap="none"
-                  className="mb-2"
+                  className="luft-unten-xs"
                 >
-                  <strong className="small d-flex align-items-center gap-2">
+                  <strong className="zelle-klein zeile-mitte">
                     <DBTag semantic="neutral" emphasis="strong">
                       #{currentIndex + 1}
                     </DBTag>
@@ -242,7 +250,7 @@ export default function VorgabenBEditor({
                   </DBStack>
                 </DBStack>
 
-                <div className="raster mb-2 abstand-2">
+                <div className="raster luft-unten-xs abstand-2">
                   <div>
                     <DbFeld
                       beschriftung="Bezeichnung"
@@ -286,7 +294,7 @@ export default function VorgabenBEditor({
                   }
                 />
 
-                <div className="raster mb-2 abstand-2">
+                <div className="raster luft-unten-xs abstand-2">
                   <div className="sp-lg-6">
                     <DbFeld
                       beschriftung="Beginn Bereitschaft"
@@ -331,12 +339,12 @@ export default function VorgabenBEditor({
                   </div>
                 </div>
 
-                <div className="mb-2">
-                  <label className="small mb-1">Aktive Schichten</label>
+                <div className="luft-unten-xs">
+                  <label className="zelle-klein luft-unten-2xs">Aktive Schichten</label>
                   <DBStack direction="row" wrap gap="medium">
                     {SCHICHT_OPTIONEN.map(({ typ, label }) => (
                       <DBCheckbox
-                        className="m-0"
+                        className="ohne-luft"
                         size="small"
                         key={typ}
                         label={label}
@@ -409,7 +417,7 @@ export default function VorgabenBEditor({
                       }
                     />
 
-                    <div className="raster mb-2 abstand-2">
+                    <div className="raster luft-unten-xs abstand-2">
                       <div className="sp-lg-6">
                         <DbFeld
                           beschriftung="Beginn Nachtschicht"
@@ -455,12 +463,12 @@ export default function VorgabenBEditor({
                     </div>
                   </>
                 ) : (
-                  <div className="small text-body-secondary mb-2">Keine Nachtschicht aktiviert.</div>
+                  <div className="zelle-klein farbe-gedaempft luft-unten-xs">Keine Nachtschicht aktiviert.</div>
                 )}
-              </div>
+              </Gruppe>
             </DBStack>
           );
         })()}
-    </div>
+    </Gruppe>
   );
 }

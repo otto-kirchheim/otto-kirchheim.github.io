@@ -129,14 +129,21 @@ Bootstrap ist raus (Phase H) -- kein Paket, kein CSS, kein JS, keine `data-bs-*`
 ```ts
 import '../scss/layers.scss'; // @layer db-ux, app;
 import '../scss/db-ux.css'; // DB-UX-Bundle in layer(db-ux)
-import '../scss/utilities.scss'; // eigene Hilfsklassen in @layer app
+import '../scss/db-gegenregeln.scss'; // Gegenregeln zum DB-Layer in @layer app
 import '../scss/styles.scss'; // App-Regeln, bewusst ungelayert (schlagen alle Layer)
 ```
 
-### Hilfsklassen
+### Layout und Klassen
 
-Die Klassennamen entsprechen Bootstraps Utility-API (`d-flex`, `mb-3`, `text-body-secondary`, ...),
-die Werte kommen aber aus den DB-Tokens. Neue Hilfsklassen gehoeren nach `src/scss/utilities.scss`.
+Keine Bootstrap-Utility-Klassen (`d-flex`, `mb-3`, `text-muted`, ...; die Datei `utilities.scss` ist
+seit dem Bootstrap-Rueckbau geloescht, `test/app/bootstrapRueckbau.test.ts` schuetzt dagegen). Stattdessen:
+
+- Layout und Abstaende ueber DB-Komponenten und ihre Props (`DBStack` `direction`/`gap`/`alignment`/`wrap`,
+  `DBInfotext`, `DBNotification`, `DBButton` `size`/`width`), Feldgruppen mit `Gruppe` (`shared/ui/gruppe`).
+- Eigene Klassen mit sprechenden Namen in `src/scss/styles.scss` bzw. `src/scss/admin.scss` (Admin), Werte nur aus DB-Tokens.
+  Abstaende `luft-oben|unten|links|rechts-<2xs|xs|sm|md>`, Farben `farbe-*`, Tabellenzellen `zelle-*`.
+  Neuen Klassennamen vorher im ganzen `src/scss` suchen (Kollisionen).
+- Ein-/Ausblenden per `hidden`-Attribut (globale Regel in `styles.scss`), nie per Klasse.
 
 ---
 

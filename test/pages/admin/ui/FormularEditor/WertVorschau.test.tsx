@@ -13,12 +13,12 @@ describe('WertVorschau', () => {
   it('zeigt "(leer)" bei leerem Text', () => {
     const container = renderWertVorschau('');
     expect(container.querySelector('em')?.textContent).toBe('(leer)');
-    expect(container.querySelector('.font-monospace')).toBeNull();
+    expect(container.querySelector('.schrift-mono')).toBeNull();
   });
 
   it('zeigt den Text monospaced, wenn nicht leer', () => {
     const container = renderWertVorschau('Beispielwert');
-    expect(container.querySelector('.font-monospace')?.textContent).toBe('Beispielwert');
+    expect(container.querySelector('.schrift-mono')?.textContent).toBe('Beispielwert');
     expect(container.querySelector('em')).toBeNull();
   });
 });

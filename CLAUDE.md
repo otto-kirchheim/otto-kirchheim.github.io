@@ -24,7 +24,7 @@
 - **Framework:** React 19 (seit 2026-09-06, vorher Preact 10 – siehe `tasks/plan-db-ux-migration.md`)
 - **Build Tool:** Vite (v8) mit `@vitejs/plugin-react` (Oxc)
 - **Sprache:** TypeScript (strict mode; kein any)
-- **Styling:** DB UX Design System 5.6 (`@db-ux/*`, `db-theme` 6.3) + eigene Hilfsklassen (`src/scss/utilities.scss`) + SCSS; Cascade Layers `db-ux < app < unlayered` (`src/scss/layers.scss`, dort ausführlich begründet). Bootstrap ist seit Phase H komplett raus (Paket, CSS, JS, `data-bs-*`). DB "neues Design" (Phase I): `<html data-density="regular">` (seit 2026-09-13; vorher `functional` -- umgestellt wegen zu kleiner Zeilen-Aktionsknoepfe in Tabellen, siehe `CHANGELOG.md` Eintrag 128/129), DB-Schwelle (`.schwelle` + `--schwelle-motiv`) am oberen Rand des Startbereichs. `AppHeader.tsx`s `useHeaderForceMobile()` gleicht dabei aus, dass `DBHeader`s fixe `min-width:64em`-CSS-Weiche nicht auf `data-density` reagiert (siehe dort). Brand-Regeln in der Memory `db-brand-farben-neues-design`
+- **Styling:** DB UX Design System 5.6 (`@db-ux/*`, `db-theme` 6.3) + eigene Klassen (`src/scss/styles.scss`, `admin.scss`, Gegenregeln `db-gegenregeln.scss`) + SCSS; Cascade Layers `db-ux < app < unlayered` (`src/scss/layers.scss`, dort ausführlich begründet). Bootstrap ist seit Phase H komplett raus (Paket, CSS, JS, `data-bs-*`). DB "neues Design" (Phase I): `<html data-density="regular">` (seit 2026-09-13; vorher `functional` -- umgestellt wegen zu kleiner Zeilen-Aktionsknoepfe in Tabellen, siehe `CHANGELOG.md` Eintrag 128/129), DB-Schwelle (`.schwelle` + `--schwelle-motiv`) am oberen Rand des Startbereichs. `AppHeader.tsx`s `useHeaderForceMobile()` gleicht dabei aus, dass `DBHeader`s fixe `min-width:64em`-CSS-Weiche nicht auf `data-density` reagiert (siehe dort). Brand-Regeln in der Memory `db-brand-farben-neues-design`
 - **Datum:** dayjs (IMMER dayjs verwenden, NIEMALS native Date-Methoden oder moment.js)
 - **PWA:** vite-plugin-pwa (Service Worker, Auto-Update)
 - **Testing:** Bun test + happy-dom
@@ -57,7 +57,7 @@ bun run preview        # Build-Preview (schreibt nach ../public/public)
 src/
 ├── index.html             # Minimaler Einstiegspunkt (`<div id="app">` + `<noscript>`, Phase N), lädt `ts/app/main.tsx`
 ├── env.d.ts               # Vite Environment-Typen
-├── scss/                  # DB-UX-Import, Hilfsklassen, App-Styles
+├── scss/                  # DB-UX-Import, Gegenregeln, App-Styles
 └── ts/                    # Feature-Sliced Design: Import nur abwärts app → pages → widgets → features → shared
     ├── app/               # main.tsx (Hook-Registrierung, Root-Mount, Init), App.tsx (Shell), features.ts (Feature-Manifest),
     │                      # session/ (Login-Nachbereitung, loadUserDaten), shell/ (Pull-to-Refresh, Offline, Versionshinweis)

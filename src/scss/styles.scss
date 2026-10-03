@@ -487,7 +487,7 @@ td:has(.SchichtBereitschaft) {
 
 // Verschachtelte Auslege-Tabellen im Zeilenkopf (EWT-Schwellen, Zulagen-Codes): umbrechen in der festen 11.5rem-Spalte und
 // erben nichts von der `db-table`-Huelle (Rahmen, Zebra, Grid) -- alles zuruecksetzen. `display: table` ist noetig, weil die
-// Gegenregel in `utilities.scss` nur `.db-table > table` abfaengt, nicht `.db-table table`.
+// Gegenregel in `db-gegenregeln.scss` nur `.db-table > table` abfaengt, nicht `.db-table table`.
 .berechnung-label-tabelle {
   display: table;
   inline-size: 100%;

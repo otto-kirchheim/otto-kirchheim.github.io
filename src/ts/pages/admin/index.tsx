@@ -121,12 +121,12 @@ export default function AdminTab() {
   }
 
   return (
-    <div className="px-2 px-md-4">
-      <div className="position-relative mb-3 text-center">
-        <DBHeadingH1 className="d-inline-flex align-items-center gap-1 text-dark-emphasis">Admin</DBHeadingH1>
+    <div className="admin-huelle">
+      <div className="admin-kopfzeile">
+        <DBHeadingH1 className="admin-titel">Admin</DBHeadingH1>
       </div>
 
-      <div className="mb-3">
+      <div className="luft-unten-sm">
         <DBNavigation className="admin-unternavigation" id="admin-tabs" role="tablist" aria-label="Adminbereiche">
           {unterTabs.map(eintrag =>
             eintrag.art === 'trenner' ? (
@@ -155,10 +155,12 @@ export default function AdminTab() {
         </DBNavigation>
       </div>
 
-      {capabilitiesLoading && <div className="small text-body-secondary mb-3">Berechtigungen werden geladen...</div>}
+      {capabilitiesLoading && (
+        <div className="zelle-klein farbe-gedaempft luft-unten-sm">Berechtigungen werden geladen...</div>
+      )}
 
       {!capabilitiesLoading && !canSeeVorgabenTab && !canSeeTemplatesTab && !canSeeFormulareTab && (
-        <p className="text-body-secondary mb-3">
+        <p className="farbe-gedaempft luft-unten-sm">
           Es sind aktuell keine zusätzlichen Admin-Rechte für VorgabenGeld, Profile-Templates oder Formular-Vorlagen
           vergeben.
         </p>
@@ -185,7 +187,7 @@ export default function AdminTab() {
           tabIndex={0}
         >
           {!actAsState.active && (
-            <p className="small text-body-secondary mb-3">
+            <p className="zelle-klein farbe-gedaempft luft-unten-sm">
               Eigene Daten aktiv: Du arbeitest gerade mit deinen eigenen Daten.
             </p>
           )}

@@ -87,70 +87,66 @@ describe('addressValidation', () => {
   });
 
   it('validates PNummer with exact 8 digits', () => {
-    document.body.innerHTML = '<div class="mb-3"><input id="PNummer" required value="12345678" /></div>';
+    document.body.innerHTML = '<div><input id="PNummer" required value="12345678" /></div>';
     const input = document.querySelector<HTMLInputElement>('#PNummer')!;
     expect(validatePersInput(input)).toBe(true);
   });
 
   it('rejects PNummer with wrong length', () => {
-    document.body.innerHTML = '<div class="mb-3"><input id="PNummer" required value="1234567" /></div>';
+    document.body.innerHTML = '<div><input id="PNummer" required value="1234567" /></div>';
     const input = document.querySelector<HTMLInputElement>('#PNummer')!;
     expect(validatePersInput(input)).toBe(false);
     expect(input.validationMessage).toContain('8-stellig');
   });
 
   it('validates phone number', () => {
-    document.body.innerHTML = '<div class="mb-3"><input id="Telefon" required value="+49 123 456 789" /></div>';
+    document.body.innerHTML = '<div><input id="Telefon" required value="+49 123 456 789" /></div>';
     const input = document.querySelector<HTMLInputElement>('#Telefon')!;
     expect(validatePersInput(input)).toBe(true);
   });
 
   it('rejects invalid phone number', () => {
-    document.body.innerHTML = '<div class="mb-3"><input id="Telefon" required value="abc" /></div>';
+    document.body.innerHTML = '<div><input id="Telefon" required value="abc" /></div>';
     const input = document.querySelector<HTMLInputElement>('#Telefon')!;
     expect(validatePersInput(input)).toBe(false);
   });
 
   it('validates Bundesland from valid set', () => {
-    document.body.innerHTML =
-      '<div class="mb-3"><select id="Bundesland"><option value="HE">Hessen</option></select></div>';
+    document.body.innerHTML = '<div><select id="Bundesland"><option value="HE">Hessen</option></select></div>';
     const input = document.querySelector<HTMLSelectElement>('#Bundesland')!;
     input.value = 'HE';
     expect(validatePersInput(input)).toBe(true);
   });
 
   it('rejects invalid Bundesland', () => {
-    document.body.innerHTML = '<div class="mb-3"><select id="Bundesland"><option value="XX">XX</option></select></div>';
+    document.body.innerHTML = '<div><select id="Bundesland"><option value="XX">XX</option></select></div>';
     const input = document.querySelector<HTMLSelectElement>('#Bundesland')!;
     input.value = 'XX';
     expect(validatePersInput(input)).toBe(false);
   });
 
   it('validates TB with valid values', () => {
-    document.body.innerHTML =
-      '<div class="mb-3"><select id="TB"><option value="Tarifkraft">Tarifkraft</option></select></div>';
+    document.body.innerHTML = '<div><select id="TB"><option value="Tarifkraft">Tarifkraft</option></select></div>';
     const input = document.querySelector<HTMLSelectElement>('#TB')!;
     input.value = 'Tarifkraft';
     expect(validatePersInput(input)).toBe(true);
   });
 
   it('validates distance input within range', () => {
-    document.body.innerHTML =
-      '<div class="mb-3"><input id="kmArbeitsort" required value="25" min="1" max="100" /></div>';
+    document.body.innerHTML = '<div><input id="kmArbeitsort" required value="25" min="1" max="100" /></div>';
     const input = document.querySelector<HTMLInputElement>('#kmArbeitsort')!;
     expect(validatePersInput(input)).toBe(true);
   });
 
   it('rejects distance input out of range', () => {
-    document.body.innerHTML =
-      '<div class="mb-3"><input id="kmArbeitsort" required value="200" min="1" max="100" /></div>';
+    document.body.innerHTML = '<div><input id="kmArbeitsort" required value="200" min="1" max="100" /></div>';
     const input = document.querySelector<HTMLInputElement>('#kmArbeitsort')!;
     expect(validatePersInput(input)).toBe(false);
     expect(input.validationMessage).toContain('zwischen');
   });
 
   it('rejects empty required text fields', () => {
-    document.body.innerHTML = '<div class="mb-3"><input id="Betrieb" required value="" /></div>';
+    document.body.innerHTML = '<div><input id="Betrieb" required value="" /></div>';
     const input = document.querySelector<HTMLInputElement>('#Betrieb')!;
     expect(validatePersInput(input)).toBe(false);
     expect(input.validationMessage).toContain('erforderlich');
@@ -164,7 +160,7 @@ describe('addressValidation', () => {
   });
 
   it('falls back to native browser validation when the switch-case leaves no custom error but checkValidity() fails', () => {
-    document.body.innerHTML = '<div class="mb-3"><input id="OE" required pattern="^[0-9]+$" value="ABC" /></div>';
+    document.body.innerHTML = '<div><input id="OE" required pattern="^[0-9]+$" value="ABC" /></div>';
     const input = document.querySelector<HTMLInputElement>('#OE')!;
 
     // 'OE' hat im switch nur eine required-Prüfung; ein nicht-leerer Wert erzeugt dort keine
@@ -176,7 +172,7 @@ describe('addressValidation', () => {
 
   it('keeps a trailing space while typing (input event) but trims it on blur', () => {
     document.body.innerHTML = `
-      <div class="mb-3">
+      <div>
         <input id="Nachname" required value="" />
         <label for="Nachname">Nachname</label>
       </div>
@@ -222,7 +218,7 @@ describe('addressValidation', () => {
 
   it('clears a previous custom validation error after a personal field is corrected', () => {
     document.body.innerHTML = `
-      <div class="mb-3">
+      <div>
         <input id="Vorname" required value="1" />
         <label for="Vorname">Vorname</label>
       </div>

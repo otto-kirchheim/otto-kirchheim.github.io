@@ -14,9 +14,9 @@ describe('#generateTableBerechnung', () => {
     Storage.set('VorgabenGeld', VorgabenGeldMock);
 
     document.body.innerHTML =
-      '<!DOCTYPE html><table class="align-middle table-Berechnung" aria-describedby="titelBerechnung">' +
-      '<thead class="align-middle">' +
-      '<tr class="table-primary align-middle">' +
+      '<!DOCTYPE html><table class="table-Berechnung" aria-describedby="titelBerechnung">' +
+      '<thead>' +
+      '<tr>' +
       '<th></th>' +
       '<th class="col-1">Jan</th>' +
       '<th class="col-1">Feb</th>' +

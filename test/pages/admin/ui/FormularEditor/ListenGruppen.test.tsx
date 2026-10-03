@@ -120,7 +120,7 @@ describe('ListenGruppen', () => {
     });
     const container = renderGruppen({ formular: 'ez', tabelle, onChange });
 
-    const schluesselInput = container.querySelectorAll('input.font-monospace')[0] as HTMLInputElement;
+    const schluesselInput = container.querySelectorAll('input.schrift-mono')[0] as HTMLInputElement;
     setzeWert(schluesselInput, 'NeuerSchluessel');
 
     const updated = onChange.mock.calls[0][0] as TabellenDef;

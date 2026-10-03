@@ -2,6 +2,21 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-03 (209)
+
+### refactor (Bootstrap-Rueckbau R9 + R10: Abschluss)
+
+- R9: `pages/admin/index.tsx` und `pages/admin/features/*` (VorgabenB-/Fahrzeit-/Zulagen-Editoren) ohne Bootstrap-Klassen.
+- R10: `src/scss/utilities.scss` (Bootstrap-kompatible Hilfsklassen) geloescht; die drei Gegenregeln zum DB-Layer (Listenpunkte, `.db-heading`-Ausrichtung, `.db-table`-Tabellenlayout) liegen in `src/scss/db-gegenregeln.scss`. Ratsche `GRENZE = 0` (`db-table` ist als DB-Klasse aus der Liste genommen), Test-Fixtures und Doku (`CLAUDE.md`, Skill `coding-konventionen`) bereinigt.
+- Sichtvergleich nach dem Loeschen: alle 132 Fotos gleich, Livetest 45/45.
+
+## 2026-10-03 (208)
+
+### refactor (Bootstrap-Rueckbau R8: Formular-Editor)
+
+- Alle Dateien unter `pages/admin/ui/FormularEditor/` ohne Bootstrap-Klassen (gleiche Skript-Umstellung wie R7: Klassen-Abbildung, `DBStack`, `Gruppe`, neue Klassen in `admin.scss` fuer Canvas, Split-Ansicht, Klapp-Abschnitte). Tests (`font-monospace` zu `schrift-mono`) angepasst. Ratsche 91.
+- Der Editor selbst ist im Sichtvergleich nicht abgedeckt (Fake-Backend ohne Vorlagen); die Admin-Tabs sind pixelgleich.
+
 ## 2026-10-03 (207)
 
 ### refactor (Bootstrap-Rueckbau R7: `pages/admin/ui` ohne FormularEditor)

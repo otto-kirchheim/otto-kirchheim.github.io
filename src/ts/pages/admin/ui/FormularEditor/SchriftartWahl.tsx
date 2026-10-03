@@ -1,3 +1,4 @@
+import { DBStack } from '@db-ux/react-core-components';
 import type { Schriftart } from '@otto-kirchheim/nebengeld-shared';
 import { DbAuswahl } from '@/shared/ui/form/DbFeld';
 import { SCHRIFTARTEN } from './datenKatalog';
@@ -79,10 +80,10 @@ export function SchriftartWahl({ value, vorlageFonts, onChange }: Props) {
   const fehlt = fehlendeVorlagenSchnitte(value, vorlageFonts);
 
   return (
-    <div className="d-flex flex-column gap-2">
-      <div className="schriftwahl-raster small">
+    <DBStack direction="column" gap="x-small">
+      <div className="schriftwahl-raster zelle-klein">
         <label className="schriftwahl-zeile" title="Grundschrift für den gesamten Fließtext">
-          <span className="text-muted">Schrift</span>
+          <span className="farbe-gedaempft">Schrift</span>
           <DbAuswahl beschriftung="Grundschrift" dicht value={basis} onChange={e => setzeBasis(e.target.value)}>
             {familienFuer('normal', basis).map(o => (
               <option key={o.wert} value={o.wert}>
@@ -99,7 +100,7 @@ export function SchriftartWahl({ value, vorlageFonts, onChange }: Props) {
               className="schriftwahl-zeile"
               title={`Nur für ${schnittLabel(schnitt)}-Text abweichend (z.B. wenn die Grundschrift diesen Schnitt nicht hat)`}
             >
-              <span className="text-muted">{schnittLabel(schnitt)}</span>
+              <span className="farbe-gedaempft">{schnittLabel(schnitt)}</span>
               <DbAuswahl
                 beschriftung={`Schrift für ${schnittLabel(schnitt)}`}
                 dicht
@@ -118,11 +119,11 @@ export function SchriftartWahl({ value, vorlageFonts, onChange }: Props) {
         })}
       </div>
       {fehlt.length > 0 && (
-        <div className="small text-warning-emphasis">
+        <div className="zelle-klein farbe-warnung">
           Die gewählte Schrift bringt {fehlt.map(schnittLabel).join(' und ')} nicht mit — dort setzt der Renderer
           Helvetica im passenden Schnitt. Für einen anderen Ersatz das jeweilige Feld gezielt wählen.
         </div>
       )}
-    </div>
+    </DBStack>
   );
 }

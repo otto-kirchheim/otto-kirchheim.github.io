@@ -3,7 +3,7 @@
 //
 // 3-Stufen-Modell:
 //   1. @layer db-ux  -- das DB-UX-Bundle (`db-theme` + `core-components`)
-//   2. @layer app    -- eigene Hilfsklassen und Gegenregeln (`utilities.scss`); schlagen db-ux
+//   2. @layer app    -- Gegenregeln zum DB-Layer (`db-gegenregeln.scss`); schlagen db-ux
 //   3. unlayered     -- `styles.scss` + `customtable.scss`: App-spezifische Regeln, die auch
 //                       gegen eine Hilfsklasse gewinnen sollen. Schlagen alle Layer.
 //

@@ -1,4 +1,5 @@
-import { DBButton, DBDrawer, DBDrawerHeader } from '@db-ux/react-core-components';
+import { DBButton, DBDrawer, DBDrawerHeader, DBStack } from '@db-ux/react-core-components';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -132,12 +133,12 @@ function SchnittZeile({
   const fett = schnitt === 'fett' || schnitt === 'fettKursiv';
   const kursiv = schnitt === 'kursiv' || schnitt === 'fettKursiv';
   return (
-    <div className="d-flex align-items-baseline gap-2 py-1">
-      <span className="text-muted small flex-shrink-0" style={{ width: '6rem' }}>
+    <div className="zeile-basis">
+      <span className="farbe-gedaempft zelle-klein nicht-schrumpfen" style={{ width: '6rem' }}>
         {label}
       </span>
       <span
-        className="text-truncate"
+        className="abschneiden"
         style={{
           fontFamily: cssFamilie(familie, ersatz, geladen),
           fontWeight: fett ? 700 : 400,
@@ -148,7 +149,7 @@ function SchnittZeile({
       >
         {PROBE}
       </span>
-      {ersatz && <span className="small text-warning-emphasis flex-shrink-0">Helvetica-Ersatz</span>}
+      {ersatz && <span className="zelle-klein farbe-warnung nicht-schrumpfen">Helvetica-Ersatz</span>}
     </div>
   );
 }
@@ -162,7 +163,7 @@ function Vorschau({ value, vorlageFonts }: { value: Schriftart | undefined; vorl
   const geladen = useVorlagenFaces(vorlageFonts);
   const fehlt = new Set(fehlendeVorlagenSchnitte(value, vorlageFonts));
   return (
-    <div className="border p-2 bg-body-tertiary">
+    <Gruppe className="hinterlegt-3">
       {SCHNITTE.map(s => (
         <SchnittZeile
           key={s.key}
@@ -173,7 +174,7 @@ function Vorschau({ value, vorlageFonts }: { value: Schriftart | undefined; vorl
           geladen={geladen}
         />
       ))}
-    </div>
+    </Gruppe>
   );
 }
 
@@ -210,13 +211,13 @@ export function SchriftartDialog({ value, vorlageFonts, unbrauchbareFonts, onCha
       header={<DBDrawerHeader text="Schriftart" closeButtonText="Schließen" />}
     >
       <div className="dialog-rumpf" data-breite="lg">
-        <div className="dialog-koerper d-flex flex-column gap-3">
+        <DBStack direction="column" gap="small" className="dialog-koerper">
           <SchriftartWahl value={value} vorlageFonts={vorlageFonts} onChange={onChange} />
 
           <Vorschau value={value} vorlageFonts={vorlageFonts} />
 
           {(vorlageFonts.length > 0 || unbrauchbareFonts.length > 0) && (
-            <div className="small text-muted">
+            <div className="zelle-klein farbe-gedaempft">
               Eingebettet:{' '}
               {[
                 ...vorlageFonts.map(f => (
@@ -227,7 +228,7 @@ export function SchriftartDialog({ value, vorlageFonts, unbrauchbareFonts, onCha
                 ...unbrauchbareFonts.map(n => (
                   <span
                     key={n}
-                    className="text-danger text-decoration-line-through"
+                    className="farbe-gefahr durchgestrichen"
                     title="Teilzeichensatz oder kaputte Zeichenzuordnung (z.B. aus PDF24) — nicht als Formularschrift nutzbar"
                   >
                     {n}
@@ -239,12 +240,12 @@ export function SchriftartDialog({ value, vorlageFonts, unbrauchbareFonts, onCha
           )}
 
           {istVorlagenSchrift && (
-            <div className="small text-warning-emphasis">
+            <div className="zelle-klein farbe-warnung">
               Eingebettete Schrift gewählt — nur die Vorschau nutzt sie, der Download rendert bis auf Weiteres
               Helvetica. Fehlende Glyphen (Teilzeichensatz) erscheinen als leere Kästchen.
             </div>
           )}
-        </div>
+        </DBStack>
 
         <div className="dialog-fuss">
           <DBButton type="button" variant="brand" onClick={onClose}>

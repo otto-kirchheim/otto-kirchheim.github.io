@@ -1,4 +1,5 @@
 import type { Spalte, SeitenDef, TabellenBereich, TabellenDef, Zeile } from '@otto-kirchheim/nebengeld-shared';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { berechneteEintraege } from './aggregationsHelfer';
 import { katalogZeilenFelder, werteAuswahl, zeilenQuellen, type FormularCode } from './datenKatalog';
 import { Abschnitt, ScharfButton, ZahlFeld } from './feldPanelGemeinsam';
@@ -10,7 +11,7 @@ import { UEBER_OPTIONEN } from './sonderZeilenOptionen';
 import { SpalteZeile } from './SpalteZeile';
 import { WertVorschau } from './WertVorschau';
 import { sonderZeileZelleWert, zeilenFuerUeber } from '@/shared/lib/pdf/wert';
-import { DBButton, DBCheckbox, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBTooltip, DBStack } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 /**
@@ -146,13 +147,13 @@ export function TabellenBlock({
   }
 
   return (
-    <div className="border p-2 mb-2 bg-body-tertiary">
-      <div className="d-flex align-items-center gap-1 mb-1">
-        <span className="fw-semibold small flex-grow-1">Tabelle „{name}"</span>
+    <Gruppe className="luft-unten-xs hinterlegt-3">
+      <DBStack direction="row" gap="2x-small" alignment="center" className="luft-unten-2xs">
+        <span className="fett zelle-klein waechst">Tabelle „{name}"</span>
         {bereich && (
           <DBButton
             type="button"
-            className="py-0"
+
             variant="outlined"
             size="small"
             icon="unlink_chain"
@@ -164,7 +165,7 @@ export function TabellenBlock({
         )}
         <DBButton
           type="button"
-          className="py-0"
+
           variant="outlined"
           data-color="critical"
           size="small"
@@ -174,9 +175,9 @@ export function TabellenBlock({
         >
           <DBTooltip>Tabelle löschen (aus dem ganzen Dokument)</DBTooltip>
         </DBButton>
-      </div>
+      </DBStack>
 
-      <div className="raster mb-1 abstand-1">
+      <div className="raster luft-unten-2xs abstand-1">
         <div className="sp-7">
           <DbAuswahl
             beschriftung="Zeilenquelle"
@@ -211,11 +212,11 @@ export function TabellenBlock({
       </div>
 
       {tabelle.filter && (
-        <div className="mb-1 ps-2 border-start">
+        <div className="einzug-linie einzug-linie--duenn">
           <DbAuswahl
             beschriftung="Filterfeld"
             dicht
-            className="mb-1"
+            className="luft-unten-2xs"
             value={tabelle.filter.feld}
             onChange={e => onChange({ ...tabelle, filter: { feld: e.target.value, werte: [] } })}
           >
@@ -226,7 +227,7 @@ export function TabellenBlock({
             ))}
           </DbAuswahl>
           {filterWerte.length > 0 ? (
-            <div className="d-flex flex-wrap gap-2">
+            <DBStack direction="row" wrap gap="x-small">
               {filterWerte.map(wert => (
                 <div key={wert}>
                   <DBCheckbox
@@ -243,12 +244,12 @@ export function TabellenBlock({
                   />
                 </div>
               ))}
-            </div>
+            </DBStack>
           ) : (
             <DbFeld
               beschriftung="Werte, durch Komma getrennt"
               dicht
-              feldKlasse="font-monospace"
+              feldKlasse="schrift-mono"
               placeholder="Werte, durch Komma getrennt"
               value={tabelle.filter.werte.join(', ')}
               onChange={e =>
@@ -268,30 +269,30 @@ export function TabellenBlock({
         </div>
       )}
 
-      <div className="d-flex align-items-center gap-2 mb-1">
+      <DBStack direction="row" gap="x-small" alignment="center" className="luft-unten-2xs">
         <ScharfButton
           aktiv={aktiv}
           onClick={() => onArm(aktiv ? null : { bereich: 'tabelle', tabelle: name })}
           titel="Auf dem PDF die erste Datenzeile dieser Tabelle markieren — setzt Startposition und Zeilenhöhe"
         />
-        <span className="small">erste Datenzeile auf dieser Seite</span>
-      </div>
+        <span className="zelle-klein">erste Datenzeile auf dieser Seite</span>
+      </DBStack>
       {bereich && maxZeilen > 1 && (
-        <div className="d-flex align-items-center gap-2 mb-1">
+        <DBStack direction="row" gap="x-small" alignment="center" className="luft-unten-2xs">
           <ScharfButton
             aktiv={letzteAktiv}
             onClick={() => onArm(letzteAktiv ? null : { bereich: 'letzteZeile', tabelle: name })}
             titel="Letzte Datenzeile markieren — daraus wird die Zeilenhöhe über alle Zeilen gemittelt"
           />
-          <span className="small">
-            letzte Datenzeile <span className="text-body-secondary">— misst die Höhe genauer</span>
+          <span className="zelle-klein">
+            letzte Datenzeile <span className="farbe-gedaempft">— misst die Höhe genauer</span>
           </span>
-        </div>
+        </DBStack>
       )}
-      <div className="d-flex align-items-center gap-2 mb-1">
-        <span className="small fw-semibold flex-grow-1">Datenzeile {eigenePlatzierung ? '(nur diese Seite)' : ''}</span>
+      <DBStack direction="row" gap="x-small" alignment="center" className="luft-unten-2xs">
+        <span className="zelle-klein fett waechst">Datenzeile {eigenePlatzierung ? '(nur diese Seite)' : ''}</span>
         {bereich && (
-          <div className="mb-0">
+          <div className="ohne-luft-unten">
             <DBCheckbox
               size="small"
               label="eigene je Seite"
@@ -308,15 +309,15 @@ export function TabellenBlock({
             />
           </div>
         )}
-      </div>
-      <div className="raster mb-1 align-items-end abstand-1">
+      </DBStack>
+      <div className="raster luft-unten-2xs ausrichtung-unten abstand-1">
         <ZahlFeld label="startY" wert={startY} onChange={v => setzeStartY(v ?? 0)} />
         <ZahlFeld label="Höhe" wert={zeilenHoehe} min={0.1} onChange={v => setzeZeilenHoehe(v ?? 1)} />
         <ZahlFeld label="Zeilen" wert={maxZeilen} ganzzahl min={1} onChange={v => setzeMaxZeilen(v ?? 1)} />
       </div>
       {!bereich && (
-        <div className="d-flex align-items-center gap-2 mb-2">
-          <div className="small text-body-secondary flex-grow-1">
+        <DBStack direction="row" gap="x-small" alignment="center" className="luft-unten-xs">
+          <div className="zelle-klein farbe-gedaempft waechst">
             Auf dieser Seite noch kein Platz — Startposition setzen, um sie hier zu zeigen.
           </div>
           <DBButton
@@ -328,7 +329,7 @@ export function TabellenBlock({
           >
             Mit Werten der Tabelle platzieren
           </DBButton>
-        </div>
+        </DBStack>
       )}
 
       <ListenGruppen
@@ -357,7 +358,7 @@ export function TabellenBlock({
 
       <Abschnitt
         titel="Sonderzeilen"
-        zusatz={<span className="text-body-secondary">{Object.keys(tabelle.sonderzeilen ?? {}).length}</span>}
+        zusatz={<span className="farbe-gedaempft">{Object.keys(tabelle.sonderzeilen ?? {}).length}</span>}
       >
         <SonderZeilen
           tabelle={tabelle}
@@ -368,20 +369,20 @@ export function TabellenBlock({
         />
 
         {bereich && Object.keys(tabelle.sonderzeilen ?? {}).length > 0 && (
-          <div className="mb-1">
-            <div className="small fw-semibold mb-1">Sonderzeilen auf dieser Seite</div>
+          <div className="luft-unten-2xs">
+            <div className="zelle-klein fett luft-unten-2xs">Sonderzeilen auf dieser Seite</div>
             {Object.keys(tabelle.sonderzeilen ?? {}).map(sonderName => {
               const platzierungen = bereich.sonderzeilen ?? [];
               const indizes = platzierungen.map((_, i) => i).filter(i => platzierungen[i]!.name === sonderName);
               const sonderzeile = tabelle.sonderzeilen![sonderName]!;
               const standardUeber = sonderzeile.ueber ?? '$alle';
               return (
-                <div key={sonderName} className="mb-1">
-                  <div className="d-flex align-items-center gap-2 mb-1">
-                    <span className="small flex-grow-1">{sonderName}</span>
+                <div key={sonderName} className="luft-unten-2xs">
+                  <DBStack direction="row" gap="x-small" alignment="center" className="luft-unten-2xs">
+                    <span className="zelle-klein waechst">{sonderName}</span>
                     <DBButton
                       type="button"
-                      className="py-0"
+
                       variant="outlined"
                       size="small"
                       title="Diese Sonderzeile an einer weiteren Position platzieren (z.B. Überschrift oben UND als Kopie unten)"
@@ -393,7 +394,7 @@ export function TabellenBlock({
                     >
                       + Platzieren
                     </DBButton>
-                  </div>
+                  </DBStack>
                   {indizes.map(i => {
                     const platz = platzierungen[i]!;
                     const zeilenAktiv = istGleich(armed, { bereich: 'sonderzeile', tabelle: name, index: i });
@@ -409,8 +410,8 @@ export function TabellenBlock({
                       .filter(Boolean)
                       .join('   |   ');
                     return (
-                      <div key={i} className="border p-2 mb-1 bg-body">
-                        <div className="d-flex align-items-end gap-1 mb-1 flex-wrap">
+                      <Gruppe key={i} className="hinterlegt-1 luft-unten-2xs">
+                        <DBStack direction="row" wrap gap="2x-small" alignment="end" className="luft-unten-2xs">
                           <ScharfButton
                             aktiv={zeilenAktiv}
                             onClick={() =>
@@ -436,7 +437,7 @@ export function TabellenBlock({
                               })
                             }
                           />
-                          <div className="flex-grow-1" style={{ minWidth: '11rem' }}>
+                          <div className="waechst" style={{ minWidth: '11rem' }}>
                             <DbAuswahl
                               beschriftung="Zeilenbezug (nur diese Seite)"
                               dicht
@@ -459,7 +460,7 @@ export function TabellenBlock({
                           </div>
                           <DBButton
                             type="button"
-                            className="py-0"
+
                             variant="outlined"
                             data-color="critical"
                             size="small"
@@ -469,9 +470,9 @@ export function TabellenBlock({
                           >
                             <DBTooltip>Diese Platzierung entfernen</DBTooltip>
                           </DBButton>
-                        </div>
+                        </DBStack>
                         <WertVorschau text={vorschauText} />
-                      </div>
+                      </Gruppe>
                     );
                   })}
                 </div>
@@ -483,12 +484,12 @@ export function TabellenBlock({
 
       <Abschnitt
         titel={`Spalten${eigeneSpalten ? ' (nur diese Seite)' : ''}`}
-        zusatz={<span className="text-body-secondary">{spalten.length}</span>}
+        zusatz={<span className="farbe-gedaempft">{spalten.length}</span>}
         offen
       >
         {bereich && (
           <DBCheckbox
-            className="mb-1"
+            className="luft-unten-2xs"
             size="small"
             label="eigene je Seite"
             checked={eigeneSpalten}
@@ -550,6 +551,6 @@ export function TabellenBlock({
           + Spalte
         </DBButton>
       </Abschnitt>
-    </div>
+    </Gruppe>
   );
 }

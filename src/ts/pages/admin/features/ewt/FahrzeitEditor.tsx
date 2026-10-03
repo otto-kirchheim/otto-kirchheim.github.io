@@ -1,5 +1,6 @@
 import { DBButton, DBStack } from '@db-ux/react-core-components';
 
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { DbFeld } from '@/shared/ui/form/DbFeld';
 import type { AdminVorlagenEditorProps } from '../../adminFeatures';
 import type { FahrzeitRow } from './fahrzeit';
@@ -39,17 +40,24 @@ export default function FahrzeitEditor({
   const entferne = (index: number) => onChange(rows.filter((_, i) => i !== index));
 
   return (
-    <div className="border p-2 mb-2">
-      <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="none" className="mb-1">
-        <label className="small fw-semibold mb-0">Fahrzeit-Einträge</label>
+    <Gruppe className="luft-unten-xs">
+      <DBStack
+        direction="row"
+        wrap
+        alignment="center"
+        justifyContent="space-between"
+        gap="none"
+        className="luft-unten-2xs"
+      >
+        <label className="zelle-klein fett ohne-luft-unten">Fahrzeit-Einträge</label>
         <DBButton type="button" variant="outlined" size="small" onClick={hinzufuegen} disabled={disabled} data-disabler>
           Zeile hinzufügen
         </DBButton>
       </DBStack>
       <DBStack direction="column" gap="x-small">
-        {rows.length === 0 && <small className="text-body-secondary">Keine Fahrzeit-Einträge vorhanden.</small>}
+        {rows.length === 0 && <small className="farbe-gedaempft">Keine Fahrzeit-Einträge vorhanden.</small>}
         {rows.map((row, index) => (
-          <div className="raster align-items-end abstand-2" key={`${templateId}-fz-${index}`}>
+          <div className="raster ausrichtung-unten abstand-2" key={`${templateId}-fz-${index}`}>
             <div>
               <DBStack direction="row" alignment="end" gap="x-small" className="feldgruppe admin-fahrzeit-input-group">
                 <DbFeld
@@ -85,14 +93,14 @@ export default function FahrzeitEditor({
                   disabled={disabled}
                   data-disabler
                 >
-                  <span className="d-none d-sm-inline">Löschen</span>
-                  <span className="d-sm-none">X</span>
+                  <span className="ab-sm-inline">Löschen</span>
+                  <span className="nur-unter-sm">X</span>
                 </DBButton>
               </DBStack>
             </div>
           </div>
         ))}
       </DBStack>
-    </div>
+    </Gruppe>
   );
 }

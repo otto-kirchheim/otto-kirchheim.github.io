@@ -70,7 +70,7 @@ export function BulkEditPreviewTable({ preview, activeFields, showApplyFrom }: P
           </thead>
           <tbody>
             {preview.results.map(entry => (
-              <tr key={entry.userId} className={entry.status === 'skipped' ? 'text-body-secondary' : undefined}>
+              <tr key={entry.userId} className={entry.status === 'skipped' ? 'farbe-gedaempft' : undefined}>
                 <td>{entry.userName}</td>
                 {entry.status === 'skipped' ? (
                   <td colSpan={columnCount} className="kursiv">

@@ -85,7 +85,7 @@ type SignaturWahl = 'verwenden' | 'neu' | 'ohne' | 'digital';
 function signaturEntscheidung(cachedPng: string | null): Promise<SignaturWahl> {
   return new Promise<SignaturWahl>(resolve => {
     // Der Rahmen kommt vom Drawer; kein `.modal`/`.fade` verwenden -- `.fade` ohne `.show` haelt den
-    // Inhalt auf `opacity: 0` (siehe `utilities.scss`).
+    // Inhalt auf `opacity: 0`.
     const modal = document.createElement('div');
     modal.innerHTML = `
       <div class="dialog-rumpf">
