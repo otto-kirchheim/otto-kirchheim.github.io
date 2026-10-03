@@ -19,7 +19,7 @@ agentdb.rvf.lock
 .claude-flow/
 .claude/.proven-config-version
 .claude/proven-config.json
-.swarm/**
+.swarm
 
 # TypeScript inkrementeller Build-Cache
 *.tsbuildinfo
