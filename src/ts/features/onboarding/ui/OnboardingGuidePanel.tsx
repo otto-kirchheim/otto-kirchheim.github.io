@@ -1,4 +1,4 @@
-import { DBButton, DBCard, DBHeadingH6, DBInfotext, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBCard, DBHeadingH6, DBInfotext, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { type FC, useEffect, useMemo, useState } from 'react';
 
 // Direktimporte statt Barrel, um den Zyklus createOnboardingGuideModal →
@@ -22,7 +22,7 @@ type GuideStep =
 type FeatureInhalt = { tourTabs: TourTab[]; pruefSchritte: BestaetigungSchritt[] };
 
 /**
- * Prüft, ob der Tab-Knopf sichtbar ist (sein `<li>` ist nicht per `d-none` ausgeblendet).
+ * Prüft, ob der Tab-Knopf sichtbar ist (sein `<li>` ist nicht per `hidden` ausgeblendet).
  *
  * @param tabButtonId - CSS-Selektor des Tab-Knopfs, z. B. `#ewt-tab`.
  * @returns `false`, wenn der Knopf fehlt oder ausgeblendet ist.
@@ -30,7 +30,7 @@ type FeatureInhalt = { tourTabs: TourTab[]; pruefSchritte: BestaetigungSchritt[]
 function istTabSichtbar(tabButtonId: string): boolean {
   const button = document.querySelector<HTMLButtonElement>(tabButtonId);
   if (!button) return false;
-  return !button.closest('li')?.classList.contains('d-none');
+  return button.closest('li')?.hidden !== true;
 }
 
 /**
@@ -214,15 +214,14 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
   const titel = getStepTitle(step);
 
   return (
-    <DBCard className="shadow" spacing="none">
-      <div className="d-flex align-items-center gap-2 py-2 px-3 bg-body-secondary border-bottom">
-        <strong className="me-auto">Ersteinrichtung</strong>
-        <span className="text-body-secondary small">
+    <DBCard className="ersteinrichtung" spacing="none">
+      <DBStack direction="row" alignment="center" gap="x-small" className="ersteinrichtung__kopf">
+        <strong className="ersteinrichtung__titel">Ersteinrichtung</strong>
+        <DBInfotext showIcon={false}>
           Schritt {stepIndex + 1} von {steps.length}
-        </span>
+        </DBInfotext>
         <DBButton
           type="button"
-          className="p-0"
           variant="ghost"
           size="small"
           icon={minimiert ? 'chevron_up' : 'chevron_down'}
@@ -232,31 +231,31 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
         >
           <DBTooltip>{minimiert ? 'Ersteinrichtung ausklappen' : 'Ersteinrichtung minimieren'}</DBTooltip>
         </DBButton>
-      </div>
+      </DBStack>
 
       {!minimiert && (
-        <div className="d-flex flex-column gap-2 overflow-auto p-3" style={{ maxHeight: '45vh' }}>
-          <DBHeadingH6 className="mb-0">{titel}</DBHeadingH6>
+        <DBStack gap="x-small" className="ersteinrichtung__inhalt">
+          <DBHeadingH6>{titel}</DBHeadingH6>
 
           {step.art === 'intro' && (
             <>
-              <p className="mb-0">Ich führe dich Schritt für Schritt durch die Einrichtung. </p>
-              <p className="mb-0 text-body-secondary small">
+              <p>Ich führe dich Schritt für Schritt durch die Einrichtung. </p>
+              <DBInfotext showIcon={false}>
                 Du kannst die Ersteinrichtung jederzeit über die Hilfe im Start-Tab erneut öffnen.
-              </p>
+              </DBInfotext>
             </>
           )}
 
           {step.art === 'pers' && (
             <>
-              <p className="mb-0">
+              <p>
                 Bitte fülle alle persönlichen Daten aus. Einige Felder sind schon passend vorausgefüllt – prüfe sie kurz
                 und ersetze die Beispielwerte durch deine eigenen Angaben.
               </p>
-              <p className="text-body-secondary small mb-0">
+              <DBInfotext showIcon={false}>
                 Wichtig: Vorname, Nachname, Personalnummer, Telefon, Wohnsitz sowie die Entfernungen zur Arbeitsstätte
                 und zum nächsten Bahnhof.
-              </p>
+              </DBInfotext>
               {persValidation.ok ? (
                 <DBInfotext semantic="successful">Alle Pflichtangaben sind eingetragen.</DBInfotext>
               ) : (
@@ -267,14 +266,14 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
 
           {step.art === 'bestaetigung' && (
             <>
-              <p className="mb-0">{step.beschreibung}</p>
+              <p>{step.beschreibung}</p>
             </>
           )}
 
           {step.art === 'tour' && (
             <>
-              <p className="mb-0">{step.tab.kurzbeschreibung}</p>
-              <ul className="mb-0">
+              <p>{step.tab.kurzbeschreibung}</p>
+              <ul>
                 {step.tab.punkte.map(punkt => (
                   <li key={punkt}>{punkt}</li>
                 ))}
@@ -284,17 +283,17 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
 
           {step.art === 'abschluss' && (
             <>
-              <p className="mb-0">
+              <p>
                 Die Ersteinrichtung ist abgeschlossen. Über die Hilfe im Start-Tab kannst du sie jederzeit erneut
                 öffnen.
               </p>
             </>
           )}
-        </div>
+        </DBStack>
       )}
 
       {!minimiert && (
-        <div className="d-flex gap-2 py-2 px-3 bg-body-secondary border-top">
+        <DBStack direction="row" gap="x-small" className="ersteinrichtung__fuss">
           <DBButton
             type="button"
             variant="filled"
@@ -304,7 +303,13 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
           >
             Zurück
           </DBButton>
-          <DBButton type="button" className="me-auto" variant="ghost" size="small" onClick={onClose}>
+          <DBButton
+            type="button"
+            className="ersteinrichtung__ueberspringen"
+            variant="ghost"
+            size="small"
+            onClick={onClose}
+          >
             Überspringen
           </DBButton>
           {isLast ? (
@@ -316,7 +321,7 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
               {weiterText}
             </DBButton>
           )}
-        </div>
+        </DBStack>
       )}
     </DBCard>
   );

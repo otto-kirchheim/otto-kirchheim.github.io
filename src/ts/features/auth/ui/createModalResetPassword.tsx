@@ -3,6 +3,7 @@ import { createRef, type SubmitEvent } from 'react';
 import MyFormModal from '@/shared/ui/modal/MyFormModal';
 import MyInput from '@/shared/ui/form/MyInput';
 import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import PasswordStrengthMeter from '@/shared/ui/form/PasswordStrengthMeter';
 import showModal, { schliesseModal } from '@/shared/ui/modal/showModal';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
@@ -21,8 +22,7 @@ export default function createModalResetPassword(token: string): void {
   const modal = showModal(
     <MyFormModal myRef={ref} title="Passwort zurücksetzen" submitText="Passwort speichern" onSubmit={onSubmit()}>
       <MyModalBody>
-        <div className="border p-2">
-          <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Neues Passwort</p>
+        <Gruppe titel="Neues Passwort">
           <div className="raster abstand-2">
             <MyInput
               myRef={passwortRef}
@@ -60,7 +60,7 @@ export default function createModalResetPassword(token: string): void {
               Neues Passwort wiederholen
             </MyInput>
           </div>
-        </div>
+        </Gruppe>
       </MyModalBody>
     </MyFormModal>,
   );

@@ -3,6 +3,7 @@ import { createRef, type SubmitEvent } from 'react';
 import MyFormModal from '@/shared/ui/modal/MyFormModal';
 import MyInput from '@/shared/ui/form/MyInput';
 import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import PasswordStrengthMeter from '@/shared/ui/form/PasswordStrengthMeter';
 import showModal from '@/shared/ui/modal/showModal';
 import { PASSWORD_MIN_LENGTH } from '@/shared/lib/validation/passwordValidation';
@@ -61,8 +62,7 @@ export default function createModalNewUser(): void {
         >
           E-Mail (@deutschebahn.com)
         </MyInput>
-        <div className="border p-2">
-          <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Passwort</p>
+        <Gruppe titel="Passwort">
           <div className="raster abstand-2">
             <MyInput
               myRef={passwortRef}
@@ -107,7 +107,7 @@ export default function createModalNewUser(): void {
               Passwort wiederholen
             </MyInput>
           </div>
-        </div>
+        </Gruppe>
       </MyModalBody>
     </MyFormModal>,
   );

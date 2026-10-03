@@ -1,4 +1,4 @@
-import { DBButton, DBDivider } from '@db-ux/react-core-components';
+import { DBButton, DBDivider, DBInfotext, DBStack } from '@db-ux/react-core-components';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import { createRef, type SubmitEvent } from 'react';
 
@@ -7,6 +7,7 @@ import DBLoadingButton from '@/shared/ui/button-loading/DBLoadingButton';
 import MyFormModal from '@/shared/ui/modal/MyFormModal';
 import MyInput from '@/shared/ui/form/MyInput';
 import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import showModal from '@/shared/ui/modal/showModal';
 import { createModalForgotPassword, createModalNewUser } from '.';
 import type { CustomHTMLDivElement } from '@/types';
@@ -22,22 +23,21 @@ export default function createModalLogin(): void {
   const supportsPasskeys = browserSupportsWebAuthn();
 
   const footer = (
-    <div className="dialog-fuss flex-column align-items-stretch gap-0 p-0">
-      <div className="d-flex justify-content-center gap-2 w-100 px-3 pt-3">
+    <div className="dialog-fuss login-fuss">
+      <DBStack direction="row" justifyContent="center" className="login-fuss__bereich login-fuss__bereich--oben">
         <DBLoadingButton variant="brand" type="submit" id="btnLoginModal">
           Einloggen
         </DBLoadingButton>
-      </div>
+      </DBStack>
 
       {supportsPasskeys && (
-        <div className="w-100 px-3 p-3">
-          <div className="border px-3 py-2 bg-body-tertiary">
-            <div className="small fw-semibold text-uppercase text-body-secondary mb-1">Alternative Anmeldung</div>
-            <p className="small text-body-secondary mb-2">
-              Mit einem gespeicherten Passkey kann der Benutzername leer bleiben – der Browser zeigt dann passende
-              Geräte an.
-            </p>
-            <div className="d-flex justify-content-center gap-2">
+        <div className="login-fuss__bereich login-fuss__bereich--oben login-fuss__bereich--unten">
+          <Gruppe titel="Alternative Anmeldung">
+            <DBStack gap="x-small" alignment="center">
+              <DBInfotext showIcon={false}>
+                Mit einem gespeicherten Passkey kann der Benutzername leer bleiben – der Browser zeigt dann passende
+                Geräte an.
+              </DBInfotext>
               <DBButton
                 variant="outlined"
                 type="button"
@@ -47,16 +47,22 @@ export default function createModalLogin(): void {
               >
                 Mit Passkey
               </DBButton>
-            </div>
-          </div>
+            </DBStack>
+          </Gruppe>
         </div>
       )}
 
       {!supportsPasskeys && <DBDivider width="full" />}
 
-      <div className="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 w-100 px-3 pb-3">
-        <span className="small text-body-secondary">Weitere Optionen</span>
-        <div className="d-grid d-sm-flex gap-2">
+      <DBStack
+        direction="row"
+        alignment="center"
+        justifyContent="space-between"
+        wrap
+        className="login-fuss__bereich login-fuss__bereich--unten"
+      >
+        <DBInfotext showIcon={false}>Weitere Optionen</DBInfotext>
+        <DBStack direction="row" wrap gap="x-small">
           <DBButton
             variant="outlined"
             type="button"
@@ -77,8 +83,8 @@ export default function createModalLogin(): void {
           <DBButton variant="filled" type="button" data-dialog-dismiss="modal">
             Abbrechen
           </DBButton>
-        </div>
-      </div>
+        </DBStack>
+      </DBStack>
     </div>
   );
 

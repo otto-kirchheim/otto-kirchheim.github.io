@@ -55,6 +55,7 @@ describe('Bootstrap-Rueckbau', () => {
       0,
     );
     console.log('ANZAHL', anzahl);
+    console.log('ANZAHL', anzahl);
     expect(anzahl).toBeLessThanOrEqual(GRENZE);
   });
 });

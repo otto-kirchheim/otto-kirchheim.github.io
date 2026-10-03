@@ -17,7 +17,7 @@ function openGuidePanel(captureSnapshot: boolean): void {
   container.id = PANEL_ID;
   // z-index 1040: unter den Dialogen (nativer `<dialog>` liegt in der Top-Layer), damit
   // Add/Edit-Dialoge darueber oeffnen.
-  container.className = 'position-fixed bottom-0 end-0 p-2 p-md-3 onboarding-panel';
+  container.className = 'onboarding-panel';
   container.style.zIndex = '1040';
   document.body.appendChild(container);
 

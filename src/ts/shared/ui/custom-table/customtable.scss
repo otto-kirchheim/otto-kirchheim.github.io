@@ -221,6 +221,15 @@ th.customtable-sortable:hover > span.customtableIcon {
   animation: autosave-pulse 1.2s ease-in-out infinite;
 }
 
+// Knopfleiste unter der Tabelle (`CustomTableView.tsx`): bleibt im sichtbaren Teil, auch wenn die Tabelle breiter als
+// der Bildschirm ist und waagrecht scrollt (`.db-table` ist Container, `100cqi` = sichtbare Breite); ab `sm` gleichmaessig
+// verteilt.
+.customtable-aktionen {
+  position: sticky;
+  inset-inline-start: 0;
+  max-inline-size: calc(100cqi - var(--db-spacing-fixed-sm));
+}
+
 // Knopfleiste unter der Tabelle (`CustomTableView.tsx`): ab `sm` gleichmaessig verteilt.
 @media screen and (min-width: #{bp.$sm}px) {
   .customtable-aktionen {

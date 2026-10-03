@@ -90,8 +90,8 @@ export function AdminUserCard({
               )}
             </span>
           </div>
-          <div className="d-flex align-items-center gap-2">
-            <DBTag semantic={roleInfo.semantic} emphasis="strong">
+          <div className="d-flex align-items-center gap-2 flex-shrink-0">
+            <DBTag semantic={roleInfo.semantic} emphasis="strong" className="rollen-tag">
               {roleInfo.label}
             </DBTag>
             <span

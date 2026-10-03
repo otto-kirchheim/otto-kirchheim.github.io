@@ -1,4 +1,4 @@
-import { DBButton } from '@db-ux/react-core-components';
+import { DBButton, DBNotification, DBStack } from '@db-ux/react-core-components';
 import { type FC, useState } from 'react';
 
 import dayjs from '@/shared/lib/date/configDayjs';
@@ -44,25 +44,22 @@ const ConflictReviewBanner: FC<Props> = ({ resources, onSave }) => {
   };
 
   return (
-    <div className="breit px-2 px-md-3 mt-1">
-      {/* Der Knopf steht als direktes Kind im `close`-Bereich des Meldungsrasters -- innerhalb
-          des Inhalts wuerde DB die Spalte trotzdem freihalten und der Text bliebe schmal. */}
-      <div className="db-notification shadow-sm mb-0" data-semantic="informational" role="status" aria-live="polite">
-        <span data-area="content">
-          <span className="fw-semibold d-block">Bitte erst Änderungen überprüfen und speichern</span>
-          <span className="small">{text}</span>
-        </span>
-        <DBButton
-          className="u-min-w-120"
-          variant="brand"
-          size="small"
-          type="button"
-          disabled={saving}
-          onClick={handleClick}
-        >
-          Übernehmen {saving && <span className="laedt ms-2" role="status" aria-hidden="true" />}
-        </DBButton>
-      </div>
+    <div className="app-hinweise">
+      <DBNotification
+        semantic="informational"
+        variant="standalone"
+        role="status"
+        ariaLive="polite"
+        headline="Bitte erst Änderungen überprüfen und speichern"
+      >
+        {/* Knopf im Inhalt, nicht im `link`-Slot (dort setzt DB einen `.db-button` als Schliessen-Knopf oben rechts). */}
+        <DBStack gap="x-small" alignment="start">
+          <span>{text}</span>
+          <DBButton variant="brand" size="small" type="button" disabled={saving} onClick={handleClick}>
+            Übernehmen {saving && <span className="laedt" role="status" aria-hidden="true" />}
+          </DBButton>
+        </DBStack>
+      </DBNotification>
     </div>
   );
 };

@@ -6,7 +6,7 @@
  * Aufruf (Dev-Server muss laufen):
  *   bun scripts/sichtvergleich.ts aufnehmen <name>            # Fotos nach .sichtvergleich/<name>/
  *   bun scripts/sichtvergleich.ts vergleichen <alt> <neu>     # Diff-Bilder nach .sichtvergleich/diff-<alt>-<neu>/
- * Optionen beim Aufnehmen: --nur <Teilstring> (nur passende Ansichten), --farbe light|dark, --viewport desktop|mobil,
+ * Optionen beim Aufnehmen: --nur <Teilstring>[,<Teilstring>…] (nur passende Ansichten), --farbe light|dark, --viewport desktop|mobil,
  *   --backend <API-URL> (echtes Backend statt Fake, Testbenutzer --user/--password, Standard livetest-fsd als Super-Admin;
  *   Login-Zeiten, Logs und Speicherwerte aendern sich zwischen Laeufen -- fuer exakte Vergleiche das Fake-Backend nehmen),
  *   --base <URL>, --chrome <Pfad>. Ein voller Lauf (4 Browser parallel, 4 x 22 Ansichten) dauert etwa 1-2 Minuten.
@@ -24,7 +24,7 @@ const argValue = (name: string): string | undefined => {
 };
 const BASE = argValue('--base') ?? 'http://localhost:8080';
 const CHROME = argValue('--chrome') ?? '/usr/bin/google-chrome-stable';
-const NUR = argValue('--nur');
+const NUR = argValue('--nur')?.split(',');
 const FARBE = argValue('--farbe');
 const VIEWPORT = argValue('--viewport');
 const ORDNER = `${import.meta.dir}/../.sichtvergleich`;
@@ -89,10 +89,10 @@ const adminTab =
  * @param weiter - Optional: Klick auf diesen Selektor im Dialog (Folgedialog).
  * @returns Oeffnen/Schliessen der Ansicht.
  */
-const modulDialog = (aufruf: () => Promise<void>, weiter?: string): Pick<Ansicht, 'oeffnen' | 'schliessen'> => ({
+const modulDialog = (aufruf: ModulAufruf, weiter?: string): Pick<Ansicht, 'oeffnen' | 'schliessen'> => ({
   async oeffnen(page) {
     await tab('start')(page);
-    await page.evaluate(aufruf);
+    await rufeModul(page, aufruf);
     await page.waitForSelector('dialog[open]', { timeout: 5000 }).catch(() => undefined);
     if (weiter) {
       await klick(page, `dialog[open] ${weiter}`);
@@ -102,30 +102,77 @@ const modulDialog = (aufruf: () => Promise<void>, weiter?: string): Pick<Ansicht
     }
   },
   async schliessen(page) {
-    await page.evaluate(() =>
-      document
-        .querySelectorAll<HTMLElement>('dialog[open] [data-dialog-dismiss="modal"]')
-        .forEach(knopf => knopf.click()),
-    );
+    // Nur Schliessen/Abbrechen: andere `data-dialog-dismiss`-Knoepfe oeffnen Folgedialoge (Login -> Registrieren).
+    await page.evaluate(() => {
+      const knoepfe = [...document.querySelectorAll<HTMLElement>('dialog[open] [data-dialog-dismiss="modal"]')];
+      const knopf =
+        knoepfe.find(k => k.dataset['icon'] === 'cross') ??
+        knoepfe.find(k => /^(Schlie(ß|ss)en|Abbrechen)$/.test(k.textContent?.trim() ?? ''));
+      knopf?.click();
+    });
     await page.keyboard.press('Escape');
     await warteBis(page, () => !document.querySelector('dialog[open]'), '', 3000);
   },
 });
 
-const speicherfehler = async (): Promise<void> => {
-  const pfad = '/ts/shared/lib/autosave/errorHandling.ts';
-  const { showErrorDialog } = (await import(pfad)) as { showErrorDialog: (r: string, e: object[]) => void };
-  showErrorDialog('BZ', [
-    { operation: 'create', label: 'Mo 07.09., 15:00', message: 'Zeitraum ueberschneidet sich mit einem vorhandenen.' },
-    { operation: 'delete', id: 'abc123', message: 'Eintrag nicht gefunden.' },
-  ]);
-};
+/**
+ * Ansicht, die ein Modul ausserhalb eines Dialogs einblendet (z. B. das Ersteinrichtungs-Panel).
+ *
+ * @param aufruf - Laeuft im Browser und blendet die Ansicht ein.
+ * @param selektor - Element, auf das gewartet und das danach entfernt wird.
+ * @returns Oeffnen/Schliessen der Ansicht.
+ */
+const modulAnsicht = (aufruf: ModulAufruf, selektor: string): Pick<Ansicht, 'oeffnen' | 'schliessen'> => ({
+  async oeffnen(page) {
+    await tab('start')(page);
+    await rufeModul(page, aufruf);
+    await page.waitForSelector(selektor, { timeout: 5000 }).catch(() => undefined);
+  },
+  async schliessen(page) {
+    await page.evaluate(s => document.querySelectorAll(s).forEach(el => el.remove()), selektor);
+  },
+});
 
-const signatur = async (): Promise<void> => {
-  const pfad = '/ts/shared/lib/pdf/signaturDialog.ts';
-  const { signaturDialog } = (await import(pfad)) as { signaturDialog: () => Promise<unknown> };
-  void signaturDialog();
+/** Aufruf einer Modulfunktion im Browser (Pfad wie vom Dev-Server ausgeliefert, `name` = Export, `default` fuer den Standardexport). */
+interface ModulAufruf {
+  pfad: string;
+  name: string;
+  argumente?: unknown[];
+}
+
+/**
+ * Fuehrt einen `ModulAufruf` im Browser aus (das Ergebnis wird nicht abgewartet: Dialoge loesen erst beim Schliessen auf).
+ *
+ * @param page - Seite mit geladener App.
+ * @param aufruf - Modul, Export und Argumente.
+ */
+const rufeModul = (page: Page, { pfad, name, argumente = [] }: ModulAufruf): Promise<void> =>
+  page.evaluate(
+    async (p: string, n: string, a: unknown[]) => {
+      const modul = (await import(p)) as Record<string, (...x: unknown[]) => unknown>;
+      void modul[n](...a);
+    },
+    pfad,
+    name,
+    argumente,
+  );
+
+const SPEICHERFEHLER: ModulAufruf = {
+  pfad: '/ts/shared/lib/autosave/errorHandling.ts',
+  name: 'showErrorDialog',
+  argumente: [
+    'BZ',
+    [
+      {
+        operation: 'create',
+        label: 'Mo 07.09., 15:00',
+        message: 'Zeitraum ueberschneidet sich mit einem vorhandenen.',
+      },
+      { operation: 'delete', id: 'abc123', message: 'Eintrag nicht gefunden.' },
+    ],
+  ],
 };
+const SIGNATUR: ModulAufruf = { pfad: '/ts/shared/lib/pdf/signaturDialog.ts', name: 'signaturDialog' };
 
 const ANSICHTEN: Ansicht[] = [
   { name: 'start', oeffnen: tab('start') },
@@ -143,9 +190,32 @@ const ANSICHTEN: Ansicht[] = [
   { name: 'ea-dialog', ...dialog('EA', '#btnESEA') },
   { name: 'berechnung', oeffnen: tab('Berechnung') },
   { name: 'impressum', ...dialog('start', '.app-footer .impressum') },
-  { name: 'dialog-speicherfehler', ...modulDialog(speicherfehler) },
-  { name: 'dialog-signatur', ...modulDialog(signatur) },
-  { name: 'dialog-signatur-pad', ...modulDialog(signatur, '[data-wahl="neu"]') },
+  { name: 'dialog-speicherfehler', ...modulDialog(SPEICHERFEHLER) },
+  {
+    name: 'dialog-registrieren',
+    ...modulDialog({ pfad: '/ts/features/auth/ui/createModalNewUser.tsx', name: 'default' }),
+  },
+  {
+    name: 'dialog-passwort-vergessen',
+    ...modulDialog({ pfad: '/ts/features/auth/ui/createModalForgotPassword.tsx', name: 'default' }),
+  },
+  {
+    name: 'dialog-passwort-neu',
+    ...modulDialog({
+      pfad: '/ts/features/auth/ui/createModalResetPassword.tsx',
+      name: 'default',
+      argumente: ['token'],
+    }),
+  },
+  {
+    name: 'ersteinrichtung',
+    ...modulAnsicht(
+      { pfad: '/ts/features/onboarding/ui/createOnboardingGuideModal.tsx', name: 'openOnboardingGuide' },
+      '.onboarding-panel',
+    ),
+  },
+  { name: 'dialog-signatur', ...modulDialog(SIGNATUR) },
+  { name: 'dialog-signatur-pad', ...modulDialog(SIGNATUR, '[data-wahl="neu"]') },
   { name: 'start-hilfe', ...dialog('start', '#btnHelpStart') },
   {
     name: 'einstellungen',
@@ -224,7 +294,7 @@ async function aufnehmen(name: string): Promise<void> {
         await page.goto(BASE, { waitUntil: 'networkidle2' });
 
         const login: Ansicht = { name: 'login-dialog', ...dialog('start', '#btnLogin') };
-        const passt = (ansicht: Ansicht): boolean => !NUR || ansicht.name.includes(NUR);
+        const passt = (ansicht: Ansicht): boolean => !NUR || NUR.some(teil => ansicht.name.includes(teil));
         const ansichten = [login, ...ANSICHTEN].filter(passt);
         if (passt(login)) await foto(page, login, `${ziel}/${farbschema}-${viewportName}`);
         const { geladen } = await anmelden(page, USER, PASSWORD);

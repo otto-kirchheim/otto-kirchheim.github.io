@@ -2,6 +2,7 @@ import { type JSX, useState } from 'react';
 
 import { DBButton, DBHeadingH5, DBInfotext, DBStack, DBTag, DBTooltip } from '@db-ux/react-core-components';
 import { DbFeld } from '@/shared/ui/form/DbFeld';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import type { IPerWeekdaySchicht, SchichtBase } from '@/types';
 import { groupBySchedule, isOvernightSchicht } from '@/shared/lib/schicht/resolveSchichtDay';
 
@@ -159,91 +160,90 @@ export function SchichtSection({
           ))}
         </div>
         {addingOverride ? (
-          <DBStack gap="x-small" className="schicht-neu">
-            <DBInfotext showIcon={false} className="schicht-neu__titel">
-              <strong>Neue Zeitvariante</strong>
-            </DBInfotext>
-            <DBStack direction="row" gap="2x-small">
-              {regelarbeitstage.map(day => (
-                <DBButton
-                  key={day}
-                  type="button"
-                  variant={newDays.includes(day) ? 'brand' : 'outlined'}
-                  size="small"
-                  style={{ minWidth: '2.5rem' }}
-                  onClick={() =>
-                    setNewDays(prev => (prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]))
-                  }
-                >
-                  {DAY_LABELS[day]}
-                </DBButton>
-              ))}
-            </DBStack>
-            <DBStack direction="row" alignment="center" gap="x-small" wrap>
-              <DbFeld
-                type="time"
-                beschriftung="Beginn"
-                dicht
-                huelleStyle={{ width: '7rem' }}
-                value={newConfig.beginn}
-                onChange={e => setNewConfig(prev => ({ ...prev, beginn: e.target.value }))}
-              />
-              <span>–</span>
-              <DbFeld
-                type="time"
-                beschriftung="Ende"
-                dicht
-                huelleStyle={{ width: '7rem' }}
-                value={newConfig.ende}
-                onChange={e => setNewConfig(prev => ({ ...prev, ende: e.target.value }))}
-              />
-              {isOvernightSchicht(newConfig) && (
-                <DBTag semantic="neutral" emphasis="strong" style={{ fontSize: '0.65rem' }}>
-                  +1 Tag
-                </DBTag>
-              )}
-              <DBStack direction="row" alignment="center" gap="2x-small">
-                <DbFeld
-                  type="number"
-                  beschriftung="Pause in Minuten"
-                  dicht
-                  feldKlasse="feld-zentriert"
-                  huelleStyle={{ width: '4rem' }}
-                  value={newConfig.pause}
-                  min={0}
-                  step={5}
-                  onChange={e => setNewConfig(prev => ({ ...prev, pause: Number(e.target.value) }))}
-                />
-                <DBInfotext showIcon={false}>min</DBInfotext>
+          <Gruppe titel="Neue Zeitvariante">
+            <DBStack gap="x-small">
+              <DBStack direction="row" gap="2x-small">
+                {regelarbeitstage.map(day => (
+                  <DBButton
+                    key={day}
+                    type="button"
+                    variant={newDays.includes(day) ? 'brand' : 'outlined'}
+                    size="small"
+                    style={{ minWidth: '2.5rem' }}
+                    onClick={() =>
+                      setNewDays(prev => (prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]))
+                    }
+                  >
+                    {DAY_LABELS[day]}
+                  </DBButton>
+                ))}
               </DBStack>
-              <DBButton
-                type="button"
-                className="schicht-neu__uebernehmen"
-                variant="filled"
-                data-color="successful"
-                size="small"
-                icon="check"
-                noText
-                onClick={saveNewOverride}
-                disabled={newDays.length === 0}
-              >
-                <DBTooltip>Übernehmen</DBTooltip>
-              </DBButton>
-              <DBButton
-                type="button"
-                variant="outlined"
-                size="small"
-                icon="cross"
-                noText
-                onClick={() => {
-                  setAddingOverride(false);
-                  setNewDays([]);
-                }}
-              >
-                <DBTooltip>Abbrechen</DBTooltip>
-              </DBButton>
+              <DBStack direction="row" alignment="center" gap="x-small" wrap>
+                <DbFeld
+                  type="time"
+                  beschriftung="Beginn"
+                  dicht
+                  huelleStyle={{ width: '7rem' }}
+                  value={newConfig.beginn}
+                  onChange={e => setNewConfig(prev => ({ ...prev, beginn: e.target.value }))}
+                />
+                <span>–</span>
+                <DbFeld
+                  type="time"
+                  beschriftung="Ende"
+                  dicht
+                  huelleStyle={{ width: '7rem' }}
+                  value={newConfig.ende}
+                  onChange={e => setNewConfig(prev => ({ ...prev, ende: e.target.value }))}
+                />
+                {isOvernightSchicht(newConfig) && (
+                  <DBTag semantic="neutral" emphasis="strong" style={{ fontSize: '0.65rem' }}>
+                    +1 Tag
+                  </DBTag>
+                )}
+                <DBStack direction="row" alignment="center" gap="2x-small">
+                  <DbFeld
+                    type="number"
+                    beschriftung="Pause in Minuten"
+                    dicht
+                    feldKlasse="feld-zentriert"
+                    huelleStyle={{ width: '4rem' }}
+                    value={newConfig.pause}
+                    min={0}
+                    step={5}
+                    onChange={e => setNewConfig(prev => ({ ...prev, pause: Number(e.target.value) }))}
+                  />
+                  <DBInfotext showIcon={false}>min</DBInfotext>
+                </DBStack>
+                <DBButton
+                  type="button"
+                  className="schicht-neu__uebernehmen"
+                  variant="filled"
+                  data-color="successful"
+                  size="small"
+                  icon="check"
+                  noText
+                  onClick={saveNewOverride}
+                  disabled={newDays.length === 0}
+                >
+                  <DBTooltip>Übernehmen</DBTooltip>
+                </DBButton>
+                <DBButton
+                  type="button"
+                  variant="outlined"
+                  size="small"
+                  icon="cross"
+                  noText
+                  onClick={() => {
+                    setAddingOverride(false);
+                    setNewDays([]);
+                  }}
+                >
+                  <DBTooltip>Abbrechen</DBTooltip>
+                </DBButton>
+              </DBStack>
             </DBStack>
-          </DBStack>
+          </Gruppe>
         ) : (
           <DBStack alignment="start">
             <DBButton

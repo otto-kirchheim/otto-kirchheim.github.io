@@ -65,7 +65,7 @@ describe('createOnboardingGuideModal (Panel)', () => {
       <a id="brand-start-tab" href="#start" data-tab-target="start"></a>
       <ul>
         <li><button id="bereitschaft-tab" type="button" data-tab-target="Bereitschaft"></button></li>
-        <li class="d-none"><button id="ewt-tab" type="button" data-tab-target="EWT"></button></li>
+        <li hidden><button id="ewt-tab" type="button" data-tab-target="EWT"></button></li>
         <li><button id="neben-tab" type="button" data-tab-target="Neben"></button></li>
         <li><button id="berechnung-tab" type="button" data-tab-target="Berechnung"></button></li>
         <li><button id="einstellungen-tab" type="button" data-tab-target="Einstellungen"></button></li>
@@ -154,7 +154,7 @@ describe('createOnboardingGuideModal (Panel)', () => {
     // EWT ist ausgeblendet: sein Prüf-Schritt (Fahrzeiten) entfällt, es geht direkt in die Tab-Tour.
     expect(getPanel()?.textContent).not.toContain('Fahrzeiten prüfen');
 
-    // Tab-Tour: EWT ist versteckt (d-none) und darf nicht vorkommen.
+    // Tab-Tour: EWT ist versteckt (hidden) und darf nicht vorkommen.
     for (const [titel, _tabSelector] of [
       ['Tab: Bereitschaft', '#bereitschaft-tab'],
       ['Tab: Erschwerniszulagen', '#neben-tab'],
@@ -207,8 +207,8 @@ describe('createOnboardingGuideModal (Panel)', () => {
   });
 
   it('überspringt den Prüf-Schritt eines Features, dessen Tab ausgeblendet ist, und zeigt die übrigen', async () => {
-    document.querySelector('#bereitschaft-tab')!.closest('li')!.classList.add('d-none');
-    document.querySelector('#ewt-tab')!.closest('li')!.classList.remove('d-none');
+    document.querySelector('#bereitschaft-tab')!.closest('li')!.hidden = true;
+    document.querySelector('#ewt-tab')!.closest('li')!.hidden = false;
     openOnboardingGuide();
     await tick();
     for (let schritt = 0; schritt < 3; schritt++) {
