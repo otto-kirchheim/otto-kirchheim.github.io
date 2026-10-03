@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-03 (210)
+
+### chore (`@db-ux/*` 5.6.0 auf 5.6.1)
+
+- `core-components`, `core-foundations`, `react-core-components`, `core-eslint-plugin`, `core-stylelint`, `agent-cli` auf 5.6.1 (reine Patch-Fixes: DBShell, DBControlPanel, DBPopover, Dialog-/Drawer-Ueberschrift). `db-theme` bleibt 6.3.0.
+- Gate gruen, Sichtvergleich 132/132 gleich, Livetest 45/45.
+
 ## 2026-10-03 (209)
 
 ### refactor (Bootstrap-Rueckbau R9 + R10: Abschluss)
