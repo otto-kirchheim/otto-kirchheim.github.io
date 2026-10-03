@@ -97,9 +97,8 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
 
         {content.tipp && <DBInfotext semantic="informational">{content.tipp}</DBInfotext>}
 
-        {/* Eigener Block: im Stack wuerde der Knopf sonst auf volle Breite gezogen. */}
         {content.reopenOnboardingAction && (
-          <div>
+          <DBStack alignment="start">
             <DBButton
               type="button"
               variant="outlined"
@@ -110,7 +109,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
             >
               Ersteinrichtung erneut öffnen
             </DBButton>
-          </div>
+          </DBStack>
         )}
       </DBStack>
     </MyModalBody>

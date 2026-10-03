@@ -108,21 +108,21 @@ function signaturEntscheidung(cachedPng: string | null): Promise<SignaturWahl> {
           <div class="dialog-koerper">
             ${
               cachedPng
-                ? `<p class="mb-2">Es liegt eine gespeicherte Unterschrift vor. Wie möchten Sie fortfahren?</p>
-                 <ul class="mb-0 ps-3">
+                ? `<p>Es liegt eine gespeicherte Unterschrift vor. Wie möchten Sie fortfahren?</p>
+                 <ul>
                    <li><strong>Verwenden:</strong> direkt für dieses PDF übernehmen.</li>
                    <li><strong>Ändern:</strong> Pad öffnet mit der gespeicherten Unterschrift, zum Anpassen oder Neuzeichnen.</li>
                    <li><strong>Ohne Unterschrift:</strong> PDF ohne Unterschrift, Unterschriftsdatum bleibt (z.B. für eine Unterschrift auf Papier).</li>
                    <li><strong>Digital:</strong> PDF ohne Unterschrift UND ohne Datum (für eine spätere digitale Signatur).</li>
                    </ul>`
-                : `<p class="mb-2">Jetzt unterschreiben?</p>
-                 <ul class="mb-0 ps-3">
+                : `<p>Jetzt unterschreiben?</p>
+                 <ul>
                    <li><strong>Ja:</strong> Unterschrift wird ins PDF eingefügt.</li>
                    <li><strong>Ohne Unterschrift:</strong> PDF ohne Unterschrift, Unterschriftsdatum bleibt (z.B. für eine Unterschrift auf Papier).</li>
                    <li><strong>Digital:</strong> PDF ohne Unterschrift UND ohne Datum (für eine spätere digitale Signatur).</li>
                    </ul>`
             }
-          <p class="small text-body-secondary mt-2 mb-0">Die Unterschrift wird nur auf diesem Gerät verarbeitet und zwischengespeichert.</p>
+          <span class="db-infotext">Die Unterschrift wird nur auf diesem Gerät verarbeitet und zwischengespeichert.</span>
           </div>
           <div class="dialog-fuss">
           <button type="button" class="db-button" data-variant="outlined" data-wahl="digital">Digital</button>
@@ -180,7 +180,7 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
           <canvas class="signatur-canvas"></canvas>
         </div>
         <div class="dialog-fuss signatur-fusszeile">
-          <div class="db-checkbox me-auto" data-size="small">
+          <div class="db-checkbox" data-size="small">
             <label for="signatur-speichern">
               <input type="checkbox" id="signatur-speichern" data-speichern="true" ${cachedPng ? 'checked' : ''}>
               Merken

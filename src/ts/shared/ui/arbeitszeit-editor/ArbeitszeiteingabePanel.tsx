@@ -1,6 +1,6 @@
 import { type JSX, useEffect, useRef, useState } from 'react';
 
-import { DBDivider, DBHeadingH5 } from '@db-ux/react-core-components';
+import { DBDivider, DBHeadingH5, DBInfotext, DBStack } from '@db-ux/react-core-components';
 import { DbFeld } from '@/shared/ui/form/DbFeld';
 import MyCheckbox from '@/shared/ui/form/MyCheckbox';
 import type { IVorgabenUaZ, IPerWeekdaySchicht, ISchichtZeiten, SchichtBase } from '@/types';
@@ -169,15 +169,15 @@ function OptionalSchichtSection({
   };
 
   return (
-    <div>
-      <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
-        <DBHeadingH5 className="mb-0">{title}</DBHeadingH5>
-        <MyCheckbox className="ms-2" size="small" id={`toggle-${title}`} checked={enabled} changeHandler={handleToggle}>
+    <DBStack gap="x-small">
+      <DBStack direction="row" alignment="center" justifyContent="center" gap="medium">
+        <DBHeadingH5>{title}</DBHeadingH5>
+        <MyCheckbox size="small" id={`toggle-${title}`} checked={enabled} changeHandler={handleToggle}>
           aktiv
         </MyCheckbox>
-      </div>
+      </DBStack>
       {enabled && <SchichtSection title="" schicht={schicht} onChange={onChange} />}
-    </div>
+    </DBStack>
   );
 }
 
@@ -203,11 +203,10 @@ function SonderSection({
   const update = (partial: Partial<ISchichtZeiten>) => onChange({ ...sonder, ...partial });
 
   return (
-    <div>
-      <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
-        <DBHeadingH5 className="mb-0">Sonderschicht</DBHeadingH5>
+    <DBStack gap="x-small">
+      <DBStack direction="row" alignment="center" justifyContent="center" gap="medium">
+        <DBHeadingH5>Sonderschicht</DBHeadingH5>
         <MyCheckbox
-          className="ms-2"
           size="small"
           id="toggle-sonder"
           checked={enabled}
@@ -215,9 +214,9 @@ function SonderSection({
         >
           aktiv
         </MyCheckbox>
-      </div>
+      </DBStack>
       {enabled && (
-        <div className="d-flex align-items-center gap-2 flex-wrap">
+        <DBStack direction="row" alignment="center" gap="x-small" wrap>
           <DbFeld
             type="time"
             beschriftung="Beginn"
@@ -235,22 +234,22 @@ function SonderSection({
             value={sonder.ende}
             onChange={e => update({ ende: e.target.value })}
           />
-          <div className="d-flex align-items-center gap-1">
+          <DBStack direction="row" alignment="center" gap="2x-small">
             <DbFeld
               type="number"
               beschriftung="Pause in Minuten"
               dicht
-              feldKlasse="text-center"
+              feldKlasse="feld-zentriert"
               huelleStyle={{ width: '4rem' }}
               value={sonder.pause}
               min={0}
               step={5}
               onChange={e => update({ pause: Number(e.target.value) })}
             />
-            <span className="text-muted small">min</span>
-          </div>
-        </div>
+            <DBInfotext showIcon={false}>min</DBInfotext>
+          </DBStack>
+        </DBStack>
       )}
-    </div>
+    </DBStack>
   );
 }

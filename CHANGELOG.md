@@ -2,6 +2,24 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-03 (201)
+
+### refactor (Bootstrap-Rueckbau R1 Rest + R2 `shared/ui`)
+
+- HTML-Dialoge: Speicherfehler mit `db-stack`/`db-infotext`/`db-tag`, Kopf `db-color-critical` (hellrot statt vollrot);
+  Unterschrift-Abfrage mit `db-infotext` statt `small text-body-secondary`.
+- Arbeitszeit-Editor (`SchichtSection`, `ArbeitszeiteingabePanel`): `DBStack`, `DBInfotext` fuer „min“/„keine Pause“/
+  „Arbeitsfrei“, `<strong>` fuer Tage, Komponentenklassen `schicht-neu`/`schicht-zeile`; Loeschknopf `data-color="critical"`.
+- `berechnungBausteine`, `PasswordStrengthMeter`, `CustomTableView`-Knopfleiste (`customtable-aktionen`), Dialog-Fehler
+  (`dialog-fehler`), `MyModalBody` (`db-color-critical`), `DBLoadingButton` (Abzeichen-Position per `:has`),
+  `MyShowElement` (`anzeige-zeile`, Label `<strong>`), `feld-zentriert`.
+- `.db-stack` mit `block-size: auto` (ein Stack in einer gestreckten Rasterzelle ueberlappte den naechsten).
+- Sichtvergleich: neue Ansichten Speicherfehler, Unterschrift (+ Pad), EWT-/Einsatz-Anzeige, Ausloesung per Modul-Import;
+  `--backend` fuer das echte Backend (Testbenutzer `livetest-fsd`, Super-Admin). Ratsche zaehlt auch `divClass`/
+  `feldKlasse`/... der My*-Wrapper (1877).
+- Abweichungen laut Sichtvergleich: Einstellungen > Arbeitszeit (Tage fett, Abstaende wenige px), EWT-Anzeige (Zeilen
+  6px enger), Speicherfehler- und Unterschrift-Dialog (s. o.).
+
 ## 2026-10-03 (200)
 
 ### refactor (Bootstrap-Rueckbau R0 + R1 Teil 1: Sichtbarkeit per `hidden`, Tab-Zustand ohne Bootstrap-Klassen)

@@ -44,9 +44,8 @@ const createTagElement = (row: Row<IDatenEWT>) => {
 
   return (
     <MyShowElement
-      divClass="raster mb-1"
-      labelClass="sp-4 sp-sm-5 text-wrap fw-bold"
-      spanClass="sp-8 sp-sm-7 align-middle text-break my-auto"
+      labelClass="sp-4 sp-sm-5"
+      spanClass="sp-8 sp-sm-7 anzeige-zeile__wert"
       title={`${column.title}:`}
       id="Tag"
       text={tagText}
@@ -65,8 +64,8 @@ const createOrtSchichtElement = (row: Row<IDatenEWT>, columnName: string) => {
   const column: Column<IDatenEWT> = getColumn(row, columnName);
   return (
     <MyShowElement
-      labelClass="sp-4 sp-sm-5 text-wrap fw-bold"
-      spanClass="sp-8 sp-sm-7 align-middle text-break my-auto"
+      labelClass="sp-4 sp-sm-5"
+      spanClass="sp-8 sp-sm-7 anzeige-zeile__wert"
       title={`${column.title}:`}
       id={column.name}
       text={column.parser(row.cells[column.name]) ?? '\u00A0'}

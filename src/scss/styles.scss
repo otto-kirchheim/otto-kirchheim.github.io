@@ -23,10 +23,12 @@
   min-block-size: var(--db-sizing-lg);
 }
 
-// `.db-stack` hat `inline-size: 100%` (als Flex-Kind eines Stack-Rows drueckt es die Geschwister in eigene Zeilen)
-// und `overflow: auto` (schneidet Fokusringe/Schatten ab) -- beides zuruecksetzen.
+// `.db-stack` hat `inline-size: 100%` (als Flex-Kind eines Stack-Rows drueckt es die Geschwister in eigene Zeilen),
+// `block-size: 100%` (fuellt in einer gestreckten Rasterzelle die ganze Hoehe, der naechste Stack ueberlappt) und
+// `overflow: auto` (schneidet Fokusringe/Schatten ab) -- alles zuruecksetzen.
 .db-stack {
   inline-size: auto;
+  block-size: auto;
   overflow: visible;
 }
 
@@ -437,7 +439,9 @@ td:has(.SchichtBereitschaft) {
   padding: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-xs);
   flex-wrap: nowrap;
 
+  // „Merken“ links, die Knoepfe rechts.
   .db-checkbox {
+    margin-inline-end: auto;
     font-size: 0.8rem;
     white-space: nowrap;
   }
@@ -1084,4 +1088,101 @@ body,
 // eigenen unteren Rand.
 .hilfe-inhalt :is(p, ul, ol) {
   margin-block-end: 0;
+}
+
+// ── Gemeinsame Bausteine (`shared/ui`) ──
+
+// Lade-Knopf mit AutoSave-Abzeichen in der Ecke (`DBLoadingButton`, `DBBadge placement="corner-top-right"`).
+.db-button:has(> .autosave-badge) {
+  position: relative;
+}
+
+.passwort-staerke {
+  margin-block-start: var(--db-spacing-fixed-2xs);
+}
+
+// Fehlermeldung oben im Dialog (`MyDivModal`, `MyFormModal`).
+.dialog-fehler {
+  margin: var(--db-spacing-fixed-sm) var(--db-spacing-fixed-sm) 0;
+}
+
+// Monatskarten der Berechnung (`berechnungBausteine.tsx`): Label links, Wert rechts ohne Umbruch.
+.berechnung-card-zeile,
+.berechnung-card-gruppe {
+  > :first-child {
+    text-align: start;
+  }
+
+  > :last-child {
+    text-align: end;
+    white-space: nowrap;
+  }
+}
+
+.berechnung-card-zeile {
+  padding-block: var(--db-spacing-fixed-2xs);
+  padding-inline-start: var(--db-spacing-fixed-sm);
+}
+
+.berechnung-card-gruppe {
+  padding-block: var(--db-spacing-fixed-xs) var(--db-spacing-fixed-2xs);
+}
+
+// Kurze Zahlenfelder (`DbFeld feldKlasse`, z. B. Pause in Minuten): Wert mittig.
+.feld-zentriert {
+  text-align: center;
+}
+
+// Arbeitszeit-Editor (`SchichtSection.tsx`).
+.schicht-neu {
+  padding: var(--db-spacing-fixed-xs);
+  border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.schicht-neu__titel {
+  text-transform: uppercase;
+}
+
+.schicht-neu__uebernehmen {
+  margin-inline-start: auto;
+}
+
+.schicht-zeile {
+  padding-block: var(--db-spacing-fixed-2xs);
+}
+
+// Zeile als Knopf: fuellt die Breite, Inhalt umbrechend.
+.schicht-zeile__knopf {
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: var(--db-spacing-fixed-xs);
+  padding-inline: 0;
+}
+
+.schicht-zeile__zeit {
+  white-space: nowrap;
+}
+
+// Anzeige-Dialoge (`MyShowElement`, `showModalHelpers.tsx`): Label-Wert-Zeilen und die zentrierte Tageszeile.
+.anzeige-zeile {
+  margin-block-end: var(--db-spacing-fixed-2xs);
+}
+
+.anzeige-zeile__wert {
+  align-self: center;
+  overflow-wrap: anywhere;
+}
+
+.anzeige-tag {
+  margin-block-end: var(--db-spacing-fixed-xs);
+  text-align: center;
+}
+
+.anzeige-tag__label {
+  padding-inline-end: var(--db-spacing-fixed-sm);
+  vertical-align: middle;
+}
+
+.anzeige-tag__wert {
+  vertical-align: middle;
 }

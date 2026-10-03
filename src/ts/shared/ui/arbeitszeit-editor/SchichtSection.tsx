@@ -1,6 +1,6 @@
 import { type JSX, useState } from 'react';
 
-import { DBButton, DBHeadingH5, DBTag, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBHeadingH5, DBInfotext, DBStack, DBTag, DBTooltip } from '@db-ux/react-core-components';
 import { DbFeld } from '@/shared/ui/form/DbFeld';
 import type { IPerWeekdaySchicht, SchichtBase } from '@/types';
 import { groupBySchedule, isOvernightSchicht } from '@/shared/lib/schicht/resolveSchichtDay';
@@ -144,22 +144,26 @@ export function SchichtSection({
   return (
     <div>
       {title && <DBHeadingH5 paragraphSpacing>{title}</DBHeadingH5>}
-      <WeekdayChips regelarbeitstage={regelarbeitstage} onToggle={toggleDay} />
-      <div className="mt-2">
-        {groups.map(group => (
-          <ScheduleGroupRow
-            key={group.days.join(',')}
-            days={group.days}
-            config={group.config}
-            defaultConfig={schicht.default}
-            onUpdate={updatedConfig => updateGroup(group.days, updatedConfig)}
-            onDelete={isOverrideGroup(group.days) ? () => deleteOverride(group.days) : undefined}
-          />
-        ))}
+      <DBStack gap="x-small">
+        <WeekdayChips regelarbeitstage={regelarbeitstage} onToggle={toggleDay} />
+        <div>
+          {groups.map(group => (
+            <ScheduleGroupRow
+              key={group.days.join(',')}
+              days={group.days}
+              config={group.config}
+              defaultConfig={schicht.default}
+              onUpdate={updatedConfig => updateGroup(group.days, updatedConfig)}
+              onDelete={isOverrideGroup(group.days) ? () => deleteOverride(group.days) : undefined}
+            />
+          ))}
+        </div>
         {addingOverride ? (
-          <div className="border p-2 mt-2">
-            <p className="small text-muted fw-semibold text-uppercase mb-2">Neue Zeitvariante</p>
-            <div className="d-flex gap-1 mb-2">
+          <DBStack gap="x-small" className="schicht-neu">
+            <DBInfotext showIcon={false} className="schicht-neu__titel">
+              <strong>Neue Zeitvariante</strong>
+            </DBInfotext>
+            <DBStack direction="row" gap="2x-small">
               {regelarbeitstage.map(day => (
                 <DBButton
                   key={day}
@@ -174,8 +178,8 @@ export function SchichtSection({
                   {DAY_LABELS[day]}
                 </DBButton>
               ))}
-            </div>
-            <div className="d-flex align-items-center gap-2 flex-wrap">
+            </DBStack>
+            <DBStack direction="row" alignment="center" gap="x-small" wrap>
               <DbFeld
                 type="time"
                 beschriftung="Beginn"
@@ -198,23 +202,23 @@ export function SchichtSection({
                   +1 Tag
                 </DBTag>
               )}
-              <div className="d-flex align-items-center gap-1">
+              <DBStack direction="row" alignment="center" gap="2x-small">
                 <DbFeld
                   type="number"
                   beschriftung="Pause in Minuten"
                   dicht
-                  feldKlasse="text-center"
+                  feldKlasse="feld-zentriert"
                   huelleStyle={{ width: '4rem' }}
                   value={newConfig.pause}
                   min={0}
                   step={5}
                   onChange={e => setNewConfig(prev => ({ ...prev, pause: Number(e.target.value) }))}
                 />
-                <span className="text-muted small">min</span>
-              </div>
+                <DBInfotext showIcon={false}>min</DBInfotext>
+              </DBStack>
               <DBButton
                 type="button"
-                className="ms-auto"
+                className="schicht-neu__uebernehmen"
                 variant="filled"
                 data-color="successful"
                 size="small"
@@ -238,24 +242,25 @@ export function SchichtSection({
               >
                 <DBTooltip>Abbrechen</DBTooltip>
               </DBButton>
-            </div>
-          </div>
+            </DBStack>
+          </DBStack>
         ) : (
-          <DBButton
-            type="button"
-            className="mt-2 d-flex align-items-center gap-1"
-            variant="outlined"
-            size="small"
-            icon="plus"
-            onClick={() => {
-              setAddingOverride(true);
-              setNewConfig(schicht.default);
-            }}
-          >
-            Zeitvariante
-          </DBButton>
+          <DBStack alignment="start">
+            <DBButton
+              type="button"
+              variant="outlined"
+              size="small"
+              icon="plus"
+              onClick={() => {
+                setAddingOverride(true);
+                setNewConfig(schicht.default);
+              }}
+            >
+              Zeitvariante
+            </DBButton>
+          </DBStack>
         )}
-      </div>
+      </DBStack>
     </div>
   );
 }
@@ -273,7 +278,7 @@ function WeekdayChips({
   onToggle: (day: number) => void;
 }): JSX.Element {
   return (
-    <div className="d-flex flex-wrap gap-1">
+    <DBStack direction="row" wrap gap="2x-small">
       {[1, 2, 3, 4, 5, 6, 7].map(day => (
         <DBButton
           key={day}
@@ -286,7 +291,7 @@ function WeekdayChips({
           {DAY_LABELS[day]}
         </DBButton>
       ))}
-    </div>
+    </DBStack>
   );
 }
 
@@ -316,21 +321,21 @@ function ScheduleGroupRow({
 
   if (config === null) {
     return (
-      <div className="d-flex align-items-center py-1 text-muted small">
-        <span className="fw-medium me-auto" style={{ minWidth: '7rem' }}>
-          {dayLabel}
-        </span>
-        <span className="fst-italic">Arbeitsfrei</span>
-      </div>
+      <DBStack direction="row" alignment="center" justifyContent="space-between" className="schicht-zeile">
+        <DBInfotext showIcon={false}>
+          <strong>{dayLabel}</strong>
+        </DBInfotext>
+        <DBInfotext showIcon={false}>
+          <em>Arbeitsfrei</em>
+        </DBInfotext>
+      </DBStack>
     );
   }
 
   if (editing) {
     return (
-      <div className="d-flex align-items-center gap-2 py-1 flex-wrap">
-        <span className="fw-medium" style={{ minWidth: '7rem' }}>
-          {dayLabel}
-        </span>
+      <DBStack direction="row" alignment="center" gap="x-small" wrap className="schicht-zeile">
+        <strong style={{ minWidth: '7rem' }}>{dayLabel}</strong>
         <DbFeld
           type="time"
           beschriftung="Beginn"
@@ -353,20 +358,20 @@ function ScheduleGroupRow({
             +1 Tag
           </DBTag>
         )}
-        <div className="d-flex align-items-center gap-1">
+        <DBStack direction="row" alignment="center" gap="2x-small">
           <DbFeld
             type="number"
             beschriftung="Pause in Minuten"
             dicht
-            feldKlasse="text-center"
+            feldKlasse="feld-zentriert"
             huelleStyle={{ width: '4rem' }}
             value={local.pause}
             min={0}
             step={5}
             onChange={e => setLocal(prev => ({ ...prev, pause: Number(e.target.value) }))}
           />
-          <span className="text-muted small">min</span>
-        </div>
+          <DBInfotext showIcon={false}>min</DBInfotext>
+        </DBStack>
         <DBButton
           type="button"
           variant="filled"
@@ -394,15 +399,15 @@ function ScheduleGroupRow({
         >
           <DBTooltip>Abbrechen</DBTooltip>
         </DBButton>
-      </div>
+      </DBStack>
     );
   }
 
   return (
-    <div className="d-flex align-items-center py-1">
+    <DBStack direction="row" alignment="center" gap="none" className="schicht-zeile">
       <DBButton
         type="button"
-        className="d-flex align-items-center flex-wrap gap-2 flex-grow-1 text-start text-decoration-none text-body px-0"
+        className="schicht-zeile__knopf"
         variant="ghost"
         iconTrailing="pen"
         onClick={() => {
@@ -410,10 +415,8 @@ function ScheduleGroupRow({
           setEditing(true);
         }}
       >
-        <span className="fw-medium" style={{ minWidth: '5rem' }}>
-          {dayLabel}
-        </span>
-        <span className="text-nowrap">
+        <strong style={{ minWidth: '5rem' }}>{dayLabel}</strong>
+        <span className="schicht-zeile__zeit">
           {config.beginn} – {config.ende}
         </span>
         {overnight && (
@@ -421,21 +424,13 @@ function ScheduleGroupRow({
             +1 Tag
           </DBTag>
         )}
-        <span className="text-muted small">{config.pause > 0 ? `${config.pause} min` : 'keine Pause'}</span>
+        <DBInfotext showIcon={false}>{config.pause > 0 ? `${config.pause} min` : 'keine Pause'}</DBInfotext>
       </DBButton>
       {onDelete && (
-        <DBButton
-          type="button"
-          className="text-danger px-1"
-          variant="ghost"
-          size="small"
-          icon="bin"
-          noText
-          onClick={onDelete}
-        >
+        <DBButton type="button" data-color="critical" variant="ghost" size="small" icon="bin" noText onClick={onDelete}>
           <DBTooltip>Zeitvariante löschen</DBTooltip>
         </DBButton>
       )}
-    </div>
+    </DBStack>
   );
 }

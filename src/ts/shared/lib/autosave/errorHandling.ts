@@ -100,16 +100,13 @@ function buildErrorItemHtml(err: BulkErrorEntry, globalIdx: number): string {
   const opLabel = (op: BulkErrorEntry['operation']) =>
     op === 'create' ? 'Erstellen' : op === 'update' ? 'Ändern' : 'Löschen';
   const rowDesc = err.label ?? (err.operation !== 'create' && err.id ? err.id : `#${globalIdx + 1}`);
-  return `<li class="trennliste-eintrag px-0">
-    <div class="d-flex gap-2 align-items-start">
-      <span class="db-icon text-danger flex-shrink-0" data-icon="exclamation_mark_circle" style="font-size:1.1rem;margin-top:2px" aria-hidden="true"></span>
-      <div class="flex-grow-1">
-        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-          <span class="db-tag" data-semantic="critical" data-emphasis="strong">${escapeHtml(opLabel(err.operation))}</span>
-          <span class="text-body-secondary small">${escapeHtml(rowDesc)}</span>
-        </div>
-        <div class="text-danger small">${escapeHtml(err.message)}</div>
+  return `<li class="trennliste-eintrag">
+    <div class="db-stack" data-gap="2x-small">
+      <div class="db-stack" data-direction="row" data-gap="x-small" data-alignment="center" data-wrap="true">
+        <span class="db-tag" data-semantic="critical" data-emphasis="strong">${escapeHtml(opLabel(err.operation))}</span>
+        <span class="db-infotext" data-show-icon-leading="false">${escapeHtml(rowDesc)}</span>
       </div>
+      <span class="db-infotext" data-semantic="critical" data-icon="exclamation_mark_circle">${escapeHtml(err.message)}</span>
     </div>
   </li>`;
 }
@@ -148,15 +145,17 @@ export function showErrorDialog(_resource: Exclude<TResourceKey, 'settings'>, er
 
   inhalt.innerHTML = `
     <div data-error-dialog="true">
-      <div class="db-drawer-header bg-danger text-white">
+      <div class="db-drawer-header db-color-critical">
         <h5>Fehler beim Speichern</h5>
         <button type="button" class="db-button" data-icon="cross" data-variant="ghost" data-no-text="true" data-dialog-dismiss="modal">Schließen</button>
       </div>
       <div class="dialog-koerper">
-        <p class="fw-semibold mb-2" data-error-count>${errors.length} Fehler gefunden:</p>
-        <ul class="trennliste">${itemsHtml}</ul>
-        <div class="db-notification mt-3 mb-0 py-2 small" data-semantic="informational">
-          <span data-area="content">Die fehlerhaften Zeilen sind in der Tabelle rot markiert und können erneut gespeichert werden.</span>
+        <div class="db-stack" data-gap="small">
+          <strong data-error-count>${errors.length} Fehler gefunden:</strong>
+          <ul class="trennliste">${itemsHtml}</ul>
+          <div class="db-notification" data-semantic="informational" data-variant="standalone">
+            <span data-area="content">Die fehlerhaften Zeilen sind in der Tabelle rot markiert und können erneut gespeichert werden.</span>
+          </div>
         </div>
       </div>
       <div class="dialog-fuss">

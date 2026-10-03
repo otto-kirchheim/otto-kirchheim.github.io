@@ -220,3 +220,10 @@ th.customtable-sortable:hover > span.customtableIcon {
 .autosave-pulse {
   animation: autosave-pulse 1.2s ease-in-out infinite;
 }
+
+// Knopfleiste unter der Tabelle (`CustomTableView.tsx`): ab `sm` gleichmaessig verteilt.
+@media screen and (min-width: #{bp.$sm}px) {
+  .customtable-aktionen {
+    justify-content: space-evenly;
+  }
+}

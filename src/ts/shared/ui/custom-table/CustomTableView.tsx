@@ -342,7 +342,7 @@ export default function CustomTableView({ table }: { table: AnyTable }): ReactNo
         <tfoot>
           <tr className="customtable-editing">
             <td colSpan={columns.length + 1}>
-              <div className="d-flex flex-wrap gap-2 justify-content-center justify-content-sm-evenly">
+              <DBStack direction="row" wrap gap="x-small" justifyContent="center" className="customtable-aktionen">
                 <DBButton
                   type="button"
                   variant="brand"
@@ -386,7 +386,7 @@ export default function CustomTableView({ table }: { table: AnyTable }): ReactNo
                 >
                   {table.options.editing.deleteAllText}
                 </DBButton>
-              </div>
+              </DBStack>
             </td>
           </tr>
         </tfoot>

@@ -17,13 +17,13 @@ describe('MyShowElement', () => {
 
     const div = container.querySelector('div');
     const label = container.querySelector('label');
-    const span = container.querySelector('span');
+    const span = container.querySelector('span#myid');
 
-    expect(div?.className).toBe('raster mb-1');
-    expect(label?.className).toBe('sp-3 text-wrap fw-bold');
+    expect(div?.className).toBe('raster anzeige-zeile');
+    expect(label?.className).toBe('sp-3');
     expect(label?.getAttribute('for')).toBe('myid');
     expect(label?.textContent).toBe('Titel');
-    expect(span?.className).toBe('sp-9 align-middle text-break my-auto');
+    expect(span?.className).toBe('sp-9 anzeige-zeile__wert');
     expect(span?.id).toBe('myid');
     expect(span?.textContent).toBe(' ');
   });

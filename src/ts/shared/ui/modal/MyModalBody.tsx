@@ -13,7 +13,7 @@ const MyModalBody: FC<{ className?: string; children?: ReactNode }> = ({ classNa
   return (
     <div className={`${defaultClass}${additionalClass}`}>
       {children}
-      <div className="text-bg-danger">
+      <div className="db-color-critical">
         <span id="errorMessage" />
       </div>
     </div>

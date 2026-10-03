@@ -102,12 +102,15 @@ Befund Bestand: Utilities direkt an DB-Komponenten 111 x `DBButton` (`py-0` 26, 
       Viewport, voller Lauf ca. 85 s, zwei Laeufe ohne Aenderung 88/88 pixelgleich); Fake-Backend mit festen Admin-Daten
       (`scripts/livetest/adminDaten.ts`, vorher waren alle Admin-Tabs leer); Schutztest `test/app/bootstrapRueckbau.test.ts`
       (eingefrorene Klassenliste `bootstrapKlassen.json`, Grenze 2024).
-- [ ] R1 `app/`, `widgets/`, `shared/model`, `shared/lib` -- Teil 1 erledigt (2026-10-03): Tab-Zustand (`hidden` statt
-      `tab-pane fade show active`, Panel-Erkennung ueber `role="tabpanel"`, Berechtigung `data-gesperrt`), JS-Umschaltungen
-      `#admin`/`#MonatFeld`/`#btnLogin`/`#startSchnellzugriff`/`#ladeAnzeige`/`#actAsNotice` auf `hidden`, Act-As-Hinweis als
-      `DBNotification` mit `headline` + `DBStack`, Hilfedialog mit `DBStack`, `ThemeSwitcher` per `aria-label`, Admin-Panes
-      `admin-pane--<farbe>`. Sichtvergleich: alles gleich ausser Hilfedialog (Fusszeile 12px hoeher, leerer Abstand vor der
-      Fehlerzeile entfaellt). Rest R1: `shared/lib` (2 Dateien), uebrige `d-none`-Stellen ausserhalb (siehe Batches)
+- [x] R1 `app/`, `widgets/`, `shared/model`, `shared/lib` (2026-10-03): Tab-Zustand (`hidden` statt `tab-pane fade show
+      active`, Panel-Erkennung ueber `role="tabpanel"`, Berechtigung `data-gesperrt`), JS-Umschaltungen auf `hidden`,
+      Act-As-Hinweis, Hilfedialog, `ThemeSwitcher`, Admin-Panes; HTML-Dialoge Speicherfehler (`db-stack`/`db-infotext`/
+      `db-color-critical`, Kopf jetzt hellrot statt vollrot) und Unterschrift (`db-infotext`).
+- [x] R2 `shared/ui` (2026-10-03): Arbeitszeit-Editor (`DBStack`, `DBInfotext`, `<strong>`, Komponentenklassen
+      `schicht-*`), `berechnungBausteine`, `PasswordStrengthMeter`, Dialog-Fehler (`dialog-fehler`), `MyModalBody`
+      (`db-color-critical`), `CustomTableView`-Knopfleiste, `DBLoadingButton`, `MyShowElement` (`anzeige-zeile`,
+      Label `<strong>`), `feld-zentriert`. `.db-stack` zusaetzlich `block-size: auto` (Stack in gestreckter Rasterzelle
+      ueberlappte). Ratsche zaehlt jetzt auch `divClass`/`feldKlasse`/... der My*-Wrapper: 1877.
 
 ### Festgelegt im Spike
 
@@ -119,9 +122,16 @@ Befund Bestand: Utilities direkt an DB-Komponenten 111 x `DBButton` (`py-0` 26, 
   obere Rand gehoert zum bisherigen Bild.
 - **Knopf in `DBNotification`:** in den Inhalt (`DBStack`), nicht in den `link`-Slot (DB legt einen `.db-button` dort als
   Schliessen-Knopf oben rechts ab).
+- **Grauer Hinweistext:** `DBInfotext` (Standard `adaptive` ist gedaempft grau, Schrift `body-sm`); ohne Symbol
+  `showIcon={false}` (HTML `data-show-icon-leading="false"`). User-Entscheid 2026-10-03.
+- **Schrift:** `small` -> `<small>`/`data-font-size="sm"` bzw. `DBInfotext`; fett -> `<strong>` (User-Entscheid).
+- **Farbiger Grund + Text** (`text-bg-*`): `db-color-<semantik>` (setzt Grund `bg-basic-level-1` und Text `emphasis-100`).
+- **Knopf links in einem Spalten-Stack:** eigener `DBStack alignment="start"` statt Wrapper-`div` (ein `div` folgt
+  `text-align` des Bereichs).
+- **HTML-Strings** (Dialoge per `erzeugeDbDialog`): DB-Klassen mit Daten-Attributen (`db-stack` + `data-gap`/
+  `data-direction`, `db-infotext`, `db-color-*`).
 - **Responsiv:** `-md-` der alten Utilities = DB `md` (64em/1024px), in eigenen Klassen `@media (min-width: #{bp.$md}px)`.
 
-- [ ] R2 `shared/ui` – ca. 130
 - [ ] R3 `features/auth`, `features/onboarding` – ca. 110
 - [ ] R4 `features/ber` – ca. 180
 - [ ] R5 `features/ewt`, `features/ez`, `features/ea` – ca. 135

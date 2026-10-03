@@ -234,7 +234,7 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
                       dicht
                       type={field === 'value' ? 'time' : 'text'}
                       beschriftung={FIELD_LABELS[field]}
-                      feldKlasse="text-center"
+                      feldKlasse="feld-zentriert"
                       ungueltig={hasContent && field !== 'text' && row[field] === ''}
                       placeholder={field === 'text' ? 'optional' : undefined}
                       value={row[field]}

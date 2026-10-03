@@ -5,15 +5,15 @@ import bootstrapKlassen from './bootstrapKlassen.json';
 
 /**
  * Ratsche fuer den Bootstrap-Rueckbau (`tasks/plan-bootstrap-rueckbau.md`): zaehlt Klassen mit Bootstrap-Namen in
- * `className`, `class: [...]` und `classList.*` unter `src/ts`. `bootstrapKlassen.json` ist die eingefrorene Liste aller
+ * `className` (auch `divClass`/`feldKlasse`/... der My*-Wrapper), `class: [...]` und `classList.*` unter `src/ts`. `bootstrapKlassen.json` ist die eingefrorene Liste aller
  * Klassen aus `src/scss/utilities.scss` (Stand 2026-10-03) plus `tab-pane`/`fade`/`tab-content`, damit das Zaehlen auch nach dem Loeschen der Datei greift. Die
  * Grenze sinkt mit jedem Batch und steht am Ende auf 0; neue Bootstrap-Klassen brechen den Test sofort.
  */
-const GRENZE = 2024;
+const GRENZE = 1877;
 
 const KLASSEN = new Set<string>(bootstrapKlassen);
 const QUELLEN = [
-  /(?:className|class)\s*[=:]\s*\{?\s*[`'"]([^`'"]*)[`'"]/g,
+  /\b(?:className|class|divClass|feldKlasse|spanClass|labelClass|colorClass)\s*[=:]\s*\{?\s*[`'"]([^`'"]*)[`'"]/g,
   /class:\s*\[([^\]]*)\]/g,
   /classList\.(?:add|remove|toggle|contains)\(([^)]*)\)/g,
 ];
@@ -54,6 +54,7 @@ describe('Bootstrap-Rueckbau', () => {
       (summe, datei) => summe + zaehle(readFileSync(datei, 'utf8')),
       0,
     );
+    console.log('ANZAHL', anzahl);
     expect(anzahl).toBeLessThanOrEqual(GRENZE);
   });
 });

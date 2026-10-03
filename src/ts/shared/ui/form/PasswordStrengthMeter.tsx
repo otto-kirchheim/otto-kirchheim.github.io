@@ -1,4 +1,4 @@
-import { DBInfotext } from '@db-ux/react-core-components';
+import { DBInfotext, DBStack } from '@db-ux/react-core-components';
 import { Component, type RefObject } from 'react';
 
 import { getPasswordStrength } from '@/shared/lib/validation/passwordStrength';
@@ -62,13 +62,13 @@ export default class PasswordStrengthMeter extends Component<Props, State> {
     const meta = LEVEL_META[level];
 
     return (
-      <div className="mt-1">
-        <div className="d-flex gap-1">
+      <div className="passwort-staerke">
+        <DBStack direction="row" gap="2x-small">
           {LEVELS.map((levelName, index) => (
             <div
               key={levelName}
-              className="flex-fill"
               style={{
+                flex: '1 1 auto',
                 height: '4px',
                 borderRadius: 'var(--db-border-radius-full)',
                 background:
@@ -76,7 +76,7 @@ export default class PasswordStrengthMeter extends Component<Props, State> {
               }}
             />
           ))}
-        </div>
+        </DBStack>
         <DBInfotext semantic={meta.semantik} size="small" showIcon={false}>
           {meta.label}
         </DBInfotext>

@@ -25,7 +25,7 @@ const MyDivModal: FC<Omit<TMyModal<HTMLDivElement>, 'myRef' | 'onSubmit'>> = ({
   <div className="dialog-rumpf" data-breite={size}>
     {Header ?? <MyModalHeader title={title} helpContext={helpContext} />}
     {errorMessage && (
-      <DBNotification semantic="critical" role="alert" className="mx-3 mt-3 mb-0 py-2">
+      <DBNotification semantic="critical" role="alert" className="dialog-fehler">
         {errorMessage}
       </DBNotification>
     )}

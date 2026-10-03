@@ -150,7 +150,7 @@ export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
                     type="number"
                     beschriftung="Pause in Minuten"
                     dicht
-                    feldKlasse="text-center"
+                    feldKlasse="feld-zentriert"
                     huelleStyle={{ width: '4rem' }}
                     value={sonderOverride?.pause ?? aZ.sonder.pause}
                     min={0}

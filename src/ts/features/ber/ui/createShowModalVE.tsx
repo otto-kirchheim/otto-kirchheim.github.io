@@ -21,9 +21,7 @@ const createShowElement = (row: Row<IVorgabenUvorgabenB>, columnName: string, fa
   if (!column) throw Error(`Spalte ${columnName} nicht gefunden`);
   return (
     <MyShowElement
-      divClass="mb-1"
-      labelClass="sp-3 text-wrap fw-bold"
-      spanClass="sp-9 align-middle text-break my-auto"
+      divClass="anzeige-zeile"
       title={`${column.title}:`}
       id={column.name}
       text={column.parser(row.cells[column.name], falseparser)}

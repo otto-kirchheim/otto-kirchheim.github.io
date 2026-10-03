@@ -45,10 +45,10 @@ const DBLoadingButton: FC<TDBLoadingButton> = ({
       icon={loading ? undefined : icon}
       showIcon={!loading}
       disabled={disabled || loading || globalDisabled}
-      className={autoSaveResources ? [className, 'position-relative'].filter(Boolean).join(' ') : className}
+      className={className}
       {...rest}
     >
-      {loading && <span className="laedt me-1" data-size="small" role="status" aria-hidden="true" />}
+      {loading && <span className="laedt" data-size="small" role="status" aria-hidden="true" />}
       {loading && loadingText ? loadingText : children}
       {autoSaveResources && <AutoSaveBadge resources={autoSaveResources} />}
     </DBButton>

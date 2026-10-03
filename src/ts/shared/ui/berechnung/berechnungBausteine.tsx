@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { DBStack } from '@db-ux/react-core-components';
 import { formatCurrency } from '@/shared/lib/ressource/berechnungWerte';
 
 /*
@@ -18,8 +19,8 @@ export function LabelTabelle({ zeilen }: { zeilen: Array<[ReactNode, ReactNode]>
       <tbody>
         {zeilen.map(([a, b], i) => (
           <tr key={i}>
-            <td className="py-0">{a}</td>
-            <td className="py-0">{b}</td>
+            <td>{a}</td>
+            <td>{b}</td>
           </tr>
         ))}
       </tbody>
@@ -33,10 +34,10 @@ export function LabelTabelle({ zeilen }: { zeilen: Array<[ReactNode, ReactNode]>
  * @param props - `label` und `wert` als bereits formatierte Texte.
  */
 export const DetailZeile = ({ label, wert }: { label: string; wert: string }) => (
-  <div className="d-flex justify-content-between gap-2 py-1 ps-3 berechnung-card-zeile">
-    <span className="text-start">{label}</span>
-    <span className="text-end text-nowrap">{wert}</span>
-  </div>
+  <DBStack direction="row" justifyContent="space-between" gap="x-small" className="berechnung-card-zeile">
+    <span>{label}</span>
+    <span>{wert}</span>
+  </DBStack>
 );
 
 /**
@@ -45,10 +46,10 @@ export const DetailZeile = ({ label, wert }: { label: string; wert: string }) =>
  * @param props - `titel` und `summe` (Euro; `null` = keine Anzeige).
  */
 export const GruppenTitel = ({ titel, summe }: { titel: string; summe: number | null }) => (
-  <div className="d-flex justify-content-between gap-2 fw-bold pt-2 pb-1 berechnung-card-gruppe">
-    <span className="text-start">{titel}</span>
-    <span className="text-end text-nowrap">{summe === null ? '' : formatCurrency(summe)}</span>
-  </div>
+  <DBStack direction="row" justifyContent="space-between" gap="x-small" className="berechnung-card-gruppe">
+    <strong>{titel}</strong>
+    <strong>{summe === null ? '' : formatCurrency(summe)}</strong>
+  </DBStack>
 );
 
 /**

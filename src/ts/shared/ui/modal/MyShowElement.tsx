@@ -17,9 +17,9 @@ type TMyShowElement = {
  * @param props - `title` (Label), `id` (für `label`/`span`), `text` (Anzeigewert; Standard und Fallback ist ein geschütztes Leerzeichen), optionale Klassen `divClass`, `labelClass`, `spanClass`.
  */
 const MyShowElement: FC<TMyShowElement> = ({
-  divClass = 'raster mb-1',
-  labelClass = 'sp-3 text-wrap fw-bold',
-  spanClass = 'sp-9 align-middle text-break my-auto',
+  divClass = 'raster anzeige-zeile',
+  labelClass = 'sp-3',
+  spanClass = 'sp-9 anzeige-zeile__wert',
   title,
   id,
   text = '\u00A0',
@@ -27,7 +27,7 @@ const MyShowElement: FC<TMyShowElement> = ({
   return (
     <div className={divClass}>
       <label className={labelClass} htmlFor={id}>
-        {title}
+        <strong>{title}</strong>
       </label>
       <span className={spanClass} id={id}>
         {text?.toString() ?? '\u00A0'}

@@ -7,12 +7,14 @@
  *   bun scripts/sichtvergleich.ts aufnehmen <name>            # Fotos nach .sichtvergleich/<name>/
  *   bun scripts/sichtvergleich.ts vergleichen <alt> <neu>     # Diff-Bilder nach .sichtvergleich/diff-<alt>-<neu>/
  * Optionen beim Aufnehmen: --nur <Teilstring> (nur passende Ansichten), --farbe light|dark, --viewport desktop|mobil,
+ *   --backend <API-URL> (echtes Backend statt Fake, Testbenutzer --user/--password, Standard livetest-fsd als Super-Admin;
+ *   Login-Zeiten, Logs und Speicherwerte aendern sich zwischen Laeufen -- fuer exakte Vergleiche das Fake-Backend nehmen),
  *   --base <URL>, --chrome <Pfad>. Ein voller Lauf (4 Browser parallel, 4 x 22 Ansichten) dauert etwa 1-2 Minuten.
  */
 
 import { mkdir, readdir } from 'node:fs/promises';
 import puppeteer, { type Page } from 'puppeteer';
-import { fakeBackend } from './livetest/backends';
+import { echtesBackend, fakeBackend, type Backend } from './livetest/backends';
 import { anmelden, oeffneApp, warteBis } from './livetest/browser';
 
 const args = process.argv.slice(2);
@@ -26,7 +28,9 @@ const NUR = argValue('--nur');
 const FARBE = argValue('--farbe');
 const VIEWPORT = argValue('--viewport');
 const ORDNER = `${import.meta.dir}/../.sichtvergleich`;
-const USER = 'sichtvergleich';
+const BACKEND = argValue('--backend')?.replace(/\/$/, '');
+const USER = argValue('--user') ?? (BACKEND ? 'livetest-fsd' : 'sichtvergleich');
+const PASSWORD = argValue('--password') ?? 'Livetest-FSD-2026!';
 
 /** Hoehe reicht fuer die laengsten Ansichten: die App scrollt im eigenen Container, ein Ganzseiten-Foto saehe das nicht. */
 const VIEWPORTS = {
@@ -78,20 +82,70 @@ const adminTab =
     await klick(page, `[data-tab-target="admin-pane-${id}"]`);
   };
 
+/**
+ * Dialog, den ein Modul direkt oeffnet (HTML-Dialoge ohne eigenen Ausloeser in der Oberflaeche, z. B. Speicherfehler).
+ *
+ * @param aufruf - Laeuft im Browser und oeffnet den Dialog (Modul per `import('/ts/...')`).
+ * @param weiter - Optional: Klick auf diesen Selektor im Dialog (Folgedialog).
+ * @returns Oeffnen/Schliessen der Ansicht.
+ */
+const modulDialog = (aufruf: () => Promise<void>, weiter?: string): Pick<Ansicht, 'oeffnen' | 'schliessen'> => ({
+  async oeffnen(page) {
+    await tab('start')(page);
+    await page.evaluate(aufruf);
+    await page.waitForSelector('dialog[open]', { timeout: 5000 }).catch(() => undefined);
+    if (weiter) {
+      await klick(page, `dialog[open] ${weiter}`);
+      // Der Folgedialog entsteht erst nach dem Schliessen des ersten (naechster Frame).
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await page.waitForSelector('dialog[open]', { timeout: 5000 }).catch(() => undefined);
+    }
+  },
+  async schliessen(page) {
+    await page.evaluate(() =>
+      document
+        .querySelectorAll<HTMLElement>('dialog[open] [data-dialog-dismiss="modal"]')
+        .forEach(knopf => knopf.click()),
+    );
+    await page.keyboard.press('Escape');
+    await warteBis(page, () => !document.querySelector('dialog[open]'), '', 3000);
+  },
+});
+
+const speicherfehler = async (): Promise<void> => {
+  const pfad = '/ts/shared/lib/autosave/errorHandling.ts';
+  const { showErrorDialog } = (await import(pfad)) as { showErrorDialog: (r: string, e: object[]) => void };
+  showErrorDialog('BZ', [
+    { operation: 'create', label: 'Mo 07.09., 15:00', message: 'Zeitraum ueberschneidet sich mit einem vorhandenen.' },
+    { operation: 'delete', id: 'abc123', message: 'Eintrag nicht gefunden.' },
+  ]);
+};
+
+const signatur = async (): Promise<void> => {
+  const pfad = '/ts/shared/lib/pdf/signaturDialog.ts';
+  const { signaturDialog } = (await import(pfad)) as { signaturDialog: () => Promise<unknown> };
+  void signaturDialog();
+};
+
 const ANSICHTEN: Ansicht[] = [
   { name: 'start', oeffnen: tab('start') },
   { name: 'bereitschaft', oeffnen: tab('Bereitschaft') },
   { name: 'bereitschaft-dialog-zeitraum', ...dialog('Bereitschaft', '#btnESZ') },
   { name: 'bereitschaft-dialog-einsatz', ...dialog('Bereitschaft', '#btnESE') },
   { name: 'bereitschaft-hilfe', ...dialog('Bereitschaft', '#btnHelpBereitschaft') },
+  { name: 'bereitschaft-anzeige', ...dialog('Bereitschaft', '#tableBE tbody tr:first-child td:nth-child(2)') },
   { name: 'ewt', oeffnen: tab('EWT') },
   { name: 'ewt-dialog', ...dialog('EWT', '#btnESEE') },
+  { name: 'ewt-anzeige', ...dialog('EWT', '#tableE tbody tr:first-child td:nth-child(2)') },
   { name: 'neben', oeffnen: tab('Neben') },
   { name: 'neben-dialog', ...dialog('Neben', '#btnESN') },
   { name: 'ea', oeffnen: tab('EA') },
   { name: 'ea-dialog', ...dialog('EA', '#btnESEA') },
   { name: 'berechnung', oeffnen: tab('Berechnung') },
   { name: 'impressum', ...dialog('start', '.app-footer .impressum') },
+  { name: 'dialog-speicherfehler', ...modulDialog(speicherfehler) },
+  { name: 'dialog-signatur', ...modulDialog(signatur) },
+  { name: 'dialog-signatur-pad', ...modulDialog(signatur, '[data-wahl="neu"]') },
   { name: 'start-hilfe', ...dialog('start', '#btnHelpStart') },
   {
     name: 'einstellungen',
@@ -140,12 +194,25 @@ async function aufnehmen(name: string): Promise<void> {
       .filter(([viewportName]) => !VIEWPORT || viewportName === VIEWPORT)
       .map(([viewportName, viewport]) => ({ farbschema, viewportName, viewport })),
   );
+  // Echtes Backend: Testdaten einmal anlegen, alle Browser teilen sie; Fake: je Browser ein eigenes.
+  const echtes = BACKEND ? echtesBackend(BACKEND, { user: USER, password: PASSWORD, code: 'kirchheim' }) : undefined;
+  await echtes?.vorbereiten();
   // Je Farbschema/Viewport ein eigener Browser, alle parallel.
   await Promise.all(
     laeufe.map(async ({ farbschema, viewportName, viewport }) => {
-      const backend = fakeBackend(USER, 'super-admin');
-      await backend.vorbereiten();
-      const { browser, page, seitenfehler } = await oeffneApp({ backend, chrome: CHROME, viewport, farbschema });
+      let backend: Backend;
+      if (echtes) backend = echtes;
+      else {
+        backend = fakeBackend(USER, 'super-admin');
+        await backend.vorbereiten();
+      }
+      const { browser, page, seitenfehler } = await oeffneApp({
+        backend,
+        backendUrl: BACKEND,
+        chrome: CHROME,
+        viewport,
+        farbschema,
+      });
       try {
         await page.evaluateOnNewDocument(css => {
           document.addEventListener('DOMContentLoaded', () => {
@@ -160,7 +227,7 @@ async function aufnehmen(name: string): Promise<void> {
         const passt = (ansicht: Ansicht): boolean => !NUR || ansicht.name.includes(NUR);
         const ansichten = [login, ...ANSICHTEN].filter(passt);
         if (passt(login)) await foto(page, login, `${ziel}/${farbschema}-${viewportName}`);
-        const { geladen } = await anmelden(page, USER, 'x');
+        const { geladen } = await anmelden(page, USER, PASSWORD);
         if (!geladen) throw new Error('Login fehlgeschlagen');
         for (const ansicht of ANSICHTEN.filter(passt))
           await foto(page, ansicht, `${ziel}/${farbschema}-${viewportName}`);
@@ -171,6 +238,7 @@ async function aufnehmen(name: string): Promise<void> {
       }
     }),
   );
+  await echtes?.aufraeumen();
   console.log(`Fotos: ${ziel}`);
 }
 

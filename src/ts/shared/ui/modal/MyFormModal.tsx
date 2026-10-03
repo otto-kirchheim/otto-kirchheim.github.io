@@ -27,7 +27,7 @@ const MyFormModal: FC<TMyModal<HTMLFormElement>> = ({
   <form ref={myRef} onSubmit={onSubmit} className="dialog-rumpf" data-breite={size}>
     {Header ?? <MyModalHeader title={title} helpContext={helpContext} />}
     {errorMessage && (
-      <DBNotification semantic="critical" role="alert" className="mx-3 mt-3 mb-0 py-2">
+      <DBNotification semantic="critical" role="alert" className="dialog-fehler">
         {errorMessage}
       </DBNotification>
     )}
