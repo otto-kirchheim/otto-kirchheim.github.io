@@ -2,6 +2,14 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-03 (211)
+
+### refactor (`DBLoadingIndicator` statt eigener Ladeanzeigen)
+
+- `DBLoadingButton` und alle Buttons mit Ladezustand (Speichern/Vorschau/Erzeugen/Uebernehmen in Admin-Dialogen, Heap-Snapshot) zeigen einen `DBLoadingIndicator` als Overlay (`overlay`, `autoDisable={false}`): Inhalt und Breite bleiben stehen, die Breiten-Fixierung (`min-inline-size`) in `setLoading` entfaellt. Seitenladungen (Start-Ladeanzeige `#ladeAnzeige`, Admin-Dashboard/-Listen/-Tabellen, Memory-Karte, Passkey-Liste) nutzen den Indikator als Kreis.
+- `setLoading`/`clearLoading`: nur noch `DBLoadingButton`s zeigen einen sichtbaren Ladezustand, andere Buttons werden nur gesperrt (`loadingButtonState.ts` und der DOM-Spinner entfallen). `#btnAuswaehlen` (Einstellungen) ist dafuer ein `DBLoadingButton`. `.laedt` bleibt nur fuer den Zieh-Indikator (`pullToRefresh.ts`).
+- Sichtvergleich: Ansichten `laedt-knopf`, `laedt-start`, `laedt-einstellungen` (Ladezustand per `setLoading`) neu; uebrige 132 Fotos gleich, Livetest 45/45.
+
 ## 2026-10-03 (210)
 
 ### chore (`@db-ux/*` 5.6.0 auf 5.6.1)

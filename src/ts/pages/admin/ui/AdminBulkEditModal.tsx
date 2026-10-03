@@ -22,7 +22,7 @@ import { MAX_OE_LEVELS, SIMPLE_FIELD_KEYS } from '../model/bulkEditOe';
 import { BulkEditApplySourceBlock, type ApplySource } from './BulkEditApplySourceBlock';
 import { BulkEditAdminOesBlock, type AdminOeActionState } from './BulkEditAdminOesBlock';
 import { BulkEditPreviewTable, type PreviewFieldKey } from './BulkEditPreviewTable';
-import { DBButton, DBTag } from '@db-ux/react-core-components';
+import { DBButton, DBLoadingIndicator, DBTag } from '@db-ux/react-core-components';
 
 type Step = 'form' | 'preview' | 'result';
 
@@ -354,13 +354,17 @@ export function AdminBulkEditModal({
       </DBButton>
       {step === 'form' && (
         <DBButton type="button" variant="brand" disabled={busy} onClick={() => void runPreview()}>
-          {busy && <span className="laedt luft-rechts-xs" data-size="small" aria-hidden="true" />}
+          <DBLoadingIndicator overlay autoDisable={false} state={busy ? 'active' : 'inactive'}>
+            Lädt
+          </DBLoadingIndicator>
           Vorschau
         </DBButton>
       )}
       {step === 'preview' && (
         <DBButton type="button" variant="filled" data-color="critical" disabled={busy} onClick={() => void runApply()}>
-          {busy && <span className="laedt luft-rechts-xs" data-size="small" aria-hidden="true" />}
+          <DBLoadingIndicator overlay autoDisable={false} state={busy ? 'active' : 'inactive'}>
+            Lädt
+          </DBLoadingIndicator>
           {preview ? `${preview.summary.ok} Profile ändern` : 'Änderungen anwenden'}
         </DBButton>
       )}

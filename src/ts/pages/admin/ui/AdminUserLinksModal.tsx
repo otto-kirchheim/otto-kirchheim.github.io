@@ -4,7 +4,7 @@ import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { DbFeld } from '@/shared/ui/form/DbFeld';
 import MyModalHeader from '@/shared/ui/modal/MyModalHeader';
-import { DBButton, DBStack } from '@db-ux/react-core-components';
+import { DBButton, DBLoadingIndicator, DBStack } from '@db-ux/react-core-components';
 import { issueVerificationLink, issuePasswordResetLink, type AdminIssuedLink } from '../api/api';
 
 type LinkKind = 'verification' | 'reset';
@@ -137,14 +137,10 @@ function LinkSection({
               disabled={loading}
               onClick={() => void handleIssue()}
             >
-              {loading ? (
-                <>
-                  <span className="laedt luft-rechts-2xs" data-size="small" role="status" />
-                  Erzeugen…
-                </>
-              ) : (
-                'Link erzeugen'
-              )}
+              <DBLoadingIndicator overlay autoDisable={false} state={loading ? 'active' : 'inactive'}>
+                Erzeugt
+              </DBLoadingIndicator>
+              {loading ? 'Erzeugen…' : 'Link erzeugen'}
             </DBButton>
           )}
 

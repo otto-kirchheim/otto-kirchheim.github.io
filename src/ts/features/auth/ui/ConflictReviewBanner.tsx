@@ -1,4 +1,4 @@
-import { DBButton, DBNotification, DBStack } from '@db-ux/react-core-components';
+import { DBButton, DBLoadingIndicator, DBNotification, DBStack } from '@db-ux/react-core-components';
 import { type FC, useState } from 'react';
 
 import dayjs from '@/shared/lib/date/configDayjs';
@@ -56,7 +56,10 @@ const ConflictReviewBanner: FC<Props> = ({ resources, onSave }) => {
         <DBStack gap="x-small" alignment="start">
           <span>{text}</span>
           <DBButton variant="brand" size="small" type="button" disabled={saving} onClick={handleClick}>
-            Übernehmen {saving && <span className="laedt" role="status" aria-hidden="true" />}
+            <DBLoadingIndicator overlay autoDisable={false} state={saving ? 'active' : 'inactive'}>
+              Speichert
+            </DBLoadingIndicator>
+            Übernehmen
           </DBButton>
         </DBStack>
       </DBNotification>

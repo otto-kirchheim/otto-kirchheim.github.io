@@ -1,4 +1,4 @@
-import { DBButton, DBCheckbox, DBInfotext, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBInfotext, DBLoadingIndicator, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Role, ROLE_HIERARCHY } from '@otto-kirchheim/nebengeld-shared';
@@ -446,9 +446,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
 
       {loading && (
         <div className="admin-laden">
-          <div className="laedt farbe-primary" role="status">
-            <span className="nur-screenreader">Laden…</span>
-          </div>
+          <DBLoadingIndicator showLabel={false}>Laden…</DBLoadingIndicator>
         </div>
       )}
 

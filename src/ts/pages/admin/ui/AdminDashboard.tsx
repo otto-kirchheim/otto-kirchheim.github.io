@@ -10,6 +10,7 @@ import {
   DBCard,
   DBHeadingH6,
   DBInfotext,
+  DBLoadingIndicator,
   DBNotification,
   DBStack,
   DBTag,
@@ -150,9 +151,7 @@ export function AdminDashboard() {
   if (loading) {
     return (
       <div className="admin-laden">
-        <div className="laedt farbe-primary" role="status">
-          <span className="nur-screenreader">Wird geladen…</span>
-        </div>
+        <DBLoadingIndicator showLabel={false}>Wird geladen…</DBLoadingIndicator>
       </div>
     );
   }

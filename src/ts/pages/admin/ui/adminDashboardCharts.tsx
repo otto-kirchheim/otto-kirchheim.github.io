@@ -8,6 +8,7 @@ import {
   DBCheckbox,
   DBHeadingH6,
   DBInfotext,
+  DBLoadingIndicator,
   DBStack,
   DBTag,
   DBTooltip,
@@ -363,13 +364,14 @@ export function MemoryCard({
             data-color="successful"
             size="small"
             icon="line_chart"
-            showIcon={!snapping}
             noText
             onClick={takeSnapshot}
             disabled={snapping || loading}
           >
             <DBTooltip>Manuellen Heap-Snapshot jetzt speichern</DBTooltip>
-            {snapping && <span className="laedt" data-size="small" />}
+            <DBLoadingIndicator overlay autoDisable={false} state={snapping ? 'active' : 'inactive'}>
+              Snapshot wird gespeichert
+            </DBLoadingIndicator>
           </DBButton>
           <DBButton
             type="button"
@@ -421,7 +423,9 @@ export function MemoryCard({
 
       {loading && !heap ? (
         <div className="admin-laden admin-laden--klein">
-          <span className="laedt farbe-primary" data-size="small" />
+          <DBLoadingIndicator size="small" showLabel={false}>
+            Verlauf wird geladen
+          </DBLoadingIndicator>
         </div>
       ) : (
         <>

@@ -174,6 +174,23 @@ const SPEICHERFEHLER: ModulAufruf = {
 };
 const SIGNATUR: ModulAufruf = { pfad: '/ts/shared/lib/pdf/signaturDialog.ts', name: 'signaturDialog' };
 
+/**
+ * Ansicht im Ladezustand: `setLoading(knopfId)` im Browser (Knopf mit Spinner, `#ladeAnzeige` auf der Startseite), danach `clearLoading`.
+ *
+ * @param paneId - Tab, auf dem der Ladezustand fotografiert wird.
+ * @param knopfId - Id des Knopfs (ohne `#`); ein unbekannter Id zeigt nur die Ladeanzeige der Startseite.
+ * @returns Oeffnen/Schliessen der Ansicht.
+ */
+const ladezustand = (paneId: string, knopfId: string): Pick<Ansicht, 'oeffnen' | 'schliessen'> => ({
+  async oeffnen(page) {
+    await tab(paneId)(page);
+    await rufeModul(page, { pfad: '/ts/shared/ui/button-loading/setLoading.ts', name: 'default', argumente: [knopfId] });
+  },
+  async schliessen(page) {
+    await rufeModul(page, { pfad: '/ts/shared/ui/button-loading/clearLoading.ts', name: 'default', argumente: [knopfId] });
+  },
+});
+
 const ANSICHTEN: Ansicht[] = [
   { name: 'start', oeffnen: tab('start') },
   { name: 'bereitschaft', oeffnen: tab('Bereitschaft') },
@@ -181,6 +198,9 @@ const ANSICHTEN: Ansicht[] = [
   { name: 'bereitschaft-dialog-einsatz', ...dialog('Bereitschaft', '#btnESE') },
   { name: 'bereitschaft-hilfe', ...dialog('Bereitschaft', '#btnHelpBereitschaft') },
   { name: 'bereitschaft-anzeige', ...dialog('Bereitschaft', '#tableBE tbody tr:first-child td:nth-child(2)') },
+  { name: 'laedt-knopf', ...ladezustand('Bereitschaft', 'btnSaveB') },
+  { name: 'laedt-einstellungen', ...ladezustand('Einstellungen', 'btnAuswaehlen') },
+  { name: 'laedt-start', ...ladezustand('start', 'btnLadeAnzeigeDummy') },
   { name: 'ewt', oeffnen: tab('EWT') },
   { name: 'ewt-dialog', ...dialog('EWT', '#btnESEE') },
   { name: 'ewt-anzeige', ...dialog('EWT', '#tableE tbody tr:first-child td:nth-child(2)') },

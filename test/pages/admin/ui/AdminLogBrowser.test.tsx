@@ -51,7 +51,7 @@ describe('AdminLogBrowser', () => {
     const container = renderBrowser();
     await flush(1);
 
-    expect(container.querySelector('.laedt')).not.toBeNull();
+    expect(container.querySelector('.db-loading-indicator')).not.toBeNull();
   });
 
   it('zeigt "Keine Log-Einträge" bei leerem Ergebnis', async () => {

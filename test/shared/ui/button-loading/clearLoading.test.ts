@@ -2,16 +2,14 @@ import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import clearLoading from '@/shared/ui/button-loading/clearLoading';
 import setLoading from '@/shared/ui/button-loading/setLoading';
 
-describe('clearLoading', () => {
+describe('setLoading / clearLoading (nicht-React-Buttons)', () => {
   let container: HTMLDivElement;
 
   beforeEach(() => {
     container = document.createElement('div');
     container.innerHTML = `
-      <div id="ladeAnzeige"></div>
-      <button id="btnTest" disabled>
-        <span class="laedt" data-size="small"></span> Laden…
-      </button>
+      <div id="ladeAnzeige" hidden></div>
+      <button id="btnTest">Speichern <span class="autosave-badge">●</span></button>
     `;
     document.body.appendChild(container);
   });
@@ -20,74 +18,37 @@ describe('clearLoading', () => {
     container.remove();
   });
 
-  it('versteckt Ladeanzeige und aktiviert Button', () => {
+  it('sperrt den Button, laesst seinen Inhalt unveraendert und zeigt die Ladeanzeige', () => {
     const btn = document.querySelector<HTMLButtonElement>('#btnTest')!;
-    const originalMarkup = btn.innerHTML;
+    const markup = btn.innerHTML;
+
+    setLoading('btnTest');
+
+    expect(btn.disabled).toBe(true);
+    expect(btn.innerHTML).toBe(markup);
+    expect(document.querySelector<HTMLElement>('#ladeAnzeige')!.hidden).toBe(false);
+  });
+
+  it('clearLoading gibt den Button frei und versteckt die Ladeanzeige', () => {
+    const btn = document.querySelector<HTMLButtonElement>('#btnTest')!;
 
     setLoading('btnTest');
     clearLoading('btnTest');
 
-    expect(document.querySelector<HTMLElement>('#ladeAnzeige')!.hidden).toBe(true);
-    expect(btn.innerHTML).toBe(originalMarkup);
     expect(btn.disabled).toBe(false);
+    expect(document.querySelector<HTMLElement>('#ladeAnzeige')!.hidden).toBe(true);
   });
 
-  it('versteckt Ladeanzeige nicht wenn resetLoader=false', () => {
+  it('versteckt die Ladeanzeige nicht, wenn resetLoader=false', () => {
+    setLoading('btnTest');
     clearLoading('btnTest', false);
     expect(document.querySelector<HTMLElement>('#ladeAnzeige')!.hidden).toBe(false);
   });
 
-  it('verwendet textContent als Fallback wenn kein normaltext gesetzt', () => {
-    const btn = document.querySelector<HTMLButtonElement>('#btnTest')!;
-    btn.textContent = 'Absenden';
-    clearLoading('btnTest');
-    expect(btn.innerHTML).toBe('Absenden');
-  });
-
-  it('interpretiert Fallback-Text nicht als HTML', () => {
-    const btn = document.querySelector<HTMLButtonElement>('#btnTest')!;
-    btn.dataset.normaltext = '<img src=x onerror=alert(1)>';
-
-    clearLoading('btnTest');
-
-    expect(btn.textContent).toBe('<img src=x onerror=alert(1)>');
-    expect(btn.querySelector('img')).toBeNull();
-  });
-
-  it('tut nichts wenn Button nicht existiert', () => {
-    expect(() => clearLoading('nichtExistent')).not.toThrow();
-  });
-
-  it('tut nichts für Ladeanzeige wenn Element fehlt', () => {
+  it('tut nichts, wenn Button oder Ladeanzeige fehlen', () => {
     document.querySelector('#ladeAnzeige')!.remove();
+    expect(() => setLoading('nichtExistent')).not.toThrow();
+    expect(() => clearLoading('nichtExistent')).not.toThrow();
     expect(() => clearLoading('btnTest')).not.toThrow();
-  });
-
-  it('stellt Original-Inhalt wieder her und behält den autosave-badge bei', () => {
-    const btn = document.querySelector<HTMLButtonElement>('#btnTest')!;
-    btn.innerHTML = 'Speichern <span class="autosave-badge">●</span>';
-
-    setLoading('btnTest');
-    // setLoading behält den Badge neben dem Spinner
-    expect(btn.querySelector('.autosave-badge')).not.toBeNull();
-
-    clearLoading('btnTest');
-
-    expect(btn.textContent?.trim()).toBe('Speichern ●');
-    expect(btn.querySelector('.autosave-badge')).not.toBeNull();
-    expect(btn.disabled).toBe(false);
-  });
-
-  it('nutzt Fallback-Text mit autosave-badge, wenn kein Original-Inhalt gemerkt wurde', () => {
-    const btn = document.querySelector<HTMLButtonElement>('#btnTest')!;
-    btn.dataset.normaltext = 'Aktualisieren';
-    btn.innerHTML = 'Laden… <span class="autosave-badge">●</span>';
-
-    // clearLoading ohne vorheriges setLoading: takeOriginalButtonContent() liefert null
-    clearLoading('btnTest');
-
-    expect(btn.textContent?.trim()).toBe('Aktualisieren●');
-    expect(btn.querySelector('.autosave-badge')).not.toBeNull();
-    expect(btn.disabled).toBe(false);
   });
 });

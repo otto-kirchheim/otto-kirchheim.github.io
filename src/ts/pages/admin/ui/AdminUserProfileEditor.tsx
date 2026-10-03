@@ -3,6 +3,7 @@ import {
   DBDrawer,
   DBDrawerHeader,
   DBHeadingH6,
+  DBLoadingIndicator,
   DBNotification,
   DBStack,
   DBTooltip,
@@ -415,7 +416,9 @@ export function AdminUserProfileEditor({
             {loading && (
               <tr>
                 <td colSpan={4} className="zelle-mitte zelle-luft">
-                  <div className="laedt" data-size="small" role="status" />
+                  <DBLoadingIndicator size="small" showLabel={false}>
+                    Lädt
+                  </DBLoadingIndicator>
                 </td>
               </tr>
             )}
@@ -619,7 +622,9 @@ export function AdminUserProfileEditor({
                       <div className="zelle-klein farbe-gedaempft luft-unten-2xs">
                         Passkeys
                         {edit.passkeysLoading && (
-                          <span className="laedt luft-links-xs" data-size="small" role="status" />
+                          <DBLoadingIndicator size="small" showLabel={false} className="luft-links-xs">
+                            Passkeys werden geladen
+                          </DBLoadingIndicator>
                         )}
                       </div>
                       {edit.passkeys.length === 0 && !edit.passkeysLoading && (
@@ -660,14 +665,10 @@ export function AdminUserProfileEditor({
                   Schließen
                 </DBButton>
                 <DBButton type="button" variant="brand" onClick={saveEdit} disabled={edit.saving}>
-                  {edit.saving ? (
-                    <>
-                      <span className="laedt luft-rechts-2xs" data-size="small" role="status" />
-                      Speichern…
-                    </>
-                  ) : (
-                    'Profil speichern'
-                  )}
+                  <DBLoadingIndicator overlay autoDisable={false} state={edit.saving ? 'active' : 'inactive'}>
+                    Speichert
+                  </DBLoadingIndicator>
+                  {edit.saving ? 'Speichern…' : 'Profil speichern'}
                 </DBButton>
               </div>
             </div>

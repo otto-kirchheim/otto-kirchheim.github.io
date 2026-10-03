@@ -282,14 +282,14 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
       Bootstrap-Markup in `test/mockData.ts`; Kommentare/JSDoc. User: Umfang komplett, Zielbild DB-nativ direkt.
       Plan + Ersatz-Tabelle + Batches R0-R10: `tasks/plan-bootstrap-rueckbau.md`. Naechster Schritt: R0 (Sichtvergleich-Skript,
       Baseline, Spike).
-- [ ] Als Naechstes (User 2026-10-03): Updates von `@db-ux/*` pruefen (neue Versionen, Changelog/Migration, danach Gate + Sichtpruefung)
+- [x] Als Naechstes (User 2026-10-03): Updates von `@db-ux/*` pruefen (5.6.1, CHANGELOG 210) (neue Versionen, Changelog/Migration, danach Gate + Sichtpruefung)
 - [ ] DB UX 5.6 neue Komponenten einbauen (Hinweis User 2026-09-26, nach Update auf 5.6.0, CHANGELOG 191):
   - [ ] `DBDialog`/`DBDialogHeader`/`DBDialogFooter` (nativer, zentrierter `<dialog>`, `backdrop`, `containerSize`,
         Invoker Commands) statt `DBDrawer` in `shared/ui/modal/showModal.tsx` + `MyModalHeader` (nachgebautes Kopf-Markup
         entfaellt, `aria-labelledby` macht der Header selbst); pruefen: `data-dialog-dismiss`-Delegation, gestapelte
         Dialoge, `confirmDialog`/`signaturDialog`/`errorHandling` (HTML-Markup), `DIALOG_RICHTUNG`, `data-breite`-Breiten
         -> `containerSize`/`--db-dialog-max-width`, Mobil-Verhalten. Browser-Check aller Dialogarten.
-  - [ ] `DBLoadingIndicator` (Spinner/Fortschritt) statt eigener Ladeanzeigen: `DBLoadingButton`/`button-loading`
+  - [x] `DBLoadingIndicator` (Spinner/Fortschritt) (2026-10-03, CHANGELOG 211) statt eigener Ladeanzeigen: `DBLoadingButton`/`button-loading`
         (`setLoading`/`clearLoading`), AutoSave-Puls, Laden nach Login, PDF-Erzeugung; vorher Props/Varianten per
         `mcp__db-ux__get_component_props` pruefen.
 - [ ] stylelint-Warnungen beheben (User 2026-09-27; `lint:css` laeuft lokal schon ohne `--max-warnings 93`): Stand 87

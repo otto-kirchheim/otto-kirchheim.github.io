@@ -260,13 +260,13 @@ describe('#setLoading + #clearLoading', () => {
 
   it('should set the button to loading state', () => {
     setLoading('test-button');
-    expect(button.innerHTML).toBe('<span class="laedt" data-size="small" role="status" aria-hidden="true"></span>');
+    expect(button.textContent).toBe('Submit');
     expect(button.disabled).toBe(true);
   });
 
   it('should restore the button to its normal state', () => {
     clearLoading('test-button');
-    expect(button.innerHTML).toBe('Submit');
+    expect(button.textContent).toBe('Submit');
     expect(button.disabled).toBe(false);
   });
 

@@ -5,6 +5,7 @@ import {
   DBHeadingH1,
   DBHeadingH5,
   DBInfotext,
+  DBLoadingIndicator,
   DBSection,
   DBStack,
   DBTooltip,
@@ -133,12 +134,9 @@ export default function StartTab() {
         id="ladeAnzeige"
         hidden
       >
-        <strong role="status">Lädt...</strong>
-        <span
-          className="laedt start-icon"
-          style={{ '--db-icon-font-size': '3rem' } as React.CSSProperties}
-          role="status"
-        />
+        <DBLoadingIndicator orientation="vertical" size="large">
+          Lädt...
+        </DBLoadingIndicator>
       </DBStack>
     </DBSection>
   );

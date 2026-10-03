@@ -179,8 +179,8 @@
   }
 }
 
-// Ladeanzeige (Ersatz fuer `.spinner-border`): drehendes `circular_arrows`-Symbol. `.ptr-indikator__symbol` teilt sich das
-// Glyph -- dort dreht der Finger, die Dauerdrehung (`.laedt`) kommt erst beim Ausloesen.
+// Zieh-Indikator von `pullToRefresh.ts`: drehendes `circular_arrows`-Symbol (alle uebrigen Ladeanzeigen sind
+// `DBLoadingIndicator`). Beim Ziehen dreht der Finger, die Dauerdrehung (`.laedt`) kommt erst beim Ausloesen.
 .laedt,
 .ptr-indikator__symbol {
   display: inline-block;
@@ -199,10 +199,6 @@
 
 .laedt {
   animation: laedt-drehung 1.5s linear infinite;
-}
-
-.laedt[data-size='small'] {
-  --db-icon-font-size: 1rem;
 }
 
 @keyframes laedt-drehung {

@@ -4,10 +4,11 @@ import {
   DBDrawer,
   DBDrawerHeader,
   DBHeadingH2,
+  DBLoadingIndicator,
   DBNotification,
+  DBStack,
   DBTag,
   DBTooltip,
-  DBStack,
 } from '@db-ux/react-core-components';
 import { createPortal } from 'react-dom';
 
@@ -305,14 +306,10 @@ export function AdminResourceEditModal({
             Abbrechen
           </DBButton>
           <DBButton type="button" variant="brand" onClick={saveEdit} disabled={edit.saving}>
-            {edit.saving ? (
-              <>
-                <span className="laedt luft-rechts-2xs" data-size="small" role="status" />
-                Speichern…
-              </>
-            ) : (
-              'Speichern'
-            )}
+            <DBLoadingIndicator overlay autoDisable={false} state={edit.saving ? 'active' : 'inactive'}>
+              Speichert
+            </DBLoadingIndicator>
+            {edit.saving ? 'Speichern…' : 'Speichern'}
           </DBButton>
         </div>
       </div>

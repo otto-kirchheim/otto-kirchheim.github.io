@@ -1,4 +1,4 @@
-import { DBButton } from '@db-ux/react-core-components';
+import { DBButton, DBLoadingIndicator } from '@db-ux/react-core-components';
 import { type ComponentProps, type FC } from 'react';
 
 import AutoSaveBadge from './AutoSaveBadge';
@@ -42,14 +42,16 @@ const DBLoadingButton: FC<TDBLoadingButton> = ({
       id={id}
       type={type}
       data-react-loading="true"
-      icon={loading ? undefined : icon}
-      showIcon={!loading}
+      icon={icon}
       disabled={disabled || loading || globalDisabled}
       className={className}
       {...rest}
     >
-      {loading && <span className="laedt" data-size="small" role="status" aria-hidden="true" />}
-      {loading && loadingText ? loadingText : children}
+      {/* Overlay ueber dem Knopf: Inhalt und Breite bleiben stehen (kein Springen), der Knopf wird oben per `disabled` gesperrt. */}
+      <DBLoadingIndicator overlay autoDisable={false} state={loading ? 'active' : 'inactive'}>
+        {loadingText ?? 'Lädt'}
+      </DBLoadingIndicator>
+      {children}
       {autoSaveResources && <AutoSaveBadge resources={autoSaveResources} />}
     </DBButton>
   );

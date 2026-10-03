@@ -6,7 +6,15 @@ import createAdminUserPasswordModal from './createAdminUserPasswordModal';
 import { OeLevelBoxes } from './OeLevelBoxes';
 import { OeTagInput } from './OeTagInput';
 import { ROLE_LABELS, type UserEditState } from './adminUserListTypen';
-import { DBButton, DBCheckbox, DBInfotext, DBStack, DBTag, DBTooltip } from '@db-ux/react-core-components';
+import {
+  DBButton,
+  DBCheckbox,
+  DBInfotext,
+  DBLoadingIndicator,
+  DBStack,
+  DBTag,
+  DBTooltip,
+} from '@db-ux/react-core-components';
 import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { DbAuswahl } from '@/shared/ui/form/DbFeld';
 
@@ -268,13 +276,14 @@ export function AdminUserCard({
                     className="waechst"
                     variant="brand"
                     size="small"
-                    icon={isSaving ? undefined : 'save'}
-                    showIcon={!isSaving}
+                    icon="save"
                     onClick={onSave}
                     disabled={!changed || isSaving}
                     data-disabler
                   >
-                    {isSaving && <span className="laedt symbol-vor-text" data-size="small" role="status" />}
+                    <DBLoadingIndicator overlay autoDisable={false} state={isSaving ? 'active' : 'inactive'}>
+                      Speichert
+                    </DBLoadingIndicator>
                     {isSaving ? 'Speichern…' : 'Speichern'}
                   </DBButton>
                   {changed && (

@@ -23,7 +23,15 @@ import {
   fetchAdminUserNameMap,
   type AdminPage,
 } from '../api/api';
-import { DBButton, DBCard, DBNotification, DBStack, DBTag, DBTooltip } from '@db-ux/react-core-components';
+import {
+  DBButton,
+  DBCard,
+  DBLoadingIndicator,
+  DBNotification,
+  DBStack,
+  DBTag,
+  DBTooltip,
+} from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
 type Props = { onNavigateToUser?: (userId: string) => void };
@@ -464,7 +472,9 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
             {loading && (
               <tr>
                 <td colSpan={totalCols} className="zelle-mitte zelle-luft">
-                  <div className="laedt" data-size="small" role="status" />
+                  <DBLoadingIndicator size="small" showLabel={false}>
+                    Lädt
+                  </DBLoadingIndicator>
                 </td>
               </tr>
             )}

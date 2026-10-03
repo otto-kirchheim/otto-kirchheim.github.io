@@ -249,9 +249,9 @@ export default function EinstellungenTab() {
               <DBTooltip placement="top">Achtung: Vor Jahreswechsel Speichern!!</DBTooltip>
             </DBInput>
 
-            <DBButton variant="brand" type="submit" id="btnAuswaehlen" name="Auswählen" data-disabler>
+            <DBLoadingButton variant="brand" type="submit" id="btnAuswaehlen" name="Auswählen" data-disabler>
               Auswählen
-            </DBButton>
+            </DBLoadingButton>
           </DBStack>
         </form>
       </DBStack>
