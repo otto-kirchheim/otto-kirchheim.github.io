@@ -2,6 +2,16 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-03 (202)
+
+### refactor (Bootstrap-Rueckbau R3 `features/auth` + `features/onboarding`)
+
+- Neu `shared/ui/gruppe/Gruppe.tsx` (umrandete Feldgruppe mit Titel): Registrieren, Passwort-Reset, Login (Passkey), Arbeitszeit-Editor.
+- Konflikt-Banner als `DBNotification`, Ersteinrichtungs-Panel mit `DBStack`/`DBInfotext`, Login-Fusszeile mit `DBStack`.
+- Fix: Rollen-Abzeichen (`Super-Admin`) in der Benutzerkarte brach um und wurde abgeschnitten (`rollen-tag`).
+- Fix: Label-Spalte der Berechnung wieder 11.5rem (10rem brach `040 Fahrentsch.` um); Tabellen-Knopfleiste bleibt bei breiten Tabellen im sichtbaren Bereich (`position: sticky`, `100cqi`).
+- Sichtvergleich `--nur a,b` (Liste), Ansichten Login/Registrieren/Passwort/Ersteinrichtung; Ratsche 1768.
+
 ## 2026-10-03 (201)
 
 ### refactor (Bootstrap-Rueckbau R1 Rest + R2 `shared/ui`)

@@ -9,7 +9,7 @@ import bootstrapKlassen from './bootstrapKlassen.json';
  * Klassen aus `src/scss/utilities.scss` (Stand 2026-10-03) plus `tab-pane`/`fade`/`tab-content`, damit das Zaehlen auch nach dem Loeschen der Datei greift. Die
  * Grenze sinkt mit jedem Batch und steht am Ende auf 0; neue Bootstrap-Klassen brechen den Test sofort.
  */
-const GRENZE = 1877;
+const GRENZE = 1768;
 
 const KLASSEN = new Set<string>(bootstrapKlassen);
 const QUELLEN = [
@@ -54,8 +54,6 @@ describe('Bootstrap-Rueckbau', () => {
       (summe, datei) => summe + zaehle(readFileSync(datei, 'utf8')),
       0,
     );
-    console.log('ANZAHL', anzahl);
-    console.log('ANZAHL', anzahl);
     expect(anzahl).toBeLessThanOrEqual(GRENZE);
   });
 });

@@ -132,7 +132,7 @@ Befund Bestand: Utilities direkt an DB-Komponenten 111 x `DBButton` (`py-0` 26, 
   `data-direction`, `db-infotext`, `db-color-*`).
 - **Responsiv:** `-md-` der alten Utilities = DB `md` (64em/1024px), in eigenen Klassen `@media (min-width: #{bp.$md}px)`.
 
-- [ ] R3 `features/auth`, `features/onboarding` – ca. 110
+- [x] R3 `features/auth`, `features/onboarding` (2026-10-03): Login-/Registrieren-/Reset-Dialog (`Gruppe` in `shared/ui/gruppe`), Konflikt-Banner, Ersteinrichtungs-Panel. Ratsche 1768. Nebenbei: Rollen-Abzeichen einzeilig (`rollen-tag`), Berechnung-Labelspalte wieder 11.5rem, Tabellen-Knopfleiste sticky
 - [ ] R4 `features/ber` – ca. 180
 - [ ] R5 `features/ewt`, `features/ez`, `features/ea` – ca. 135
 - [ ] R6 `pages/start`, `pages/berechnung`, `pages/einstellungen` – ca. 145
