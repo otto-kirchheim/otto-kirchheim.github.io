@@ -59,6 +59,27 @@ describe('Icon-Registry', () => {
     expect([...unbekannt]).toEqual([]);
   });
 
+  it('kennt jeden DB-Icon-Namen, der irgendwo im Quellcode als String steht', () => {
+    // Fehlende Namen fallen erst in der freien Variante auf (Material-Schrift ohne Ligatur zeigt Buchstaben statt Symbol).
+    // Quelle der DB-Namen: die Namensliste von `@db-ux/db-theme-icons` (Code, auch ohne entschluesselte Assets vorhanden).
+    const dbNamen = new Set(
+      [
+        ...readFileSync('node_modules/@db-ux/db-theme-icons/build/ts/all-icons.ts', 'utf8').matchAll(/"([a-z0-9_]+)"/g),
+      ].map(t => t[1] as string),
+    );
+    // Gleichlautende Strings, die keine Icons sind (CSS-Werte, Log-Ereignisse, Alt-Tabelle `dbIcons.ts`).
+    const KEINE_ICONS = new Set(['block', 'brand', 'start', 'stop', 'light_bulb']);
+    const unbekannt = new Set<string>();
+    for (const datei of sammleDateien('src', ['.ts', '.tsx', '.html'])) {
+      for (const treffer of readFileSync(datei, 'utf8').matchAll(/['"`]([a-z][a-z0-9_]+)['"`]/g)) {
+        const name = treffer[1] as string;
+        if (dbNamen.has(name) && !ERLAUBT.has(name) && !KEINE_ICONS.has(name)) unbekannt.add(`${datei}: ${name}`);
+      }
+    }
+    expect(dbNamen.size).toBeGreaterThan(100);
+    expect([...unbekannt]).toEqual([]);
+  });
+
   it('kennt die Icon-Namen aus den JS-Abbildungstabellen', () => {
     const fehlend = JS_TABELLEN_ICONS.filter(name => !(name in ICON_REGISTRY));
     expect(fehlend).toEqual([]);

@@ -58,6 +58,7 @@ export const ICON_REGISTRY = {
   arrow_down: { material: 'arrow_downward' },
   arrow_right: { material: 'arrow_right_alt' },
   arrow_up: { material: 'arrow_upward' },
+  arrows_vertical: { material: 'unfold_more', hinweis: 'Sortierbar (Tabellenkopf)' },
   arrow_up_right: { material: 'open_in_new', hinweis: 'DB-Motiv "in neuem Kontext oeffnen"' },
   chevron_down: { material: 'expand_more' },
   chevron_left: { material: 'chevron_left' },
@@ -71,6 +72,7 @@ export const ICON_REGISTRY = {
   cross: { material: 'close' },
   download: { material: 'download' },
   menu: { material: 'menu' },
+  log_out: { material: 'logout' },
   minus: { material: 'remove' },
   pen: { material: 'edit' },
   plus: { material: 'add' },
@@ -79,6 +81,11 @@ export const ICON_REGISTRY = {
   undo: { material: 'undo' },
 
   // --- Status und Hinweise
+  // Nur im Komponenten-CSS von @db-ux/core-components (Notification, Lade-Anzeige, Aufzaehlungspunkt).
+  circle: { material: 'circle' },
+  circle_small: { material: 'fiber_manual_record', hinweis: 'Aufzaehlungspunkt' },
+  successful: { material: 'check_circle' },
+  critical: { material: 'error' },
   check: { material: 'check' },
   check_circle: { material: 'check_circle' },
   cloud: { material: 'cloud' },
@@ -91,6 +98,8 @@ export const ICON_REGISTRY = {
 
   // --- Objekte und Navigation
   bar_chart: { material: 'bar_chart' },
+  clock: { material: 'schedule' },
+  counter_clockwise_clock: { material: 'history' },
   calendar: { material: 'calendar_today', hinweis: 'DB_ICON alt: event_available' },
   document: { material: 'description', hinweis: 'DB_ICON alt: picture_as_pdf' },
   envelope: { material: 'mail' },
@@ -115,6 +124,7 @@ export const ICON_REGISTRY = {
 
   // --- Personen und Verwaltung
   id_card: { material: 'badge' },
+  fingerprint: { material: 'fingerprint' },
   person: { material: 'person' },
   persons: { material: 'group' },
   profile_card: {

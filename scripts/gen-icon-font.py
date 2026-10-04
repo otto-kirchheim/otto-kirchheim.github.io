@@ -8,8 +8,8 @@ steht im Markup (`data-icon="chevron_down"`) UND in den CSS-Regeln der Komponent
 Ohne die DB-Schrift (DB-Designs-Lizenz) genuegt es, dieselben Namen in einer freien Schrift aufzuloesen: kein CSS-Remap
 je Selektor, auch die internen Icons der Komponenten (Checkbox-Haken, Select-Pfeil, Notification) funktionieren.
 
-Quelle der Zuordnung: `src/ts/shared/ui/icons/iconRegistry.ts` (DB-Name -> Material-Name) plus `INTERN` unten fuer
-Icons, die nur Komponenten-CSS nutzt. Neu erzeugen: `bun run icons:font` (braucht Python `fonttools` und `brotli`).
+Quelle der Zuordnung: `src/ts/shared/ui/icons/iconRegistry.ts` (DB-Name -> Material-Name, inkl. der Namen aus dem
+Komponenten-CSS). Neu erzeugen: `bun run icons:font` (braucht Python `fonttools` und `brotli`).
 """
 import re
 import sys
@@ -25,14 +25,6 @@ QUELLE = WURZEL / "node_modules/@material-symbols/font-400/material-symbols-outl
 REGISTRY = WURZEL / "src/ts/shared/ui/icons/iconRegistry.ts"
 ZIEL = WURZEL / "src/fonts/material-symbols-db.woff2"
 
-# Nur im Komponenten-CSS von @db-ux/core-components genutzt (nicht in der Registry).
-INTERN = {
-    "circle_small": "fiber_manual_record",
-    "circle": "circle",
-    "clock": "schedule",
-    "successful": "check_circle",
-    "critical": "error",
-}
 
 ZEICHEN = "abcdefghijklmnopqrstuvwxyz0123456789_"
 
@@ -40,7 +32,6 @@ ZEICHEN = "abcdefghijklmnopqrstuvwxyz0123456789_"
 def zuordnung() -> dict[str, str]:
     text = REGISTRY.read_text(encoding="utf8")
     paare = dict(re.findall(r"^\s*(\w+): \{ material: '(\w+)'", text, re.M))
-    paare.update(INTERN)
     return paare
 
 

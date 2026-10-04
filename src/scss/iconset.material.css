@@ -27,6 +27,11 @@
     --db-icon: "open_in_new";
   }
 
+  /* Sortierbar (Tabellenkopf) */
+  [data-icon="arrows_vertical"] {
+    --db-icon: "unfold_more";
+  }
+
   [data-icon="bar_chart"] {
     --db-icon: "bar_chart";
   }
@@ -77,8 +82,21 @@
     --db-icon: "expand_less";
   }
 
+  [data-icon="circle"] {
+    --db-icon: "circle";
+  }
+
+  /* Aufzaehlungspunkt */
+  [data-icon="circle_small"] {
+    --db-icon: "fiber_manual_record";
+  }
+
   [data-icon="circular_arrows"] {
     --db-icon: "refresh";
+  }
+
+  [data-icon="clock"] {
+    --db-icon: "schedule";
   }
 
   [data-icon="cloud"] {
@@ -91,6 +109,14 @@
 
   [data-icon="copy"] {
     --db-icon: "content_copy";
+  }
+
+  [data-icon="counter_clockwise_clock"] {
+    --db-icon: "history";
+  }
+
+  [data-icon="critical"] {
+    --db-icon: "error";
   }
 
   [data-icon="cross"] {
@@ -125,6 +151,10 @@
 
   [data-icon="eye"] {
     --db-icon: "visibility";
+  }
+
+  [data-icon="fingerprint"] {
+    --db-icon: "fingerprint";
   }
 
   [data-icon="funnel"] {
@@ -168,6 +198,10 @@
   /* DB_ICON alt: highlight_alt; ggf. center_focus_strong */
   [data-icon="location_crosshairs"] {
     --db-icon: "my_location";
+  }
+
+  [data-icon="log_out"] {
+    --db-icon: "logout";
   }
 
   [data-icon="magnifying_glass"] {
@@ -241,6 +275,10 @@
 
   [data-icon="sliders_horizontal"] {
     --db-icon: "tune";
+  }
+
+  [data-icon="successful"] {
+    --db-icon: "check_circle";
   }
 
   [data-icon="sun"] {
