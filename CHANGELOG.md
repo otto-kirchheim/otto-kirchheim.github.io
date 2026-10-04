@@ -2,6 +2,12 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-04 (221)
+
+### fix (Icons Serverstart/Herunterfahren in der freien Variante)
+
+- Admin-Dashboard, Ereignisliste: `start`/`stop` fehlten in `iconRegistry.ts` (der Registry-Test hatte beide faelschlich als Nicht-Icon-Strings ausgenommen) -> die freie Icon-Schrift zeigte den Buchstaben "S". Jetzt `start` -> `play_arrow`, `stop` -> `stop`; Ausnahme im Test entfernt, `iconset.material.css` und `material-symbols-db.woff2` neu erzeugt.
+
 ## 2026-10-04 (220)
 
 ### fix (Update haengt mit Alt-Daten; Release ohne doppeltes Gate)

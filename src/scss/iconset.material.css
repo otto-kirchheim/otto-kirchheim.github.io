@@ -277,6 +277,16 @@
     --db-icon: "tune";
   }
 
+  /* Admin-Ereignis Serverstart */
+  [data-icon="start"] {
+    --db-icon: "play_arrow";
+  }
+
+  /* Admin-Ereignis Herunterfahren */
+  [data-icon="stop"] {
+    --db-icon: "stop";
+  }
+
   [data-icon="successful"] {
     --db-icon: "check_circle";
   }

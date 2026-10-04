@@ -79,6 +79,8 @@ export const ICON_REGISTRY = {
   resize: { material: 'open_in_full', hinweis: 'DB_ICON alt: crop_free; ggf. crop_free' },
   save: { material: 'save' },
   undo: { material: 'undo' },
+  start: { material: 'play_arrow', hinweis: 'Admin-Ereignis Serverstart' },
+  stop: { material: 'stop', hinweis: 'Admin-Ereignis Herunterfahren' },
 
   // --- Status und Hinweise
   // Nur im Komponenten-CSS von @db-ux/core-components (Notification, Lade-Anzeige, Aufzaehlungspunkt).
