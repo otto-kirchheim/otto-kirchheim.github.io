@@ -21,8 +21,14 @@ async function runAppStartTasks(): Promise<void> {
   if (bootstrapStarted) return;
   bootstrapStarted = true;
 
+  // Eine scheiternde Aufgabe (z. B. unerwartete Daten im Speicher) darf die folgenden nicht blockieren -- sonst bliebe
+  // die App ohne Login-Knopf, Tab-Steuerung usw. haengen.
   for (const task of appStartTasks) {
-    await task();
+    try {
+      await task();
+    } catch (fehler) {
+      console.error('Start-Aufgabe fehlgeschlagen:', fehler);
+    }
   }
 }
 

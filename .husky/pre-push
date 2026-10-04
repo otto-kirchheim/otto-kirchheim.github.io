@@ -20,6 +20,9 @@ while read -r _local_ref local_sha remote_ref _remote_sha; do
   [ "$local_sha" = "0000000000000000000000000000000000000000" ] && continue
   case "$remote_ref" in
     refs/heads/dev | refs/heads/main)
+      # Nur einmal je Push, auch wenn dev und main zusammen gepusht werden.
+      [ -n "${gate_gelaufen:-}" ] && continue
+      gate_gelaufen=1
       echo "husky pre-push: volles Gate fuer $remote_ref -- lint + test + build"
       bun run lint && bun run test && bun run build || exit 1
       ;;

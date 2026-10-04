@@ -2,6 +2,15 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-04 (220)
+
+### fix (Update haengt mit Alt-Daten; Release ohne doppeltes Gate)
+
+- Versionswechsel: `app/shell/pruefeAppVersion.ts` leert `localStorage`/`sessionStorage` einer aelteren App-Version jetzt als ALLERERSTES in `main.tsx`, vor Root-Mount und Start-Aufgaben. Vorher lief die Pruefung als spaete Start-Aufgabe: Alt-Daten liessen die frueheren Aufgaben (Sitzung laden) scheitern, die Pruefung kam nie an die Reihe und die App blieb haengen. Der Update-Hinweis maskiert den Benutzernamen (`escapeHtml`).
+- `bootstrap.ts`: Eine fehlschlagende Start-Aufgabe wird protokolliert, die folgenden laufen weiter (vorher brach die Kette ab).
+- Release: `scripts/release.ts` und `scripts/deploy.sh` pushen mit `HUSKY=0` (Gate lief direkt davor); `.husky/pre-push` prueft nur einmal je Push.
+- Tests: `test/app/shell/pruefeAppVersion.test.ts`, `test/shared/lib/lifecycle/bootstrap.fehler.test.ts`.
+
 ## 2026-10-04 (219)
 
 ### feat (Illustrationen auf Startseite und Admin-Dashboard)

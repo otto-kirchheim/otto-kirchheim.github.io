@@ -26,6 +26,15 @@ function runGit(commandArgs: string[]): string {
   return execFileSync('git', commandArgs, { encoding: 'utf8' }).trim();
 }
 
+/**
+ * Commit/Push des Release-Bumps ohne Husky-Hooks (`HUSKY=0`): `release:check` lief unmittelbar vorher (siehe
+ * `release:*`-Scripts). Sonst liefe das volle Gate im pre-push noch einmal -- und zwar in diesem Bun-Prozess, der die
+ * `.env` schon geladen hat: `bun test` saehe dann die Entwicklungs-DB statt `.env.test`.
+ */
+function runGitOhneHooks(commandArgs: string[]): string {
+  return execFileSync('git', commandArgs, { encoding: 'utf8', env: { ...process.env, HUSKY: '0' } }).trim();
+}
+
 function ensureCleanWorkingTree(): void {
   const status = runGit(['status', '--porcelain']);
   if (status.length === 0) return;
@@ -94,10 +103,10 @@ if (dryRun) {
 }
 
 runGit(['add', 'package.json']);
-runGit(['commit', '-m', releaseCommitMessage]);
+runGitOhneHooks(['commit', '-m', releaseCommitMessage]);
 console.log(`Release commit created: ${releaseCommitMessage}`);
 
 if (shouldPush) {
-  runGit(['push', remote, branch]);
+  runGitOhneHooks(['push', remote, branch]);
   console.log(`Release branch pushed: ${remote}/${branch}`);
 }

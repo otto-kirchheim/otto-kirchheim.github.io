@@ -5,10 +5,11 @@ import { saveEinstellungen } from '@/pages/einstellungen/model';
 import changeMonatJahr from '@/shared/model/period/changeMonatJahr';
 import logoutUser from '@/features/auth/model/logoutUser';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
+import { escapeHtml } from '@/shared/lib/autosave/errorHandling';
 import initPullToRefresh from '@/app/shell/pullToRefresh';
 import setVersionOutdated from '@/app/shell/setVersionOutdated';
 import { default as Storage } from '@/shared/lib/storage/Storage';
-import { default as compareVersion } from '@/shared/lib/version/compareVersion';
+import pruefeAppVersion from '@/app/shell/pruefeAppVersion';
 import { default as setOffline } from '@/app/shell/setOffline';
 import { default as storageAvailable } from '@/shared/lib/storage/storageAvailable';
 import { registerHook, featureLifecycleRegistry } from '@/shared/lib/feature';
@@ -18,6 +19,10 @@ import loadUserDaten from '@/app/session/loadUserDaten';
 import userLoginSuccess from '@/app/session/userLoginSuccess';
 import { openHelpModal } from '@/widgets/help-modal/openHelpModal';
 import { openOnboardingGuideOnce } from '@/features/onboarding/ui/createOnboardingGuideModal';
+
+// Als Allererstes: Alt-Daten einer frueheren App-Version leeren, bevor Mount oder Start-Aufgaben den Speicher lesen
+// (siehe `pruefeAppVersion`). Der Hinweis an den Benutzer folgt im Start-Task unten, wenn die Oberflaeche steht.
+const updateBenutzer = pruefeAppVersion();
 
 validateAllSequences();
 
@@ -131,19 +136,14 @@ initTabController();
 initPullToRefresh();
 
 registerAppStartTask(() => {
-  if (Storage.size() > 3) {
-    const currentVersion: string = import.meta.env.APP_VERSION;
-    const clientVersion: string = Storage.get('Version', { check: true, default: '0.0.0' });
-    if (compareVersion(clientVersion, currentVersion) < 0) {
-      const benutzer = Storage.get<string>('Benutzer', { check: true, default: '' });
-      sessionStorage.clear();
-      logoutUser({ serverLogout: false, reason: 'version-mismatch' });
-      createSnackBar({
-        message: `Hallo ${benutzer},<br/>die App hat ein Update erhalten.<br/>Bitte melde dich neu an, um<br/>die neuen Funktionen zu nutzen.`,
-        timeout: 10000,
-        fixed: true,
-      });
-    } else if (clientVersion !== currentVersion) Storage.set('Version', currentVersion);
+  if (updateBenutzer !== null) {
+    // Speicher ist schon geleert (`pruefeAppVersion`); `logoutUser` setzt nur noch die Oberflaeche auf "abgemeldet".
+    logoutUser({ serverLogout: false, reason: 'version-mismatch' });
+    createSnackBar({
+      message: `Hallo ${escapeHtml(updateBenutzer)},<br/>die App hat ein Update erhalten.<br/>Bitte melde dich neu an, um<br/>die neuen Funktionen zu nutzen.`,
+      timeout: 10000,
+      fixed: true,
+    });
   }
   if (!storageAvailable('localStorage')) {
     createSnackBar({
