@@ -11,6 +11,12 @@
  * ergaebe zwei gestapelte Scrollbalken (siehe `styles.scss`, Begruendung zur Fusszeilen-Reservierung).
  */
 
+import { createElement } from 'react';
+
+import { mount } from '@/shared/lib/react-root/reactRoot';
+import { PullIndikator } from './PullIndikator';
+import { setzePullZustand } from './pullZustand';
+
 /** Container, der tatsaechlich scrollt (siehe Kopfkommentar). */
 const SCROLL_CONTAINER = '.db-shell-content';
 
@@ -32,9 +38,6 @@ const MIN_VERTIKAL_VERHAELTNIS = 1.5;
 /** Dauer des Zurueckschnappens, wenn unterhalb der Ausloese-Distanz losgelassen wird. */
 const ZURUECK_DAUER_MS = 200;
 
-/** Volle Umdrehungen des Symbols auf dem Weg bis zur Ausloese-Distanz. */
-const INDIKATOR_UMDREHUNGEN = 1;
-
 /**
  * Richtet die Zieh-Geste am Scroll-Container ein: erzeugt den Indikator (`.ptr-indikator`) und haengt die
  * Touch-Handler an. Loslassen ab `AUSLOESE_DISTANZ_PX` laedt die Seite neu. Ohne `.db-shell-content` passiert nichts.
@@ -49,10 +52,10 @@ export default function initPullToRefresh(): void {
   const indikator = document.createElement('div');
   indikator.className = 'ptr-indikator';
   indikator.setAttribute('aria-hidden', 'true');
-  const symbol = document.createElement('span');
-  symbol.className = 'ptr-indikator__symbol';
-  indikator.append(symbol);
   document.body.append(indikator);
+  // Der Kreis ist ein `DBLoadingIndicator` (React); Zugstrecke und Neuladen laufen ueber `setzePullZustand`.
+  setzePullZustand({ fortschritt: 0, bereit: false, laedt: false });
+  mount(indikator, createElement(PullIndikator));
 
   let startY = 0;
   let startX = 0;
@@ -60,7 +63,7 @@ export default function initPullToRefresh(): void {
   let distanz = 0;
 
   /**
-   * Stellt Position, Deckkraft und Drehung des Indikators passend zur aktuellen Zugstrecke ein.
+   * Stellt Position, Deckkraft und Fuellstand des Indikators passend zur aktuellen Zugstrecke ein.
    *
    * @param animiert - `true` blendet weich per Transition (Zurueckschnappen), sonst direkt (Mitziehen).
    */
@@ -71,8 +74,9 @@ export default function initPullToRefresh(): void {
       : '';
     indikator.style.transform = `translate(-50%, calc(-100% + ${distanz}px))`;
     indikator.style.opacity = String(fortschritt);
-    symbol.style.transform = `rotate(${fortschritt * INDIKATOR_UMDREHUNGEN}turn)`;
-    indikator.classList.toggle('ptr-indikator--bereit', distanz >= AUSLOESE_DISTANZ_PX);
+    const bereit = distanz >= AUSLOESE_DISTANZ_PX;
+    indikator.classList.toggle('ptr-indikator--bereit', bereit);
+    setzePullZustand({ fortschritt, bereit, laedt: false });
   }
 
   /**
@@ -86,7 +90,6 @@ export default function initPullToRefresh(): void {
     container.style.transform = '';
     distanz = 0;
     zeigeIndikator(animiert);
-    symbol.classList.remove('laedt');
     zieht = false;
   }
 
@@ -147,10 +150,9 @@ export default function initPullToRefresh(): void {
         if (!zieht) return;
         if (typ === 'touchend' && distanz >= AUSLOESE_DISTANZ_PX) {
           // Transform stehen lassen: die Seite laedt ohnehin gleich neu, ein Zurueckschnappen
-          // kurz vor dem Neuaufbau flackert nur. Das Symbol dreht ab jetzt von selbst weiter --
-          // die CSS-Animation schlaegt die inline gesetzte Drehung.
+          // kurz vor dem Neuaufbau flackert nur. Der Kreis laeuft ab jetzt als Dauer-Spinner.
           zieht = false;
-          symbol.classList.add('laedt');
+          setzePullZustand({ fortschritt: 1, bereit: true, laedt: true });
           location.reload();
           return;
         }

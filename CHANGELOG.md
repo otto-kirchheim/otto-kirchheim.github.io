@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-04 (213)
+
+### refactor (Pull-to-Refresh mit `DBLoadingIndicator`)
+
+- Der Zieh-Indikator (`pullToRefresh.ts`) ist ein `DBLoadingIndicator` (Kreis, mittel), der sich mit der Zugstrecke fuellt, ab der Schwelle gruen wird (`--db-loading-indicator-segment-color` ueber `.ptr-indikator--bereit`, "jetzt loslassen") und nach dem Ausloesen als gruener Dauer-Spinner laeuft. React-Komponente `PullIndikator.tsx`, Zustand in `pullZustand.ts`. Der Zustand bleibt immer `active`: `state="successful"` tauscht Spinner und Symbol im Layout und liess den Kreis springen; `gap: 0` zentriert den Spinner. Alte Icon-Regeln (`.ptr-indikator__symbol`, `.laedt`) entfernt.
+- Sichtvergleich-Ansichten `pull-halb`/`pull-bereit` (Touch-Ereignisse im Browser).
+
 ## 2026-10-03 (212)
 
 ### refactor (`DBDialog` fuer Add-/Editor-/Show-Dialoge)

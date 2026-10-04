@@ -179,34 +179,6 @@
   }
 }
 
-// Zieh-Indikator von `pullToRefresh.ts`: drehendes `circular_arrows`-Symbol (alle uebrigen Ladeanzeigen sind
-// `DBLoadingIndicator`). Beim Ziehen dreht der Finger, die Dauerdrehung (`.laedt`) kommt erst beim Ausloesen.
-.laedt,
-.ptr-indikator__symbol {
-  display: inline-block;
-
-  &::before {
-    display: inline-block;
-    color: var(--db-icon-color, inherit);
-    font-family: var(--db-icon-font-family, var(--db-icon-default-font-family, 'db-ux-default', 'icon-font-fallback'));
-    font-size: var(--db-icon-font-size, 1.5rem);
-    font-style: normal;
-    font-weight: normal;
-    line-height: 1;
-    content: 'circular_arrows';
-  }
-}
-
-.laedt {
-  animation: laedt-drehung 1.5s linear infinite;
-}
-
-@keyframes laedt-drehung {
-  to {
-    transform: rotate(1turn);
-  }
-}
-
 // Zum-Aktualisieren-Ziehen (`pullToRefresh.ts`): der Kreis faehrt hinter der Oberkante des Inhaltsbereichs hervor.
 // `position: fixed`, weil `overflow-y: auto` an `.db-shell-content` ein Kind oberhalb abschneiden wuerde;
 // Lage und Sichtbarkeit setzt das Skript inline.
@@ -227,12 +199,16 @@
   pointer-events: none;
   transform: translate(-50%, -100%);
 
-  --db-icon-font-size: 1.25rem;
 }
 
-// Ab der Ausloese-Distanz Markenfarbe: "jetzt loslassen".
-.ptr-indikator--bereit {
-  --db-icon-color: var(--db-brand-origin-default);
+// Der Abstand zwischen Symbol und (versteckter) Beschriftung schoebe den `DBLoadingIndicator` aus der Mitte.
+.ptr-indikator > .db-loading-indicator {
+  gap: 0;
+}
+
+// Ab der Ausloese-Distanz gruener Ring: "jetzt loslassen" (und waehrend des Neuladens).
+.ptr-indikator--bereit > .db-loading-indicator {
+  --db-loading-indicator-segment-color: var(--db-successful-origin-default);
 }
 
 // Zwei Motive fehlen im DB-Satz (Theme-Automatik, Filter zuruecksetzen): SVG unter `src/icons/`

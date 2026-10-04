@@ -191,6 +191,37 @@ const ladezustand = (paneId: string, knopfId: string): Pick<Ansicht, 'oeffnen' |
   },
 });
 
+/**
+ * Ansicht mitten im Zum-Aktualisieren-Ziehen: schickt Touch-Ereignisse an `.db-shell-content` (Finger-Weg `dy` in Pixeln, ohne
+ * Loslassen -- ein Loslassen ueber der Schwelle laedt die Seite neu), danach `touchcancel`.
+ *
+ * @param dy - Gezogene Strecke des Fingers in Pixeln (die Anzeige folgt mit Daempfung 0.5, Ausloesung bei 80px Zug).
+ * @returns Oeffnen/Schliessen der Ansicht.
+ */
+const ziehen = (dy: number): Pick<Ansicht, 'oeffnen' | 'schliessen'> => ({
+  async oeffnen(page) {
+    await tab('start')(page);
+    await page.evaluate(async (strecke: number) => {
+      const el = document.querySelector<HTMLElement>('.db-shell-content')!;
+      el.scrollTop = 0;
+      const feuere = (typ: string, y: number): void => {
+        const punkt = new Touch({ identifier: 1, target: el, clientX: 200, clientY: y });
+        el.dispatchEvent(
+          new TouchEvent(typ, { bubbles: true, cancelable: true, touches: [punkt], changedTouches: [punkt] }),
+        );
+      };
+      feuere('touchstart', 300);
+      feuere('touchmove', 300 + strecke);
+    }, dy);
+  },
+  async schliessen(page) {
+    await page.evaluate(() => {
+      const el = document.querySelector<HTMLElement>('.db-shell-content')!;
+      el.dispatchEvent(new TouchEvent('touchcancel', { bubbles: true, cancelable: true }));
+    });
+  },
+});
+
 const ANSICHTEN: Ansicht[] = [
   { name: 'start', oeffnen: tab('start') },
   { name: 'bereitschaft', oeffnen: tab('Bereitschaft') },
@@ -200,6 +231,8 @@ const ANSICHTEN: Ansicht[] = [
   { name: 'bereitschaft-anzeige', ...dialog('Bereitschaft', '#tableBE tbody tr:first-child td:nth-child(2)') },
   { name: 'laedt-knopf', ...ladezustand('Bereitschaft', 'btnSaveB') },
   { name: 'laedt-einstellungen', ...ladezustand('Einstellungen', 'btnAuswaehlen') },
+  { name: 'pull-halb', ...ziehen(80) },
+  { name: 'pull-bereit', ...ziehen(200) },
   { name: 'laedt-start', ...ladezustand('start', 'btnLadeAnzeigeDummy') },
   { name: 'ewt', oeffnen: tab('EWT') },
   { name: 'ewt-dialog', ...dialog('EWT', '#btnESEE') },

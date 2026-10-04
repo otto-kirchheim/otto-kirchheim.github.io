@@ -22,6 +22,11 @@ function beruehrung(ziel: HTMLElement, x: number, y: number): Touch {
   return new Touch({ identifier: 1, target: ziel, clientX: x, clientY: y });
 }
 
+/** `true`, wenn der Indikator als Dauer-Spinner laeuft (kein bestimmter Fortschritt mehr). */
+function laeuft(): boolean {
+  return document.querySelector('.ptr-indikator progress')?.hasAttribute('value') === false;
+}
+
 function geste(von: { x: number; y: number }, nach: { x: number; y: number }): { transformBeimZiehen: string } {
   const el = container();
   const feuere = (typ: string, x: number, y: number): void => {
@@ -73,7 +78,6 @@ describe('initPullToRefresh', () => {
   it('blendet den Indikator mit dem Fortschritt ein und meldet die erreichte Ausloese-Distanz', () => {
     const el = container();
     const indikator = document.querySelector<HTMLElement>('.ptr-indikator')!;
-    const symbol = indikator.querySelector<HTMLElement>('.ptr-indikator__symbol')!;
 
     const punkt = (y: number, typ: string): void => {
       const beruehrung = new Touch({ identifier: 1, target: el, clientX: 100, clientY: y });
@@ -85,7 +89,7 @@ describe('initPullToRefresh', () => {
     punkt(100, 'touchstart');
     punkt(180, 'touchmove'); // 80px Finger -> 40px Inhalt = halber Weg
     expect(indikator.style.opacity).toBe('0.5');
-    expect(symbol.style.transform).toBe('rotate(0.5turn)');
+    expect(indikator.querySelector('progress')?.getAttribute('value')).toBe('50');
     expect(indikator.classList.contains('ptr-indikator--bereit')).toBe(false);
 
     punkt(400, 'touchmove'); // weit ueber der Schwelle
@@ -95,7 +99,6 @@ describe('initPullToRefresh', () => {
 
   it('loest erst beim Loslassen aus, nicht schon beim vollen Durchziehen', () => {
     const el = container();
-    const symbol = document.querySelector<HTMLElement>('.ptr-indikator__symbol')!;
     const feuere = (typ: string, y: number): void => {
       const beruehrung = new Touch({ identifier: 1, target: el, clientX: 100, clientY: y });
       el.dispatchEvent(
@@ -110,15 +113,14 @@ describe('initPullToRefresh', () => {
 
     feuere('touchstart', 100);
     feuere('touchmove', 400); // weit ueber der Schwelle, Finger bleibt unten
-    expect(symbol.classList.contains('laedt')).toBe(false);
+    expect(laeuft()).toBe(false);
 
     feuere('touchend', 400);
-    expect(symbol.classList.contains('laedt')).toBe(true);
+    expect(laeuft()).toBe(true);
   });
 
   it('loest nicht aus, wenn nach dem Durchziehen wieder unter die Schwelle zurueckgezogen wird', () => {
     const el = container();
-    const symbol = document.querySelector<HTMLElement>('.ptr-indikator__symbol')!;
     const feuere = (typ: string, y: number): void => {
       const beruehrung = new Touch({ identifier: 1, target: el, clientX: 100, clientY: y });
       el.dispatchEvent(
@@ -136,7 +138,7 @@ describe('initPullToRefresh', () => {
     feuere('touchmove', 140); // zurueck auf 20px Inhalt
     feuere('touchend', 140);
 
-    expect(symbol.classList.contains('laedt')).toBe(false);
+    expect(laeuft()).toBe(false);
   });
 
   it('behaelt die Geste beim Ziehen (preventDefault), laesst waagerechtes Wischen aber dem Browser', () => {
