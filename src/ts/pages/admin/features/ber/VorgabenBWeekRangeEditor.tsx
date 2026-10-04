@@ -1,0 +1,250 @@
+import { DBButton, DBStack } from '@db-ux/react-core-components';
+import { useState, type PointerEvent as ReactPointerEvent } from 'react';
+
+const WEEKDAY_SLOTS: Array<{ tag: number; short: string }> = [
+  { tag: 1, short: 'Mo' },
+  { tag: 2, short: 'Di' },
+  { tag: 3, short: 'Mi' },
+  { tag: 4, short: 'Do' },
+  { tag: 5, short: 'Fr' },
+  { tag: 6, short: 'Sa' },
+  { tag: 7, short: 'So' },
+];
+
+const SLOT_LOOKUP_BY_TAG: Record<number, number> = {
+  1: 0,
+  2: 1,
+  3: 2,
+  4: 3,
+  5: 4,
+  6: 5,
+  7: 6,
+  0: 6, // Altdaten: Sonntag wurde früher als 0 gespeichert
+};
+
+/**
+ * Slot-Index (0-6 = Woche 1, 7-13 = Woche 2) zu Wochentag und Wochenmarkierung.
+ *
+ * @param tag - Wochentag 1 (Mo) bis 7 (So); 0 gilt als Sonntag (Altdaten).
+ * @param Nwoche - `true` für die zweite Woche.
+ * @param allowSecondWeek - `false` erzwingt Woche 1 unabhängig von `Nwoche`.
+ * @returns Slot-Index; unbekannte Tage fallen auf Montag zurück.
+ */
+const getSlotFromTag = (tag: number, Nwoche = false, allowSecondWeek = true): number => {
+  const baseIndex = SLOT_LOOKUP_BY_TAG[tag] ?? 0;
+  if (!allowSecondWeek) return baseIndex;
+  return baseIndex + (Nwoche ? 7 : 0);
+};
+
+/**
+ * Kehrt `getSlotFromTag` um; der Slot wird auf 0-13 begrenzt.
+ *
+ * @param slot - Slot-Index.
+ * @returns Wochentag 1-7 und `Nwoche` (`true` ab Slot 7).
+ */
+const getTagFromSlot = (slot: number): { tag: number; Nwoche: boolean } => {
+  const normalizedSlot = Math.max(0, Math.min(13, slot));
+  return {
+    tag: WEEKDAY_SLOTS[normalizedSlot % 7].tag,
+    Nwoche: normalizedSlot >= 7,
+  };
+};
+
+/**
+ * Beschriftung eines Slots, z.B. `Mo W1`.
+ *
+ * @param slot - Slot-Index; wird auf 0-13 begrenzt.
+ * @returns Kürzel und Wochenlabel.
+ */
+const getSlotLabel = (slot: number): string => {
+  const normalizedSlot = Math.max(0, Math.min(13, slot));
+  const weekLabel = normalizedSlot >= 7 ? 'W2' : 'W1';
+  return `${WEEKDAY_SLOTS[normalizedSlot % 7].short} ${weekLabel}`;
+};
+
+export type WeekRangeEditorProps = {
+  selectorKey: string;
+  label: string;
+  start: { tag: number; Nwoche?: boolean };
+  end: { tag: number; Nwoche?: boolean };
+  startHasNwoche: boolean;
+  disabled: boolean;
+  onStartChange: (tag: number, Nwoche: boolean) => void;
+  onEndChange: (tag: number, Nwoche: boolean) => void;
+};
+
+/**
+ * Auswahl eines Wochenbereichs (Start bis Ende) über 14 Tages-Slots (zwei Wochen). Maus: Ziehen von
+ * Start nach Ende; Touch/Klick: erst Start, dann Ende antippen. Ohne `startHasNwoche` ist der Start
+ * auf Woche 1 beschränkt.
+ *
+ * @param props - `selectorKey` (Key-Präfix/Neuinitialisierung), `label`, `start`/`end`, `startHasNwoche`,
+ *   `disabled` und die Handler `onStartChange`/`onEndChange`.
+ */
+export function VorgabenBWeekRangeEditor({
+  selectorKey,
+  label,
+  start,
+  end,
+  startHasNwoche,
+  disabled,
+  onStartChange,
+  onEndChange,
+}: WeekRangeEditorProps) {
+  // Slots aus den Props ableiten: beim Mount und bei jedem Bereichswechsel in der Renderphase
+  // (statt im Effect, set-state-in-effect). Während einer laufenden End-Auswahl bleiben sie unangetastet.
+  const slotsKey = `${selectorKey}|${start.tag}|${start.Nwoche}|${end.tag}|${end.Nwoche}|${startHasNwoche}`;
+  /**
+   * Berechnet Start- und End-Slot aus den Props; das Ende liegt nie vor dem Start.
+   *
+   * @returns Start- und End-Slot.
+   */
+  const initialSlots = (): { start: number; end: number } => {
+    const startSlotValue =
+      startHasNwoche && start.Nwoche && start.tag === 0
+        ? getSlotFromTag(start.tag, false, true)
+        : getSlotFromTag(start.tag, start.Nwoche, startHasNwoche);
+    return {
+      start: startSlotValue,
+      end: Math.max(getSlotFromTag(end.tag, end.Nwoche, true), startSlotValue),
+    };
+  };
+  const [startSlot, setStartSlot] = useState<number>(() => initialSlots().start);
+  const [endSlot, setEndSlot] = useState<number | null>(() => initialSlots().end);
+  const [awaitingEndSelection, setAwaitingEndSelection] = useState<boolean>(false);
+  const [dragAnchor, setDragAnchor] = useState<number | null>(null);
+
+  const [prevSlotsKey, setPrevSlotsKey] = useState(slotsKey);
+  if (prevSlotsKey !== slotsKey) {
+    setPrevSlotsKey(slotsKey);
+    if (!awaitingEndSelection) {
+      const next = initialSlots();
+      setStartSlot(next.start);
+      setEndSlot(next.end);
+      setDragAnchor(null);
+    }
+  }
+
+  /**
+   * Zwei-Schritt-Auswahl per Tippen: erster Tipp setzt den Start, zweiter das Ende (nie vor dem Start).
+   *
+   * @param slot - Getippter Slot.
+   */
+  const updateByTap = (slot: number): void => {
+    if (disabled) return;
+
+    if (!awaitingEndSelection) {
+      const nextStartSlot = startHasNwoche ? slot : slot % 7;
+      const nextStart = getTagFromSlot(nextStartSlot);
+      setStartSlot(nextStartSlot);
+      setEndSlot(null);
+      setAwaitingEndSelection(true);
+      onStartChange(nextStart.tag, startHasNwoche ? nextStart.Nwoche : false);
+      return;
+    }
+
+    const nextEndSlot = Math.max(slot, startSlot);
+    const nextEnd = getTagFromSlot(nextEndSlot);
+    setEndSlot(nextEndSlot);
+    setAwaitingEndSelection(false);
+    onEndChange(nextEnd.tag, nextEnd.Nwoche);
+  };
+
+  /**
+   * Maus: startet eine Ziehauswahl am Slot; Touch/Stift: delegiert an `updateByTap`.
+   *
+   * @param event - Pointer-Event des Buttons.
+   * @param slot - Slot unter dem Zeiger.
+   */
+  const handlePointerDown = (event: ReactPointerEvent<HTMLButtonElement>, slot: number): void => {
+    if (disabled) return;
+
+    if (event.pointerType === 'mouse') {
+      const normalizedAnchor = startHasNwoche ? slot : slot % 7;
+      const nextStart = getTagFromSlot(normalizedAnchor);
+      setStartSlot(normalizedAnchor);
+      setEndSlot(null);
+      setDragAnchor(normalizedAnchor);
+      setAwaitingEndSelection(true);
+      onStartChange(nextStart.tag, startHasNwoche ? nextStart.Nwoche : false);
+      return;
+    }
+
+    updateByTap(slot);
+  };
+
+  /**
+   * Aktualisiert während einer Ziehauswahl Start und Ende aus Ankerslot und aktuellem Slot.
+   *
+   * @param slot - Slot, den der Zeiger betritt.
+   */
+  const handlePointerEnter = (slot: number): void => {
+    if (disabled || dragAnchor === null) return;
+
+    const nextStartSlot = Math.min(dragAnchor, slot);
+    const nextEndSlot = Math.max(dragAnchor, slot);
+    const nextStart = getTagFromSlot(nextStartSlot);
+    const nextEnd = getTagFromSlot(nextEndSlot);
+
+    setStartSlot(nextStartSlot);
+    setEndSlot(nextEndSlot);
+    onStartChange(nextStart.tag, startHasNwoche ? nextStart.Nwoche : false);
+    onEndChange(nextEnd.tag, nextEnd.Nwoche);
+  };
+
+  /**
+   * Beendet die Ziehauswahl; ist ein Ende gesetzt, wartet die Auswahl nicht mehr auf eine End-Wahl.
+   */
+  const clearDrag = (): void => {
+    if (dragAnchor === null) return;
+    setDragAnchor(null);
+    if (endSlot !== null) setAwaitingEndSelection(false);
+  };
+
+  const rangeText =
+    endSlot === null ? `${getSlotLabel(startSlot)} -> ...` : `${getSlotLabel(startSlot)} -> ${getSlotLabel(endSlot)}`;
+
+  return (
+    <div className="luft-unten-xs">
+      <DBStack direction="row" wrap gap="x-small" className="ausrichtung-basis luft-unten-xs">
+        <span className="zelle-klein fett ohne-luft-unten">{label}</span>
+        <span className="zelle-klein farbe-gedaempft">Auswahl: {rangeText}</span>
+      </DBStack>
+
+      <div
+        className="wochentag-raster"
+        style={{ userSelect: 'none' }}
+        onPointerUp={clearDrag}
+        onPointerLeave={clearDrag}
+      >
+        {Array.from({ length: 14 }, (_, slot) => {
+          const isStart = slot === startSlot;
+          const isEnd = endSlot !== null && slot === endSlot;
+          const isInRange = endSlot === null ? slot === startSlot : slot >= startSlot && slot <= endSlot;
+
+          // Start/Ende/Bereich unterscheiden sich ueber Variante und Semantikfarbe des
+          // DB-Buttons; ausserhalb des Bereichs bleibt der Schalter neutral umrandet.
+          const variante = isStart || isEnd ? 'filled' : isInRange ? 'brand' : 'outlined';
+          const farbe = isStart ? 'successful' : isEnd ? 'informational' : undefined;
+
+          return (
+            <DBButton
+              key={`${selectorKey}-${slot}`}
+              type="button"
+              variant={variante}
+              data-color={farbe}
+              size="small"
+              disabled={disabled}
+              onPointerDown={event => handlePointerDown(event, slot)}
+              onPointerEnter={() => handlePointerEnter(slot)}
+              onClick={() => updateByTap(slot)}
+              aria-pressed={isStart || isEnd || isInRange}
+            >
+              {WEEKDAY_SLOTS[slot % 7].short}
+            </DBButton>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

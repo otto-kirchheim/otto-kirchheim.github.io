@@ -1,16 +1,18 @@
 import dayjs from 'dayjs';
-import { createCustomTable } from '@/infrastructure/table/CustomTable';
-import type { IDaten } from '@/core/types/IDaten';
-import type { IVorgabenBerechnung } from '@/core/types/IVorgabenBerechnungMonat';
-import type { IVorgabenGeld } from '@/core/types/IVorgabenGeldType';
-import type { IVorgabenU } from '@/core/types/IVorgabenU';
+import { LreType } from '@otto-kirchheim/nebengeld-shared';
+import { createCustomTable } from '@/shared/ui/custom-table/CustomTable';
+import type { IDaten } from '@/shared/types/IDaten';
+import type { IVorgabenBerechnung } from '@/shared/types/IVorgabenBerechnungMonat';
+import type { IVorgabenGeld } from '@/shared/types/IVorgabenGeldType';
+import type { IVorgabenU } from '@/shared/types/IVorgabenU';
 
 export const VorgabenGeldMock: IVorgabenGeld = {
   1: {
-    A: 0,
-    B: 0,
-    C: 0,
-    SIPO: 0,
+    A: 0.98,
+    B: 1.59,
+    C: 2.16,
+    SIPO: 0.44,
+    GKR: 0.9,
     BE14: 24,
     BE8: 9,
     'Besoldungsgruppe A 8': 16.37,
@@ -29,7 +31,7 @@ export const VorgabenGeldMock: IVorgabenGeld = {
 };
 
 export const VorgabenUMock: IVorgabenU = {
-  pers: {
+  Pers: {
     Vorname: 'Jan',
     Nachname: 'Otto',
     PNummer: '05211456',
@@ -47,7 +49,7 @@ export const VorgabenUMock: IVorgabenU = {
     kmnBhf: 12,
     TB: 'Tarifkraft',
   },
-  aZ: {
+  Arbeitszeit: {
     frueh: {
       aktiv: true,
       default: { beginn: '07:00', ende: '15:45', pause: 30 },
@@ -65,7 +67,7 @@ export const VorgabenUMock: IVorgabenU = {
     sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 },
     fahrzeit: '00:20',
   },
-  fZ: [
+  Fahrzeit: [
     {
       key: 'Kaiserau',
       text: 'km 167,0',
@@ -132,7 +134,7 @@ export const VorgabenUMock: IVorgabenU = {
       value: '01:00',
     },
   ],
-  vorgabenB: {
+  VorgabenB: {
     0: {
       Name: 'B1 + Nacht',
       beginnB: {
@@ -259,6 +261,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       C9: 0,
       SIPO: 0,
     },
+    EA: {
+      Minuten: 0,
+    },
   },
   '2': {
     B: {
@@ -284,6 +289,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       CB: 0,
       C9: 0,
       SIPO: 0,
+    },
+    EA: {
+      Minuten: 0,
     },
   },
   '3': {
@@ -311,6 +319,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       C9: 0,
       SIPO: 0,
     },
+    EA: {
+      Minuten: 0,
+    },
   },
   '4': {
     B: {
@@ -336,6 +347,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       CB: 0,
       C9: 0,
       SIPO: 0,
+    },
+    EA: {
+      Minuten: 0,
     },
   },
   '5': {
@@ -363,6 +377,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       C9: 0,
       SIPO: 0,
     },
+    EA: {
+      Minuten: 0,
+    },
   },
   '6': {
     B: {
@@ -388,6 +405,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       CB: 0,
       C9: 0,
       SIPO: 0,
+    },
+    EA: {
+      Minuten: 0,
     },
   },
   '7': {
@@ -415,6 +435,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       C9: 0,
       SIPO: 0,
     },
+    EA: {
+      Minuten: 0,
+    },
   },
   '8': {
     B: {
@@ -440,6 +463,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       CB: 0,
       C9: 0,
       SIPO: 0,
+    },
+    EA: {
+      Minuten: 0,
     },
   },
   '9': {
@@ -467,6 +493,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       C9: 0,
       SIPO: 0,
     },
+    EA: {
+      Minuten: 0,
+    },
   },
   '10': {
     B: {
@@ -492,6 +521,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       CB: 0,
       C9: 0,
       SIPO: 0,
+    },
+    EA: {
+      Minuten: 0,
     },
   },
   '11': {
@@ -519,6 +551,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       C9: 0,
       SIPO: 0,
     },
+    EA: {
+      Minuten: 0,
+    },
   },
   '12': {
     B: {
@@ -545,22 +580,25 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       C9: 0,
       SIPO: 0,
     },
+    EA: {
+      Minuten: 0,
+    },
   },
 };
 
 export const mockNeben = (): void => {
   document.body.insertAdjacentHTML(
     'beforeend',
-    '<div class="table-responsive">' +
-      '<table id="tableN" class="table table-bordered table-striped table-hover align-middle" aria-label="Nebengeld"></table>' +
+    '<div class="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">' +
+      '<table id="tableN" aria-label="Nebengeld"></table>' +
       '</div>',
   );
 
   createCustomTable('tableN', {
     columns: [
-      { name: 'tagN', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
-      { name: 'beginN', title: 'Arbeit Von', type: 'time' },
-      { name: 'endeN', title: 'Arbeit Bis', type: 'time' },
+      { name: 'Tag', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
+      { name: 'Beginn', title: 'Arbeit Von', type: 'time' },
+      { name: 'Ende', title: 'Arbeit Bis', type: 'time' },
       { name: 'beginPauseN', title: 'Pause Von', breakpoints: 'sm', type: 'time' },
       { name: 'endePauseN', title: 'Pause Bis', breakpoints: 'sm', type: 'time' },
       { name: 'dauerN', title: 'Anzahl', breakpoints: 'md' },
@@ -573,8 +611,8 @@ export const mockNeben = (): void => {
 export const mockEWT = (): void => {
   document.body.insertAdjacentHTML(
     'beforeend',
-    '<div class="table-responsive">' +
-      '<table id="tableE" class="table table-bordered table-striped table-hover align-middle" aria-label="EWT"></table>' +
+    '<div class="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">' +
+      '<table id="tableE" aria-label="EWT"></table>' +
       '</div>',
   );
 
@@ -599,9 +637,9 @@ export const mockEWT = (): void => {
   };
   createCustomTable('tableE', {
     columns: [
-      { name: 'tagE', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
-      { name: 'eOrtE', title: 'Einsatzort', classes: ['custom-text-truncate'], type: 'text' },
-      { name: 'schichtE', title: 'Schicht', parser: schichtParser, type: 'time' },
+      { name: 'Tag', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
+      { name: 'Einsatzort', title: 'Einsatzort', classes: ['custom-text-truncate'], type: 'text' },
+      { name: 'Schicht', title: 'Schicht', parser: schichtParser, type: 'time' },
       { name: 'abWE', title: 'Ab Wohnung', breakpoints: 'xl', type: 'time' },
       { name: 'beginE', title: 'Arbeitszeit Von', breakpoints: 'md', type: 'time' },
       { name: 'ab1E', title: 'Ab 1.Tgk.-St.', breakpoints: 'lg', type: 'time' },
@@ -610,7 +648,7 @@ export const mockEWT = (): void => {
       { name: 'an1E', title: 'An 1.Tgk.-St.', breakpoints: 'lg', type: 'time' },
       { name: 'endeE', title: 'Arbeitszeit Bis', breakpoints: 'md', type: 'time' },
       { name: 'anWE', title: 'An Wohnung', breakpoints: 'xl', type: 'time' },
-      { name: 'berechnen', title: 'Berechnen?', parser: berechnenParser, breakpoints: 'xxl' },
+      { name: 'berechnen', title: 'Berechnen?', parser: berechnenParser, breakpoints: 'xl' },
     ],
     rows: [],
   });
@@ -619,13 +657,13 @@ export const mockEWT = (): void => {
 export const mockBereitschaft = (): void => {
   document.body.insertAdjacentHTML(
     'beforeend',
-    '<div class="table-responsive">' +
+    '<div class="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">' +
       '<h4 id="titelBZ">Bereitschaftszeitraum</h4>' +
-      '<table id="tableBZ" class="table table-bordered table-striped table-hover align-middle" aria-describedby="TitelBZ"></table>' +
+      '<table id="tableBZ" aria-describedby="TitelBZ"></table>' +
       '</div>' +
-      '<div class="table-responsive">' +
+      '<div class="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">' +
       '<h4 id="titelBE">Bereitschaftseinsätze</h4>' +
-      '<table id="tableBE" class="table table-bordered table-striped table-hover align-middle" aria-describedby="titelBE"></table>' +
+      '<table id="tableBE" aria-describedby="titelBE"></table>' +
       '</div>',
   );
 
@@ -633,20 +671,20 @@ export const mockBereitschaft = (): void => {
   const timeZeroParser = (value: number): number | string => (!value ? '' : value);
   createCustomTable('tableBZ', {
     columns: [
-      { name: 'beginB', title: 'Von', parser: datetimeParser, sortable: true, sorted: true, direction: 'ASC' },
-      { name: 'endeB', title: 'Bis', parser: datetimeParser, sortable: true },
-      { name: 'pauseB', title: 'Pause', parser: timeZeroParser, breakpoints: 'xs' },
+      { name: 'Beginn', title: 'Von', parser: datetimeParser, sortable: true, sorted: true, direction: 'ASC' },
+      { name: 'Ende', title: 'Bis', parser: datetimeParser, sortable: true },
+      { name: 'Pause', title: 'Pause', parser: timeZeroParser, breakpoints: 'xs' },
     ],
     rows: [],
   });
   createCustomTable('tableBE', {
     columns: [
-      { name: 'tagBE', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
-      { name: 'auftragsnummerBE', title: 'Auftrags-Nr.', classes: ['custom-text-truncate'] },
-      { name: 'beginBE', title: 'Von', breakpoints: 'sm', type: 'time' },
-      { name: 'endeBE', title: 'Bis', breakpoints: 'sm', type: 'time' },
-      { name: 'lreBE', title: 'LRE' },
-      { name: 'privatkmBE', title: 'Privat Km', parser: timeZeroParser, breakpoints: 'md' },
+      { name: 'Tag', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
+      { name: 'Auftragsnummer', title: 'Auftrags-Nr.', classes: ['custom-text-truncate'] },
+      { name: 'Beginn', title: 'Von', breakpoints: 'sm', type: 'time' },
+      { name: 'Ende', title: 'Bis', breakpoints: 'sm', type: 'time' },
+      { name: 'LRE', title: 'LRE' },
+      { name: 'PrivatKm', title: 'Privat Km', parser: timeZeroParser, breakpoints: 'md' },
     ],
     rows: [],
   });
@@ -654,78 +692,78 @@ export const mockBereitschaft = (): void => {
 
 export const datenBZMock: Required<IDaten>['BZ'] = [
   {
-    beginB: '2023-03-02T14:45:00.000Z',
-    endeB: '2023-03-02T21:30:00.000Z',
-    pauseB: 30,
+    Beginn: '2023-03-02T14:45:00.000Z',
+    Ende: '2023-03-02T21:30:00.000Z',
+    Pause: 30,
   },
   {
-    beginB: '2023-03-08T14:45:00.000Z',
-    endeB: '2023-03-09T06:00:00.000Z',
-    pauseB: 30,
+    Beginn: '2023-03-08T14:45:00.000Z',
+    Ende: '2023-03-09T06:00:00.000Z',
+    Pause: 30,
   },
   {
-    beginB: '2023-03-09T14:45:00.000Z',
-    endeB: '2023-03-10T06:00:00.000Z',
-    pauseB: 30,
+    Beginn: '2023-03-09T14:45:00.000Z',
+    Ende: '2023-03-10T06:00:00.000Z',
+    Pause: 30,
   },
   {
-    beginB: '2023-03-10T12:00:00.000Z',
-    endeB: '2023-03-11T07:00:00.000Z',
-    pauseB: 0,
+    Beginn: '2023-03-10T12:00:00.000Z',
+    Ende: '2023-03-11T07:00:00.000Z',
+    Pause: 0,
   },
   {
-    beginB: '2023-03-11T07:00:00.000Z',
-    endeB: '2023-03-12T07:00:00.000Z',
-    pauseB: 0,
+    Beginn: '2023-03-11T07:00:00.000Z',
+    Ende: '2023-03-12T07:00:00.000Z',
+    Pause: 0,
   },
   {
-    beginB: '2023-03-12T07:00:00.000Z',
-    endeB: '2023-03-12T18:30:00.000Z',
-    pauseB: 0,
+    Beginn: '2023-03-12T07:00:00.000Z',
+    Ende: '2023-03-12T18:30:00.000Z',
+    Pause: 0,
   },
   {
-    beginB: '2023-03-13T05:15:00.000Z',
-    endeB: '2023-03-13T06:00:00.000Z',
-    pauseB: 45,
+    Beginn: '2023-03-13T05:15:00.000Z',
+    Ende: '2023-03-13T06:00:00.000Z',
+    Pause: 45,
   },
   {
-    beginB: '2023-03-13T14:45:00.000Z',
-    endeB: '2023-03-13T18:30:00.000Z',
-    pauseB: 0,
+    Beginn: '2023-03-13T14:45:00.000Z',
+    Ende: '2023-03-13T18:30:00.000Z',
+    Pause: 0,
   },
   {
-    beginB: '2023-03-14T05:15:00.000Z',
-    endeB: '2023-03-14T06:00:00.000Z',
-    pauseB: 45,
+    Beginn: '2023-03-14T05:15:00.000Z',
+    Ende: '2023-03-14T06:00:00.000Z',
+    Pause: 45,
   },
   {
-    beginB: '2023-03-14T14:45:00.000Z',
-    endeB: '2023-03-14T18:30:00.000Z',
-    pauseB: 0,
+    Beginn: '2023-03-14T14:45:00.000Z',
+    Ende: '2023-03-14T18:30:00.000Z',
+    Pause: 0,
   },
   {
-    beginB: '2023-03-15T05:15:00.000Z',
-    endeB: '2023-03-15T06:00:00.000Z',
-    pauseB: 45,
+    Beginn: '2023-03-15T05:15:00.000Z',
+    Ende: '2023-03-15T06:00:00.000Z',
+    Pause: 45,
   },
 ];
 
 export const datenBEMock: Required<IDaten>['BE'] = [
   {
-    tagBE: '10.03.2023',
-    auftragsnummerBE: 'Test',
-    beginBE: '00:14',
-    endeBE: '01:59',
-    lreBE: 'LRE 1',
-    privatkmBE: 0,
+    Tag: '10.03.2023',
+    Auftragsnummer: 'Test',
+    Beginn: '00:14',
+    Ende: '01:59',
+    LRE: LreType.LRE_1,
+    PrivatKm: 0,
   },
 ];
 
 export const datenEWTMock: Required<IDaten>['EWT'] = [
   {
-    tagE: '2023-03-01',
-    eOrtE: 'Licherode',
-    schichtE: 'T',
+    Tag: '2023-03-01',
+    Einsatzort: 'Licherode',
+    Schicht: 'T',
     abWE: '06:40',
     ab1E: '07:20',
     anEE: '07:55',
@@ -737,9 +775,9 @@ export const datenEWTMock: Required<IDaten>['EWT'] = [
     berechnen: true,
   },
   {
-    tagE: '2023-03-02',
-    eOrtE: 'Kirchheim',
-    schichtE: 'T',
+    Tag: '2023-03-02',
+    Einsatzort: 'Kirchheim',
+    Schicht: 'T',
     abWE: '06:40',
     ab1E: '07:20',
     anEE: '07:30',
@@ -751,9 +789,9 @@ export const datenEWTMock: Required<IDaten>['EWT'] = [
     berechnen: true,
   },
   {
-    tagE: '2023-03-06',
-    eOrtE: 'Mühlbach',
-    schichtE: 'T',
+    Tag: '2023-03-06',
+    Einsatzort: 'Mühlbach',
+    Schicht: 'T',
     abWE: '06:40',
     ab1E: '07:20',
     anEE: '07:40',
@@ -765,9 +803,9 @@ export const datenEWTMock: Required<IDaten>['EWT'] = [
     berechnen: true,
   },
   {
-    tagE: '2023-03-08',
-    eOrtE: 'Mühlbach',
-    schichtE: 'T',
+    Tag: '2023-03-08',
+    Einsatzort: 'Mühlbach',
+    Schicht: 'T',
     abWE: '06:40',
     ab1E: '07:20',
     anEE: '07:40',
@@ -779,9 +817,9 @@ export const datenEWTMock: Required<IDaten>['EWT'] = [
     berechnen: true,
   },
   {
-    tagE: '2023-03-09',
-    eOrtE: 'Richthof',
-    schichtE: 'T',
+    Tag: '2023-03-09',
+    Einsatzort: 'Richthof',
+    Schicht: 'T',
     abWE: '06:40',
     ab1E: '07:20',
     anEE: '07:40',
@@ -793,9 +831,9 @@ export const datenEWTMock: Required<IDaten>['EWT'] = [
     berechnen: true,
   },
   {
-    tagE: '2023-03-13',
-    eOrtE: 'Licherode',
-    schichtE: 'BN',
+    Tag: '2023-03-13',
+    Einsatzort: 'Licherode',
+    Schicht: 'BN',
     abWE: '19:10',
     ab1E: '20:30',
     anEE: '21:05',
@@ -807,9 +845,9 @@ export const datenEWTMock: Required<IDaten>['EWT'] = [
     berechnen: true,
   },
   {
-    tagE: '2023-03-14',
-    eOrtE: 'Licherode',
-    schichtE: 'BN',
+    Tag: '2023-03-14',
+    Einsatzort: 'Licherode',
+    Schicht: 'BN',
     abWE: '19:10',
     ab1E: '20:30',
     anEE: '21:05',
@@ -821,9 +859,9 @@ export const datenEWTMock: Required<IDaten>['EWT'] = [
     berechnen: true,
   },
   {
-    tagE: '2023-03-15',
-    eOrtE: 'Licherode',
-    schichtE: 'BN',
+    Tag: '2023-03-15',
+    Einsatzort: 'Licherode',
+    Schicht: 'BN',
     abWE: '19:10',
     ab1E: '20:30',
     anEE: '21:05',
@@ -835,9 +873,9 @@ export const datenEWTMock: Required<IDaten>['EWT'] = [
     berechnen: true,
   },
   {
-    tagE: '2023-03-28',
-    eOrtE: 'Langenschwarz',
-    schichtE: 'T',
+    Tag: '2023-03-28',
+    Einsatzort: 'Langenschwarz',
+    Schicht: 'T',
     abWE: '06:40',
     ab1E: '07:20',
     anEE: '07:55',
@@ -849,9 +887,9 @@ export const datenEWTMock: Required<IDaten>['EWT'] = [
     berechnen: true,
   },
   {
-    tagE: '2023-03-29',
-    eOrtE: 'Langenschwarz',
-    schichtE: 'T',
+    Tag: '2023-03-29',
+    Einsatzort: 'Langenschwarz',
+    Schicht: 'T',
     abWE: '06:40',
     ab1E: '07:20',
     anEE: '07:55',
@@ -863,9 +901,9 @@ export const datenEWTMock: Required<IDaten>['EWT'] = [
     berechnen: true,
   },
   {
-    tagE: '2023-03-30',
-    eOrtE: 'Langenschwarz',
-    schichtE: 'T',
+    Tag: '2023-03-30',
+    Einsatzort: 'Langenschwarz',
+    Schicht: 'T',
     abWE: '06:40',
     ab1E: '07:20',
     anEE: '07:55',
@@ -880,33 +918,67 @@ export const datenEWTMock: Required<IDaten>['EWT'] = [
 
 export const datenNMock: Required<IDaten>['N'] = [
   {
-    tagN: '12.03.2023',
-    beginN: '19:30',
-    endeN: '06:15',
-    zulagenN: [{ code: '040', value: 1 }],
-    auftragN: '123456789',
+    Tag: '12.03.2023',
+    Beginn: '19:30',
+    Ende: '06:15',
+    Zulagen: [{ Typ: '040', Wert: 1 }],
+    Auftragsnummer: '123456789',
   },
   {
-    tagN: '13.03.2023',
-    beginN: '19:30',
-    endeN: '06:15',
-    zulagenN: [{ code: '040', value: 1 }],
-    auftragN: '223456789',
+    Tag: '13.03.2023',
+    Beginn: '19:30',
+    Ende: '06:15',
+    Zulagen: [{ Typ: '040', Wert: 1 }],
+    Auftragsnummer: '223456789',
   },
   {
-    tagN: '14.03.2023',
-    beginN: '19:30',
-    endeN: '06:15',
-    zulagenN: [{ code: '040', value: 1 }],
-    auftragN: '323456789',
+    Tag: '14.03.2023',
+    Beginn: '19:30',
+    Ende: '06:15',
+    Zulagen: [{ Typ: '040', Wert: 1 }],
+    Auftragsnummer: '323456789',
+  },
+];
+
+export const mockEA = (): void => {
+  document.body.insertAdjacentHTML(
+    'beforeend',
+    '<div class="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">' +
+      '<table id="tableEA" aria-label="Entgeltausgleich"></table>' +
+      '</div>',
+  );
+
+  createCustomTable('tableEA', {
+    columns: [
+      { name: 'Tag', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
+      { name: 'Dauer', title: 'Dauer', type: 'time' },
+      { name: 'Taetigkeit', title: 'Tätigkeit' },
+      { name: 'Entgeltgruppe', title: 'Entgeltgruppe' },
+    ],
+    rows: [],
+  });
+};
+
+export const datenEAMock: Required<IDaten>['EA'] = [
+  {
+    Tag: '12.03.2026',
+    Dauer: '02:00',
+    Taetigkeit: 'Signalmechaniker RBEG',
+    Entgeltgruppe: '105',
+  },
+  {
+    Tag: '13.03.2026',
+    Dauer: '01:30',
+    Taetigkeit: 'Signalmechaniker RBEG',
+    Entgeltgruppe: '105',
   },
 ];
 
 export const mockEinstellungen = (): void => {
   document.body.insertAdjacentHTML(
     'beforeend',
-    '<form class="text-center" id="formEinstellungen">' +
-      '<button type="submit" class="btn btn-success" name="btnES" id="btnSaveEinstellungen" data-disabler><span class="material-icons-round big-icons">save</span>Speichern</button>' +
+    '<form id="formEinstellungen">' +
+      '<button type="submit" class="btn btn-success" name="btnES" id="btnSaveEinstellungen" data-disabler><span class="db-icon db-font-size-lg big-icons" data-icon="save"></span>Speichern</button>' +
       '<input type="Text" placeholder="Max" id="Vorname" class="form-control validate" required /><label for="Vorname">Vorname</label>' +
       '<input type="Text" placeholder="Mustermann" id="Nachname" class="form-control validate" required /><label for="Nachname">Nachname</label>' +
       '<input type="Text" placeholder="01234567" id="PNummer" class="form-control validate" required /><label for="PNummer">Personalnummer</label>' +
@@ -930,7 +1002,7 @@ export const mockEinstellungen = (): void => {
       '<input type="time" id="eN" class="form-control validate" required /><label for="eN">Arbeitsende Nacht</label>' +
       '<input type="time" id="bS" class="form-control validate" required /><label for="bS">Arbeitsbeginn Sonderschicht</label>' +
       '<input type="time" id="eS" class="form-control validate" required /><label for="eS">Arbeitsende Sonderschicht</label>' +
-      '<table id="tableVE" class="table table-bordered table-striped table-hover align-middle"	aria-label="Voreinstellungen Bereitschaft"></table>' +
+      '<table id="tableVE"	aria-label="Voreinstellungen Bereitschaft"></table>' +
       '<div id="fahrzeiten-panel"></div></form>',
   );
 };

@@ -1,0 +1,450 @@
+import { useRef } from 'react';
+
+import type { Feld, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
+import { wert } from '@/shared/lib/pdf/wert';
+import { AggregationEditor } from './aggregationUndRechnung';
+import { FeldAnkreuzBedingung } from './bedingungEditor';
+import { istBooleanFeld, katalogFelder, type FormularCode } from './datenKatalog';
+import { DatenpfadWahl, PlatzhalterPicker, ZusammengesetzteQuellen } from './datenpfadUndFormeln';
+import { openPlatzhalterHilfe } from './platzhalterHilfe';
+import { DarstellungsFelder, KlappZeile, ScharfButton, Zellkoordinaten } from './feldPanelGemeinsam';
+import { istGleich, naechsterFreierSchluessel } from './feldPanelHelfer';
+import type { Armed, Vorschau } from './feldPanelTypen';
+import { WertVorschau } from './WertVorschau';
+import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
+
+/**
+ * Aufklappbare Zeile für ein Feld der Seite: Position, Art des Inhalts (Datenfeld, Text, Mehrere, Summe, Ankreuzen, Überschrift), Anzeigename, Darstellung und Beispielwert.
+ *
+ * @param props - Feld samt Schlüssel, Formular, Tabellen, bereits belegten Datenpfaden, Scharfschalt-Zustand (`armed`), Vorschau und Callbacks (Scharfschalten, Ändern, Umbenennen, Löschen).
+ */
+function FeldZeile({
+  keyName,
+  feld,
+  formular,
+  armed,
+  tabellen,
+  belegtePfade,
+  onArm,
+  onChange,
+  onRename,
+  onDelete,
+  vorschau,
+}: {
+  keyName: string;
+  feld: Feld;
+  formular: FormularCode;
+  tabellen: Record<string, TabellenDef>;
+  /** Pfade ALLER Felder in dieser Liste (inkl. des eigenen) -- siehe `DatenpfadWahl`. */
+  belegtePfade: Set<string>;
+  armed: Armed | null;
+  onArm: () => void;
+  onChange: (feld: Feld) => void;
+  onRename: (neuerKey: string) => void;
+  onDelete: () => void;
+  vorschau: Vorschau;
+}) {
+  const festerText = feld.text !== undefined;
+  const textRef = useRef<HTMLInputElement>(null);
+  // Tabellen mit dynamischen Spalten -- nur dafür gibt es überhaupt Überschriften zu setzen.
+  const mitListen = Object.entries(tabellen).filter(([, t]) => t.listen && Object.keys(t.listen).length > 0);
+  const aktiv = istGleich(armed, { bereich: 'feld', key: keyName });
+  return (
+    <KlappZeile
+      offen={aktiv}
+      titel={
+        <span className="schrift-mono" title={keyName}>
+          {feld.label ?? keyName}
+        </span>
+      }
+      aktionen={
+        <>
+          <ScharfButton aktiv={aktiv} onClick={onArm} />
+          <DBButton
+            type="button"
+
+            variant="outlined"
+            data-color="critical"
+            size="small"
+            icon="bin"
+            noText
+            onClick={onDelete}
+          >
+            <DBTooltip>Feld löschen</DBTooltip>
+          </DBButton>
+        </>
+      }
+    >
+      <div className="luft-unten-2xs">
+        <Zellkoordinaten wert={feld} onChange={onChange} />
+      </div>
+
+      <DBStack direction="row" wrap gap="2x-small" className="volle-breite luft-unten-2xs">
+        <DBButton
+          type="button"
+          variant={
+            !festerText && !feld.berechnet && !feld.wenn && !feld.quellen && !feld.listenKopf ? 'brand' : 'outlined'
+          }
+          onClick={() =>
+            onChange({
+              ...feld,
+              text: undefined,
+              berechnet: undefined,
+              wenn: undefined,
+              quellen: undefined,
+              listenKopf: undefined,
+            })
+          }
+        >
+          Datenfeld
+        </DBButton>
+        <DBButton
+          type="button"
+          variant={festerText ? 'brand' : 'outlined'}
+          title="Fester Text, wahlweise mit eingefügten Datenpfaden"
+          onClick={() =>
+            onChange({
+              ...feld,
+              berechnet: undefined,
+              wenn: undefined,
+              quellen: undefined,
+              listenKopf: undefined,
+              text: feld.text ?? '',
+            })
+          }
+        >
+          Text
+        </DBButton>
+        <DBButton
+          type="button"
+          variant={feld.quellen ? 'brand' : 'outlined'}
+          title="Mehrere Werte in eine Zelle, ohne Trennzeichen-Lücke bei leeren/optionalen Teilen (z.B. Adress2)"
+          onClick={() =>
+            onChange({
+              ...feld,
+              text: undefined,
+              berechnet: undefined,
+              wenn: undefined,
+              listenKopf: undefined,
+              quellen: feld.quellen ?? [keyName],
+              trenner: feld.trenner ?? ', ',
+            })
+          }
+        >
+          Mehrere
+        </DBButton>
+        <DBButton
+          type="button"
+          variant={feld.berechnet ? 'brand' : 'outlined'}
+          onClick={() =>
+            onChange({
+              ...feld,
+              text: undefined,
+              wenn: undefined,
+              quellen: undefined,
+              listenKopf: undefined,
+              berechnet: feld.berechnet ?? { op: 'summe', ueber: '$seite' },
+            })
+          }
+        >
+          Summe
+        </DBButton>
+        <DBButton
+          type="button"
+          variant={feld.wenn ? 'brand' : 'outlined'}
+          title="Zeigt ein Zeichen nur, wenn eine Bedingung zutrifft, z.B. bei Gesamtsumme > 0"
+          onClick={() => {
+            const startPfad = katalogFelder(formular)[0]?.pfad ?? '';
+            onChange({
+              ...feld,
+              text: undefined,
+              berechnet: undefined,
+              quellen: undefined,
+              listenKopf: undefined,
+              wenn: feld.wenn ?? { feld: startPfad, werte: istBooleanFeld(startPfad) ? [true] : [], dann: 'X' },
+            });
+          }}
+        >
+          Ankreuzen
+        </DBButton>
+        {mitListen.length > 0 && (
+          <DBButton
+            type="button"
+            variant={feld.listenKopf ? 'brand' : 'outlined'}
+            title="Überschrift über einem dynamischen Spaltenplatz — zeigt den Schlüssel, der dort gelandet ist"
+            onClick={() => {
+              const [tabellenName, tabelle] = mitListen[0]!;
+              onChange({
+                ...feld,
+                text: undefined,
+                berechnet: undefined,
+                wenn: undefined,
+                quellen: undefined,
+                listenKopf: feld.listenKopf ?? {
+                  tabelle: tabellenName,
+                  gruppe: Object.keys(tabelle.listen!)[0]!,
+                  index: 0,
+                },
+              });
+            }}
+          >
+            Überschrift
+          </DBButton>
+        )}
+      </DBStack>
+
+      {feld.listenKopf ? (
+        <div className="raster luft-unten-2xs abstand-1">
+          <div className="sp-4">
+            <DbAuswahl
+              beschriftung="Tabelle"
+              dicht
+              value={feld.listenKopf.tabelle}
+              onChange={e => {
+                const tabellenName = e.target.value;
+                const gruppe = Object.keys(tabellen[tabellenName]?.listen ?? {})[0] ?? '';
+                onChange({ ...feld, listenKopf: { ...feld.listenKopf!, tabelle: tabellenName, gruppe } });
+              }}
+            >
+              {mitListen.map(([name]) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </DbAuswahl>
+          </div>
+          <div className="sp-5">
+            <DbAuswahl
+              beschriftung="Listen-Gruppe"
+              dicht
+              value={feld.listenKopf.gruppe}
+              onChange={e =>
+                onChange({
+                  ...feld,
+                  listenKopf: { ...feld.listenKopf!, gruppe: e.target.value },
+                })
+              }
+            >
+              {Object.keys(tabellen[feld.listenKopf.tabelle]?.listen ?? {}).map(g => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+            </DbAuswahl>
+          </div>
+          <div className="sp-3">
+            <DbFeld
+              beschriftung="Platz"
+              beschriftungZeigen
+              dicht
+              type="number"
+              min={1}
+              step={1}
+              value={feld.listenKopf.index + 1}
+              onChange={e =>
+                onChange({
+                  ...feld,
+                  listenKopf: {
+                    ...feld.listenKopf!,
+                    index: Math.max(0, Math.round(Number(e.target.value)) - 1),
+                  },
+                })
+              }
+            />
+          </div>
+        </div>
+      ) : feld.wenn ? (
+        <FeldAnkreuzBedingung feld={feld} formular={formular} tabellen={tabellen} onChange={onChange} />
+      ) : feld.quellen ? (
+        <ZusammengesetzteQuellen feld={feld} formular={formular} onChange={onChange} />
+      ) : festerText ? (
+        <div className="luft-unten-2xs">
+          <PlatzhalterPicker
+            formular={formular}
+            inputRef={textRef}
+            wert={feld.text ?? ''}
+            onEinfuegen={neu => onChange({ ...feld, text: neu })}
+          />
+          <DbFeld
+            beschriftung="z.B. Übertrag  oder  Seite {seite} von {seiten}"
+            dicht
+            feldRef={textRef}
+            placeholder="z.B. Übertrag  oder  Seite {seite} von {seiten}"
+            value={feld.text}
+            onChange={e => onChange({ ...feld, text: (e.target as HTMLInputElement).value })}
+          />
+          <div className="zelle-klein farbe-gedaempft">
+            Platzhalter in <code>{'{ }'}</code>: <code>{'{seite}'}</code>, <code>{'{seiten}'}</code>,{' '}
+            <code>{'{heute}'}</code> oder jeder Datenpfad (z.B. <code>{'{Monat}'}</code>, oder oben aus der Liste
+            einfügen) -- auch mehrere gemischt, z.B. <code>{'{Nachname}, {Vorname}'}</code>. Für Trennzeichen, die bei
+            leeren/optionalen Werten automatisch wegfallen (z.B. Adress2), stattdessen den Modus „Mehrere" nutzen.
+            Format erzwingen mit <code>{'{Pfad:Format}'}</code>, z.B. <code>{'{heute:datumKurz}'}</code>.{' '}
+            <DBButton
+              type="button"
+
+              variant="ghost"
+              size="small"
+              onClick={openPlatzhalterHilfe}
+            >
+              Alle Platzhalter &amp; Formate…
+            </DBButton>
+          </div>
+        </div>
+      ) : feld.berechnet ? (
+        <AggregationEditor
+          wert={feld.berechnet}
+          formular={formular}
+          tabellen={tabellen}
+          onChange={berechnet => onChange({ ...feld, berechnet })}
+        />
+      ) : (
+        <div className="luft-unten-2xs">
+          <DatenpfadWahl
+            wert={keyName}
+            eintraege={katalogFelder(formular)}
+            belegt={new Set([...belegtePfade].filter(p => p !== keyName))}
+            onChange={onRename}
+          />
+        </div>
+      )}
+
+      <DbFeld
+        beschriftung="Anzeigename (nur für diese Liste)"
+        dicht
+        className="luft-unten-2xs"
+        placeholder="Anzeigename (nur für diese Liste)"
+        value={feld.label ?? ''}
+        onChange={e => onChange({ ...feld, label: (e.target as HTMLInputElement).value || undefined })}
+      />
+      <DarstellungsFelder wert={feld} onChange={onChange} />
+      <WertVorschau text={wert(feld, keyName, vorschau.daten, vorschau.kontext)} />
+    </KlappZeile>
+  );
+}
+
+const VORLAGEN: { label: string; key: string; feld: Feld }[] = [
+  { label: '+ Feld', key: 'feld', feld: { x: 50, y: 50, size: 10, align: 'zentriert' } },
+  {
+    label: '+ Gesamtsumme',
+    key: 'summe',
+    feld: { x: 50, y: 50, size: 10, align: 'rechts', format: 'waehrung', berechnet: { op: 'summe', ueber: '$alle' } },
+  },
+  {
+    label: '+ Übertrag',
+    key: 'uebertrag',
+    feld: { x: 50, y: 50, size: 10, align: 'rechts', format: 'waehrung', berechnet: { op: 'summe', ueber: '$bisher' } },
+  },
+  {
+    label: '+ Seitenzahl',
+    key: 'seitenzahl',
+    feld: { x: 50, y: 50, size: 8, align: 'rechts', text: 'Seite {seite} von {seiten}' },
+  },
+  {
+    label: '+ Monat/Jahr',
+    key: 'monatJahr',
+    feld: { x: 50, y: 50, size: 10, align: 'zentriert', text: '{Monat}/{Jahr}', label: 'Monat/Jahr' },
+  },
+];
+
+/**
+ * Liste aller allgemeinen Felder einer Seite (ohne `nurBeiSignatur`-Felder) mit Schaltflächen zum Anlegen aus `VORLAGEN`.
+ *
+ * @param props - Felder der Seite, Formular, Tabellen, Scharfschalt-Zustand (`armed`), Vorschau und Callbacks (Scharfschalten, Ändern).
+ */
+export function FeldListe({
+  felder,
+  formular,
+  tabellen,
+  armed,
+  onArm,
+  onChange,
+  vorschau,
+}: {
+  felder: Record<string, Feld>;
+  formular: FormularCode;
+  tabellen: Record<string, TabellenDef>;
+  armed: Armed | null;
+  onArm: (armed: Armed | null) => void;
+  onChange: (felder: Record<string, Feld>) => void;
+  vorschau: Vorschau;
+}) {
+  /**
+   * Benennt den Schlüssel eines Feldes um (Reihenfolge bleibt erhalten), übernimmt bei fehlendem Format den Katalog-Vorschlag und führt die Scharfschaltung auf den neuen Schlüssel mit.
+   *
+   * @param alt - Bisheriger Schlüssel des Feldes.
+   * @param neu - Neuer Schlüssel; leer, gleich `alt` oder bereits vergeben = keine Änderung.
+   */
+  function umbenennen(alt: string, neu: string) {
+    if (!neu || neu === alt || felder[neu]) return;
+    // Format-Vorschlag aus dem Katalog nur übernehmen, wenn das Feld noch keins hat: so bleibt eine bewusste
+    // Wahl erhalten, und ein Array ohne `liste`-Format (z.B. OE) wird trotzdem korrekt dargestellt.
+    const vorschlag = katalogFelder(formular).find(e => e.pfad === neu)?.format;
+    const naechste: Record<string, Feld> = {};
+    for (const [k, v] of Object.entries(felder))
+      naechste[k === alt ? neu : k] = k === alt && !v.format && vorschlag ? { ...v, format: vorschlag } : v;
+    onChange(naechste);
+    if (istGleich(armed, { bereich: 'feld', key: alt })) onArm({ bereich: 'feld', key: neu });
+  }
+
+  /**
+   * Fügt ein Feld unter einem freien Schlüssel hinzu und schaltet es scharf.
+   *
+   * @param basis - Wunschschlüssel; wird bei Kollision zu einem freien Schlüssel erweitert.
+   * @param feld - Anzulegendes Feld.
+   */
+  function hinzufuegen(basis: string, feld: Feld) {
+    const key = naechsterFreierSchluessel(felder, basis);
+    onChange({ ...felder, [key]: feld });
+    onArm({ bereich: 'feld', key });
+  }
+
+  const belegtePfade = new Set(Object.keys(felder));
+
+  return (
+    <div>
+      <div className="zelle-klein farbe-gedaempft luft-unten-2xs">
+        Alles außerhalb der Datentabelle — Kopfangaben, Summen, Übertrag, Seitenzahl. Die Position bestimmt allein die
+        Zelle, bei Summen der gewählte Bezug (diese Seite / Vorseiten / alle Zeilen).
+      </div>
+      {/* nurBeiSignatur-Felder (Unterschriftsdatum) laufen über die eigene, kompakte Sektion in der
+          Signatur-Fläche (siehe `FeldPanel`), nicht über die allgemeine Feldliste. */}
+      {Object.entries(felder)
+        .filter(([, feld]) => !feld.nurBeiSignatur)
+        .map(([key, feld]) => (
+          <FeldZeile
+            key={key}
+            keyName={key}
+            feld={feld}
+            formular={formular}
+            tabellen={tabellen}
+            belegtePfade={belegtePfade}
+            armed={armed}
+            vorschau={vorschau}
+            onArm={() => onArm(istGleich(armed, { bereich: 'feld', key }) ? null : { bereich: 'feld', key })}
+            onChange={next => onChange({ ...felder, [key]: next })}
+            onRename={neu => umbenennen(key, neu)}
+            onDelete={() => {
+              const rest = { ...felder };
+              delete rest[key];
+              onChange(rest);
+              if (istGleich(armed, { bereich: 'feld', key })) onArm(null);
+            }}
+          />
+        ))}
+      <DBStack direction="row" wrap gap="2x-small">
+        {VORLAGEN.map(v => (
+          <DBButton
+            key={v.key}
+            type="button"
+            variant="outlined"
+            size="small"
+            onClick={() => hinzufuegen(v.key, { ...v.feld })}
+          >
+            {v.label}
+          </DBButton>
+        ))}
+      </DBStack>
+    </div>
+  );
+}

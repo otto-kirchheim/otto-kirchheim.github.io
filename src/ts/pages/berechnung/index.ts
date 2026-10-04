@@ -1,0 +1,25 @@
+import type { IVorgabenBerechnung, IVorgabenGeld } from '@/types';
+import { registerAppStartTask } from '@/shared/lib/lifecycle/bootstrap';
+import { markStep } from '@/shared/lib/lifecycle/initSequence';
+import { onEvent } from '@/shared/lib/events/appEvents';
+import { default as Storage } from '@/shared/lib/storage/Storage';
+import aktualisiereBerechnung from './aktualisiereBerechnung';
+import generateTableBerechnung from './generateTableBerechnung';
+import { initBerechnungMonatsFensterNav } from './berechnungMonatsFenster';
+
+export { generateTableBerechnung, aktualisiereBerechnung };
+
+registerAppStartTask(async () => {
+  onEvent('data:changed', () => {
+    Promise.resolve(aktualisiereBerechnung()).catch(error => console.error('Berechnung fehlgeschlagen:', error));
+  });
+  initBerechnungMonatsFensterNav();
+
+  if (Storage.check('VorgabenU') && Storage.check('datenBerechnung') && Storage.check('VorgabenGeld')) {
+    await generateTableBerechnung(
+      Storage.get<IVorgabenBerechnung>('datenBerechnung', { check: true }),
+      Storage.get<IVorgabenGeld>('VorgabenGeld', { check: true }),
+    );
+  }
+  markStep('boot', 'boot:berechnung');
+});

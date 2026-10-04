@@ -1,0 +1,120 @@
+import { DBButton, DBHeadingH6, DBInfotext, DBStack } from '@db-ux/react-core-components';
+import MyDialogFooter from '@/shared/ui/modal/MyDialogFooter';
+import { type FC } from 'react';
+
+import type { HelpContent } from '@/shared/lib/help/helpContent';
+import { openOnboardingGuide } from '@/features/onboarding/ui/createOnboardingGuideModal';
+import MyDivModal from '@/shared/ui/modal/MyDivModal';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+
+/**
+ * Hilfedialog: zeigt Titel, Kurzbeschreibung und die optionalen Abschnitte des `HelpContent`.
+ * Bei `reopenOnboardingAction` schließt ein Button den Dialog und öffnet die Ersteinrichtung erneut.
+ *
+ * @param props - `content`: Hilfetext des Kontexts (`getHelpContent`); optionale Abschnitte werden nur bei vorhandenen Daten gerendert.
+ */
+const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
+  <MyDivModal
+    title={content.title}
+    Footer={
+      <MyDialogFooter>
+        <DBButton type="button" variant="filled" data-dialog-dismiss="modal">
+          Schließen
+        </DBButton>
+      </MyDialogFooter>
+    }
+  >
+    <MyModalBody className="hilfe-inhalt">
+      <DBStack gap="small">
+        <p>{content.kurzbeschreibung}</p>
+
+        <div>
+          <DBHeadingH6 paragraphSpacing>Was kann ich hier machen?</DBHeadingH6>
+          <ul>
+            {content.wasKannIchHierMachen.map(item => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+
+        {content.buttons && (
+          <div>
+            <DBHeadingH6 paragraphSpacing>Wofür sind die Buttons?</DBHeadingH6>
+            <ul>
+              {content.buttons.map(button => (
+                <li key={button.label}>
+                  <strong>{button.label}:</strong> {button.description}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {content.felder && (
+          <div>
+            <DBHeadingH6 paragraphSpacing>Eingabehilfe</DBHeadingH6>
+            <ul>
+              {content.felder.map(feld => (
+                <li key={feld.label}>
+                  <strong>{feld.label}:</strong> {feld.description}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {content.schritte && (
+          <div>
+            <DBHeadingH6 paragraphSpacing>Schritte</DBHeadingH6>
+            <ol>
+              {content.schritte.map(schritt => (
+                <li key={schritt}>{schritt}</li>
+              ))}
+            </ol>
+          </div>
+        )}
+
+        {content.eingaberegeln && (
+          <div>
+            <DBHeadingH6 paragraphSpacing>Eingaberegeln</DBHeadingH6>
+            <ul>
+              {content.eingaberegeln.map(regel => (
+                <li key={regel}>{regel}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {content.haeufigeFehler && (
+          <div>
+            <DBHeadingH6 paragraphSpacing>Häufige Fehler</DBHeadingH6>
+            <ul>
+              {content.haeufigeFehler.map(fehler => (
+                <li key={fehler}>{fehler}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {content.tipp && <DBInfotext semantic="informational">{content.tipp}</DBInfotext>}
+
+        {content.reopenOnboardingAction && (
+          <DBStack alignment="start">
+            <DBButton
+              type="button"
+              variant="outlined"
+              size="small"
+              icon="circular_arrows"
+              data-dialog-dismiss="modal"
+              onClick={() => openOnboardingGuide()}
+            >
+              Ersteinrichtung erneut öffnen
+            </DBButton>
+          </DBStack>
+        )}
+      </DBStack>
+    </MyModalBody>
+  </MyDivModal>
+);
+
+export default MyHelpModal;

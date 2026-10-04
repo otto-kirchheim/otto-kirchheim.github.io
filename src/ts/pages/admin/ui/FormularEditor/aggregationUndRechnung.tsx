@@ -1,0 +1,421 @@
+import type {
+  Berechnet,
+  ListenPlatz,
+  OpName,
+  Spalte,
+  TabellenDef,
+  ZeilenBerechnet,
+  ZeilenOpName,
+  ZeilenOperand,
+} from '@otto-kirchheim/nebengeld-shared';
+import { gruppiere, katalogZeilenFelder, type FormularCode, type KatalogEintrag } from './datenKatalog';
+import { DBButton, DBCheckbox, DBStack } from '@db-ux/react-core-components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
+
+import { berechneteEintraege, alleBerechneteEintraege } from './aggregationsHelfer';
+
+const AGGREGATIONS_OPS: { wert: OpName; label: string }[] = [
+  { wert: 'summe', label: 'Summe' },
+  { wert: 'anzahl', label: 'Anzahl' },
+  { wert: 'max', label: 'Maximum' },
+  { wert: 'letztesDatum', label: 'Letztes Datum' },
+];
+
+/**
+ * Berechnete/Zeilenfelder EINER Tabelle -- Baustein für die Feld-Auswahl in `AggregationEditor`.
+ *
+ * @param formular - Formular, dessen Katalog die Zeilenfelder liefert.
+ * @param tabelle - Tabelle, deren `quelle` und berechnete Spalten gelten.
+ * @returns Zeilenfelder der Quelle plus die berechneten/Ankreuz-Spalten der Tabelle.
+ */
+function feldOptionenFuerTabelle(formular: FormularCode, tabelle: TabellenDef): KatalogEintrag[] {
+  return [
+    ...katalogZeilenFelder(formular, tabelle.quelle),
+    ...berechneteEintraege(tabelle.spalten, 'Berechnete/Ankreuz-Spalten'),
+  ];
+}
+
+type ListenOption = { key: string; label: string; liste: NonNullable<Berechnet['liste']> };
+
+/** Suffix je `art` -- `summe` bleibt ohne Suffix (bestehender Key-Bestand bliebe sonst mehrdeutig). */
+const LISTE_ART_SUFFIX: Record<NonNullable<Berechnet['liste']>['art'] & string, string> = {
+  summe: '',
+  bereinigt: ':bereinigt',
+  summeGeld: ':geld',
+};
+/** Label-Zusatz je `art`. */
+const LISTE_ART_LABEL: Record<NonNullable<Berechnet['liste']>['art'] & string, string> = {
+  summe: '',
+  bereinigt: ' (bereinigt, Std.)',
+  summeGeld: ' (€)',
+};
+
+/**
+ * Summenfeld-Optionen je dynamischem Spaltenplatz einer Tabelle (EZ): je konfiguriertem Platz eine
+ * Variante je `art` (roh, bereinigt, "(€)"), dazu je Listengruppe eine Gesamtsumme, siehe
+ * `Berechnet.liste`. Bewusst je Platz statt je Code: welcher Code an einem Platz landet, steht erst
+ * mit den Monatsdaten fest (`schluesselAufPlatz()`), und die Summe muss demselben Platz folgen wie die
+ * Spaltenüberschrift. Plätze kommen deshalb aus den tatsächlich angelegten Spalten
+ * (`Spalte.listenPlatz`); das Label übernimmt das Spalten-`label`.
+ *
+ * @param name - Tabellenname (Key in `tabellen`), Teil von Key und `liste.tabelle`.
+ * @param tabelle - Tabellendefinition mit Spalten und Listengruppen.
+ * @returns Auswahloptionen mit Key, Label und `Berechnet.liste`-Wert.
+ */
+function listenOptionenFuerTabelle(name: string, tabelle: TabellenDef): ListenOption[] {
+  const arten = ['summe', 'bereinigt', 'summeGeld'] as const;
+  const jePlatz = tabelle.spalten
+    .filter((sp): sp is Spalte & { listenPlatz: ListenPlatz } => sp.listenPlatz !== undefined)
+    .flatMap(sp => {
+      const { gruppe, index } = sp.listenPlatz;
+      const bezeichnung = sp.label ?? `${gruppe} ${index + 1}`;
+      return arten.map(art => ({
+        key: `liste:${name}:${gruppe}:${index}${LISTE_ART_SUFFIX[art]}`,
+        label: `${bezeichnung}${LISTE_ART_LABEL[art]}`,
+        liste: { tabelle: name, gruppe, index, art },
+      }));
+    });
+  // Gesamtsumme über ALLE Einträge einer Gruppe (jeder mit seinem eigenen Code, nicht an einen
+  // Platz gebunden) -- ohne `index`.
+  const gesamt = Object.keys(tabelle.listen ?? {}).flatMap(gruppe =>
+    arten.map(art => ({
+      key: `liste:${name}:${gruppe}:gesamt${LISTE_ART_SUFFIX[art]}`,
+      label: `${gruppe} — Gesamtsumme${LISTE_ART_LABEL[art] || ' (roh)'}`,
+      liste: { tabelle: name, gruppe, art },
+    })),
+  );
+  return [...jePlatz, ...gesamt];
+}
+
+/**
+ * Editor einer Aggregation über Zeilen (`Berechnet`): Rechenart, Zeilenbezug (`$seite`/`$bisher`/
+ * `$laufend`/`$alle`), optionale Eingrenzung auf Tabellen (`Berechnet.tabellen`) und das aggregierte
+ * Zeilenfeld bzw. die Zulagen-Liste. Genutzt für berechnete Felder (`Feld.berechnet`) und für die
+ * "Berechnung"-Variante einer Feld-Bedingung (`FeldAnkreuzBedingung`).
+ *
+ * Ohne Tabellenauswahl werden die Zeilenfelder aller Quellen und die berechneten Spalten aller
+ * Tabellen angeboten, per `pfad` dedupliziert -- bei gleichnamigen Spalten (z.B. `Dauer`) bleibt nur
+ * eine. Mit gewählten Tabellen kommen nur deren eigene Felder (vereinigt, ebenfalls per `pfad`
+ * dedupliziert); das löst Namenskollisionen und erlaubt Summen über Teiltabellen (z.B. LRE1/2 + LRE3
+ * ohne die BZ-Haupttabelle).
+ *
+ * @param props - `wert` (aktuelle Aggregation), `formular`, `tabellen` (Tabellen des Formulars) und `onChange`.
+ */
+export function AggregationEditor({
+  wert,
+  formular,
+  tabellen,
+  onChange,
+}: {
+  wert: Berechnet;
+  formular: FormularCode;
+  tabellen: Record<string, TabellenDef>;
+  onChange: (wert: Berechnet) => void;
+}) {
+  const gewaehlt = wert.tabellen ?? [];
+  const feldOptionen =
+    gewaehlt.length > 0
+      ? [
+          ...new Map(
+            gewaehlt
+              .flatMap(name => (tabellen[name] ? feldOptionenFuerTabelle(formular, tabellen[name]) : []))
+              .map(e => [e.pfad, e]),
+          ).values(),
+        ]
+      : [...katalogZeilenFelder(formular), ...alleBerechneteEintraege(tabellen)];
+  // Zulagen-Platz-Summen nur bei op "summe": eine Anzahl/ein Maximum "je Platz" hat keine
+  // eindeutige Bedeutung (siehe `Berechnet.liste`).
+  const relevanteTabellen: [string, TabellenDef][] =
+    gewaehlt.length > 0
+      ? gewaehlt.flatMap(name => (tabellen[name] ? [[name, tabellen[name]] as [string, TabellenDef]] : []))
+      : Object.entries(tabellen);
+  const listenOptionen =
+    wert.op === 'summe' ? relevanteTabellen.flatMap(([name, t]) => listenOptionenFuerTabelle(name, t)) : [];
+
+  /**
+   * Schaltet eine Tabelle in der Eingrenzung ein/aus; `feld` und `liste` werden zurückgesetzt, weil
+   * sich die Auswahlmöglichkeiten ändern.
+   *
+   * @param name - Tabellenname.
+   */
+  function schalteTabelle(name: string) {
+    const naechste = gewaehlt.includes(name) ? gewaehlt.filter(t => t !== name) : [...gewaehlt, name];
+    onChange({ ...wert, tabellen: naechste.length > 0 ? naechste : undefined, feld: undefined, liste: undefined });
+  }
+
+  return (
+    <div className="raster luft-unten-2xs abstand-1">
+      <div className="sp-3">
+        <DbAuswahl
+          beschriftung="Rechenart"
+          dicht
+          value={wert.op}
+          onChange={e => onChange({ ...wert, op: e.target.value as OpName })}
+        >
+          {AGGREGATIONS_OPS.map(o => (
+            <option key={o.wert} value={o.wert}>
+              {o.label}
+            </option>
+          ))}
+        </DbAuswahl>
+      </div>
+      <div className="sp-4">
+        <DbAuswahl
+          beschriftung="Bezugsbereich"
+          dicht
+          value={wert.ueber}
+          onChange={e => onChange({ ...wert, ueber: e.target.value })}
+        >
+          <option value="$alle">alle Zeilen (Gesamtsumme)</option>
+          <option value="$seite">nur diese Seite</option>
+          <option value="$bisher">alle Vorseiten (Übertrag)</option>
+          <option value="$laufend">bis hierher (Übertrag + diese Seite)</option>
+        </DbAuswahl>
+      </div>
+      <div className="sp-5">
+        <DbAuswahl
+          beschriftung="Feld oder Liste"
+          dicht
+          value={
+            wert.liste
+              ? `liste:${wert.liste.tabelle}:${wert.liste.gruppe}:${wert.liste.index ?? 'gesamt'}${LISTE_ART_SUFFIX[wert.liste.art ?? 'summe']}`
+              : (wert.feld ?? '')
+          }
+          onChange={e => {
+            const v = (e.target as HTMLSelectElement).value;
+            if (v.startsWith('liste:')) {
+              const treffer = listenOptionen.find(o => o.key === v);
+              onChange({ ...wert, feld: undefined, liste: treffer?.liste });
+            } else {
+              onChange({ ...wert, feld: v || undefined, liste: undefined });
+            }
+          }}
+        >
+          <option value="">(Feld wählen)</option>
+          {gruppiere(feldOptionen).map(([gruppe, felder]) => (
+            <optgroup key={gruppe} label={gruppe}>
+              {felder.map(f => (
+                // Key aus pfad+label: ohne Tabellenauswahl mischt `feldOptionen` mehrere Zeilenquellen
+                // (z.B. "Dauer" aus Daten.BZ und Daten.BE) mit gleichem Pfad, aber anderem Label.
+                <option key={`${f.pfad}|${f.label}`} value={f.pfad}>
+                  {f.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+          {listenOptionen.filter(o => o.liste.index !== undefined).length > 0 && (
+            <optgroup label="Zulagen-Spaltenplätze (Summe je Platz)">
+              {listenOptionen
+                .filter(o => o.liste.index !== undefined)
+                .map(o => (
+                  <option key={o.key} value={o.key}>
+                    {o.label}
+                  </option>
+                ))}
+            </optgroup>
+          )}
+          {listenOptionen.filter(o => o.liste.index === undefined).length > 0 && (
+            <optgroup label="Zulagen-Gruppen (Gesamtsumme über alle Plätze)">
+              {listenOptionen
+                .filter(o => o.liste.index === undefined)
+                .map(o => (
+                  <option key={o.key} value={o.key}>
+                    {o.label}
+                  </option>
+                ))}
+            </optgroup>
+          )}
+        </DbAuswahl>
+      </div>
+      <DBStack direction="row" wrap gap="x-small" alignment="center">
+        <span
+          className="zelle-klein farbe-gedaempft"
+          title="Grenzt die Aggregation auf eine oder mehrere Teiltabellen ein -- ohne Auswahl laufen alle Tabellen zusammen"
+        >
+          Tabellen:
+        </span>
+        {Object.keys(tabellen).map(name => (
+          <DBCheckbox
+            key={name}
+            size="small"
+            label={name}
+            checked={gewaehlt.includes(name)}
+            onChange={() => schalteTabelle(name)}
+          />
+        ))}
+      </DBStack>
+      {wert.op === 'letztesDatum' && (
+        <DBStack direction="row" gap="x-small" alignment="center">
+          <DbFeld
+            beschriftung="Tage"
+            dicht
+            type="number"
+            min="0"
+            huelleStyle={{ maxWidth: '6rem' }}
+            placeholder="Tage"
+            value={wert.maxTage ?? ''}
+            onChange={e => {
+              const roh = (e.target as HTMLInputElement).value;
+              onChange({ ...wert, maxTage: roh === '' ? undefined : Number(roh) });
+            }}
+          />
+          <span className="zelle-klein farbe-gedaempft">
+            Tage Frist — liegt der letzte Eintrag länger zurück (oder fehlt er), wird das heutige Datum gesetzt. Leer
+            lassen: immer der letzte Eintrag.
+          </span>
+        </DBStack>
+      )}
+    </div>
+  );
+}
+
+const ZEILEN_OPS_AUSWAHL: { wert: ZeilenOpName; text: string }[] = [
+  { wert: 'produkt', text: 'Produkt (×)' },
+  { wert: 'summe', text: 'Summe (+)' },
+  { wert: 'differenz', text: 'Differenz (−)' },
+  { wert: 'quotient', text: 'Quotient (÷)' },
+  { wert: 'zeitdifferenz', text: 'Dauer aus Uhrzeiten (ein Tag, über Mitternacht)' },
+  { wert: 'zeitspanne', text: 'Zeitspanne aus Zeitstempeln (über mehrere Tage)' },
+];
+
+/**
+ * Rechnung einer berechneten Spalte. Ruft sich für geklammerte Zwischenrechnungen selbst auf —
+ * damit sind gemischte Rechnungen wie Ende − Beginn + Pause abbildbar, ohne eine Vorrangregel
+ * einzuführen: die Klammerung steht sichtbar in der Struktur.
+ *
+ * @param props - `wert` (Rechnung), `zeilenFelder` (wählbare Operanden), `onChange` und `onEntfernen`
+ *   (nur bei Zwischenrechnungen; zeigt den Entfernen-Knopf).
+ */
+export function Rechnung({
+  wert,
+  zeilenFelder,
+  onChange,
+  onEntfernen,
+}: {
+  wert: ZeilenBerechnet;
+  zeilenFelder: KatalogEintrag[];
+  onChange: (wert: ZeilenBerechnet) => void;
+  onEntfernen?: () => void;
+}) {
+  /**
+   * Ersetzt einen Operanden.
+   *
+   * @param index - Position in `wert.operanden`.
+   * @param operand - Neues Feld, Festwert oder Zwischenrechnung.
+   */
+  function setzeOperand(index: number, operand: ZeilenOperand) {
+    onChange({ ...wert, operanden: wert.operanden.map((o, j) => (j === index ? operand : o)) });
+  }
+
+  /**
+   * Entfernt einen Operanden.
+   *
+   * @param index - Position in `wert.operanden`.
+   */
+  function entferneOperand(index: number) {
+    onChange({ ...wert, operanden: wert.operanden.filter((_, j) => j !== index) });
+  }
+
+  return (
+    <div className="luft-unten-2xs">
+      <DBStack direction="row" alignment="end" gap="x-small" className="feldgruppe luft-unten-2xs">
+        <DbAuswahl
+          beschriftung="Rechenart"
+          dicht
+          value={wert.op}
+          onChange={e => onChange({ ...wert, op: e.target.value as ZeilenOpName })}
+        >
+          {ZEILEN_OPS_AUSWAHL.map(o => (
+            <option key={o.wert} value={o.wert}>
+              {o.text}
+            </option>
+          ))}
+        </DbAuswahl>
+        {onEntfernen && (
+          <DBButton
+            type="button"
+            variant="outlined"
+            data-color="critical"
+            title="Zwischenrechnung entfernen"
+            onClick={onEntfernen}
+          >
+            ×
+          </DBButton>
+        )}
+      </DBStack>
+      <div className="zelle-klein farbe-gedaempft luft-unten-2xs">
+        Operanden der Reihe nach verrechnet — für gemischte Rechnungen eine Zwischenrechnung einsetzen.
+      </div>
+
+      {wert.operanden.map((operand, i) =>
+        typeof operand === 'object' ? (
+          // Index als Key: Operanden haben keine eigene ID, ihre Reihenfolge ist Teil der Rechnung.
+          <div key={i} className="einzug-linie">
+            <Rechnung
+              wert={operand}
+              zeilenFelder={zeilenFelder}
+              onChange={b => setzeOperand(i, b)}
+              onEntfernen={() => entferneOperand(i)}
+            />
+          </div>
+        ) : (
+          // Index als Key, siehe oben.
+          <DBStack key={i} direction="row" alignment="end" gap="x-small" className="feldgruppe luft-unten-2xs">
+            <DbAuswahl
+              beschriftung="Operand"
+              dicht
+              value={typeof operand === 'number' ? '__zahl' : operand}
+              onChange={e => {
+                const v = e.target.value;
+                if (v === '__zahl') setzeOperand(i, 0);
+                else if (v === '__rechnung') setzeOperand(i, { op: 'differenz', operanden: [] });
+                else setzeOperand(i, v);
+              }}
+            >
+              {zeilenFelder.map(f => (
+                <option key={f.pfad} value={f.pfad}>
+                  {f.label}
+                </option>
+              ))}
+              <option value="__zahl">Fester Zahlenwert…</option>
+              <option value="__rechnung">Zwischenrechnung (Klammer)…</option>
+            </DbAuswahl>
+            {typeof operand === 'number' && (
+              <DbFeld
+                beschriftung="Zahlenwert"
+                dicht
+                type="number"
+                step="any"
+                value={operand}
+                onChange={e => setzeOperand(i, Number(e.target.value))}
+              />
+            )}
+            <DBButton type="button" variant="outlined" data-color="critical" onClick={() => entferneOperand(i)}>
+              ×
+            </DBButton>
+          </DBStack>
+        ),
+      )}
+
+      <DBStack direction="row" gap="2x-small">
+        <DBButton
+          type="button"
+          variant="outlined"
+          data-size="small"
+          onClick={() => onChange({ ...wert, operanden: [...wert.operanden, zeilenFelder[0]?.pfad ?? ''] })}
+        >
+          + Operand
+        </DBButton>
+        <DBButton
+          type="button"
+          variant="outlined"
+          data-size="small"
+          title="Geklammerte Zwischenrechnung als weiteren Operanden anhängen"
+          onClick={() => onChange({ ...wert, operanden: [...wert.operanden, { op: 'differenz', operanden: [] }] })}
+        >
+          + Zwischenrechnung
+        </DBButton>
+      </DBStack>
+    </div>
+  );
+}

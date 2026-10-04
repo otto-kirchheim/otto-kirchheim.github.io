@@ -10,7 +10,7 @@ description: 'Use when: frontend topic coding-konventionen'
 ### Dateien & Ordner
 
 - **Feature-Module:** PascalCase (`Bereitschaft/`, `EWT/`, `Neben/`)
-- **Komponenten:** PascalCase (`MyButton.tsx`, `MyFormModal.tsx`)
+- **Komponenten:** PascalCase (`DBLoadingButton.tsx`, `MyFormModal.tsx`)
 - **Utilities:** camelCase (`configDayjs.ts`, `saveDaten.ts`)
 - **Klassen:** PascalCase (`CustomTable.ts`, `CustomSnackbar.ts`)
 - **Interfaces:** PascalCase mit `I`-Prefix (`IDaten.ts`, `IVorgabenU.ts`)
@@ -36,7 +36,7 @@ description: 'Use when: frontend topic coding-konventionen'
 **IMMER** `dayjs` verwenden, **NIEMALS** native `Date`-Methoden oder moment.js.
 
 ```ts
-import dayjs from "../utilities/configDayjs";
+import dayjs from "@/shared/lib/date/configDayjs";
 ```
 
 Die zentrale Konfiguration (`configDayjs.ts`) lädt:
@@ -55,20 +55,38 @@ Jeder Ordner hat eine `index.ts` mit Re-Exports:
 
 ```ts
 // components/index.ts
-export { default as MyButton } from "./MyButton";
+export { default as DBLoadingButton } from "./DBLoadingButton";
 export { default as MyFormModal } from "./MyFormModal";
 ```
 
 ### Import-Reihenfolge
 
-1. Externe Pakete (`preact`, `dayjs`, `bootstrap`)
-2. Utilities (`../utilities`)
+1. Externe Pakete (`react`, `dayjs`, `@db-ux/react-core-components`)
+2. tiefere FSD-Schichten per `@/`-Alias auf die konkrete Datei, z.B. `@/shared/api/FetchRetry`
 3. Komponenten (`../components`)
 4. Lokale Dateien (`./utils`)
 
 ---
 
-## Preact-Komponenten
+## React-Komponenten
+
+### DB-UX-Komponenten zuerst
+
+Native HTML-Controls (`<button>`, `<input type="checkbox">`, roh gebautes `db-tag`/`db-textarea`-
+Markup) sind seit Phase J durchgehend auf `@db-ux/react-core-components` umgestellt
+(`DBButton`, `DBCheckbox`, `DBRadio`, `DBTag`, `DBTextarea`, `DBInput`/`DBSelect`). Neuer Code
+verwendet diese Komponenten direkt statt rohes `db-*`-Markup nachzubauen.
+
+- **`DBButton`** braucht ein explizites `type` (Lint-Regel `db-ux/button-type-required`); ein
+  icon-only Button (`noText`) braucht ein `<DBTooltip>`-Kind.
+- **`DBLoadingButton`** (`components/DBLoadingButton.tsx`) statt `DBButton`, wenn der Button per
+  `id` an `setLoading`/`clearLoading` haengt (z.B. Speichern-/PDF-Buttons) -- ein normaler
+  `DBButton` wuerde deren `replaceChildren()`-Zugriff am React-Tree vorbei nicht ueberleben,
+  siehe `shared/ui/button-loading/buttonLoadingStore.ts`.
+- **`MyCheckbox`** (kapselt `DBSwitch`) fuer alles, was semantisch ein Schalter ist
+  (`role="switch"`-Markup), nicht `DBCheckbox`.
+- **`DbFeld`/`DbAuswahl`** (kapseln `DBInput`/`DBSelect`) fuer kompakte Felder ohne sichtbares
+  Label -- eigene Konventionen (`beschriftung`, `dicht`, `huelleStyle`), siehe deren Kopfkommentar.
 
 ### Props-Typen
 
@@ -78,40 +96,54 @@ interface Props {
   onClick: () => void;
 }
 
-const MyButton: FunctionalComponent<Props> = ({ label, onClick }) => { ... };
+const MeinButton: FC<Props> = ({ label, onClick }) => { ... };
 ```
 
 ### Modal-Rendering
 
-Preact-Komponenten werden in Bootstrap-Modals gerendert:
+React-Komponenten werden in einen `DBDrawer` gerendert (`showModal()`, nativer `<dialog>`):
 
 ```ts
-import { render } from "preact";
-render(<MyComponent {...props} />, document.getElementById("modal-body"));
+import { mount, unmount } from "@/shared/lib/react-root/reactRoot";
+mount(document.getElementById("modal-body"), <MyComponent {...props} />);
+// Abhaengen (frueher `render(null, el)`):
+unmount(document.getElementById("modal-body"));
 ```
 
 ### JSX
 
-- `jsxImportSource: "preact"` (automatisch via TSConfig)
-- Preact `FunctionalComponent<T>` statt React `FC<T>`
+- `jsxImportSource: "react"` (automatisch via TSConfig)
+- React `FC<T>`; `children` gehoert explizit in den Props-Typ (React vererbt sie nicht implizit)
 
 ---
 
-## Bootstrap
+## Styles
 
-### Module einzeln importieren
+Gate: `bun run lint:css` (Stylelint, Teil von `release:check`). Regeln und Begruendungen stehen
+im Kopf von `stylelint.config.mjs`.
+
+Bootstrap ist raus (Phase H) -- kein Paket, kein CSS, kein JS, keine `data-bs-*`-Attribute.
+
+### Ladereihenfolge (`main.ts`)
 
 ```ts
-import { Collapse } from "bootstrap";
-import { Modal } from "bootstrap";
+import '../scss/layers.scss'; // @layer db-ux, app;
+import '../scss/db-ux.css'; // DB-UX-Bundle in layer(db-ux)
+import '../scss/db-gegenregeln.scss'; // Gegenregeln zum DB-Layer in @layer app
+import '../scss/styles.scss'; // App-Regeln, bewusst ungelayert (schlagen alle Layer)
 ```
 
-### CSS via SCSS
+### Layout und Klassen
 
-```scss
-@import "~bootstrap/scss/bootstrap";
-@import "~material-icons/iconfont/material-icons.css";
-```
+Keine Bootstrap-Utility-Klassen (`d-flex`, `mb-3`, `text-muted`, ...; die Datei `utilities.scss` ist
+seit dem Bootstrap-Rueckbau geloescht, `test/app/bootstrapRueckbau.test.ts` schuetzt dagegen). Stattdessen:
+
+- Layout und Abstaende ueber DB-Komponenten und ihre Props (`DBStack` `direction`/`gap`/`alignment`/`wrap`,
+  `DBInfotext`, `DBNotification`, `DBButton` `size`/`width`), Feldgruppen mit `Gruppe` (`shared/ui/gruppe`).
+- Eigene Klassen mit sprechenden Namen in `src/scss/styles.scss` bzw. `src/scss/admin.scss` (Admin), Werte nur aus DB-Tokens.
+  Abstaende `luft-oben|unten|links|rechts-<2xs|xs|sm|md>`, Farben `farbe-*`, Tabellenzellen `zelle-*`.
+  Neuen Klassennamen vorher im ganzen `src/scss` suchen (Kollisionen).
+- Ein-/Ausblenden per `hidden`-Attribut (globale Regel in `styles.scss`), nie per Klasse.
 
 ---
 
@@ -120,16 +152,13 @@ import { Modal } from "bootstrap";
 Alle Server-Anfragen über `FetchRetry`:
 
 ```ts
-import { FetchRetry } from "../utilities";
+import { FetchRetry } from "@/shared/api/FetchRetry";
 
-const response = await FetchRetry("/api/resource", {
-	method: "POST",
-	body: JSON.stringify(data),
-});
+const response = await FetchRetry<RequestBody, ResponseData>("resource", data, "POST");
 ```
 
 - Token wird automatisch im Header gesetzt
-- Auto-Retry bei 401 mit Token-Refresh
+- Auto-Refresh bei 401 über einen geteilten Single-Flight-Refresh (kein Retry pro Request einzeln)
 - Kein manuelles Error-Handling für Auth nötig
 
 ---
@@ -139,7 +168,7 @@ const response = await FetchRetry("/api/resource", {
 Typsicherer Zugriff über `Storage`-Singleton:
 
 ```ts
-import { Storage } from "../utilities";
+import Storage from "@/shared/lib/storage/Storage";
 
 // Lesen mit Typ
 const monat = Storage.get<number>("Monat");
@@ -147,8 +176,8 @@ const monat = Storage.get<number>("Monat");
 // Schreiben
 Storage.set("Monat", 3);
 
-// Mit Default-Wert
-const daten = Storage.get("Daten", defaultDaten);
+// Mit Default-Wert (Options-Objekt, kein roher 2. Positionsparameter)
+const daten = Storage.get("dataN", { default: defaultDaten });
 ```
 
 ---

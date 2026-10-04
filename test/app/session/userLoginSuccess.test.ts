@@ -1,0 +1,147 @@
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
+
+const {
+  selectYearMock,
+  storageSetMock,
+  storageRemoveMock,
+  setLoadingMock,
+  isAdminMock,
+  mountAdminTabMock,
+  createSnackBarMock,
+  requestVerificationMailMock,
+} = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
+  selectYearMock: vi.fn(),
+  storageSetMock: vi.fn(),
+  storageRemoveMock: vi.fn(),
+  setLoadingMock: vi.fn(),
+  isAdminMock: vi.fn(),
+  mountAdminTabMock: vi.fn(),
+  createSnackBarMock: vi.fn(),
+  requestVerificationMailMock: vi.fn(),
+}));
+
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
+  createSnackBar: createSnackBarMock,
+}));
+
+vi.mock('@/features/auth/model/requestVerificationMail', () => ({
+  default: requestVerificationMailMock,
+}));
+
+vi.mock('@/pages/einstellungen/model/selectYear', () => ({
+  default: selectYearMock,
+}));
+
+vi.mock('@/shared/lib/storage/Storage', () => ({
+  default: {
+    set: storageSetMock,
+    remove: storageRemoveMock,
+  },
+}));
+
+vi.mock('@/shared/ui/button-loading/setLoading', () => ({
+  default: setLoadingMock,
+}));
+
+vi.mock('@/shared/api/token/decodeAccessToken', () => ({
+  isAdmin: isAdminMock,
+}));
+
+vi.mock('@/pages/admin/mountAdminTab', () => ({
+  mountAdminTab: mountAdminTabMock,
+}));
+
+import userLoginSuccess from '@/app/session/userLoginSuccess';
+import { featureLifecycleRegistry } from '@/shared/lib/feature';
+import { LOGIN_INIT_SEQUENCE, getSteps, resetSteps } from '@/shared/lib/lifecycle/initSequence';
+
+describe('userLoginSuccess', () => {
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <h1 id="Willkommen"></h1>
+      <button id="btnLogin" class="btn"></button>
+      <input id="Jahr" />
+      <div id="MonatFeld" class="db-select" hidden><input id="Monat" /></div>
+      <div id="admin" hidden></div>
+      <div id="Admin" role="tabpanel" data-gesperrt></div>
+    `;
+    vi.clearAllMocks();
+    isAdminMock.mockReturnValue(false);
+    resetSteps('login');
+
+    featureLifecycleRegistry.clearAll();
+    featureLifecycleRegistry.registerFeature({
+      name: 'Admin',
+      async register(ctx) {
+        if (ctx.isAdmin) {
+          document.querySelectorAll<HTMLDivElement>('#admin').forEach(el => (el.hidden = false));
+          document.querySelector<HTMLDivElement>('#Admin')?.removeAttribute('data-gesperrt');
+          mountAdminTabMock(ctx.userName);
+        }
+      },
+    });
+  });
+
+  it('setzt Basis-UI, Storage und startet SelectYear ohne Admin-Tab fuer member', async () => {
+    await userLoginSuccess({ username: 'otto', role: 'member' });
+
+    expect(setLoadingMock).toHaveBeenCalledWith('btnLogin');
+    expect(storageSetMock).toHaveBeenCalledWith('Version', undefined);
+    expect(storageSetMock).toHaveBeenCalledWith('Benutzer', 'Otto');
+    expect(storageRemoveMock).toHaveBeenCalledWith('actAsUserId');
+    expect(storageRemoveMock).toHaveBeenCalledWith('actAsUserName');
+    expect(document.querySelector<HTMLElement>('#btnLogin')?.hidden).toBe(true);
+    expect(document.querySelector<HTMLInputElement>('#Jahr')?.value).not.toBe('');
+    expect(document.querySelector<HTMLInputElement>('#Monat')?.value).not.toBe('');
+    expect(document.querySelector<HTMLElement>('#MonatFeld')?.hidden).toBe(false);
+    expect(selectYearMock).toHaveBeenCalledTimes(1);
+    expect(mountAdminTabMock).not.toHaveBeenCalled();
+  });
+
+  it('schaltet Admin-UI frei und mountet Admin-Tab bei Admin-Rolle', async () => {
+    await userLoginSuccess({ username: 'otto', role: 'org-admin' });
+
+    expect(document.querySelector<HTMLElement>('#admin')?.hidden).toBe(false);
+    expect(document.querySelector('#Admin')?.hasAttribute('data-gesperrt')).toBe(false);
+    expect(mountAdminTabMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('nutzt isAdmin() wenn keine Rolle uebergeben wurde', async () => {
+    isAdminMock.mockReturnValue(true);
+
+    await userLoginSuccess({ username: 'otto' });
+
+    expect(isAdminMock).toHaveBeenCalledTimes(1);
+    expect(mountAdminTabMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('escaped HTML im Willkommenstext', async () => {
+    await userLoginSuccess({ username: '<otto>', role: 'member' });
+
+    expect(document.querySelector<HTMLHeadingElement>('#Willkommen')?.innerHTML).toContain('&lt;otto&gt;');
+    expect(document.querySelector<HTMLHeadingElement>('#Willkommen')?.innerHTML).not.toContain('<otto>');
+  });
+
+  it('fuehrt InitSteps in der deklarierten Reihenfolge aus', async () => {
+    await userLoginSuccess({ username: 'otto', role: 'member' });
+
+    const expected = LOGIN_INIT_SEQUENCE.map(s => s.name);
+    expect(getSteps('login')).toEqual(expected);
+  });
+
+  it('zeigt Warnung und Resend-Aktion wenn email nicht verifiziert ist', async () => {
+    await userLoginSuccess({ username: 'otto', role: 'member', emailVerified: false });
+
+    expect(createSnackBarMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'warning',
+      }),
+    );
+
+    const snackbarArg = createSnackBarMock.mock.calls[0]?.[0] as {
+      actions?: Array<{ function?: () => void }>;
+    };
+    snackbarArg.actions?.[0]?.function?.();
+    expect(requestVerificationMailMock).toHaveBeenCalledTimes(1);
+  });
+});

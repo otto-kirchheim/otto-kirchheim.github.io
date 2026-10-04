@@ -1,3 +1,2463 @@
+# Offene Punkte (Stand 2026-10-04)
+
+Alle Punkte sind erledigt (Stand 2026-10-04); die `[ ]` weiter unten sind nicht offen: alle anderen `[ ]` weiter unten (ab `# Vorheriger Plan`) stammen aus abgeschlossenen oder
+ueberholten Phasen und werden nicht mehr gepflegt (Archiv, Ergebnisse stehen im `CHANGELOG.md`).
+
+- [x] Browser-Check (User, 2026-10-04): Module steckbar -- funktioniert
+- [x] Sichtpruefung (User, 2026-10-04): nach dem stylelint-Umbau -- sieht gut aus
+- [x] Geraetetest (User 2026-10-04: i.o.): Unterschrift-Pad -- Strichstaerke/Tempo-Wirkung (`MIN_STRICH_PT`, `MAX_STRICH_PT`, `velocityFilterWeight` in `signaturePad.ts`), Drehen, Hilfslinie; Ressourcen-Bearbeiten- und Schriftart-Dialog am Handy
+- [x] Echter Stylus-Druck im Signaturpad: nicht noetig (User 2026-10-04)
+- [x] react-hooks-Warnungen: geprueft 2026-10-04, `bun run lint` meldet 0 Warnungen (I.9 erledigt)
+- [x] Phase-I-Reste geprueft 2026-10-04: I.4 (Precache ignoriert Head/Italic/Black/Digital/db-*, nur Regular/Medium/Semibold/Bold vorab), I.10 (siehe unten, doppelt gefuehrt), I.11/I.14 (`CLAUDE.md` nennt `dev`/`dev:local`, `skills/bootstrap` gibt es nicht mehr, Graph aktualisiert) erledigt
+- [x] I.6 Bundle-Zahlen (Build 2026-10-04): Entry `index-*.js` 42,7 KB gz (Baseline 43,0), `react` 67,5 KB gz (Spike ~60), CSS 102 KB gz (Spike ~84, +18 KB durch DB-UX-5.6 und App-Styles), Precache 156 Eintraege / 4978 KiB (Baseline P-1: 48 / 4691). Kein Budget-Verstoss festgelegt; bei Bedarf CSS-Anteil pruefen
+- [x] Dark-Mode-QA end-to-end (I.8, User 2026-10-04: i.o.): alle Tabs + je ein Dialog, Hell/Dunkel/Auto, Mobil, Deep-Link
+
+---
+
+# Aktueller Plan: FSD-Umbau + steckbare Feature-Module - 2026-09-20
+
+Vollständiger Plan: `tasks/plan-fsd-feature-module.md` (Branch `feat/fsd-feature-module`, Basis `feat/react-umbau`). Phasen mit grünem Gate je Phase;
+Dateien verschiebt der User in der IDE, Zielordner legt Claude vorher an.
+
+**Vor jeder Phase:** Token-/Session-Budget prüfen und ansagen (Phasengröße, geschätzter Kontext; bei L/XL-Phasen `/usage` durch den User); bei knappem Budget Phase nicht beginnen.
+
+Gate: `bun run typecheck && bun run lint && bun run test` (+ `bun run build`, `lint:css` bei Alias/CSS/Chunks).
+Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass / 0 fail (198 Dateien), Build-Baseline unten.
+
+- [x] P-1 Branch `feat/fsd-feature-module` angelegt, Baseline typecheck/lint/test notiert
+- [x] P-1 Baseline `bun run build`: exit 0; Entry `index-*.js` 176,61 kB (gzip 43,03 kB); lazy vorhanden: `mountAdminTab` 257,03 kB, `actAs` 6,69 kB, `pdf` 430,94 kB, `decompress` 295,15 kB, `fontkit` 756,37 kB; `react` 218,84 kB; `utils` 1023,53 kB; PWA-Precache 48 Einträge (4691,30 KiB)
+- [x] P0 Enabling: Aliase `@/*`/`@test/*`, 3 relative core-Imports, 47 Test-Helper-Imports, `lint:fsd` (Ratsche 132, eigene Config statt eslint-plugin-boundaries: kein neues Dependency nötig), PWA-Precache enthält Lazy-Chunks bereits. Gate grün: typecheck 0, lint 0, test 2172 pass, build 0 (Entry 176,61 kB unverändert)
+- [x] P1a Contract-Kern + EA als Referenz: `core/hooks/featureRegistry.ts` (`FeatureMeta`, `FeatureParts` ui/events, `define`/`load`/`loadMany`/`loadAll`/`metas`, Wake-Events mit Queue), `app/features.ts` (Manifest), EA als `meta.ts` + `parts/{ui,events}`; `features/EA/index.tsx` entfällt, `main.tsx` importiert `@/app/features`. 13 neue Tests (2185 pass), lint:fsd 132 unverändert. Verschoben: `useFeatureParts` -> P1e, `scripts/new-feature.ts` -> P1h. Build: Rolldown mischt Chunks um (Entry 288 kB, `utils` 699 kB, `syncEwtToEa` 204 kB); eager Summe 1191 kB statt 1200 kB. Fehlerpfad Chunk-Laden (Snackbar+Retry) folgt in P1b (`syncFeatureTabs`)
+- [x] P1b Shell aus `meta` (komplett): ber/ewt/ez migriert (meta + lazy `parts/ui`, `ez` auch `events`); `AppHeader`, `App.tsx`, `StartTab` (Schnellzugriff + Startsatz), `EinstellungenTab`-Checkboxen, `OnboardingGuidePanel`-Tour, `syncFeatureTabs` aus `meta`; Sichtbarkeit über `featureTabsStore` statt DOM-`d-none`; Chunk-Fehler-Snackbar. 2189 Tests grün. `lint:fsd`-Baseline auf 110 korrigiert (P0-Wert 132 enthielt 22 Unused-Directive-Meldungen). Browser-Check durch den User: i.o. (2026-09-20)
+- [x] P1c-1 Ressourcen-Meta & Daten-Teil (ber, ewt, ez, ea): `meta.resources` beschreibend (Storage-Key, Tabellen-Id, Monatsermittlung, Jahres-Gates), `resourceConfig`, `autoSave`, `persist*`, `mergeVisibleResourceRows`, `warmeFormularCaches`, `loadUserDaten.*`, `overwriteUserDaten` (async, lazy Teil `data`), `changeMonatJahr`, `actAs`. Gate: typecheck, lint, `lint:fsd` 109, Tests 2196, build i.o.; Browser-Check offen.
+- [x] P1c-2 Backend-Adapter (`meta.resources[].api`, `periodOf`, `signatureOmitKeys`), generisches `loadAllYearData`, `saveDaten`-Button-Zuordnung aus `meta`, Event `ewt:deleted` + `unlinkEwtRefs`, Monat/Jahr-Store (`MonatUeberschrift`). Gate: typecheck, lint, `lint:fsd` 107, Tests 2201, build i.o.; Browser-Check offen (P1c gesamt).
+- [x] P1d PDF-Provider (`meta.pdf` + lazy Teil `pdf`, `pdfDaten.ts` je Feature, `zulagenWerte.ts`, `generatePDF` ohne Feature-Wissen, `abgeleiteteWerte.ts` entfaellt). Gate: typecheck, lint, `lint:fsd` 107, Tests 2203, build i.o.; `generatePDF.test.ts` unveraendert gruen. Browser-Check (PDF je Modus B/E/N/EA) offen.
+- [x] P1e Berechnung ueber Feature-Slots (lazy Teil `berechnung`: `aggregate`, `calc`, `hatDaten`, `tabelle`, `karte`; `features/Berechnung` ohne Feature-Wissen, `aktualisiereBerechnung`/`generateTableBerechnung` async). Gate: typecheck, lint, `lint:fsd` 103, Tests 2207, build i.o.; Berechnung-Tests inhaltlich unveraendert gruen. Browser-Check (Berechnung Desktop + Mobil, Tabs aktiv/inaktiv, Zulagen-Aufschluesselung) offen.
+- [x] P1f Einstellungen ueber Feature-Slots (lazy Teil `einstellungen`: `sections`, `read`, `collect` fuer ber/ewt/ez; `EinstellungenTab` rendert Abschnitte aus dem Store; `generateEingabeMaske`/`saveEinstellungen` async bzw. slot-basiert). Gate: typecheck, lint, `lint:fsd` 107 (temporaer +4, sinkt mit den Moves), Tests 2216, build i.o.; Browser-Check offen (Einstellungen: Abschnitte, Speichern, Fahrzeiten, Zulagen, Bereitschafts-Tabelle, Act-as).
+- [x] P1g Admin nach Features (`features/Admin/adminFeatures.ts` Admin-Manifest, Ordner `features/Admin/features/{ber,ewt,ez,ea}`; Ressourcenbrowser, Verweise per Endpunkt, Formular-Upload, Dashboard-Stats, Tab-Optionen aus `meta`). Gate: typecheck, lint, `lint:fsd` 107, Tests 2221, build i.o.; Browser-Check (Admin: Ressourcenbrowser + Verweis-Sprung, Dashboard, Formular-Upload, Profil-Template) offen. Offen: `datenKatalog` je Feature, Admin-Fallback fuer neue Features
+- [x] P1h Help/Onboarding-Slots + Abnahme (lazy Teil `help` + `meta.helpKeys`, async `openHelpModal`; Pruef-Schritte der Ersteinrichtung aus `section.onboarding`, ausgeblendete Features ohne Schritt; PDF-Body-Typen in die Features; `bun run new-feature`; `test/app/featureAbnahme.test.tsx` mit allen 16 Teilmengen, Dummy-Feature, Lazy). Gate: typecheck, lint, `lint:fsd` 109 (temporaer +2), Tests 2270, build i.o. (113 Precache-Eintraege, `help`-Chunk je Feature). Eager-JS 1274 kB vs. ca. 1200 kB Baseline (Ziel verfehlt, siehe CHANGELOG 174). Browser-Check offen (Hilfe je Tab/Dialog, Ersteinrichtung mit deaktivierten Tabs).
+- [x] Hilfetexte inhaltlich gegen die heutige UI abgleichen, Teil 1/2 (User-Hinweis nach Browser-Check P1h, 2026-09-20/22): `tab.einstellungen` neu beschrieben (Sicherheit/Biometrie, Arbeitszeit, Feature-Abschnitte, sichtbare Bereiche, AutoSave, Jahreswechsel statt "Logout"/"Passwort ändern"); `tab.berechnung` fehlte komplett, jetzt Hilfe-Knopf `#btnHelpBerechnung` in `BerechnungTab.tsx` + neuer Kern-Kontext. Siehe CHANGELOG 175.
+- [x] P1i `datenKatalog.ts` nach Feature aufgeteilt (`features/Admin/features/{ber,ewt,ez,ea}/katalog.ts`, Typ `FeatureKatalog`; geteilte Typen/Helfer in `katalogTypen.ts`); `datenKatalog.ts` behaelt Basis/Schriftarten/Formate/Helfer und setzt den Rest zusammen, oeffentliche API unveraendert (keiner der 17 Konsumenten angepasst). Abweichung vom Plan: `FormularCode` bleibt literal (Typsicherheit), nicht aus dem Admin-Manifest abgeleitet. `lint:fsd` 111 (+2 dauerhaft, Boundary-Regel-Falsch-Positiv bei Admins eigenen `ewt`/`ea`-Unterordnern, siehe CHANGELOG 176). Test `test/features/Admin/FormularEditor/datenKatalog.test.ts` neu, Tests 2272 -> 2286.
+- [x] Scaffold um optionalen Admin-Ordner erweitert (`bun run new-feature <slug> --admin`; `index.ts`+`katalog.ts`-Stub, Eintrag im Admin-Manifest). Test `test/scripts.newFeature.test.ts` +3 Faelle, Tests 2286 -> 2289. Siehe CHANGELOG 177.
+- [x] P2 Shared-Leaves (2026-09-22): `infrastructure/{api,tokenManagement,storage,validation,date}` +
+      `core/{state,events,hooks,types}` → `shared/{api,api/token,lib/{storage,validation,version,date,state,events,
+      feature,schicht},types}` (User-IDE-Move, Zielordner vorher angelegt). Ausnahmen: `compareVersion.ts`→
+      `shared/lib/version`, `calculateBuchungstagEwt.ts`→`features/EWT/utils` (nur EWT), `resolveSchichtDay.ts`+3
+      Helfer→`shared/lib/schicht` (Bereitschaft UND EWT, daher nicht `features/ber/lib`; nicht mehr im `@/types`-
+      Barrel, 8 Konsumenten umgestellt). Alias `@/types`→`shared/types` (Name bleibt), neu `@/shared/*`,
+      `@/infrastructure`-Bare-Alias + ungenutztes `infrastructure/index.ts` entfernt. Nacharbeit: ~340 Dateien mit
+      gebrochenen Alias-Importen per Bulk-Sed, plus von der IDE falsch/gar nicht nachgezogene *relative* Importe
+      *innerhalb* der verschobenen Dateien selbst (`shared/api/FetchRetry.ts` u. a., alte Tiefe/altes Ziel) von
+      Hand, `core/index.ts`-Barrel umgehängt. `lint:fsd` 111 → 73 (Ratsche nachgezogen). Gate: typecheck 0, lint 0,
+      `lint:fsd` 73, Tests 2289 unverändert, build i.o. (Precache weiterhin 113), `lint:css` 87 unverändert.
+      Details CHANGELOG 179.
+- [x] P3 Shared-UI (2026-09-22): `components/*` (außer `MyHelpModal.tsx`, bleibt für P6) + generische
+      `infrastructure/ui` (*Store*/`use*`-Familie + Dialog/Snackbar/Button-Loading) + `infrastructure/table` (+SCSS)
+      → `shared/ui/{dialog,snackbar,button-loading,icons,form,modal,custom-table}`; Tab-/Sichtbarkeits-Stores →
+      `shared/model/navigation`; `bindClickHandlers.ts` → `shared/lib/dom` (4 Feature-Konsumenten); `applySelectOptions.ts`
+      aus `features/Neben/utils/` → `shared/ui/form`. **Abweichung vom Plan:** `AutoSaveBadge.tsx` NICHT nach
+      `widgets/autosave-badge` (P6), sondern mit `DBLoadingButton.tsx` nach `shared/ui/button-loading` (einziger
+      Konsument, sonst shared→widgets-Layering-Verstoß). Zurückgestellt: App-Shell-Tabs/Widgets (P6/P8),
+      `tabController`/`pullToRefresh`/`reactRoot`/`setOffline`/`setVersionOutdated` (P10), `actAsStatus.ts`/
+      `monatJahrStore.ts` (P5), `useMediaQuery.ts`/`useColorMode.ts` (bleiben bei einzigen Konsumenten).
+      Nacharbeit: IDE-Move übersah die komplette Snackbar-Dateigruppe (nachgezogen) + hinterließ ein Duplikat
+      `infrastructure/table/CustomTable.ts` (gelöscht); danach gebrochene Innen-Importe der verschobenen Dateien,
+      ~40 Test-Dateien mit `mock.module`/`vi.mock`-Strings auf alte Pfade (v. a. `CustomSnackbar`, in fast jedem
+      Fehlerpfad-Test gemockt), `gen-iconset.mts`+2 SCSS-Kommentare+`iconset.material.css` neu generiert,
+      `customtable.scss`-`@use`-Tiefe korrigiert. `@/components`-Barrel bleibt bewusst als Re-Export-Fassade
+      (74 Konsumenten) -- kein Auftrag für Massenumzug der Aufrufstellen. `lint:fsd` 73 → 47 (User zog die Ratsche
+      selbst nach). Gate: typecheck 0, lint 0, `lint:fsd` 47, Tests 2289 unverändert, build i.o. (Precache 113),
+      `lint:css` 87 unverändert. Details CHANGELOG 180.
+- [x] P4 Domänen-Shared (2026-09-23): `infrastructure/data/*` (13 Dateien: `berechnungWerte`,
+      `confirmDeleteAllRows`, `createDatenGetter`, `fieldMapper`, `mergeVisibleResourceRows`, `metaFields`,
+      `normalizeResourceRows`, `oeLevels`, `persistTableData`, `resourceConfig`, `saveDaten`,
+      `syncFieldsFromEwtRows`, `tableToArray`; alle ≥2 Konsumenten quer über ber/ewt/ez/ea bzw. Admin/core) →
+      `shared/lib/ressource/`; `Einstellungen/utils/zulagenCatalog.ts` (3 Konsumenten: Admin, Einstellungen,
+      Neben) → `shared/lib/zulagen/` (neue Slices, Namensgebung analog `shared/lib/schicht`).
+      **Abweichung vom Plan:** entgegen der Prozessregel "Ich verschiebe keine Dateien" (P0/P2/P3: User
+      verschiebt in der IDE) hier versehentlich selbst per `git mv` verschoben + Importe von Hand nachgezogen;
+      User hat auf Rückfrage entschieden, den bereits fertigen (tsc-sauberen) Stand zu behalten statt
+      zurückzurollen -- **ab P5 wieder strikt Ordner-Liste + IDE-Move durch User**.
+      **Weitere Abweichungen:** `zulagenWerte.ts` (infrastructure/pdf) trotz Plan-Wortlaut NICHT mitverschoben
+      -- hat nur 1 Konsumenten (`wert.ts`, selbes Modul), verletzt die "≥2 Konsumenten"-Regel des Abschnitts;
+      wandert mit dem restlichen PDF-Formel-Motor in P5 (`infrastructure/pdf` → `features/pdf-export`).
+      `DatenSortieren.ts` (1 Konsument: `Bereitschaft/utils/calculateBereitschaftsZeiten.ts`) →
+      `features/Bereitschaft/utils/` statt shared. `persistEwtTableData.ts` (1 Konsument: `EWT/utils/index.ts`)
+      → `features/EWT/utils/`. `generatePDF.ts` bewusst NICHT verschoben (Mapping-Tabelle: gehört zu
+      `infrastructure/pdf` → `features/pdf-export`, P5); einzige verbliebene Datei in `infrastructure/data/`.
+      Test-Moves gespiegelt für die shared-Ziele (`test/shared/lib/ressource/`, `test/shared/lib/zulagen/`);
+      `DatenSortieren.test.ts`/`EWT.persistEwtTableData.test.ts` bewusst an altem Ort belassen (Feature-Test-
+      Layout wird erst in P7 umgezogen). `lint:fsd`-Ratsche 47 → 37 (Grenze in `package.json` nachgezogen).
+      Gate: typecheck 0, lint 0, `lint:fsd` 37, Tests 2289 unverändert, build i.o. (Precache weiterhin 113),
+      `bun run format` gelaufen.
+- [x] P5 Geteilte Features + app/session (2026-09-23, Commit `969e349`). **Abweichung vom Plan (User-Entscheid):**
+      Autosave und PDF-Export nach `shared/lib/{autosave,pdf}` statt `features/{autosave,pdf-export}` --
+      sonst feature→feature (ber/ewt/ea/ez) und shared→features (`saveDaten`, `unlinkEwtRefs`, `AutoSaveBadge`).
+  - [x] Zielordner angelegt (Claude)
+  - [x] Moves in der IDE (User; die 49+1 Testdateien auf Wunsch des Users per `git mv` durch Claude): `core/orchestration/auth/{components→features/auth/ui, Login-Utils→features/auth/model}`,
+        `loadUserDaten.*`/`overwriteUserDaten`/`userLoginSuccess`/`auth/index.ts` → `app/session`,
+        `syncFeatureTabs`/`initSequence`/`bootstrap`/`DEPENDENCIES.md` → `app/init`, `onboarding` → `features/onboarding/{ui,model}`,
+        `logoutUser` → `features/auth/model`, `infrastructure/autoSave` → `shared/lib/autosave`,
+        `infrastructure/pdf` + `generatePDF` → `shared/lib/pdf`, `actAsStatus` → `shared/model/session`,
+        `monatJahrStore` → `shared/model/period`; Tests gespiegelt
+  - [x] Nacharbeit (Claude): IDE zog `@/infrastructure/pdf/*`-Aliase (Admin-FormularEditor, `pdfDaten.ts` je Feature) und
+        ~40 `vi.mock`-Strings nicht nach → per Präfix-Ersetzung; 9 `vi.mock`s auf das alte Barrel `auth/utils` auf die
+        konkrete Datei umgestellt (`@/app/session/{loadUserDaten,overwriteUserDaten,userLoginSuccess}` mit `default`,
+        `@/features/auth/model`); falsch umgeschriebene relative Pfade (`../../core/orchestration/...`, `../../shared/...`
+        in `shared/lib/pdf`) korrigiert; Barrel `features/auth/model/index.ts` ohne Session-Dateien, `Einstellungen/utils`
+        ohne `logoutUser`, `infrastructure/ui/index.ts` ohne `actAsStatus`; `main.tsx` → `import './app/session'`;
+        `test/pdf.warmeFormularCaches.test.ts` (in der Liste vergessen) → `test/shared/lib/pdf/`; Fixture-/Asset-Pfade
+        in `build.test.ts`/`dbFonts.test.ts` um eine Ebene vertieft (`dbFonts` war dadurch still übersprungen);
+        Kommentar-/Doku-Pfade; leere Alt-Ordner entfernt (übrig nur Ordner mit gitignoriertem `.claude-flow`)
+  - [x] Gate: typecheck 0, lint 0, `lint:fsd` 18 (= Ratsche des Users; neu `components/MyHelpModal` → `features/onboarding`,
+        löst sich in P6), test 2289/2289, build i.o. (Precache 113), `format`
+  - [x] Browser-Check durch den User: i.o. (2026-09-23)
+  - [x] (erledigt, Hooks über `invokeHook`/`registerHook`, siehe `CLAUDE.md`) Event-Inversion, nicht Teil des Moves: `features/auth` → `app/session`/`app/init`
+        (`loginUser`/`checkNeuerBenutzer` → `userLoginSuccess`, `logoutUser` → `syncFeatureTabs`), `checkNeuerBenutzer` → `features/onboarding`
+- [x] P6 Widgets (2026-09-23). **Abweichungen vom Plan (User-Entscheid):** `ThemeSwitcher` (+ `useColorMode`,
+      `useMediaQuery`) in `widgets/app-header` statt eigenem `widgets/theme-switcher` (einziger Konsument `AppHeader`,
+      sonst widget→widget); Hilfe aufgeteilt: `helpContent.ts` → `shared/lib/help` (Typen/Loader, von shared + features
+      genutzt), `openHelpModal` + `MyHelpModal` → `widgets/help-modal`. `AutoSaveBadge` bleibt in `shared/ui/button-loading`, Snackbar-Host in `shared/ui/snackbar` (beide schon in P3 verschoben, kein zweiter Move).
+  - [x] Zielordner angelegt (Claude)
+  - [x] Moves in der IDE (User): `AppHeader`/`ThemeSwitcher`/`useColorMode`/`useMediaQuery` → `widgets/app-header`,
+        `AppFooter`/`ImpressumDialog` → `widgets/app-footer`,
+        `openHelpModal`/`MyHelpModal` → `widgets/help-modal`, `helpContent` → `shared/lib/help`; Tests gespiegelt.
+        Snackbar-Host stand in meiner Liste, obwohl schon in P3 verschoben -- User hat ihn zurückgeschoben (Lesson).
+  - [x] Nacharbeit (Claude): Alias-Importe `@/core/help/*`, `@/components/MyHelpModal` und ein Zwischenstand
+        `@/widgets/app-header/AppFooter` in `App.tsx`; `components/index.ts` ohne `MyHelpModal`, `infrastructure/ui/index.ts`
+        ohne `useColorMode`, `core/index.ts` reicht `openHelpModal` vorerst aus `widgets/help-modal` durch (Legacy-Fassade
+        bis P10); `openHelpModal`/`MyHelpModal` ohne Barrel-Selbstimport; leerer Ordner `core/help` entfernt
+  - [x] Gate: typecheck 0, lint 0, `lint:fsd` 16 (Ratsche 18 → 16), test 2289/2289, build i.o. (Precache 113), `format`
+  - [x] Browser-Check visuell durch den User: i.o. (2026-09-23)
+  - [x] (erledigt, `invokeHook('help:open')` in `MyModalHeader`) Inversion: `openHelpModal` wird von `shared/ui/modal/MyModalHeader` und über das
+        `@/core`-Barrel von den Modul-Tabs (ber/ewt/ea/ez), `Einstellungen` und `BerechnungTab` aufgerufen → Öffner-
+        Registrierung in `shared/lib/help`, Widget meldet sich beim Start an
+- [x] P7 Module verschieben (2026-09-23): `features/{EA,Neben,EWT,Bereitschaft}` → `features/{ea,ez,ewt,ber}`,
+      darin `components` → `ui`, `utils` → `model` (ganzer Ordner, keine Einzelaufteilung in `model`/`lib`),
+      `<Tab>.tsx` → `ui/`; `meta.ts` + `parts/` bleiben an der Modulwurzel. Reihenfolge laut Plan ea, ez, ewt, ber.
+  - [x] Test-Zielordner angelegt (Claude); Quell-Zielordner bewusst NICHT (sonst scheitert die Ordner-Umbenennung)
+  - [x] Umbenennungen in der IDE (User)
+  - [x] 39 Tests nach `test/features/<key>/{ui,model}/` per `git mv` (Claude, auf Wunsch des Users), inkl.
+        `Utilities/DatenSortieren.test.ts`; `import './setupBun'` → `@test/setupBun`
+  - [x] Nacharbeit (Claude): Alias-Importe `@/features/<Alt>/…` (Manifest `app/features.ts` mit dynamischen `import()`,
+        Tests, `vi.mock`) und relative `../../<Alt>/utils` von der IDE nicht umgeschrieben → nachgezogen; `EwtTab`/
+        `parts/ui.tsx` (ewt) auf neue Lage; `eslint.fsd.config.js` FEATURES auf `ber/ea/ewt/ez`, Admin-Block nimmt
+        eigenen Ordner `@/features/Admin/features/**` aus (beseitigt die seit P1i mitgezählten 2 Fehlalarme ewt/ea und
+        2 neue für ber/ez; `datenKatalog.ts` dafür auf Alias-Importe); `scripts/new-feature.ts` erzeugt jetzt
+        `features/<slug>/{meta.ts,ui/<Ordner>Tab.tsx,parts/}` und Test unter `test/features/<slug>/` (Test angepasst);
+        Kommentar-Pfade
+  - [x] Gate: typecheck 0, lint 0, `lint:fsd` 14 (Ratsche 16 → 14), test 2289/2289, build i.o. (je Modul-Teil ein
+        Chunk, Precache 113), `format`
+  - [x] Browser-Check durch den User: keine Fehler (2026-09-23)
+- [x] P8 Globale Bereiche → Pages (2026-09-23): `features/Einstellungen` → `pages/einstellungen/{ui,model}`,
+      `features/Berechnung` → `pages/berechnung` (`components` → `ui`, lose `.ts` an der Seitenwurzel), `StartTab`/
+      `BerechnungTab`/`EinstellungenTab` → `pages/<seite>/ui/`. Vorher herausgelöst: modulspezifische Einstellungen-Teile
+      in die Module (ber: `VorgabenBTable`, `createEditorModalVE`, `createShowModalVE`, `SchichtOverrideEditor`,
+      `generateEingabeTabelleEinstellungenVorgabenB`, `saveTableDataVorgabenU`; ewt: `FahrzeitenPanel`, `fahrzeitPanelState`;
+      ez: `ZulagenCheckboxList`), Arbeitszeit-Editor (`ArbeitszeiteingabePanel`, `arbeitszeitPanelState`, `SchichtSection`)
+      → `shared/ui/arbeitszeit-editor` (Plan-Zielstruktur), `setMonatJahr`/`changeMonatJahr` → `shared/model/period`,
+      `berechnungBausteine` → `shared/ui/berechnung`, `MonatUeberschrift` → `shared/ui/monat-ueberschrift`,
+      `einstellungenTeile` → `shared/model/einstellungen`. **Abweichung:** `selectYear` → `app/session` (ruft `loadUserDaten`).
+  - [x] Zielordner angelegt (Claude); `pages/{einstellungen,berechnung}` bewusst nicht (Umbenennungsziel)
+  - [x] Moves in der IDE (User)
+  - [x] 27 Tests gespiegelt per `git mv` (Claude): `test/pages/{berechnung,einstellungen}/…`, herausgelöste Teile zu
+        ihrem neuen Ort (`features/{ber,ewt,ez}`, `shared/model/period`, `shared/ui/monat-ueberschrift`,
+        `app/session/selectYear`); `bundeslandAutofill.test.ts` testet `shared/lib/date/holidayRegion` → `test/shared/lib/date/`
+  - [x] Nacharbeit (Claude): Barrels `pages/einstellungen/{model,ui}/index.ts` nur noch mit seiteneigenen Exporten
+        (Konsumenten auf konkrete Dateien umgestellt); Alias-Importe `@/features/{Einstellungen,Berechnung}` und
+        `@/infrastructure/ui/<verschoben>` global; falsch umgeschriebene relative Pfade; 6 Tests mit `vi.mock` auf alte
+        Barrels auf konkrete Module umgestellt (ein veralteter Barrel-Mock ließ den ber-Einstellungen-Teil still
+        ausfallen); `eslint.fsd.config.js` FEATURES ohne Berechnung/Einstellungen; Kommentare
+  - [x] Gate: typecheck 0, lint 0, `lint:fsd` 4 (Ratsche 14 → 4; übrig nur ea/ez → `ewt/model`), test 2289/2289,
+        build i.o. (Precache 115: neue kleine gemeinsame Chunks `SchichtSection`, `SchichtOverrideEditor`,
+        `berechnungBausteine`), `format`
+  - [x] Browser-Check durch den User: i.o. (2026-09-23)
+  - [x] (erledigt: Schichtgrenzen laufen als `no-restricted-imports` im normalen `bun run lint`, siehe `CLAUDE.md`) Bekannt: `lint:fsd` prüft `app`/`pages`/`widgets` noch nicht (P10). Aufwärts-Importe, die er deshalb nicht
+        zählt: `features/ber/ui/VorgabenBTable` → `pages/einstellungen/model` (`saveEinstellungen`),
+        `pages/einstellungen` → `app/session/selectYear`, `features/Admin` → `pages/{berechnung,einstellungen}` (P9)
+- [x] P9 Admin (2026-09-23, bei 97 % Weekly auf User-Wunsch): `features/Admin` → `pages/admin`, darin
+      `components` → `ui` (FormularEditor unverändert mit), `utils` → `model`, `utils/api.ts` + `components/formularVersionenApi.ts`
+      → `api/` (API-Segment laut Plan); `features/<key>/` + `adminFeatures.ts` (Admin-Manifest, Name bleibt) mit.
+  - [x] Ordner `features/Admin/api` angelegt (Claude; liegt im Umbenennungsziel, deshalb vorab innerhalb von Admin)
+  - [x] Moves in der IDE (User); Typecheck danach direkt sauber (IDE zog diesmal alle Importe nach)
+  - [x] 32 Tests nach `test/pages/admin/{ui,model,api,…}` per `git mv` (Claude); `Admin.lifecycle` → `mountAdminTab.lifecycle`,
+        Namensgleichheit `profileTemplates.shared` gelöst (Bundesland-Test → `profileTemplates.shared.felder.test.ts`);
+        Fixture-Pfad in `vorlageFonts.test.ts` eine Ebene tiefer
+  - [x] Nacharbeit (Claude): 44 Stellen `features/Admin…` (`vi.mock`, Kommentare, `scripts/new-feature.ts` inkl. erzeugtem
+        Katalog-Import `../../ui/FormularEditor/katalogTypen`, Scaffold-Test); `eslint.fsd.config.js` ohne Admin und ohne die
+        P7-Ausnahme für Admins Unterordner (nicht mehr unter `features/`)
+  - [x] Gate: typecheck 0, lint 0, `lint:fsd` 4, test 2289/2289, build i.o. (`mountAdminTab` eigener Lazy-Chunk, Precache 115), `format`
+  - [x] Browser-Check durch den User: i.o. (2026-09-23)
+- [x] Inversion vor P10 (2026-09-23, eigener Commit; ersetzt die offenen Punkte bei P5/P6/P8): statt neuer
+      Registry die vorhandene Hook-Registry: `auth:login-success`, `session:load-month`, `help:open` (Registrierung
+      in `main.tsx`), `VorgabenBTable` → bestehender `pre-save:settings`. 6 Tests auf `registerHook` statt
+      `vi.mock`. Gate: typecheck 0, lint 0, `lint:fsd` 4, test 2289/2289
+- [x] P10 Abschluss (2026-09-23). **Abweichung vom Plan:** `reactRoot`, `tabController`, `updateTabVisibility`,
+      `bootstrap`, `initSequence`, `syncFeatureTabs` nach `shared/` statt `app/shell` bzw. `app/init` (Konsumenten in
+      shared/features/pages); nur `pullToRefresh`/`setOffline`/`setVersionOutdated` in `app/shell`.
+  - [x] Zielordner angelegt (Claude); Moves in der IDE (User). Zwei Zeilen kamen anders an (alte `main.tsx` blieb
+        liegen, `getEwtDaten` im falschen Ordner) → `main.tsx` gelöscht (Claude), `getEwtDaten` von Claude nach
+        `shared/lib/ressource` nachgezogen (keine relativen Importe), `nebengeldZulagen` vom User nachgeschoben (Lesson)
+  - [x] Nacharbeit (Claude): Barrels `core`/`components`/`infrastructure/ui` aufgelöst (121 Dateien, 29 `vi.mock`),
+        Legacy-Ordner + Aliase gelöscht, `index.html`, Hook `onboarding:open-once`, Boundaries als `error` in
+        `eslint.config.js`, `lint:fsd` entfernt, Scaffold-Vorlagen, Kommentare, Tests gespiegelt, verwaiste Snapshots
+  - [x] Doku: `CLAUDE.md`, Skills `architektur`/`coding-konventionen`/`tests`, Root-`.claude/CLAUDE.md` (Hauptrepo)
+  - [x] Gate: typecheck 0, lint 0 (inkl. Schichtgrenzen), test 2289/2289, `lint:css` i.o., build i.o. (Precache 136), `format`
+  - [x] Browser-Check durch den User: i.o. (2026-09-23)
+- [~] Module 100 % steckbar (User-Wunsch 2026-09-23; umgesetzt, nur der Browser-Check des Users steht aus): Fehlt eines der Module `ber`/`ewt`/`ez`/`ea` (Ordner + Manifest-
+      Zeile entfernt), laufen die übrigen vollständig weiter oder zeigen einen klaren Hinweis, dass ein anderes Modul
+      nötig ist. Zu prüfen u. a.: `ea`/`ez` lesen EWT-Zeilen (`getEwtDaten`, `syncEwtToEa`, `syncEwtToNeben`,
+      `syncFieldsFromEwtRows`, `unlinkEwtRefs` in `shared/lib/ressource`), BE/BZ-Verknüpfung, Berechnung/PDF/Admin-
+      Kataloge mit fehlendem Modul. Abhängigkeiten deklarativ machen (z. B. `meta.benoetigt: ['ewt']`, Hinweis in UI
+      und Einstellungen statt stillem Ausfall); Abnahmetest je Teilmenge (erweitert `test/app/featureAbnahme.test.tsx`).
+  - Analyse (2026-09-26): `ber` ist unabhaengig, kein Modul importiert ein anderes (ESLint). Nur `ez`/`ea` haengen an `ewt`
+    (Tag-Schnellauswahl, EWT-Zuordnung, Dauer-/Zeiten-Sync per `ewt:*`-Events). Entscheidung User: **weiche** Abhaengigkeit --
+    `ez`/`ea` laufen ohne `ewt` manuell weiter, EWT-Zuordnung/Schnellauswahl entfallen ohne Fehlermeldung.
+  - [x] Registry: `meta.benoetigt?: readonly string[]` (weich) + `featureRegistry.fehlende(id)`; `ez`/`ea` deklarieren `['ewt']`
+  - [x] Helfer `getEwtDatenFuerZuordnung(featureId, options)` in `shared/lib/ressource`: `[]`, wenn `ewt` fehlt (auch bei Alt-Daten in `dataE`); in `ez`/`ea` Add-/Editor-Modals statt `getEwtDaten`
+  - [x] `createAddModalNeben`: ohne `ewt` direkt manuelle Zeile statt Schnellauswahl/Snackbar-Fehler
+  - [x] Tests: Registry (`fehlende`), Helfer, `featureAbnahme` (ohne `ewt`: `benoetigt`-Ids, Add-Modal manuell, kein EWT-Select), `createAddModalEA.test.tsx` anpassen
+  - [x] Doku (`CLAUDE.md` Feature-Contract), CHANGELOG 189; Gate: typecheck 0, lint 0, Tests 2296/2296, format, build i.o. (2026-09-26)
+  - [ ] Browser-Check (User): `ewt`-Zeile in `app/features.ts` entfernen → Zulagen/EA ohne Zuordnung nutzbar, "Hinzufügen" in Zulagen öffnet manuelle Zeile
+- [x] Feature-Logik nur bei den Features (Audit 2026-09-26; Feature-Code, der noch in `shared`/`pages`/`app` liegt).
+      Schritt A (Punkte 1-5, ein Zug, mechanisch) -- Budget: L (viele Dateien, kein Verhaltenswechsel)
+  - [x] A1 `shared/lib/ressource/fieldMapper.ts`: `bz/be/ewt/nebengeld/ea` `From`/`ToBackend` + `Backend*`-Typen -> je `features/<id>/model/backendMapper.ts`; User-/Vorgaben-/Arbeitszeit-Mapping bleibt (`nebengeldZulagen` zieht mit nach `features/ez`, falls kein anderer Nutzer)
+  - [x] A2 `shared/api/dataApi.ts`: `bereitschaftszeitraumApi`/`bereitschaftseinsatzApi`/`ewtApi`/`nebengeldApi`/`eaApi` -> je `features/<id>/model/api.ts`; `profileApi`/`vorgabenApi`/`loadAllYearData` bleiben (Jahres-Laden geht ueber `meta.resources[].api`); Ressourcennamen-Union in `apiFetchHelper.ts` pruefen
+  - [x] A3 `shared/lib/date/getMonatFromItem.ts`: `getMonatFromBZ/BE/EWT/N/EA` -> je Feature `lib`/`model`; `isEwtInMonat` mit `getEwtDaten` klaeren
+  - [x] A4 `shared/lib/autosave/overlapGuard.ts` + `autoSave.ts`: `FeatureResource.overlapFenster?(cells)` in `meta`, Kopie `getEwtWindowLocal` entfaellt (nutzt `features/ewt/model/getEwtWindow.ts`); `resource === 'EWT'`-Sonderfall (`ewt:deleted`) und `resourceStates`-Keys aus der Registry
+  - [x] A5 `app/session/loadUserDaten.ts`: feste Ressourcen-Map `BZ/BE/EWT/N/EA` fuer `aktualisiereBerechnung` aus `featureRegistry.resources()`
+  - [x] A6 Tests mitziehen (Importpfade, `mock.module`-Strings per grep), `featureAbnahme` weiter gruen; Gate typecheck/lint/test/build/format; CHANGELOG; Browser-Check (User: Laden, Speichern, Ueberschneidungs-Fehler BZ/EWT, EWT loeschen -> EZ/EA-Verweise)
+    Stand 2026-09-26: A1-A5 umgesetzt (CHANGELOG 190). Abweichungen: API-Objekte per `createResourceEndpoints` statt
+    Einzel-Kopien; EWT-Monatsfunktionen bleiben in shared (Grundlage von `getEwtDaten`); `onDeleted`/`overlapWindow` als
+    neue `FeatureResource`-Felder. Gate: typecheck 0, lint 0, Tests 2296/2296, format, build i.o. Browser-Check per `bun scripts/livetest.ts`
+    (Puppeteer + Fake-Backend, Dev-Server :8080): 26/26 (Login/Laden, Mapper, Monatsfilter, Berechnung, Overlap BZ/EWT,
+    EWT loeschen -> Verweise EZ/EA geloest).
+    Gegen das lokale Backend (`--backend http://localhost:8081/api/v2`, Benutzer `livetest-fsd`, DB DEV2): 27/27, Daten
+    danach wieder leer. Konsole: `Einstellungen sammeln fehlgeschlagen: Persoenliche Daten fehlerhaft` beim Speichern --
+    Vorlage `kirchheim` liefert 7-stellige PNummer, Feld verlangt 8 (vorbestehend, nicht Teil von A).
+  Folgeschritte (getrennt, je eigener Commit):
+  - [x] B Admin-Profilvorlagen (Audit Punkt 6; alle Teilschritte unten erledigt, CHANGELOG 192): fest verdrahtete Abschnitte in `AdminProfileTemplateContentEditor.tsx`/`profileTemplates.shared.ts`/`adminProfileTemplatesManagerGemeinsam.ts` (`VorgabenB`+Bereitschaft/Nachtschicht=ber, `Fahrzeit`=ewt, `benoetigteZulagen`=ez, Taetigkeit/Entgeltgruppe=ea) als Slot in `pages/admin/features/<id>/` (war in P1g vorgesehen, nicht umgesetzt)
+    Plan (2026-09-26, Budget L): `AdminFeature.profilVorlage` = `{ abschnitte?: AdminVorlagenAbschnitt[], persFelder? }`;
+    Abschnitt = `id`, `label`, `ausVorlage(template)`, `inVorlage(result, entwurf)`, `hatDaten`, `Editor`. Entwurf
+    `TemplateContentDraft` = Pers + Arbeitszeit + `Einstellungen.aktivierteTabs` (global) + `abschnitte[id]`.
+    - [x] ber: `VorgabenB` (Editor inkl. Navigation/Standard/Verschieben, `VorgabenBWeekRangeEditor`, Normalisierung) -> `pages/admin/features/ber/vorgabenB.tsx`
+    - [x] ewt: `Fahrzeit` -> `pages/admin/features/ewt/fahrzeit.tsx`; ez: `benoetigteZulagen` als eigener Abschnitt „Zulagen“ -> `pages/admin/features/ez/zulagen.tsx`; ea: Pers-Felder Taetigkeit/Entgeltgruppe
+    - [x] Manager/ContentEditor/Gemeinsam generisch (fehlendes Feature: Originalwerte bleiben erhalten, kein Loeschen)
+    - [x] Tests (Payload-Roundtrip je Abschnitt, fehlendes Feature, Editor-Tags), Gate (Tests 2309), CHANGELOG 192
+    - [x] Livetest (2026-09-27): Fake-Backend 35/35 inkl. Schritt 5 (Admin > Profile-Templates: Abschnitte, EA-Pers-Felder,
+          VorgabenB hinzufuegen, Zulage waehlen, Speichern-Payload), lokales Backend 27/27 (ohne `Persoenliche Daten fehlerhaft`)
+  - [x] C Feld `Entgeltgruppe` (Audit Punkt 7): aus `PersoenlicheDatenPanel.tsx`/`saveEinstellungen.ts`/`generateEingabeMaskeEinstellungen.ts` in einen `einstellungen`-Teil von `ea` (ea hat noch keinen)
+    Plan (2026-09-27, Budget M): `IFeatureEinstellungen.PersFelder?: ComponentType` (Felder im Panel „Persönliche Daten“, nach
+    Tätigkeit); `features/ea/parts/einstellungen.ts` mit `sections: []`, `PersFelder` (Entgeltgruppe), `read`/`collect`
+    (validiert, schreibt `Pers.Entgeltgruppe`); `addressValidation`: Entgeltgruppe raus aus `PERS_FIELD_LABELS`, neue
+    `validateOptionalTextInput` (auch fuer Tätigkeit). Tätigkeit bleibt global (allgemeine Stellenbezeichnung, PDF-Katalog).
+    Admin-Profileditor/`datenKatalog` bleiben.
+    - [x] Typ + Panel + ea-Teil + `app/features.ts`; Seiten ohne `Entgeltgruppe ??= ''`
+    - [x] Tests: ea-Teil (read/collect/ungueltig/Feld fehlt), `featureAbnahme`, Einstellungen-Tests; Gate typecheck/lint/test/format/build
+    - [x] Livetest (Einstellungen speichern mit Entgeltgruppe), CHANGELOG 193, `CLAUDE.md` Feature-Contract
+    Ergebnis (2026-09-27): Livetest fand einen verdeckten Fehler -- `setElementValues` warf bei `Pers.Entgeltgruppe ===
+    undefined` (Server-Mapper), bisher vom entfernten `??= ''` verdeckt; behoben + Regressionstest. Nachtrag (User-Frage):
+    EA abgewaehlt -> Feld ausgeblendet (`PersFelder` mit `versteckt`), Wert bleibt; Modul entfernt -> Wert bleibt (Test).
+    Gate: Tests 2316/2316. Livetest Fake-Backend 42/42 (Schritt 5 Einstellungen inkl. EA ab-/anwaehlen), lokales Backend
+    34/34 (Wert danach zurueckgesetzt).
+  - [x] D Admin-Ressourcenbrowser (Punkt 8): `TIME_STRING_FIELDS`/`DATE_ONLY_FIELDS` in `adminResourceBrowserGemeinsam.ts` je Feature in `AdminResourceConfig` (`zeitFelder`, `nurDatumFelder`)
+    Plan (2026-09-27, Budget S): `AdminResourceConfig.nurDatumFelder?`/`zeitFelder?`; Zuordnung wie bisher (BE: Tag + Beginn/Ende,
+    BZ: keine -- Beginn/Ende sind Date, EWT: Tag/Buchungstag + 8 Zeitfelder, NG: Tag + Beginn/Ende, EA: Tag + Dauer);
+    `formatCell(resource, feld, wert)` und `AdminResourceEditModal` lesen aus `resource`; globale Sets entfallen.
+    - [x] Umsetzung + Tests (formatCell je Ressource, Editor-Inputtypen), Gate, CHANGELOG 194, Livetest/Browser-Check Admin > Ressourcen
+    Ergebnis (2026-09-27): Tests 2319/2319; Livetest Fake-Backend 44/44 (neuer Schritt 7: Ressourcenbrowser per Modul-Import
+    gemountet, da nur Super-Admins ihn sehen), lokales Backend 34/34.
+  - [x] E Typ-Literale (Punkt 9, bewusst, nur pruefen): `FeaturePdfModus`, `FormularCode`, Storage-Enum, `IBerechnungMonatsErgebnis`-Felder -- Scaffold `bun run new-feature` weist darauf hin bzw. erweitert sie
+    Befund (2026-09-27):
+    - `FeaturePdfModus`: reiner Typ, `generatePDF` sucht das Feature ueber `featureRegistry.metaByPdfModus` -- unkritisch.
+    - `IVorgabenBerechnungMonat`/`IBerechnungMonatsErgebnis`: feste Buckets/Felder je Feature, bewusst (persistierte
+      `datenBerechnung`, typsichere Formeln) -- unkritisch.
+    - Storage: Enum `StorageData` plus **`RESOURCE_KEYS`** (fest `dataBZ..dataEA`): eine neue Ressource ohne Eintrag bekommt
+      keinen `{ data, timestamp }`-Wrapper, `loadUserDaten.sync.ts` sieht Timestamp 0 -> Verhalten weicht still ab.
+    - **`FormularCode` + `datenKatalog.ts`**: importiert die vier `pages/admin/features/<id>/katalog.ts` statisch
+      (`FEATURE_KATALOGE`) statt ueber das Admin-Manifest -- ohne Admin-Ordner `ea` bricht der Build, ein neuer
+      `--admin`-Katalog wird nicht angemeldet. Einzige verbliebene Stelle mit statischem Admin-Feature-Import.
+    Umgesetzt: `scripts/new-feature.ts` `HANDARBEIT` (Ausgabe nach dem Anlegen) + Test. Vorschlag Folgeschritte (User):
+  - [x] F Formular-Katalog ueber das Admin-Manifest: `AdminFeature.formular.katalog`, `datenKatalog.ts` ohne statische
+        Feature-Importe (`ZEILEN_QUELLEN`/`LISTEN_VORLAGEN` als Funktionen), `FormularCode` -> `string`
+  - [x] G `RESOURCE_KEYS` aus `featureRegistry.resources()` (+ `VorgabenU`) statt fester Liste
+    Stand F+G (2026-09-27): Tests 2323/2323, typecheck/lint/build 0; Livetest 44/44 + 34/34; Katalog im Browser (Dev-Server,
+    Modul-Import): vor `ladeAdminFeatures` leer, danach EZ `Daten.N` + Listen-Vorlagen, BER BZ/BE; CHANGELOG 196.
+    F: `AdminFeature.formular.katalog`, `datenKatalog.ts` ohne Feature-Importe (`zeilenQuellen()`/`listenVorlagen()`/
+    `vorlagenKategorie()` statt Konstanten), `FormularCode = string`. Nicht angefasst: `WERTE` (LRE) und
+    `BOOLEAN_FELDER` (EWT) in `datenKatalog.ts` -- ebenfalls Feature-Wissen, Kandidat fuer `FeatureKatalog`.
+  - [x] H `WERTE` (LRE) und `BOOLEAN_FELDER` (EWT) aus `datenKatalog.ts` in die Feature-Kataloge (`KatalogEintrag.werte`/
+        `boolean`; `werteAuswahl`/`istBooleanFeld` mit unveraenderter Signatur ueber die geladenen Admin-Anteile).
+        Stand 2026-10-03: Tests 2324/2324 (+1 Entfernbarkeit ber/ewt), typecheck/lint/build 0, format; CHANGELOG 197.
+        Browser-Check offen (Dev-Server lief nicht): Formular-Editor, Bedingung auf `LRE` (Checkboxen) und `Wohnung8bis14` (Ja/Nein).
+  - Bewusst in shared (Audit): `resolveSchichtDay`/`arbeitszeit-editor`, `zulagenCatalog`, `berechnungWerte`/`-Bausteine`, `confirmDeleteAllRows`, `resourceApi`, `createDatenGetter`, ewt-Zugriff fuer ez/ea (`getEwtDaten`, `getEwtDatenFuerZuordnung`, `syncFieldsFromEwtRows`, `unlinkEwtRefs`, Events `ewt:*`)
+- [x] Bootstrap-Rueckstaende entfernen (User 2026-10-03; R0-R10 erledigt und committet, CHANGELOG 199-209). Bestand: eigene Utility-Schicht `src/scss/utilities.scss` mit
+      Bootstrap-Namen, 163 Klassen / ca. 2000 Vorkommen in 100 Dateien (`small` 181, `d-flex` 147, `mb-1` 105,
+      `align-items-center` 94, `gap-2` 93, `text-body-secondary` 87, `text-muted` 66 ...); Bootstrap-Zustandsklassen
+      `tab-pane fade show active`/`tab-content`; Bootstrap-Farbnamen (`text-bg-*`, `bg-body-*`, `*-emphasis`, `border-*-subtle`);
+      Bootstrap-Markup in `test/mockData.ts`; Kommentare/JSDoc. User: Umfang komplett, Zielbild DB-nativ direkt.
+      Plan + Ersatz-Tabelle + Batches R0-R10: `tasks/plan-bootstrap-rueckbau.md`. Naechster Schritt: R0 (Sichtvergleich-Skript,
+      Baseline, Spike).
+- [x] Als Naechstes (User 2026-10-03): Updates von `@db-ux/*` pruefen (5.6.1, CHANGELOG 210) (neue Versionen, Changelog/Migration, danach Gate + Sichtpruefung)
+- [x] DB UX 5.6 neue Komponenten einbauen (erledigt 2026-10-04: DBLoadingIndicator, DBDialog; Hilfe/Impressum/Platzhalter-Hilfe bleiben bewusst Drawer) (Hinweis User 2026-09-26, nach Update auf 5.6.0, CHANGELOG 191):
+  - [x] (Add/Editor/Show/Login/Hilfe erledigt 2026-10-03, CHANGELOG 212; Pull-to-Refresh auf `DBLoadingIndicator` 2026-10-04, CHANGELOG 213; Schriftart, Admin-Bearbeiten-Dialoge, confirmDialog, Unterschrift, Speicherfehler 2026-10-04, CHANGELOG 214; Hilfe/Impressum/Platzhalter-Hilfe bleiben) `DBDialog`/`DBDialogHeader`/`DBDialogFooter` (nativer, zentrierter `<dialog>`, `backdrop`, `containerSize`,
+        Invoker Commands) statt `DBDrawer` in `shared/ui/modal/showModal.tsx` + `MyModalHeader` (nachgebautes Kopf-Markup
+        entfaellt, `aria-labelledby` macht der Header selbst); pruefen: `data-dialog-dismiss`-Delegation, gestapelte
+        Dialoge, `confirmDialog`/`signaturDialog`/`errorHandling` (HTML-Markup), `DIALOG_RICHTUNG`, `data-breite`-Breiten
+        -> `containerSize`/`--db-dialog-max-width`, Mobil-Verhalten. Browser-Check aller Dialogarten.
+  - [x] `DBLoadingIndicator` (Spinner/Fortschritt) (2026-10-03, CHANGELOG 211) statt eigener Ladeanzeigen: `DBLoadingButton`/`button-loading`
+        (`setLoading`/`clearLoading`), AutoSave-Puls, Laden nach Login, PDF-Erzeugung; vorher Props/Varianten per
+        `mcp__db-ux__get_component_props` pruefen.
+- [x] stylelint-Warnungen beheben (erledigt 2026-10-03, `--max-warnings 0`, CHANGELOG 198) (User 2026-09-27; `lint:css` laeuft lokal schon ohne `--max-warnings 93`): Stand 87
+      Warnungen (`db-ux/use-spacings` 48, `use-sizing` 28, `use-border-width` 8, `use-border-color` 2,
+      `use-border-radius` 1) in `styles.scss`, `utilities.scss`, `raster.scss`, `CustomSnackbar.css`, `customtable.scss`.
+      Feste `rem`/`px`-Werte auf `db-spacing-*`/`db-sizing-*`/`db-border-width-*`-Tokens; Fehlalarme des Plugins
+      (`var()`, SCSS-`$wert`, `calc()`/`min()`, 1px-Haarlinie, `50%`-Kreis) mit begruendetem `stylelint-disable`-Kommentar,
+      siehe Analyse 2026-09-09 unten und `tasks/lessons.md` (Ratsche). Optik aendert sich bei Werten zwischen Token-Stufen
+      -> Browser-Sichtpruefung je Datei (Hell/Dunkel, Mobil). Danach `--max-warnings` in `package.json` auf 0.
+  Plan (2026-10-03, Budget M; User-Entscheid: Zwischenwerte und Geometrie auf naechstes Token, `.bg-darkmode-override`
+  ganz auf DB-adaptive Tokens). Token-Werte (regular): spacing 3xs .125 / 2xs .25 / xs .5 / sm .75 / md 1 / lg 1.5 / xl 2 /
+  2xl 3 / 3xl 5 rem; sizing 3xs .5 / 2xs .75 / xs 1 / sm 1.5 / md 2.5 / lg 4 / xl 6 / 2xl 10 / 3xl 15 rem; container 3xs 14 /
+  2xs 16 / xs 20 / sm 24 / md 28 / lg 32 / 2xl 42 rem; border-width 3xs 1px / 2xs 2px. Gleichstand -> groessere Stufe, wo
+  Inhalt passen muss.
+  - [x] Token-gleiche Werte 1:1 ersetzen (keine Optikaenderung)
+  - [x] Zwischenwerte runden (0.35/0.4/0.65/1.7/0.2rem, 30px)
+  - [x] Geometrie auf Tokens (Knopfbreiten, Label-Spalte 11.5 -> 10rem inkl. `ERSTE_SPALTE_PX`, Kappungsbreiten, 26rem,
+        Footer-Reservierungen); tote Klassen (`jahr-auswahl`, `big-icons`, `einstellungen-icons`, `alertstyle`,
+        `offcanvas-impressum`) entfernen
+  - [x] Fehlalarme ohne `stylelint-disable` (User: KEINE disables): Token-Namen ausgeschrieben, Rueckfallwerte als Token,
+        `allowCalc` fuer `use-sizing`
+  - [x] `.bg-darkmode-override` entfernt (DB adaptiv)
+  - [x] `--max-warnings 0`, `stylelint.config.mjs`-Kommentar; Gate lint:css/typecheck/lint/test/build gruen (Tests 2324); CHANGELOG 198
+        Livetest 38/44 -- dieselben 6 Fehler auch mit HEAD-Styles (Tabellen im Monat 9 leer, datumsabhaengig?), nicht Teil dieses Schritts
+  - [ ] Sichtpruefung (User): Hell/Dunkel, Mobil -- Liste der betroffenen Stellen im CHANGELOG
+
+---
+
+# Vorheriger Plan: Kommentare pruefen und kuerzen - 2026-09-19
+
+## Auftrag
+
+User: alle Kommentare durchgehen, auf das Wichtigste verkuerzen, und pruefen, ob der Kommentar
+ueberhaupt noetig UND korrekt ist. Umfang (Stand `HEAD`): 4581 Kommentarzeilen in 261 von 374
+Dateien unter `frontend/src` (ts 2835, tsx 1227, scss 481, css 38); 24 Zeilen sind Direktiven.
+Verteilung: 191 Dateien mit 0-5 Zeilen, 127 mit 6-20, 38 mit 21-50, 18 mit mehr als 50
+(`styles.scss` 331, `pdf/abgeleiteteWerte.ts` 118, `pdf/aggregatoren.ts` 113, `CustomTable.ts` 103 ...).
+
+## Regeln
+
+- **Behalten**: das WARUM, das aus dem Code nicht ablesbar ist -- Workarounds, DB-UX-/Browser-Eigenheiten,
+  externe Verkabelung (Ids, `querySelector`), Reihenfolge-/Timing-Zwaenge, bewusste Ausnahmen.
+- **Streichen**: Erzaehlung des Offensichtlichen, Historie ("ehemals index.html", "seit Phase K5",
+  Datum-/Commit-Verweise -- steht in CHANGELOG/`git log`), Doppelungen, Kommentare ueber entfernten Code.
+- **Korrigieren**: jede Aussage gegen den echten Code pruefen (Namen, Ids, Dateien, Zahlen, Verhalten);
+  falsche/veraltete Kommentare berichtigen oder streichen (Beispiel: `CustomTableView` behauptete natives
+  `<button>`, rendert aber `DBButton`).
+- **Nie anfassen**: Direktiven (`eslint-disable`, `@ts-expect-error`, `stylelint-disable` ...) samt ihrer
+  Begruendungszeile.
+- Stil der Umgebung beibehalten (Deutsch, Umlaute wie in der jeweiligen Datei), JSDoc nur wo es Typ-/
+  Vertragsinformation traegt.
+
+## Verifikation (pro Batch)
+
+1. `kommentar-check.mjs` (Scratchpad): je geaenderte Datei Code OHNE Kommentare `HEAD` gegen Arbeitsbaum
+   (TS: `transpileModule` mit `removeComments`, SCSS: `postcss-scss` ohne Kommentarknoten) MUSS identisch
+   sein; Direktiven-Zeilen unveraendert. Beweist "nur Kommentare geaendert".
+2. `bunx tsc --noEmit`, `bun run lint`, `bun run lint:css`, `bun run test`.
+3. Ein Commit je Batch (nach Rueckfrage bzw. wie bisher freigegeben).
+
+## Batches
+
+- [x] **1. Die 8 groessten Dateien**: `styles.scss`, `pdf/abgeleiteteWerte.ts`, `pdf/aggregatoren.ts`,
+      `table/CustomTable.ts`, `FormularEditor/datenKatalog.ts`, `autoSave/autoSave.ts`, `pdf/wert.ts`,
+      `FormularEditor/dummyDaten.ts`
+- [x] **2-16. Rest in 15 Chunks** (255 Dateien mit Kommentaren, 1197 Funktionen; Listen in `chunk_01..15.txt` im Scratchpad,
+      nach Pfad sortiert, je ca. 430 Gewicht). Ein Subagent nach dem anderen (nie zwei Schreiber im Worktree), Regeln in
+      `REGELN.md`. Nach jedem Chunk: eigener Check (Checker gegen Snapshot, `pmatch.mjs`, prettier/eslint/tsc).
+- [x] **17. Abschluss**: `bun run test`, `lint`, `lint:css`, `tsc`, Gesamtvergleich, CHANGELOG-Eintrag, Lessons; EIN Commit fuer alles
+      (User-Vorgabe: erst alle Chunks, dann zusammen committen).
+
+## Fortschritt / Ergebnisse
+
+**Batch 1 (2026-09-19):** 8 Dateien, Kommentarzeilen 1049 -> 625 (-40 %). Checker OK (Code
+ohne Kommentare identisch, Direktiven unveraendert), tsc/lint/lint:css (87 Warnungen, Grenze 93)/
+`bun run test` (2172 pass) gruen.
+
+Nachtrag (auf User-Wunsch): Jede Funktion/Methode in den bearbeiteten Dateien bekommt ein JSDoc mit
+`@param`/`@returns` (`@throws`, wo sie wirft) -- gilt als Standard fuer Batches 2-5. Pruefung per AST-Skript
+(`pmatch.mjs`: Funktion ohne JSDoc, `@param` passt nicht zur Signatur). Batch 1: 147 Funktionen, 0 ohne
+JSDoc, 0 Abweichungen; Ausnahme: die `beispiel: i => ...`-Datenlambdas im `datenKatalog.ts`.
+
+Falsche/veraltete Aussagen gefunden und korrigiert:
+- `aggregatoren.ts`: "`trifftBedingung` liegt in `shared`" -- liegt im Frontend.
+- `abgeleiteteWerte.ts`: "siehe Modulkommentar" ohne Ziel; "Phase 10-13"/Datums-Historie.
+- `CustomTable.ts`: "die 14 `.instance`-Dateien" (heute 22), Verweis auf nicht mehr existierendes
+  `customTableRender.ts`.
+
+Offen fuer spaetere Batches: `TabellenBlock.tsx` (Zeilen ~20/60/63) und `aggregationsHelfer.ts`
+nennen `mitBerechnetenSpalten()` "in `shared`" -- die Funktion ist privat in
+`pdf/tabellenZeilen.ts`.
+
+---
+
+# Aktueller Plan: Halb-Roh-Markup auf echte DB-Komponenten umstellen - 2026-09-18
+
+## Ausgangslage
+
+User-Auftrag: alle "puren" Elemente (Button, Input, Select, Badge, Tag, ...) finden und auf `DB*`
+umbauen. Bestandsaufnahme ueber alle `src/**/*.tsx` (Stand nach Commit `51f62b7`): der Grossteil der
+App nutzt DB-Komponenten bereits (`DBButton` 480x, `DBTooltip` 143x, `DBStack` 111x, `DBTag` 67x,
+`DBCheckbox` 65x). Uebrig ist fast nur **Halb-Roh-Markup**: `<div className="db-input">`,
+`<button className="db-button">`, `<div className="db-notification">` -- DB-CSS ohne die
+React-Komponente. Kein einziger nackter Stil-loser Button/Input.
+
+**Korrektur einer eigenen Fehleinschaetzung:** `CustomTableView.tsx` hat KEINE rohen Buttons.
+`editingButton()` (Z. 94) rendert echte `DBButton`; der Kopfkommentar (Z. 27-31) stammt noch aus
+Phase M0/M1 und behauptet das Gegenteil. Nicht umbauen, nur Kommentar berichtigen (Schritt 0).
+Lehre: "bewusst roh"-Begruendungen aus Kommentaren immer gegen den Code pruefen.
+
+## Verifizierte Fakten (Grundlage der Reihenfolge)
+
+- **Id-Verdrahtung ueberlebt `DBInput`**: `<DBInput id="Jahr">` (`EinstellungenTab.tsx:57`) laeuft
+  produktiv und wird extern per `document.querySelector('#Jahr')` gelesen/geschrieben
+  (`userLoginSuccess.ts:55`, `auth/index.ts:58`). `saveEinstellungen.ts:29` und
+  `generateEingabeMaskeEinstellungen.ts:78` arbeiten generisch ueber `#${key}` +
+  `element.value = ...` + `reportValidity()` -- gleiches Muster, also portabel.
+- **Bestehende Wrapper wiederverwenden, keine neuen bauen**: `MyInput`/`MySelect`/`MyCheckbox`
+  (`DBSwitch`), `DbFeld` (kompakt, verstecktes Label, ~29 Nutzer), `DBLoadingButton`. Vorbilder fuer
+  `DBNotification` (`SnackbarItem.tsx:132`), `DBDivider` (`AppHeader.tsx:232`), `DBSelect`
+  (`AppHeader.tsx:98`).
+- **`DBAccordionItem` rendert `<li id>`** (id am `<li>`, nicht an `<details>`) und hat
+  `open`/`defaultOpen`; die Einstellungen-Tabs sind an `#collapseOne..Six`, `name="einstellungen"`
+  (exklusives Oeffnen) und `closest('.db-accordion-item')` (Onboarding) gekoppelt -> Risiko, eigener
+  Schritt mit Spike.
+- **`DBNotification`** kennt `semantic`, `variant`, `role`, `ariaLive`, `onClose` -- deckt alle 12
+  Fundstellen ab.
+- Verfuegbar (laut `list_components`): accordion, badge, button, card, checkbox, divider, input,
+  link, notification, select, switch, table(+Teile), tabs/tab-item/tab-list/tab-panel, tag,
+  textarea, heading, section. **Nicht vorhanden:** Range-Slider, Liste (`ul`/`ol`).
+
+## Bewusst NICHT umbauen (mit Begruendung)
+
+- `input type="range"` (`autoSaveDelay`): keine DB-Komponente.
+- `type="hidden"` / `hidden`-Checkboxen in `createEditorModalVE.tsx`: reine Datentraeger.
+- Checkbox-in-`DBTag` (`AdminProfileTemplateContentEditor.tsx:94`): Filter-Chip, kein 1:1-Ersatz.
+- `ul`/`ol`/`label` in Hilfe-/Onboarding-Text: keine DB-Listenkomponente.
+- `AppHeader.tsx` `<a data-tab-target>` (8x): Kommentar dort begruendet, dass
+  `DBControlPanelNavigationItem` ein `<div>` rendert. **Vor dem Festschreiben pruefen** (siehe
+  Lehre oben), sonst Abschnitt "Zurueckgestellt".
+- Sortier-Knoepfe `FahrzeitenPanel.tsx:119/125` (Ghost-Knopf mit Inline-Style im Tabellenkopf):
+  erst im Puppeteer-Bild entscheiden, ob `DBButton` zu gross wirkt.
+
+## Aufgaben
+
+Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizierbar.
+
+- [x] **0. Kommentar berichtigen** (erledigt, Commit `a3d9792`) -- `CustomTableView.tsx` Z. 27-31
+      (Kopfkommentar) an den Ist-Stand angepasst; pruefen, ob `editText`/`deleteText`/`undoDeleteText` in `CustomTableOptions` wirklich
+      toter Vertrag sind (kein Aufrufer setzt sie) -- wenn ja, als eigenen Aufraeum-Punkt notieren,
+      nicht im selben Zug entfernen. **Ergebnis:** `editText`/`deleteText`/`undoDeleteText` werden nur
+      in `CustomTable.ts` mit Defaults befuellt und in `customTableTypes.ts` deklariert, gelesen und
+      gerendert nirgends -> toter Vertrag, Aufraeum-Kandidat (nicht angefasst).
+- [x] **1. Buttons** (erledigt, `a3d9792`): `StartTab.tsx` (6 Schnellzugriff-Knoepfe, mit
+      `data-jump-tab`, Wiring in `auth/index.ts:51` per `[data-jump-tab]`), `BerechnungTab.tsx`
+      (2 Monats-Pfeile, `#btnBerechnungMonatePrev/Next`), `App.tsx:60` (`#actAsOwnDataButton`),
+      `PersoenlicheDatenPanel.tsx:64` (`#btnResendVerificationEmail`),
+      `VorgabenBWeekRangeEditor.tsx:168` (Wochentag-Schalter, `aria-pressed`, Pointer-Events).
+      Achtung: alle Ids/`data-*` muessen am `<button>` landen; `DBButton` reicht `data-*`/`aria-*`
+      per `filterPassingProps` durch (im Spike bestaetigt: `data-jump-tab`, Ids, externes `disabled`/
+      `textContent` ueberleben; Icon-only-Knoepfe brauchen `DBTooltip` + `aria-label`, StartTab nutzt
+      das `icon`-Attribut statt `DBIcon`-Kind -- beides Lint-Regeln `db-ux/*`).
+- [~] **2. Switches + Tag** (teilweise, `a3d9792`/`b01666a`; **EwtTab-Berechnen-Schalter offen**): `EinstellungenTab.tsx` (5x `db-switch`: `tab-*`, `autoSaveEnabled`;
+      `#collapseFive input[data-tab-key]` und `input[data-settings-key]` bleiben Selektoren ->
+      `data-*` am inneren `<input>` pruefen) -> `DBSwitch` (Vorbild `MyCheckbox`); `db-tag`
+      `#PasskeyAccordionCount` -> `DBTag` (Wiring `Einstellungen/index.ts:42`, schreibt Text
+      per DOM); `EwtTab.tsx:40` Berechnen-Schalter (`row-checkbox`, `attachBerechnenToggleListeners`
+      liest DOM-Zustand) -> `DBSwitch`.
+      **Korrektur (User + DB-UX-Doku):** Switch NUR bei sofortiger Wirkung, sonst `DBCheckbox`
+      ("Verwende keinen Switch in einem Formular, in dem Aenderungen erst nach Klick auf
+      'Speichern' angewendet werden"). Daher: die 5 Einstellungs-Schalter -> `DBCheckbox`;
+      `MyCheckbox` ist jetzt standardmaessig `DBCheckbox`, `schalter`-Prop waehlt `DBSwitch`
+      (ThemeSwitcher, `createShowModalEWT`). **Offene Entscheidung (User):** Grenzfaelle, die sofort
+      Felder ein-/ausblenden, aber erst mit Speichern gelten -- `eigen`/`sonder`/`nacht`
+      (`createAddModalBereitschaftsZeit`), Buero (`createAddModalEWT`), `toggle-*`
+      (`ArbeitszeiteingabePanel`); stehen bis dahin per `schalter` auf Switch. `EwtTab`s
+      Berechnen-Schalter persistiert per Klick sofort -> bleibt Switch; Umbau braucht Anpassung des
+      Selektors `#tableE .row-checkbox` (`DBSwitch` reicht `className` an den Root, nicht an das
+      `<input>`).
+- [x] **3. `PersoenlicheDatenPanel.tsx`** (erledigt, `a3d9792`; groesster Einzelgewinn): 15x `db-input` -> `DBInput
+    variant="floating"` (Vorbild `Jahr` in `EinstellungenTab.tsx`), 2x `<select>` ->
+      `DBSelect`. Beibehalten: `id`, `required`, `placeholder`, `type` (`tel`/`email`/`number`
+      mit `min`/`max`), `list="taetigkeitVorschlaege"` (Datalist -> `DBInput dataList` pruefen),
+      `readOnly disabled` bei `EmailAnzeige`. `saveEinstellungen` liest per `#${key}` und ruft
+      `reportValidity()` -- im Spike bestaetigen, dass die Validierungsmeldung weiter erscheint
+      (DBInput bringt `invalidMessage`, ggf. Doppelmeldung vermeiden). Dazu
+      `ArbeitszeiteingabePanel.tsx:88` `FahrzeitInput` (`type="time"`).
+      **Ergebnis:** lokale Hilfen `Feld`/`Auswahl`; Datalist ueber die `dataList`-Prop (das rohe
+      `list`-Attribut wird von `DBInput` NICHT an das `<input>` gereicht). Gueltiger TB-Wert ist
+      `'Tarifkraft'`. **Regression aus Zyklus `51f62b7` mitrepariert:** `.feldgruppe` war nach dem
+      DBStack-Umbau `display: block`; 5 rohe `<div className="feldgruppe">` (`FeldPanel`,
+      `aggregationUndRechnung` 2x, `AdminProfileTemplateContentEditor`, `PersoenlicheDatenPanel`)
+      -> `<DBStack direction="row" alignment="end" gap="x-small">`. Stand `PersoenlicheDatenPanel`:
+      User bearbeitet die E-Mail-Zeile gerade selbst (halbe Spalte, `message="Test"` noch drin).
+- [x] **4. `DBNotification`** (erledigt 2026-09-19; **umgeordnet nach DB-Richtlinie**, siehe CHANGELOG 152 --
+      nur Fehler-/Ereignis-Feedback und stehende Systemhinweise mit Aktion bleiben Notification;
+      Hinweise -> `DBInfotext`, Leerzustaende -> schlichter Text; `ConflictReviewBanner` bleibt roh)
+      (urspruenglich 12 Stellen, siehe Liste unten): `role`/`semantic` 1:1 uebernehmen,
+      `d-none`-Umschalter an `App.tsx:44` (wird extern per DOM gesteuert, `actAsStatus.ts` -- Id
+      dort nachschlagen) nicht brechen. `py-2`/`mb-*`-Klassen als `className` behalten.
+- [x] **5. `DBDivider` + `DBCard`** (erledigt 2026-09-19, CHANGELOG 152): 16x `<hr>` -> `<DBDivider width="full">` (ohne `width` kollabiert
+      die Linie -- Erfahrung aus dem Einstellungen-Umbau); 7x `div.db-card` -> `DBCard`
+      (`AdminDashboard` 4x, `adminDashboardCharts`, `AdminResourceBrowser`, Onboarding).
+      `data-spacing="none"`/`shadow`-Klassen pruefen.
+- [x] **6. Accordion** (erledigt 2026-09-19, CHANGELOG 155; **`behavior="single"` NICHT nutzbar** -- Zwei-Klick-Fehler in DB UX 5.5.0, eigener Zustand via `offenerAbschnittStore`; nur `EinstellungenTab` + `BerechnungMobileCards` umgestellt, die ad-hoc-`<details>` in `FormularUpload`/`FormularEditor` bleiben bewusst nativ) (ZUERST Spike): `EinstellungenTab.tsx` (7 Items),
+      `BerechnungMobileCards.tsx`, `FormularUpload.tsx` -> `DBAccordion`/`DBAccordionItem`.
+      Spike-Fragen: (a) landet `id="collapseOne"` so am DOM, dass `#collapseFive
+    input[data-tab-key]` weiter trifft? (b) exklusives Oeffnen (`name="einstellungen"`) ->
+      `behavior="single"`? (c) `createOnboardingGuideModal.tsx:161` `closest('.db-accordion-item')`.
+- [x] **7. Tabellen + Tabs** (erledigt 2026-09-19: `DBTable` NICHT einsetzbar, `DBTabs` NICHT einsetzbar -- beides mit Live-Beleg, Roh-Markup bleibt; nur Tab-Leisten siehe unten) (nur nach Rueckfrage, groesster Umfang). **`DBTable`: geprueft
+      (2026-09-19, DB-UX 5.5.0) -- NICHT einsetzbar, Empfehlung: Roh-Markup `div.db-table > table`
+      beibehalten.** Belege: (a) `DBTable` rendert dieselbe Struktur wie unser Roh-Markup plus
+      Klassen (`db-table-row` usw.), (b) sein CSS ist ein Grid-Modell (`table {display:grid}` +
+      `:has()`-Spaltenzaehlung ueber `td`/`th`-Kinder), (c) `utilities.scss` setzt bewusst
+      `.db-table > table {display: table}` zurueck, weil unsere Tabellen `colspan`, Zeilenkoepfe und
+      je Breakpoint ausgeblendete Spalten (`d-none d-md-table-cell`) nutzen, (d) live gemessen: mit
+      `DBTable`-Markup stapeln sich die Zellen (Zeile 129px statt 32px, `tr` = `grid` ohne Spalten;
+      `columnSizes` aendert nichts), Zellmasse/Padding/Schrift sonst identisch. `CustomTable`-Tabellen
+      scheiden zusaetzlich aus (mountet React direkt auf `<table id>`, `DBTable` gibt die `id` an den
+      Root-`div`). Gewinne, die `DBTable` braechte (`stickyHeader`, `columnSizes`,
+      `mobileVariant="list"`, `horizontalAlignment`), haengen alle am Grid-Modell. Nebenfunde:
+      `.table-active` (FormularVersionenListe, bearbeitete Version) existiert im CSS nicht ->
+      Hervorhebung unsichtbar; `data-interactive` am Wrapper ist NICHT tot (`styles.scss:435`
+      Hover-Regel als `table-hover`-Ersatz). Rest von 7 (nur Tab-Leisten): 6 Admin-`db-table` ->
+      entfaellt; Tab-Leisten
+      (`Admin/index.tsx:138`, `AdminResourceBrowser.tsx:220`, `FormularEditor.tsx:563/570`) ->
+      `DBTabs`. **`DBTabs` geprueft (2026-09-19, DB UX 5.5.0) -- NICHT einsetzbar, Leisten bleiben
+      `DBNavigation`/`nav` mit `role="tablist"`.** Belege: (a) Live-Test mit fester Tab-Menge: Klickfolgen,
+      externer Wechsel (`activeIndex`) und Ids sind in Ordnung; (b) aber Tabs ZUR LAUFZEIT ein-/
+      ausblenden bricht die Zuordnung -- nicht rendern (Tab + Panel): "Zwei" wieder da => zwei Panels
+      gleichzeitig sichtbar, "Drei" entfernt => kein Tab aktiv; per `d-none` verstecken: Klick auf
+      den naechsten Tab und Pfeiltasten wirkungslos, zwei Panels sichtbar (`DBTabs` ordnet Tabs und
+      Panels per INDEX zu); (c) strukturell: `DBTabItem`/`DBTabPanel` haben kein `id`-Prop (Ids
+      `admin-tab-*`/`admin-pane-*`, `data-tab-target`, `getElementById('admin-tab-profiles').click()`,
+      `tabController`/`activeAdminTabStore` haengen daran), Trenner-Eintraege und "+ Seite"-Knopf
+      (`FormularEditor`) passen nicht in `DBTabList`, `AdminResourceBrowser` und `FormularEditor`
+      teilen sich EINEN Inhaltsbereich statt je einem Panel; (d) die Admin-Tabs haengen an
+      Berechtigungen (`canSee*`) und erscheinen erst nach dem Laden -- genau der Fall (b).
+- [x] **8. `DBLink`** (erledigt 2026-09-19, CHANGELOG 155: `mailto:` im Impressum; User: die `<a>` im `AppHeader`/DBShell BLEIBEN `<a>`): `ImpressumDialog.tsx:68` (`mailto:`), `AppHeader.tsx` nach Pruefung des
+      Kommentars.
+
+- [x] **9. `DBSection` (erledigt 2026-09-19, CHANGELOG 153; offen: Spalten-Schwellen s. u.)** -- ersetzt `.mitte`/`.breit`
+      (`raster.scss`; `.mitte` = max 75rem zentriert, `padding-inline: .75rem`, 10x in den Tabs +
+      3x `.breit`) und handgesetzte Block-Abstaende (`mb-3`, `py-4 py-md-5`). Fakten: `DBSection`
+      rendert `<section class="db-section" data-spacing data-width>`; `spacing` none/small/medium/
+      large (responsiver `padding-block`), `width` small/medium/large mit Seiten-Padding aus
+      `100vw` (Obergrenzen 48em/64em/90em, ohne `width`: volle Breite, 1rem Rand). Unsere 75rem
+      (1200px) gibt es nicht als Preset: `large` = volle Breite bis 1440px, dann Inhalt max 1408px
+      (breiter als heute); `medium` = ab 1024px Inhalt max 992px (schmaler; Tabellen leiden).
+      Richtlinie: Section nur fuer uebergeordnete Bloecke, nicht fuer Mikro-Abstaende; wenige,
+      konsistente Presets. Sichtbare Layout-Aenderung in JEDEM Tab -> vor Umsetzung Preset waehlen
+      (Empfehlung: `large` fuer Tab-Koepfe und -Tabellen) und einen Tab im Puppeteer-Vergleich
+      (1280/1920px) pruefen. Nicht fuer die Gruppen innerhalb der Einstellungen (Mikro-Abstaende).
+      **Pruefung 2026-09-19 (echte Einstellungen-Seite, `mitte` -> `db-section` zur Laufzeit):**
+      Inhaltsbreite ist/large/medium: 375px 351/343/343, 1280px 1176/1248/992, 1920px 1176/1408/
+      992; Seiten-Padding mobil 12px -> 16px. `spacing` small = 32px mobil / 48px Desktop
+      `padding-block` (heute 0) -> Ueberschrift rutscht 48px tiefer. Tabs sind zwei GESCHACHTELTE
+      `.mitte` (Kopf + Inhalt): zwei Sections stapeln Padding doppelt -> nur aeusseres Section, inneres
+      plain. Fazit: kein Preset trifft 1200px; `large` macht Formular-/Akkordeon-Seiten (Einstellungen)
+      zu breit (Zeilen 1408px), `medium` macht die Tabellen-Tabs zu schmal. Vorschlag: `large`
+      fuer Tabellen-Tabs (Bereitschaft/EWT/EA/Neben/Berechnung), `medium` fuer Einstellungen/Start,
+      `spacing="none"` (Abstaende regelt `#tabContent`); User entscheidet.
+- [x] **10. Switch-Grenzfaelle (erledigt 2026-09-19, CHANGELOG 153)**: alle 6 Stellen -> Checkbox
+      (Werte gelten erst mit Hinzufuegen/Speichern; im EWT-Modal steht "Berechnen" direkt ueber
+      "Buero" schon als Checkbox). `eigen`/`sonder`/`nacht`/Buero: `schalter` entfernen. `toggle-*`
+      (`ArbeitszeiteingabePanel`): `schalter` entfernen und das wechselnde Label "aktiv"/"inaktiv"
+      durch festes "aktiv" ersetzen (eine Checkbox beschreibt nicht ihren Gegenzustand).
+
+- [x] **11. Spalten-Schwellen der Tabellen pruefen (erledigt 2026-09-19, CHANGELOG 154 + 158; alle Tabellen gemessen: EWT, Bereitschaft (BZ/BE), Neben, EA, Vorgaben-Tabelle)** (User-Hinweis 2026-09-19) -- **EWT erledigt: Weg 1 umgesetzt (`Buchungstag` `xxl` -> `lg`, CHANGELOG 154, live bestaetigt: 1280px ausgeblendet, ab 1440px 14 Spalten ohne Scroll); Bereitschaft/Neben/EA/VorgabenB offen** -- **EWT gemessen**
+      (echte Ortsnamen/Zeiten des Users, echte `VorgabenGeld`; alle Spalten per CSS erzwungen,
+      `table` auf `max-content`): Platz = Container der `DBSection large`, "alle" = 14 Spalten.
+      768px: Platz 736, sichtbar 6, alle brauchen 1217 (fehlt 481) | 1024px: 992, sichtbar 8, alle
+      1217 (fehlt 225) | 1280px: 1248, sichtbar 8, alle 1240 (**passt, 8px Luft**) | 1440px: 1408,
+      sichtbar 13, alle 1400 (**passt, 8px Luft**) | 1920px: wie 1440px | 2560px: alle 14 sichtbar.
+      Befunde: (a) `large` (1408px) entspricht fast exakt der Breite der vollstaendigen EWT-Tabelle
+      (1400px) -- das Preset passt. (b) EWT-"Buchungstag" (`xxl`) erscheint erst ab 2560px, passt
+      aber schon ab 1440px (8px Luft) -> Kandidat `lg`; Risiko: laengere Ortsnamen als
+      "Langenschwarz" verbreitern die Tabelle ueber den Container (horizontaler Scroll), und die
+      Spalte ist sonst ueber das "+"-Aufklappen der Zeile erreichbar. (c) Zwischen 1024 und 1440px
+      gibt es keine Stufe: bei 1280-1439px passt die volle Tabelle knapp (1240 <= 1248), wird aber
+      erst ab 1440px gezeigt (`lg`-Spalten). Eine Stufe bei ~1280px gibt es in `_breakpoints.scss`
+      nicht (Skala xs 320 / sm 768 / md 1024 / lg 1440 / xl 1920 / xxl 2560). Bereitschaft/Neben/EA/
+      VorgabenB noch nicht gemessen (weniger Spalten, breite Container). Optionen: `Buchungstag`
+      `xxl` -> `lg` (klein, 8px Luft) ODER Sichtbarkeit wie das Berechnungs-Monatsfenster aus der
+      Containerbreite ableiten (robuster, groesserer Umbau).
+
+### 12 `db-notification`-Fundstellen (Schritt 4)
+
+`MyFormModal.tsx:22`, `MyDivModal.tsx:20`, `MyHelpModal.tsx:91`, `App.tsx:44`,
+`ConflictReviewBanner.tsx:44`, `AdminResourceBrowser.tsx:346`, `AdminResourceEditModal.tsx:73`,
+`AdminDashboard.tsx:101`, `Admin/index.tsx:158`, `AdminProfileTemplatesManager.tsx:362`,
+`createOnboardingGuideModal.tsx:222/226`.
+
+## Verifikation (pro Schritt)
+
+1. `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run lint:css`, `bun run test` (0 fail),
+   `bun run format`.
+2. **Puppeteer gegen den laufenden Dev-Server :8080** (nie eigenen starten): Vorher-/Nachher-
+   Screenshot je betroffenem Bereich, Desktop 1280px UND Mobil 375px; Ids per
+   `document.querySelector` weiter auffindbar.
+3. Einstellungen-Schritte: Feld ausfuellen -> Speichern -> `localStorage`-Inhalt und
+   `reportValidity()`-Verhalten unveraendert; Laden setzt Werte weiter in die Felder.
+4. Bekannte DB-UX-Fallen im Blick: `:empty` + `::before` (Badge/Icon), `DBDivider` ohne `width`,
+   verschachtelte `DBStack`s (siehe CHANGELOG 147).
+5. CHANGELOG-Eintrag je Schritt (`frontend/CHANGELOG.md`), `graphify update .` nach Codeaenderung.
+
+## Offene Rueckfragen an den User
+
+- Umfang: Schritte 0-5 in einem Zug, oder erst 1-3? (Empfehlung: 0-3, dann Zwischenstand.)
+- Schritt 6 (Accordion) und 7 (Tabellen/Tabs) nur mit Spike bzw. auf ausdrueckliches Ja.
+
+---
+
+# Aktueller Plan: Lint-Warnungen abbauen (I.9 + stylelint-Ratsche) - 2026-09-09
+
+## Ausgangslage
+
+User-Auftrag: alle offenen Warnungen fixen, `eslint-disable` nur im Ausnahmefall.
+Stand: `lint` 0 Fehler / 21 Warnungen, `lint:css` 0 Fehler / 90 Warnungen.
+
+Antworten aus der Rueckfrage: Umfang = ESLint (21) + stylelint (90); Verifikation =
+typecheck + test + Review (kein Browser-Verify); Zielkonflikte = Ref-Pattern/Umbau statt disable.
+
+## Analyse (2026-09-09)
+
+### ESLint 21 -- zwei Klassen
+
+1. `react-hooks/set-state-in-effect` (~14x) + gepaarte `react-hooks/exhaustive-deps` (~7x) in
+   ~13 Admin-/Bereitschaft-Komponenten. Keiner der Loader (`load`/`reload`/`reloadUsers`/
+   `loadPageWith`) ist `useCallback`; die Effekte rufen sie synchron -> `setLoading(true)` im
+   synchronen Effektpfad. Sauberer Fix je Komponente: Loader in `useCallback`, Fetch im Effekt
+   als async-IIFE (setState nur nach `await`), `loading` initial `true` fuer den Mount,
+   Refetch = stale-while-revalidate (kein Spinner mehr beim Filterwechsel). Das ist eine
+   Verhaltensaenderung pro Komponente und beruehrt jede Admin-Datenansicht.
+2. Reine "State beim Prop-Wechsel zuruecksetzen"-Faelle (`adminDashboardCharts` `setEventsPage(0)`
+   auf `[heap]`, `PdfCanvas` `setAngezeigt(seiteIndex)` auf `[seiteIndex]`,
+   `AdminUserList` `setSelectedIds(new Set())` auf Filterwechsel): React-idiomatisch via
+   prev-value-Ref + Anpassung in der Render-Phase. Klein, testbar.
+
+### stylelint 90 -- grosser Anteil dokumentierte False Positives
+
+`tasks/lessons.md` Z. 53 haelt fest: die `db-ux/*`-Regeln laufen bewusst als Ratsche
+(severity warning + `--max-warnings`), NICHT als Fix-Auftrag, weil das Plugin
+`gap: $wert` / `gap: var(--token)` / `calc(...)` nicht als Token erkennt.
+Betroffen davon hier u.a.: `raster.scss` `var(--raster-abstand,0)`, `utilities.scss` `$wert`
+(SCSS-Mixin-Parameter), `styles.scss` `calc(...)`/`min(...)`, `1px`-Haarlinien (kein
+`db-sizing`-Token fuer 1px), `border-radius: 50%` (Kreis -- Formensprache ist sonst eckig).
+Echte, mechanisch ersetzbare Faelle: die festen `0.25/0.35/0.5/0.75rem`- und `8px`-Spacings.
+Ersatz durch `db-spacing-fixed-*` aendert die Optik (Werte liegen zwischen den Token-Stufen)
+-> visuelle Regressionsgefahr ohne Browser-Verify.
+
+## Befund nach erstem Versuch (2026-09-09) -- Sackgasse
+
+`adminDashboardCharts` (`setEventsPage(0)` auf `[heap]`) auf das offizielle React-Muster
+"State in der Render-Phase via prev-Ref anpassen" umgestellt -> `set-state-in-effect` weg,
+dafuer **zwei** neue `react-hooks/refs`-Warnungen ("Cannot access refs during render").
+Die Projekt-Config (`eslint-plugin-react-hooks@7`, Compiler-Regeln inkl. `refs`) ist strenger
+als die React-Doku und lehnt **beide** Muster ab. Aenderung wieder verworfen.
+
+Konsequenz: warnungsfrei geht nur ueber Architektur:
+
+- Derived-State-Resets: `key`-Prop am Elternteil setzen (aendert die Elternkomponenten).
+- Fetch/Loading: raus aus `useEffect` -- Suspense + `use()` oder eine Data-Fetching-Schicht
+  (React Query o.ae., aktuell nicht im Projekt).
+
+Beides ist ein groesserer Umbau mit Regressionsrisiko in jeder Admin-Ansicht, ohne
+Browser-Verifikation nicht verantwortbar. Deckt sich mit der Team-Entscheidung (I.9-Zurueckstellung)
+und der `lessons.md`-Ratschen-Philosophie.
+
+## Empfehlung -- mit User zu klaeren
+
+1. ESLint 21: als dokumentierte Ausnahme unter der (nicht-brechenden) Warnschwelle lassen,
+   ODER gezielter Architektur-Umbau je Komponente MIT Browser-Verify (`verify`-Skill), 1-2
+   Komponenten pro Sitzung.
+2. stylelint 90: Ratsche ist projektgewollt. Falls doch Abbau -> nur die exakt token-gleichen
+   Spacings, Rest (var()/$wert/calc()/1px/50%) bleibt per Definition.
+3. Kein pauschales `eslint-disable` -- brächte nichts ausser Rauschen.
+
+---
+
+# Aktueller Plan: Formular-Vorlagen-Cache im Hintergrund vorwaermen - 2026-09-09
+
+## Ausgangslage
+
+`formularVersionCache` (+ `vorlagenPdfCache`) in `infrastructure/pdf/formularCache.ts` fuellt sich
+heute nur _nach_ dem ersten erfolgreichen PDF-Export (`loeseVersionAuf`/`holeVorlageAlsDatei` in
+`ladeFormular.ts`). Luecke: Export online gestartet, Verbindung faellt weg, erster Export des
+Monats -> Cache-Miss -> Abbruch. Ziel: die zum gewaehlten Monat gueltige ("neueste") Version +
+zugehoerige Vorlagen-PDF proaktiv, komplett im Hintergrund und nicht blockierend cachen.
+Backend hat keinen "newest"-Endpunkt fuer Member (`GET /formulare/:f` verlangt `stichtag`,
+`liste` ist TEAM_ADMIN) -> Prefetch immer pro konkretem Stichtag = 1. des gewaehlten Monats.
+
+## Aufgaben
+
+Status 2026-09-09: umgesetzt. Hinweis 5: Datei liegt als `test/pdf.warmeFormularCaches.test.ts`;
+Offline-Skip von `warmeVorlagenCache` selbst nicht per Test abgedeckt (bräuchte FetchRetry-Mock),
+die `navigator.onLine`-Guard ist eine Zeile und per Lesen geprüft.
+
+- [x] **1 `ladeFormular.ts`:** optionaler `still`-Schalter an `loeseVersionAuf` +
+      `holeVorlageAlsDatei` (unterdrueckt `zeigeOfflineHinweis()` fuer den Warmlauf).
+      Neu exportiert: `warmeVorlagenCache(formular, stichtag)` -- nur online
+      (`navigator.onLine !== false`), loest die Version frisch auf (ueberschreibt die
+      gecachte -> haelt "neueste" aktuell), zieht die Vorlagen-PDF nur wenn noch nicht in
+      `vorlagenPdfCache`, schluckt jeden Fehler.
+- [x] **2 Neu `infrastructure/pdf/warmeFormularCaches.ts`:** `aktivierteTabs` -> FormularCode
+      (`bereitschaft`,`ewt`,`neben`->`ez`,`ea`), Stichtag `dayjs([jahr, monat-1, 1])`,
+      sequentiell mit `requestIdleCallback`-Planung (Fallback `setTimeout`), voll detached.
+- [x] **3 Hook in `loadUserDaten.ts`** nach `syncFeatureTabs(...)`:
+      `void warmeFormularCaches(vorgabenU.Einstellungen?.aktivierteTabs, monat, jahr)` --
+      laeuft bei Login und jedem Jahr-/Monatswechsel.
+- [x] **4 `vite.config.ts` workbox:** eigener Runtime-Cache `formular-vorlagen-cache` fuer
+      `/api/v2/(formulare|vorlagen)/` (NetworkFirst, 30 Tage, eigene `maxEntries`), VOR der
+      generischen `/api/v2/`-Regel -- sonst verdraengen die Binaer-PDFs die 50 Eintraege der
+      `api-cache` und verfallen nach 1 h.
+- [x] **5 Tests** `test/warmeFormularCaches.test.ts`: Mapping, Skip-wenn-gecacht,
+      wirft-nie, Offline-Skip.
+- [x] **6 Doku:** `frontend/CHANGELOG.md`, ggf. `tasks/lessons.md`, `graphify update .`.
+
+### Verifikation
+
+- `bun run typecheck && bun run lint && bun run lint:css && bun run test && bun run build`
+- `dist/sw.js` enthaelt `formular-vorlagen-cache` und den `(formulare|vorlagen)`-Pattern
+- Kein zusaetzlicher `await` im `loadUserDaten`-Pfad (Warmlauf blockiert nichts) -- per Lesen
+  der Aufrufstelle geprueft.
+
+---
+
+# Aktueller Plan: DB-UX-Migration -- Phase I (Cleanup, Token-Finalisierung, Doku) - 2026-09-08
+
+## Ausgangslage
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase I. Phase H ist abgeschlossen und gepusht
+(`feat/db-ux` @ 5a8b4dd). Baseline heute verifiziert: `typecheck` 0, `lint` 0 Fehler /
+28 Alt-Warnungen, `lint:css` 0 Fehler / 93 Warnungen, `test` 2084 pass / 0 fail / 2 skip
+(1 sporadischer Flake im Erstlauf, im Rerun gruen), `build` gruen (Precache 59 / 4,5 MB).
+
+Design-Grundlage neu abgeglichen mit dem DB-Marketingportal ("neues Design"):
+Prinzipien, Markenfarben, Logo, Layout, Icons, Schwelle -- Kernwerte in der Referenz-Memory
+`db-brand-farben-neues-design`. Wichtigste harte Regel fuer Phase I: **DB Red (`#EC0016`)
+nie als Hintergrundflaeche** -> PWA-`theme_color` wird Weiss/Cold Black, nicht rot.
+`#EC0016` deckt sich mit `@db-ux/db-theme` 6.2 `--db-brand-origin-base` und ist der
+Barrierefreiheits-Rotton fuer UI.
+
+## Aufgaben
+
+- [x] **I.1 btn-Residuen sauber ziehen.** `customButton`-API nimmt jetzt `look?: DbButtonLook`
+      (DB-Semantik) statt `classes: string[]`. Neu: `erzeugeDbButtonAusLook` in `dbButton.ts`;
+      `erzeugeDbButton(string[])` bleibt als duenner Wrapper fuer die `customTableRender`-Defaults
+      (Add/Delete/Undo). Call-Sites `EwtTab.tsx` + `generateEingabeTabelleEinstellungenVorgabenB.ts`
+      auf `look: { variant: 'filled' }`; `CustomTable.test.ts` mitgezogen. tsc/lint/betroffene
+      Tests gruen.
+- [x] **I.2 Layer-Modell.** ENTSCHEIDUNG (User delegiert): `customtable.css` bleibt bewusst
+      unlayered -- Verschieben nach `@layer app` wuerde seine `!important`-Regeln hinter
+      `@layer db-ux` fallen lassen (bei `!important` kehrt sich die Layer-Rangfolge um) und
+      der unlayered `styles.scss`-Hover wuerde die Fehlerzeilen-Warnfarbe ueberschreiben.
+      Das 3-Stufen-Modell (`db-ux` < `app` < unlayered) ist jetzt in `layers.scss`
+      ausfuehrlich als bewusste Entscheidung dokumentiert. Kein Code-Umbau.
+- [x] **I.3 Marken-Logos aus dem Build halten.** PostCSS-Plugin `dropDbSubBrandLogos` in
+      `vite.base-config.ts` (`css.postcss.plugins`) entfernt alle `[data-logo=db-*]`-Regeln,
+      bevor Vite die `url()` aufloest. Ergebnis: `dist/assets/logo-*.svg` 13 -> 0
+      (Default-Logo wird jetzt als data-URI inlined), Precache 59 -> 47 Eintraege,
+      4526 -> 4436 KiB. `light-dark(` weiter 870 (esbuild-Minifier intakt). Build gruen.
+- [x] **I.4 Ungenutzte Icon-/Font-Gewichte.** Precache-globIgnores stehen schon (italic,
+      black, digital, head, db-*.woff2). Gegenpruefen welche woff2 real im Build sind und ob
+      weitere Schnitte raus koennen; Build-seitig (nicht nur Precache) ungenutzte Schnitte
+      ausschliessen wenn moeglich.
+- [x] **I.5 PWA-Farben.** `vite.config.ts` `theme_color` + `background_color` = `#ffffff`.
+      `src/index.html`: eine `<meta name="theme-color">` -> zwei mediengescopte
+      (`light` = `#ffffff`, `dark` = `#16181b`, der Cold-Black-Ton des DB-Themes). DB erlaubt
+      kein rotes Fill -> Browserleiste folgt dem App-Grund. Manifest im Build verifiziert.
+- [x] **I.6 Bundle-Budget** gegen die Spike-Zahlen (React-Runtime ~60 KB gz, DB-UX-CSS
+      ~84 KB gz) im Bundle-Report/CHANGELOG festhalten; `globPatterns` final pruefen.
+- [x] **I.7 data-density / data-color final.** User-Freigabe: `functional`, kein globales
+      `data-color`. `src/index.html` `<html data-density="regular">` -> `"functional"`.
+      (Global `data-color="red"` haette die ganze Flaeche/Text rot gefaerbt -> DB-Regelbruch;
+      Rot bleibt Akzent ueber `--db-brand-*`.) Kein Test asserted `regular`.
+- [x] **I.8 Dark-Mode-QA end-to-end.** Alle Tabs + je ein Modal, Hell/Dunkel/Auto, Mobile,
+      Deep-Link. `verify`-Skill + manuelle Sichtpruefung.
+- [x] **I.9 ESLint-Config aufraeumen + 28 Warnungen.** React-19-`react-hooks/refs`-Hinweise
+      (Preact-Muster: `ref.current = x` im Render) in den Admin-/Einstellungen-Komponenten
+      sauber auf `useEffect`/`useLatestRef` ziehen. `@db-ux/core-eslint-plugin` /
+      `@db-ux/core-stylelint` optional pruefen.
+- [x] **I.10 `@db-ux/agent-cli`** final neu ausfuehren, `.github/copilot-instructions.md`
+      committen (Token liegt evtl. ohne `workflows`-Permission -> nicht an `.github/workflows/`
+      pushen, aber `copilot-instructions.md` ist ok).
+- [x] **I.11 Doku (Done-Kriterium).** `frontend/CLAUDE.md`, `.claude/skills/architektur`,
+      `.claude/skills/verify`, `.claude/skills/bootstrap` (entfernen/umschreiben), Root
+      `../CLAUDE.md` + `../WORKSPACE.md` + `frontend/.claude/README.md`,
+      `frontend/CHANGELOG.md` (69), `graphify update .`.
+- [x] **I.12 Gitlink-Bump Frontend im Parent -- verifiziert, in Sync.** Parent-HEAD-Gitlink
+      fuer `frontend` = `5a8b4dd` = aktueller `frontend`-HEAD. (`b2903e2` aus der Uebergabe
+      existiert in diesem Repo nicht -- vermutlich Tippfehler; der Fakt "Gitlink zeigt aufs
+      richtige Commit" stimmt.) Nach dem naechsten Frontend-Commit erneut noetig.
+- [x] **I.10 `@db-ux/agent-cli` + `.github/copilot-instructions.md`.** `@db-ux/agent-cli@^5.3.0`
+      als devDependency (bunx erzeugt ephemere `/tmp/bunx-...`-Pfade in der Ausgabe -> nicht
+      committbar). `.amazonq/rules` bewusst NICHT erzeugt (Projekt nutzt GitHub Copilot, nicht
+      Amazon Q; agent-cli erzeugt sonst beides). `.github/copilot-instructions.md` (222 Z.,
+      stabile `node_modules/@db-ux/...`-Pfade) neu generiert -- committbar.
+- [x] **I.13 Nav-Elemente vereinheitlicht (User-Fund).** Einstellungen + Admin von
+      `<button role="tab">` auf `<a role="tab" href="#Einstellungen|#Admin" data-tab-target>`
+      (Icon-/Text-Spans unveraendert) -> alle Haupttabs sind jetzt gleichartige, per
+      Rechts-/Mittelklick deeplinkbare Links. Browser-verifiziert: Klick setzt Hash + aktiviert
+      Panel, `tagName === 'A'`. Verbleibende Buttons sind alle begruendet: `#bd-theme`
+      (Popup-Trigger) und die Admin-Unternavigation (`<button role="tab">` fuer Nicht-URL-
+      Sub-Tabs = korrektes ARIA-APG-Muster) -- die `styles.scss`-Regel
+      `.db-navigation-item > button:not(.db-navigation-item-expand-button)` bleibt fuer die
+      Admin-Unternavigation noetig.
+- [x] **I.14 CLAUDE.md-Drift.** `frontend/CLAUDE.md` "Starten" nennt `bun run start` /
+      `bun run preview` (Port 8082) -- Scripts heissen `dev` / `dev:local`, `preview` schreibt
+      nach `../public/public`. Bei I.11 mitziehen.
+
+## I.15 Sichtkorrekturen (laufende visuelle QA mit dem User, 2026-09-08)
+
+- [x] **I.15a Tabellen-Fussknoepfe ohne Abstand.** `customTableRender.renderFooter` gab dem
+      `divFooter` nur `justify-content-sm-evenly` -- das Element war aber `display:block`,
+      also griff weder `justify-content` noch `gap`. Jetzt
+      `d-flex flex-wrap gap-2 justify-content-center justify-content-sm-evenly`.
+- [x] **I.15b Text-Markierung beim Ziehen** im `VorgabenBWeekRangeEditor` (Wochen-Chips):
+      `userSelect: 'none'` am `.d-grid`-Container.
+- [x] **I.15c EWT-Anzeige-Modal `ab/an` bzw. `von/bis`** klebten am Abschnittstitel und
+      standen nicht auf einer Linie mit den Zeitwerten. `createTitle` + getrennte
+      `createShowElement`-Paare -> ein `createZeitBlock` je Abschnitt; Pfeilzeile, Kuerzel und
+      Zeitwerte teilen jetzt EIN CSS-Grid (`.ewt-zeit`, feste Aussenspalten `4.5rem 1fr 4.5rem`)
+      -> Ab-Pfeil / `ab`|`von` / linker Zeitwert stehen senkrecht uebereinander, ebenso rechts.
+      Alte `.icon-ewt*`-Regeln entfernt. Browser-verifiziert (Mobil-Viewport, Anzeige-Modal).
+- [x] **I.15d Fehlende Abschlusslinie / Zeilentrenner der Tabellen.** Ursache: `utilities.scss`
+      erzwingt `.db-table > table { display: table }` (statt DBs Grid), DBs Default aber ist
+      `border-collapse: separate` -- und bei `separate` rendern `border`-Regeln an `<tr>` NICHT.
+      Damit waren DBs `:is(tfoot,tbody) tr { border-block-end }` komplett wirkungslos (keine
+      Zeilentrenner, keine untere Linie). `customtable.css`: `table.customtable {
+    border-collapse: collapse; }` -> DBs Rahmenregeln greifen wie vorgesehen.
+      Browser-verifiziert Hell + Dunkel (EWT-Tabelle mit 4 Zeilen): Zeilentrenner + untere
+      Abschlusslinie da, keine doppelten Rahmen.
+- [x] **I.15e Button-Farben vereinheitlicht** (User-Freigabe: Schema OK). Konvention:
+      Primaer/Bestaetigen = `brand`, destruktiv = `outlined`+`critical` (weniger Gewicht),
+      neutral/schliessen/abbrechen = `filled`, Zeilen-Aktionen = `outlined`. - `customTableRender.renderFooter`: "Alle Zeilen loeschen" `filled`+`critical` ->
+      `outlined`+`critical`; "Neue Zeile" bleibt `brand`. - `MyShowFooter`: "Loeschen" `filled`+`critical` -> `outlined`+`critical` (Test mit). - Zeilen-Edit/Delete/Undo waren schon `outlined` (neutral/critical/warning) -- ok. - `MyEditorFooter` (Submit `brand` / Abbrechen `filled`) -- schon konform.
+- [x] **I.15f Waagerechter Scrollbalken ab 1024px (User-Fund).** Ab `64em` laeuft die
+      Navigation waagerecht; der Design-Auswahl-Flyout (`#bd-theme-menu`, 280px,
+      `position: absolute`, `visibility: hidden`) war an der linken Kante verankert -> klappte
+      nach rechts auf und ragte auch unsichtbar ueber den Viewport -> `scrollWidth` > Breite.
+      Fix: im `@media (min-width: 64em)`-Block `#bd-theme-menu { inset-inline: auto 0; }` ->
+      rechtsbuendig, oeffnet nach links/unten. Browser-verifiziert 1024-1600px: kein Overflow.
+- [x] **I.15g "Alle Zeilen loeschen" bei leerer Tabelle** wurde nicht mehr ausgeblendet:
+      der Empty-State suchte `tfoot .btn-danger` -- die Klasse gibt es seit Phase F nicht mehr
+      (DB-Button traegt `data-variant`). Marker-Klasse `customtable-delete-all` am Knopf,
+      Selektor angepasst. (Latent seit Phase F, vom User-QA aufgedeckt.)
+- [x] **I.15h "Start" als eigener Nav-Eintrag entfernt (User-Fund).** Die Wortmarke
+      (`.db-brand` / `#brand-start-tab`, `data-tab-target="start"`) IST der Start-Schalter --
+      der Listeneintrag war redundant. `#berechnung-tab` (erster immer sichtbarer Eintrag)
+      bekommt `tabindex="0"` fuer den initialen Tastaturfokus der Tabliste; Onboarding-Schluss
+      `springeZu('#start-tab')` -> `'#brand-start-tab'`. Browser-verifiziert: Marke -> `#start`
+      aktiv, kein Overflow.
+- [x] **I.15i Formensprache "von rund zu eckig" (User-Fund, DB "neues Design").** Alle
+      `--db-border-radius-*`-Tokens am `:root` (`styles.scss`, unlayered) auf `0` --
+      Karten, Knoepfe, Felder, Tags, Akkordeon, Drawer, Notifications usw. haben jetzt
+      90-Grad-Ecken. `--db-border-radius-full` bleibt fuer inhaerent runde Elemente (Radio,
+      Switch, Passwort-Staerke-Balken). Deckt sich mit deutschebahn.com. Browser-verifiziert.
+- [x] **I.15j DB-Schwelle -- offizielle Geometrie + Farbe.** User hat die offiziellen Assets
+      (`src/icons/DB_Schwelle*/Screen/…`, SVG+PNG, alle Farbvarianten) ins Repo gelegt.
+      `--schwelle-motiv` = Inline-SVG mit der **exakten S-Varianten-Geometrie** (viewBox
+      1304x240, 11 Balken, Raster 120, Breite 24 -> 104) als Maske; `background-color:
+    #ff002b` (Dynamic Red, exakter Asset-Farbwert). `.schwelle` in `styles.scss`, Hoehe
+      `--db-sizing-regular-md` / ab 48em `-lg`. Platzierung: waagerecht an der Oberkante des
+      `#start`-Panels, `mask ... right center / 66% 100%` -> rechtsbuendig ~2/3, dicke Balken
+      in der oberen rechten Ecke, diagonal gegenueber der Wortmarke, 1x pro Viewport.
+      Browser-verifiziert Hell (rot auf weiss) + Dunkel (rot auf Cold Black -- DB-konforme
+      Sekundaervariante). Nicht ins Bundle gezogen (Maske ist Inline-Data-URI).
+
+      **Optional, falls gewuenscht:** DB zeigt die horizontale Variante meist an der
+          UNTERkante (Balken in die untere rechte Ecke); Oberkante ist hier eine Web-Adaption
+          (Kopfzeile = oberer Rahmen). Alternativ: subtile Hintergrund-Variante (Grau-Balken
+          vollflaechig, Text ueberlagert) -- nie mit der prominenten kombinieren.
+
+## Verifikation
+
+- `bun run release:check` gruen (`typecheck` 0 / `lint` 0 Fehler / `lint:css` 0 Fehler /
+  `test` >= 2084 pass / `build` gruen).
+- `dist/assets/logo-*.svg` = 1 statt 13; Precache-Groesse gesunken; im CHANGELOG belegt.
+- `grep -c 'light-dark(' dist/assets/*.css` weiterhin > 800 (esbuild-Minifier, Phase-B-Falle).
+- `verify`-Skill: Vollpfad Hell/Dunkel/Auto, Mobile, Deep-Link `#EWT`, 0 Konsolenfehler.
+- PWA: `theme_color`/`background_color`/`<meta>` = DB-Werte; kein schwarzes Splash.
+
+## Review (Zwischenstand 2026-09-08, Ende Session 2)
+
+**Erledigt & verifiziert:** I.1, I.2, I.3, I.5, I.7, I.10, I.12, I.13, I.14, I.15a-j
+(j = erste Version), I.15d. Doku (I.11) teilweise: `CHANGELOG.md` (69),
+`frontend/CLAUDE.md` (Scripts/Styling), `.claude/skills/verify`, `graphify update .`.
+
+Checkpoint: `typecheck` 0 · `lint` 0/28 · `lint:css` 0/92 · `test` 2084/0/2 · `build` gruen ·
+`light-dark(` 870 · Precache 47 / 4438 KiB.
+
+QA-Sweep Hell/Dunkel **Desktop + Mobile**: keine Regressionen aus eckig / functional /
+Schwelle / Button-Farben / `border-collapse`. Konsolenfehler nur backend-bedingt.
+Confirm-Dialog-"OK" bleibt bewusst `filled`+`critical` (Primaeraktion des Dialogs).
+
+**Feinschliff / mit User:** I.15j (Schwelle: Wachstum/Position/Groesse, evtl. offizielles SVG).
+
+**I.9 teilweise:** 28 -> 21 ESLint-Warnungen. Erledigt: 2 verwaiste `eslint-disable`
+(`DbFeld`), `ArbeitszeiteingabePanel` (latest-ref jetzt im Effect), `OeLevelBoxes`
+(`useRef` -> `useState`, React-Muster "State beim Prop-Wechsel anpassen"), `PdfCanvas`
+(`liveAnzeige` einmal berechnet, scoped `eslint-disable` mit Begruendung -- pdf.js-Viewport
+gehoert nicht in State). Tests: OeLevelBoxes 23/0, betroffene 77/0, Suite 2084/0.
+**Rest (21):** ~13 "setState synchron im Effect", ~7 `exhaustive-deps` -- nuancierte
+Faelle in komplexen Admin-Komponenten, seit Phase A bewusst zurueckgestellt; niedriger
+Nutzen (Warnungen, kein CI-Fehler) vs. echtes Regressionsrisiko. Einzeln mit Testabdeckung
+angehen oder bewusst als dokumentierte Ausnahme lassen.
+
+**Session 3 (2026-09-08, Forts.):**
+
+- **I.15j Schwelle final:** offizielle Standard-Geometrie (nicht S), am UNTEREN Rand des
+  `#start`-Panels, buendig an der fixierten Fusszeile (kein Abstand), kein Scrollbalken auf
+  keinem Tab. `#start.active`-Layout (nicht `#start` -- sonst schob das per `opacity`
+  versteckte Panel die anderen Tabs weg). Farbvarianten: primaerer Einsatz, durchgaengig Rot.
+- **DB-Neo-PDF-Schriften (User-Wunsch, neues Feature):** `db-sans`/`db-head` im Formular-
+  Vorlagen-Editor waehlbar, `build.ts` bettet sie per fontkit/subset ein. `dbFonts.ts` (neu),
+  `datenKatalog.SCHRIFTARTEN`, `SchriftartDialog`-Vorschau. `import.meta.glob` lazy +
+  try/catch (Bun-Test-kompatibel). PDF/Admin-Tests 547/0.
+- **I.15k Admin-Dashboard:** fehlender vertikaler Abstand zwischen der Karten-Reihe und der
+  Memory-Karte (`mb-4` an der `.raster`-Reihe). Start-Schnellzugriff `abstand-2` -> `abstand-3`
+  (gleicher Gitterabstand wie die Karten darueber).
+- **I.15l Schriftart-Dialog** neu formatiert: 4 ausgerichtete Zeilen (Grid, feste
+  Beschriftungsspalte) statt umbrechender Inline-Reihe (`.schriftwahl-raster`).
+- **I.15m Leere Tabelle:** fehlende Oberkante (Kopf ist bei Leerstand ausgeblendet) --
+  `tr.customtable-empty` bekommt `border-block-start` (customtable.css).
+- **I.15n `MyCheckbox` haengende Schalter (React 19).** `MyCheckbox` war gesteuert, sobald
+  ein `changeHandler` gesetzt war -- Aufrufer mit reinem Seiteneffekt-Handler (Feld
+  ein-/ausblenden, ohne den Wert nachzufuehren) liessen den Schalter auf dem Ausgangswert
+  haengen. Neu: explizites `defaultChecked` -> immer ungesteuert. Umgestellt: Bereitschafts-
+  Zeitraum-Modal "Sonderschicht"/"Nachtschicht", EWT-Anzeige-Modal "Berechnen?". ("Spaetschicht"
+  hat gar keinen Handler -> war nie betroffen; Admin-Checkboxen fuehren den Wert per `useState`
+  nach -> korrekt gesteuert.)
+- **I.15o AutoSave-Zustandspunkt auf `db-badge` umgestellt (User-Fund).** War ein
+  zurechtgestutztes `db-tag` (beschriftete Chip-Komponente, hier als Icon-Punkt missbraucht,
+  `!important`-Padding gegen die Mindestmasse). `@db-ux/core-components` hat dafuer die eigene
+  Komponente **`db-badge`** -- mit `data-placement="corner-top-right"` (absolute Positionierung,
+  ersetzt die Bootstrap-Klassen `position-absolute top-0 start-100 translate-middle`),
+  `data-semantic` (Farbe) und `data-emphasis="strong"` (Vollfarbe). `.autosave-badge` hat jetzt
+  nur noch `z-index` + `pointer-events: none`; alle Farb-/Groessen-/Padding-Regeln weg.
+  `db-badge` ist bewusst rund (`--db-border-radius-full`) -- so sieht DB Badges/Status-Punkte
+  vor, das ist KEIN Verstoss gegen "rund zu eckig" (das betrifft Container/Flaechen).
+  Icon-Markup nach DB-`DBIcon`-Muster: `<span class="db-icon" data-icon="…">` OHNE eigene
+  `db-font-size-*`-Klasse (Groesse steuert `db-badge`). `lint:css` 91 -> 90. Tests 2084/0.
+- **I.9:** 28 -> 21 Warnungen (2 verwaiste Direktiven, ArbeitszeiteingabePanel, OeLevelBoxes,
+  PdfCanvas). Rest = nuancierte setState-im-Effect/exhaustive-deps, seit Phase A zurueckgestellt.
+
+## I.16 -- EWT-Anzeige-Modal + weitere QA-Funde (User, laufend) -- GEBÜNDELT ABARBEITEN
+
+- [x] **EWT-Anzeige "Berechnen?"-Schalter ohne Wirkung.** Der `changeHandler` holte die Zeile
+      per `e.target.closest('.modal').row` -- `#modal` ist eine ID, keine Klasse -> `null` ->
+      Handler crasht. Jetzt die `row` direkt aus dem Aufruf-Closure (`createShowModalEWT.tsx`).
+- [x] **EWT-Anzeige: "Tag:" ohne Abstand zum Wert.** `createTagElement` jetzt
+      `divClass="raster mb-1"`, `labelClass="sp-4 sp-sm-5 ..."`, `spanClass="sp-8 sp-sm-7 ..."`
+      -> Label und Wert teilen das 12-Spalten-Raster (`raster.scss`).
+- [x] **EWT-Anzeige: `<hr />` rendert als Punkt.** Jetzt `<hr className="ewt-trenner" />` plus
+      Regel in `styles.scss`. Ursache war die UA-Regel `hr { margin-inline: auto }` -- als
+      Auto-Margin im Grid-Item schlaegt sie `justify-self: stretch`, das `hr` schrumpft auf 0.
+      Fix: `margin-inline: 0` + `inline-size: 100%` + `grid-column: 1 / -1`.
+      Browser-verifiziert (Mobil, 420px): Trennerbreite 406px, Hoehe 1px.
+
+**Browser-Verifikation EWT-Anzeige-Modal (2026-09-09, `scratchpad/ewt.mjs`, Mobil 420px):**
+
+- Schalter "Berechnen?": Row-State `unchanged` -> `modified`, `cells.berechnen` gekippt,
+  `localStorage.dataE[0].berechnen` aktualisiert. ✓
+- "Tag:" Label/Wert: Abstand 7px, auf einer Zeile. ✓
+- `.ewt-trenner`: 406px breit, 1px hoch -- Linie, kein Punkt. ✓
+- Gates: typecheck 0, lint 0/21, lint:css 0/90, test 2084/0/2, build gruen (966 Module).
+- [x] **Admin-Benutzerliste-Filter: Label mal oben (Rolle), mal unten (Name/OE).**
+      "Name"/"OE" hatten die `DbFeld`-Beschriftung versteckt (`data-hide-label`) + ein zweites
+      `<label>` NACH dem Feld (Beschriftung unter dem Feld, doppeltes `for`-Label). Jetzt alle
+      drei `DbFeld`/`DbAuswahl` mit `beschriftungZeigen`, kein Zusatz-`<label>`. Browser-
+      verifiziert (`scratchpad/filter.mjs`): 3x `labelAboveField: true`, `dupLabels: 1`.
+- [x] **Bereitschaftseinsatz-Modal: Warnhinweis "noch nicht gespeicherter Zeitraum"
+      verschwindet nicht.** Ursache: der `onEvent('data:changed')`-Listener, der den Hinweis
+      bei Sync ausblendet, wurde ueber `modal.addEventListener('hide.bs.modal', unsub)`
+      aufgeraeumt -- `hide.bs.modal` ist ein Bootstrap-Event und feuert seit Phase H nie mehr.
+      Pro Dialog-Oeffnung lief also ein Listener auf; die geleakten Listener aus frueheren
+      Oeffnungen zeigen auf detachte `bzSyncHintRef`-Knoten und stoerten die Sichtbarkeits-
+      logik. Neu: `beiModalSchliessen(cleanup)` (`components/showModal.tsx`, MutationObserver
+      auf `#modal`), in **6** Dialogen (EA/Neben/Bereitschaftseinsatz je Add + Editor).
+      Browser-verifiziert (`scratchpad/be-hint.mjs`): Hinweis blendet nach BZ-Sync +
+      `data:changed{BZ}` aus (`display:none`); Oeffnen/Schliessen/Neu-Oeffnen ohne
+      Listener-Aufbau (genau 1 Hinweis-Knoten, genau 1 Style-Write). Test-Mocks fuer
+      `@/components` in 3 Dateien um `beiModalSchliessen` ergaenzt. Suite 2084/0/2.
+- [x] **EWT-Anzeige "Berechnen?"-Schalter nach oben rechts** (User-Wunsch). Schalter + Tag
+      teilen eine Flex-Zeile (`.ewt-kopf` in `styles.scss`); der Schalter belegt keine eigene
+      Rasterzeile mehr. Browser-verifiziert Desktop + Mobil: rechtsbuendig, Rest nicht verschoben.
+- [x] **AutoSave-Zustandspunkt "fehlerhaft".** Zwei Bugs: (1) `initAutoSaveIndicator()`
+      sprang bei `badgeElements.size > 0` raus -- Feature-Tabs fuellen die Map per
+      `registerAutoSaveButton()` (in `LOGIN_INIT_SEQUENCE` vor `ui:autoSaveIndicator`), ohne
+      den Status-Listener zu registrieren -> Badges wurden nie aktualisiert. Guard jetzt auf
+      `if (unsubscribe)`. (2) `db-badge`-Klasse setzt `--db-icon-font-size` nicht -> Icon-Glyph
+      auf 0, Punkt wirkte leer. `.autosave-badge` setzt Icon-Groesse + hellen Ring
+      (`box-shadow`). Browser-verifiziert: 5 Semantiken, Icon sichtbar, Ecke sauber abgesetzt.
+      (Voller Save-Flow -> Badge-Status im Puppeteer-Harness nicht reproduzierbar wegen
+      dyn.-Import-Modulidentitaet; Look + Guard-Logik geprueft.)
+- [x] **`border-radius: 0` -- Nebenwirkungen systematisch geprüft.** Kritisch nur das `<hr>`:
+      als Flex-/Grid-Kind kollabiert es auf Breite 0 (UA `hr { margin-inline: auto }` schlägt
+      `stretch`). Global gefixt: `hr { margin-inline: 0 }` in `styles.scss`. Betraf Einstellungen
+      ("Sichtbare Bereiche"/AutoSave-Trenner, `d-flex`) + VE-Modale (`.raster`). Browser-
+      verifiziert (`scratchpad/hr.mjs`): 5x `<hr>` jetzt 457-958px statt 0. Unkritisch:
+      Passwort-Stärke-Balken (`--db-border-radius-full` -> pill), AutoSave-Punkt (`db-badge`,
+      rund), `type="range"`-Slider (UA). Keine `db-progress`/`db-slider`/Avatar im Einsatz.
+
+**Noch offen:**
+
+- **I.4** -- geklaert (Entscheidung, kein Code): ungenutzte woff2-Schnitte bleiben bewusst im
+  Build. `@font-face`-`src` laedt der Browser erst beim tatsaechlichen Glyph-Rendering -> fuer
+  echte Nutzer 0 Byte. Der Precache ist ueber `globIgnores` bereits eng (nur die 4
+  Fliesstext-Schnitte). Build-seitiges Strippen braechte nur ein kleineres Deploy-Artefakt,
+  riskiert aber einen synthetisierten Fallback-Satz. Begruendung steht im CHANGELOG (69).
+- **I.6** -- erledigt: Bundle-Budget vs. Phase-0-Spike im CHANGELOG (69) festgehalten
+  (React-Runtime 59 KB gz, DB-UX+App-CSS 92 KB gz, 32 woff2 / 1,82 MB, Precache 47 / 4,3 MB).
+- **I.11** -- `frontend/CLAUDE.md` (Scripts/Styling), `.claude/skills/verify`,
+  `.claude/skills/architektur` (Modal-Teardown + `beiModalSchliessen`), `../WORKSPACE.md`
+  (React 19 / Bootstrap raus / neues Design), `CHANGELOG.md` (69). `frontend/.claude/README.md`
+  - Root `../CLAUDE.md` sind generisch/Workflow -> kein Phase-I-Drift. `graphify update .` gelaufen.
+- **I.9** -- 28 -> 21 ESLint-Warnungen. Rest (~13 setState-im-Effect, ~7 exhaustive-deps in
+  verschachtelten Admin-Komponenten) bewusst als dokumentierte Ausnahme belassen: Warnungen,
+  kein CI-Fehler; echtes Regressionsrisiko > Nutzen. Einzeln mit Testabdeckung angehen, wenn
+  die Komponenten ohnehin angefasst werden (Phase J).
+- Gitlink-Bump im Parent nach dem naechsten Frontend-Commit (weiterhin offen).
+
+## Review Phase I -- Abschluss (2026-09-09, Session 4)
+
+**Committed auf `feat/db-ux`** (noch nicht gepusht):
+
+- `5ba1231` Phase-I-Sammelstand (eckig, Schwelle, PDF-Schriften, PWA-Farben, Button-Konvention,
+  Marken-Logos raus, I.9 teilweise, Doku)
+- `ab2fa1f` EWT-Anzeige-Modal: `<hr>`-Trenner + "Berechnen?"-Schalter aendert Row-State
+- `36abbf8` Dialog-Sync-Hinweise: Listener-Leak (totes `hide.bs.modal`) -> `beiModalSchliessen()`,
+  6 Dialoge
+- `ce00ec5` EWT-Schalter oben rechts (`.ewt-kopf`) + AutoSave-Zustandspunkt sichtbar
+  (Guard-Bug `if (unsubscribe)` + Icon-Groesse + Ring)
+- `799ab5d` Admin-Benutzerliste-Filter: Beschriftungen einheitlich oben
+- `bc5e830` `<hr>` als Flex-/Grid-Kind global gefixt (`hr { margin-inline: 0 }`)
+
+**Checkpoint (2026-09-09):** `typecheck` 0 · `lint` 0/21 · `lint:css` 0/90 · `test` 2084/0/2 ·
+`build` gruen (966 Module) · `graphify update .` gelaufen (3630 Nodes).
+
+**Browser-verifiziert (Puppeteer, Chrome headless gegen Dev-Server):** EWT-Anzeige-Modal
+(Schalter kippt Row-State + `localStorage.dataE`, Trenner voll breit, Schalter oben rechts,
+Desktop + Mobil 420px) · Bereitschaftseinsatz-Sync-Hinweis (blendet nach BZ-Sync aus, kein
+Listener-Aufbau ueber Oeffnen/Schliessen/Neu-Oeffnen) · Admin-Filter (3x Label oben, kein
+Doppel-`for`) · AutoSave-Badge-Optik (5 Semantiken, Icon sichtbar) · Einstellungen-`<hr>`
+(457-958px statt 0).
+
+**Bewusst offen gelassen:** I.9-Rest (21 Warnungen, dokumentierte Ausnahme) · Gitlink-Bump
+Parent (nach Push) · voller Save-Flow -> AutoSave-Badge-Status im Harness nicht reproduzierbar
+(Optik + Guard-Logik geprueft).
+
+---
+
+# Laufend: React-Umbau Phase J-N - Start 2026-09-11
+
+Plan: `tasks/plan-react-umbau.md`. Branch `feat/react-umbau` (Frontend + Parent).
+
+**Phase I ist abgeschlossen** (geprueft 2026-09-11): Abschluss-Commit `ede59c5`, Review-Abschnitt
+weiter oben, `lint` 0 Fehler / 21 Warnungen = der dokumentierte Ausnahmezustand. Bewusst offen
+geblieben und kein Blocker fuer J: I.9-Rest (21 Warnungen, Sackgassen-Analyse oben), I.4
+(Entscheidung ohne Code). I.8 war nie abgehakt, inhaltlich aber durch den QA-Sweep
+Hell/Dunkel Desktop+Mobile erledigt.
+
+Ziel (User-Vorgabe): **alles als React**, inklusive `CustomTable`; `index.html` schrumpft am
+Ende auf `<head>` + einen React-Root.
+
+- **J** Native Controls -> `@db-ux/react-core-components` (`DBButton`/`DBTag`/`DBCheckbox`/
+  `DBRadio`/`DBTextarea` direkt an den Aufrufstellen); `DbFeld`/`DbAuswahl` innen auf
+  `DBInput`/`DBSelect`; `MyButton` aufloesen. Querschnitt: `@db-ux/core-foundations`
+  (helpers-Mixins, `_screen-sizes.scss` als einzige Breakpoint-Quelle, `utilities.scss`/
+  `raster.scss` abgleichen).
+- **K** App-Shell nach React (`DBHeader`/`DBNavigation`/Brand, Theme-Umschalter, `navdrawer`
+  - `impressum` als `DBDrawer`, Fusszeile; `tabController` wird React-State).
+- **L** Statische Tabs nach React (Start, Berechnung-Huelle, Einstellungen-Formular).
+- **M** `CustomTable` nach React -- offene Weiche M-a/M-b/M-c, Marktabgleich im Plan
+  (Ergebnis: nur `@tanstack/react-table` waere headless-kompatibel, ersetzt aber nur die
+  Sortierlogik; Tendenz M-a Portierung).
+- **N** `index.html` auf `<head>` + `<div id="app">`, `main.ts` -> `main.tsx`.
+
+## Aufgaben Phase J (erst nach Phase I abhaken)
+
+- [x] **J-0 Plan im Repo ablegen.** `tasks/plan-react-umbau.md` angelegt, Querverweis in
+      `tasks/plan-db-ux-migration.md`, dieser Abschnitt. Grund: Umsetzung laeuft im Wechsel
+      auf mehreren Geraeten -- Status wird hier gepflegt, nicht im Plan.
+- [x] **J0 Querschnitt foundations -- Breakpoint-Teil (J-Q2) erledigt** (2026-09-11, Branch
+      `feat/react-umbau`). `raster.scss`, `utilities.scss`, `customtable.scss` (vorher `.css`)
+      und `CustomTable.ts` beziehen die Schwellen jetzt aus
+      `src/scss/_breakpoints.scss` (xs-xl aus `@db-ux/core-foundations`, `xxl` als
+      Projekt-Erweiterung auf 2560, weil DB bei `xl` endet und die EWT-Tabelle eine Stufe
+      darueber braucht); `infrastructure/ui/breakpoints.ts` ist der TS-Spiegel. Skala bewusst
+      gewechselt (480/576/768/992/1200/1400 -> 320/768/1024/1440/1920/2560).
+      Spaltenstufen ALLER Tabellen neu beurteilt -- ein reiner
+      Skalentausch haette Kernspalten zu weit nach oben geschoben (EWT bei 1000 px: 4 von 14).
+      Details im `CHANGELOG.md` (91).
+      **J-Q1 erledigt:** Von den helpers-Mixins ist genau eines uebernommen -- das
+      `[hidden]`-Muster aus `_display.scss` (die `d-*`-Klassen schlugen mit ihrem `!important`
+      die UA-Regel `[hidden]`, `el.hidden = true` war damit wirkungslos). Der Rest passt
+      NICHT und bleibt bewusst Eigenbau, jeweils mit Grund: `%a11y-visually-hidden` nutzt das
+      abgekuendigte `clip: rect()` (Projektfassung mit `clip-path` ist moderner),
+      `get-focus-placeholder` ist ein `:focus-visible`-Ring in Informational-Farbe (das
+      einzige Outline im Projekt ist die Onboarding-Hervorhebung in Markenfarbe), `divider`
+      hat kein Gegenstueck (keine handgebauten Trenner-Pseudoelemente), `interactive-bg`
+      zielt auf Disabled-bewusste Button-Hintergruende (die 9 `:hover` im Projekt sitzen auf
+      Tabellenzeilen), `px-to-em` hat keinen Eigenbau mehr.
+      **J-Q3 erledigt:** foundations liefert kein Utility-System (nur Tokens + 9 Klassen
+      `db-divider-*`/`db-focus-default`) -- es gibt nichts 1:1 zu ersetzen. Das
+      Skript-Inventar aus dem gebauten CSS zeigt 697 von 901 Utility-Klassen ungenutzt
+      (3,6 KB gz); auf Entscheidung des Users bleiben sie stehen, weil ein vollstaendiges
+      Raster gewollt ist. Der Dateikopf von `utilities.scss` behauptete das Gegenteil und
+      wurde korrigiert.
+- [x] **J1 Referenz-Slice** `AdminProfileTemplateContentEditor.tsx` (2026-09-11). 14 Controls:
+      10 `DBButton`, 2 `DBTag`, 3 `DBCheckbox`. Neuer Render-Test mit 6 Faellen.
+      **Muster fuer J2-J7, drei Festlegungen:** 1. Ein `<button class="db-tag">` laesst sich NICHT als `DBTag` abbilden -- die Komponente
+      rendert immer ein `<div>`. Interaktive Tags bekommen ein Kontrollelement als Kind
+      (DB-Beispiel "Checked"): Checkbox bei zuklappbaren Umschaltern, Radio bei fester
+      Auswahl. Sichtbare Folge: DBs Pruefzustands-Symbol (`showCheckState`) erscheint. 2. `db-ux/button-type-required` erzwingt `type` an jedem `DBButton`. Das ist kein
+      Lint-Rauschen: die rohen `<button>` hatten grossteils keins und haetten im `<form>`
+      als `submit` gegolten. Bei jedem Slice mitnehmen. 3. `data-color` und `data-disabler` bleiben Passthrough-DOM-Attribute (kein Prop),
+      `variant`/`size` werden Props.
+- [x] **J2 FormularEditor** (2026-09-11). 13 Dateien (nicht 15 -- `FeldPanel`/`FeldZeile` teilen
+      sich keine eigene Datei mehr als im Plan angenommen), 74 Controls. `db-button`/`db-tag`/
+      `db-checkbox`/`db-textarea` -> `DBButton`/`DBTag`/`DBCheckbox`/`DBTextarea`.
+      **Zwei Buttons bewusst NICHT angefasst:** die Seiten-Tabs der Admin-Unternavigation in
+      `FormularEditor.tsx` (`.db-navigation-item > button`) sind laut I.13 kein `db-button`-Fall,
+      sondern das korrekte native Tab-Muster -- DB hat dafuer keine Komponente.
+      **Fund:** `DBTextarea` haette ohne `invalidMessage` den Platzhalter "TODO: Add an
+      invalidMessage" gezeigt (derselbe Fehler wie zuvor bei `DbFeld`, CHANGELOG 91) --
+      Browser-Probe VOR dem Commit gefahren, `invalidMessage={fehler}` ergaenzt.
+      Render-Tests fuer FeldZeile/TabellenBlock/feldPanelGemeinsam/SchriftartDialog in
+      `test/features/Admin/FormularEditor/dbUxJ2.test.tsx`. Details: CHANGELOG (94).
+- [x] **J3 Admin uebrige Komponenten** (2026-09-11). 23 Dateien, ~120 Controls, 13 Commits.
+      **Zwei DBRadio-Erstfaelle** (`BulkEditAdminOesBlock`, `BulkEditApplySourceBlock`): beide
+      Radios trugen bisher faelschlich die `db-checkbox`-Wrapperklasse (runde statt eckige
+      Optik) -- `DBRadio` korrigiert das automatisch mit.
+      **`OeTagInput` nutzt jetzt DBs eingebautes** `behavior="removable"` + `onRemove` statt
+      den Entfernen-Knopf von Hand nachzubauen; testverifiziert identische DOM-Struktur.
+      **Lint-Fund `db-ux/form-label-required`:** `DBCheckbox` akzeptiert reines `aria-label`
+      NICHT als Ersatz fuer `label` -- braucht `label` + `showLabel={false}` (DBs
+      Standard-visually-hidden-Technik). Deckte eine echte Verhaltensaenderung auf: ein
+      `aria-label`-Attribut taucht nie in `textContent` auf, ein (auch verstecktes)
+      `<label>`-Element schon -- ein Test in `AdminUserList.selection.test.tsx` waere sonst
+      bei jedem Render fehlgeschlagen (Assertion auf Knopf statt rohen Text umgestellt).
+      **`showIcon`-Technik** fuer Buttons mit dynamisch wechselndem Icon (Snapshot-Spinner in
+      `adminDashboardCharts.tsx`): `icon` bleibt gesetzt (Lint verlangt einen statischen Wert
+      bei `noText`), `showIcon={boolean}` blendet das Glyph per DBs eigener CSS-Regel
+      (`content:none`) aus, wenn ein eigener Spinner-Kind-Node gerendert wird. Per
+      Browser-Probe verifiziert.
+      **`ROLE_LABELS.semantic`** (geteilt zwischen `AdminUserTable`/`AdminUserCard` via
+      `adminUserListTypen.ts`) war als `string` typisiert -- an der Quelle auf die echte
+      `SemanticType`-Union von `@db-ux/react-core-components` korrigiert.
+      Grep-Gate ueber den ganzen `Admin/components`-Ordner: 0 rohe Controls bis auf zwei
+      erwartete Ausnahmen (J1-Interaktiv-Tag-Checkbox, `VorgabenBWeekRangeEditor.tsx` war von
+      Anfang an ausserhalb des Umfangs). Details im CHANGELOG (95).
+- [x] **J4 Einstellungen-Komponenten** (2026-09-11). 4 Dateien, 24 Controls.
+      **`type="checkbox" role="switch"` -> `MyCheckbox`, nicht `DBCheckbox`** -- die zwei
+      "Schicht aktiv/inaktiv"-Umschalter meinen Schalter, `MyCheckbox` kapselt bereits
+      `DBSwitch` inkl. der React-19-Glue gegen den "haengenden Schalter" (lessons.md) und
+      ist laut Bestandsaufnahme bewusst behalten. Dessen Typ kannte `size` nicht, obwohl es
+      zur Laufzeit schon durchgereicht wurde -- additive Erweiterung (`size?: SizeType`)
+      statt die Groesse der Umschalter zu verlieren.
+      Zwei `<input type="checkbox" hidden readOnly>` (Nwoche-Datentraeger in
+      `createEditorModalVE.tsx`) bewusst NICHT konvertiert -- keine echten UI-Controls,
+      `DBCheckbox` haette sichtbares Label-Markup erzwungen.
+      Details: CHANGELOG (96).
+- [x] **J5 Bereitschaft / EWT / Neben / EA** (2026-09-11). 6 Dateien.
+      **Neuer Baustein `buttonLoadingStore` + `useButtonLoading` + `DBLoadingButton`** --
+      `setLoading(id)`/`clearLoading(id)` (aus reinem TS-Code wie `saveDaten.ts`, ausserhalb
+      von React aufgerufen) manipulierten Button-Kinder per `replaceChildren()` direkt im
+      DOM, das unterlaeuft bei `DBButton`-Instanzen den React-Tree (spaeteres Reconcile kann
+      mit `NotFoundError: removeChild` crashen -- `btnLoginModal` laeuft bereits ueber
+      `MyButton` und traegt denselben latenten Fehler in sich). Fix macht den Ladezustand
+      ueber einen Store deklarativ abonnierbar; `data-react-loading="true"` markiert
+      konvertierte Buttons, alle anderen laufen unveraendert ueber den alten Pfad -- kein
+      Flag-Day. Puppeteer-verifiziert (7 Lade-Zyklen, keine Konsolenfehler); der AutoSave-
+      Badge (`appendChild`, nicht `replaceChildren`) blieb unangetastet, uebersteht dieselben
+      Zyklen nachweislich unbeschadet.
+      `EwtTab.tsx`: `berechnenParser`/`schichtParser` (rohe HTML-Strings fuer `CustomTable`)
+      bewusst nicht angefasst -- kein JSX, Phase M.
+      Nebenbei gefunden+behoben: Flakiness in `Bereitschaft.BereitschaftOverridePanel.test.tsx`
+      (~1-in-8 bei wiederholtem vollem Suite-Lauf) -- `DBCheckbox` vergibt `id` per
+      `useEffect` und setzt `_ref.current.checked` in einem weiteren Mount-Effekt direkt am
+      DOM (dieselbe Bugklasse wie der "haengende Schalter" bei `DBSwitch`). Fix: genereller
+      Poll-Helfer statt fixer Tick-Zahl.
+      Details: CHANGELOG (97).
+- [x] **J6 Feature-Tab-Buttons** (2026-09-11). Buttons selbst bereits in J5 konvertiert;
+      J6-Rest war die `buttonDisable.ts`-Verifikation. Per Puppeteer echten Fehler gefunden:
+      `clearLoading(id)` setzte `disabled` eines Buttons per Re-Render zurueck, auch wenn ein
+      GLOBALES `buttonDisable(true)` fuer einen ANDEREN Button noch aktiv war (`DBLoadingButton`
+      kannte nur den eigenen Ladezustand). Fix: neuer `globalDisableStore` +
+      `useGlobalDisabled`-Hook (analog `buttonLoadingStore`), `buttonDisable.ts` schreibt
+      zusaetzlich in den Store, `DBLoadingButton` verrechnet `disabled || loading || globalDisabled`.
+      Details: CHANGELOG (98).
+- [x] **J6b `MyButton` aufloesen** -> `DBButton`** (2026-09-11). `MyButton.tsx` geloescht,
+      7 Aufrufstellen + `MyEditorFooter`/`MyShowFooter` direkt auf `DBButton` umgestellt.
+      `btnLoginModal` (setLoading-Bezug ueber `loginUser.ts`) -> `DBLoadingButton`. `dbButton.ts`
+      (buttonLook, weiterhin fuer Vanilla-DOM CustomTable gebraucht) unangetastet.
+      Details: CHANGELOG (99).
+- [x] **J7 `My*`- + `core/`-Rest-Markup** (2026-09-11). `MyModalHeader.tsx`, `MyHelpModal.tsx`,
+      `createOnboardingGuideModal.tsx`, `ConflictReviewBanner.tsx` auf `DBButton` umgestellt;
+      `openHelpModal.tsx` hatte keine eigenen Buttons. Kein Button mit `setLoading`-Bezug.
+      Details: CHANGELOG (100).
+- [x] **J8 `DbFeld`/`DbAuswahl` -> `DBInput`/`DBSelect`** (2026-09-11, Wrapper bleibt,
+      Innenleben getauscht; Aufrufstellen unveraendert). Zwei API-Luecken (feldKlasse,
+      huelleStyle) per neuen `useLayoutEffect`-Helfern in `dbFeldHelfer.ts` geschlossen
+      (`useSofortigeKlasse`, `useSofortigeHuelleStyle`) -- kein zusaetzlicher DOM-Wrapper, sonst
+      haette der `.feldgruppe > .db-input`-Selektor (styles.scss) nicht mehr gegriffen.
+      Puppeteer-verifiziert inkl. dieses Falls. Details: CHANGELOG (101).
+- [x] **J9 Cleanup + Doku** (2026-09-11). `npx @db-ux/agent-cli .` neu generiert ->
+      `.github/copilot-instructions.md` unveraendert (schon aktuell fuer 5.3.0). Tote
+      `db-*`-Regeln in `styles.scss`/`utilities.scss` geprueft: keine Bootstrap-Era-Leichen
+      gefunden (nur erklaerende Kommentare, die Bootstraps alte Namen fuer den Vergleich
+      nennen). `.claude/skills/{architektur,coding-konventionen}/SKILL.md`: veraltete
+      `MyButton`-Beispiele (geloescht in J6b) und ein Preact-Relikt (`FunctionalComponent<Props>`
+      statt `FC<Props>`) korrigiert; Class-Component-Beispiel zeigte faelschlich `MyInput`
+      (laengst `FC`) -- durch den tatsaechlich einzigen verbliebenen Class-Component
+      (`PasswordStrengthMeter.tsx`) ersetzt. Neuer Abschnitt "DB-UX-Komponenten zuerst" in
+      `coding-konventionen` dokumentiert die J1-J8-Konventionen (DBButton/DBLoadingButton/
+      MyCheckbox/DbFeld-DbAuswahl). `graphify update .` gelaufen (3166 Nodes, 8829 Edges,
+      242 Communities; `graphify-out/` gitignored, keine Commit-Aenderung).
+      Abschliessendes Grep-Gate ueber den ganzen `src/ts/`-Baum: keine unerwarteten rohen
+      `db-button`/Checkbox/Radio-Instanzen -- nur bereits dokumentierte Ausnahmen
+      (`VorgabenBWeekRangeEditor.tsx` seit J3 bewusst ausserhalb des Umfangs; `EwtTab.tsx`s
+      CustomTable-Zellparser; `createEditorModalVE.tsx`s versteckte Nwoche-Datentraeger;
+      `AdminProfileTemplateContentEditor.tsx`s DBTag-Checkbox-Muster aus J1) sowie `<button
+    role="tab">` in `db-navigation`-Kontexten (Admin-Unternavigation, kein `db-button` --
+      anderes DB-UX-Muster, nie im Umfang). Details: CHANGELOG (102).
+
+**Phase J (J0-J9) damit vollstaendig abgeschlossen.**
+
+**Verifikation je Slice:** `bun run typecheck && bun run lint && bun run lint:css &&
+bun run test && bun run build` + MCP `db-ux__verify_migrated_code` + `verify`-Skill fuer die
+beruehrten Screens + manuell Hell/Dunkel/Auto und Mobile.
+
+## Aufgaben Phase K -- App-Shell nach React (Planungsdurchgang 2026-09-11)
+
+Startbedingung erfuellt: Phase J vollstaendig abgeschlossen. Ziel laut Plan (`plan-react-umbau.md`
+Abschnitt "Phase K"): `src/index.html:38-255` + `:1043-1060` (Header, Navigation, Theme-
+Umschalter, `navdrawer`-Dialog, `impressum`-Dialog, Fusszeile) werden React, gemountet ueber
+`infrastructure/ui/reactRoot.ts` (`mount`/`unmount`, `flushSync`, WeakMap-Root-Cache -- bereits
+das Werkzeug aus `showModal.tsx`). `tabController` wird React-State.
+
+**Bestandsaufnahme (gelesen: `index.html`, `main.ts`, `tabController.ts`, `navDrawer.ts`,
+`dbDialog.ts`, `DBColorToggler.ts`, `reactRoot.ts`, graphify-Traversal ab `tabController`):**
+
+- `tabController.ts` (`data-tab-target`, `TAB_SHOWN_EVENT` = `tab:shown`) wird von JEDEM
+  Feature-Tab gebraucht (`BereitschaftTab`, `EwtTab`, `NebenTab`, `EaTab`,
+  `Einstellungen/index.ts`, `Admin/index.tsx`) sowie von `autoSave.ts` und
+  `featureLifecycleRegistry`. Kompatibilitaetsbruecke ist Pflicht bis Phase N: `data-tab-target`
+  auf den neuen React-Nav-Items, `tab:shown` weiter als `CustomEvent` auf `document` UND
+  bubblend auf dem Ausloeser, `zeigeTab`/`zeigeTabAusHash`/`setzeTabSichtbar`-Signaturen bleiben
+  bestehen (Aufrufer: `Admin`-Feature-Registrierung, `initSequence.ts`, `Berechnung`-Monatswechsel).
+- `navDrawer.ts` zieht die Navigation per `prepend()` physisch zwischen Kopfzeile und Schublade
+  um (Grund: feste Ids, keine doppelte Navigation). Sobald `DBHeader`/`DBNavigation` React-Bauteile
+  sind, kann React sie zweimal rendern (Desktop + Drawer) und die Ids selbst vergeben -- der
+  Umzugs-Kniff entfaellt mit der Nav-Migration (K5/K6), nicht schon mit dem Drawer selbst (K4:
+  `DBDrawer` als Huelle bekommt erst in K5 echten React-Navigationsinhalt).
+- `initStatischeDialoge()` (`dbDialog.ts`) bedient `data-dialog-target`/`data-action="close"` fuer
+  IRGENDEIN `<dialog>` im Baum -- nicht nur Impressum. Nach K3 (Impressum -> `DBDrawer` mit
+  eigenem React-State) bleibt die Funktion fuer eventuelle andere statische Dialoge stehen, bis
+  keiner mehr uebrig ist (Grep-Gate am Ende von K).
+- `DBColorToggler.ts` liest/schreibt ausschliesslich per `document.querySelector` +
+  `data-theme-value`/`#bd-theme*`-Ids; wird in K2 zu einem Hook (`useColorMode`), Storage-Key
+  `theme` und die `data-mode`/`color-scheme`-Logik am `<html>`-Element bleiben exakt gleich.
+- `reactRoot.mount`/`unmount` ist synchron (`flushSync`) und bereits das App-Muster fuer
+  DOM-Interop -- kein neuer Mechanismus noetig fuer den Header-Root.
+
+**Slices (je 1 PR, aufsteigendes Risiko, analog Phase J):**
+
+- [ ] **K0 Root-Punkt.** `<header id="appHeader">` bekommt einen leeren Mount-Container
+      (`<div id="appHeaderRoot">`), `main.ts` mountet eine `<AppHeader/>`-Platzhalterkomponente
+      hinein (noch ohne Inhalt/Verhalten) -- reine Verkabelung, damit K1-K5 iterativ Inhalt
+      nachliefern koennen, statt am Ende in einem Big-Bang-Slice zu mounten.
+- [x] **K1 Fusszeile** (2026-09-11). `<footer class="app-footer">` -> `<AppFooter/>`
+      (`infrastructure/ui/AppFooter.tsx`), gemountet ueber `<div id="appFooterRoot">` in
+      `index.html` + `mount()` aus `reactRoot.ts` in `main.ts` (per `createElement`, kein JSX in
+      `main.ts` -- die Umbenennung zu `main.tsx` bleibt bewusst Phase N vorbehalten).
+      Copyright-Jahr/-Version wandert von `main.ts:setImpressumAndCopyright` (DOM-Textzuweisung)
+      in den Komponenten-Render (`dayjs()` + `import.meta.env.APP_VERSION`); die Funktion heisst
+      jetzt `setImpressum` und bedient nur noch Telefon/Mail-Verschleierung. Impressum-Button
+      bleibt bewusst natives `data-dialog-target="impressum"` (als `DBButton`) -- der Dialog
+      selbst haengt bis K3 am alten `dbDialog.ts`-Delegationsmechanismus, der ist
+      ausloeser-agnostisch. CSS-Vertrag `footer > .impressum { pointer-events: all }`
+      (styles.scss:601) beachtet: `DBButton` bleibt direktes Kind von `<footer>`.
+      Puppeteer-verifiziert: Footer-Text/-Button korrekt gerendert, Impressum-Dialog
+      oeffnet/schliesst weiterhin, Dark-Mode-Umschaltung unveraendert. Details: CHANGELOG (103).
+      **Nachtrag (2026-09-12):** `@db-ux/*` auf 5.4.0 aktualisiert (User-Vorgabe) -- bringt echte
+      `DBFooter`/`DBFooterMeta`-Komponenten. `AppFooter.tsx` von Hand-Markup auf diese umgestellt;
+      `footer > .impressum` in `styles.scss` zu `footer .impressum` (Nachfahre statt Kind, wegen
+      der neuen `.db-footer-meta-content`-Verschachtelung) -- `pointer-events` vererbt sich, die
+      Tiefe ist egal. Details: CHANGELOG (104).
+- [x] **K2 Theme-Umschalter** (2026-09-12). `#bd-theme`+`#bd-theme-menu` -> `ThemeSwitcher.tsx`
+      (`infrastructure/ui/`), `DBColorToggler.ts` geloescht (samt Test). Neuer Hook
+      `useColorMode.ts` kapselt Storage-Key `theme` + `data-mode`/`color-scheme`-Logik.
+      **Bug beim Umbau gefunden+gefixt:** der Vorgaenger ermittelte das Anfangstheme ueber
+      `getStoredTheme() || matchMedia(...).matches ? 'dark' : 'light'` -- `||` bindet staerker
+      als `?:`, das Ergebnis war `(getStoredTheme() || matches) ? 'dark' : 'light'`, und weil
+      `getStoredTheme()` wegen `default: 'auto'` IMMER truthy ist, war das Anfangstheme bei
+      JEDEM Laden `'dark'`, unabhaengig von Storage/OS-Praeferenz (Puppeteer-Matrix ueber 5 Faelle
+      verifiziert: vorher immer `dark`, nachher alle 5 korrekt). Nur der explizite Button-Klick
+      traf einen separaten, korrekten Codepfad. `#bd-theme-menu` bleibt bewusst feste Id (nicht
+      `useId()`): `styles.scss:1022` verankert den Flyout darueber. Details: CHANGELOG (105).
+- [x] **K3 Impressum-Dialog** (2026-09-12). `<dialog id="impressum">` -> `ImpressumDialog.tsx`
+      (`infrastructure/ui/`), gerendert als Geschwister von `DBFooter` in `AppFooter.tsx` (teilt
+      den `useState`, kein zweiter Mount-Punkt). Impressum-Knopf setzt `open` statt
+      `data-dialog-target`; `initStatischeDialoge()` dadurch tot -- aus `dbDialog.ts`/`main.ts`
+      entfernt (erledigt jetzt statt in K7, da direkter Nebeneffekt dieser Aenderung).
+      Telefon/Mail-Zeichenarray-Verschleierung aus `main.ts:setImpressum` in die Komponente
+      verlagert (dort komplett geloescht, inkl. des toten DOMContentLoaded-Zweigs).
+      **Nutzt echte `DBDrawerHeader`/`DBDrawerFooter`-Slots** (`header`/`footer`-Props von
+      `DBDrawer`) statt der `MyModalHeader`/`dialog-koerper`/`dialog-fuss`-Handkonvention der
+      bestehenden Dialoge -- User-Vorgabe: der `children`-Umstieg gilt nur fuer bestehende
+      Dialoge (Bestandsschutz), NEUE Dialoge nutzen DB-UX-Komponenten direkt, wo verfuegbar.
+      `.db-drawer-content`/`.db-drawer-footer` bringen Padding/Flex-Layout schon aus dem
+      core-components-CSS mit, keine Handklassen noetig.
+      Puppeteer-verifiziert: Dialog oeffnet mit Titel + korrektem `aria-labelledby`
+      (`DBDrawerHeader` verknuepft automatisch), Telefon/Mail entschluesselt sichtbar,
+      Schliessen-Knopf schliesst. Details: CHANGELOG (107).
+- [x] **K4 NavDrawer-Huelle** (2026-09-12). `<dialog id="navdrawer">` -> `NavDrawerShell.tsx`
+      (`infrastructure/ui/`), gemountet ueber `<div id="navDrawerRoot">` **vor** `initNavSchublade()`
+      in `main.ts` (die Funktion faengt sich den `#navdrawer`-Knoten einmalig beim Aufruf).
+      Bewusst uncontrolled -- kein `open`-Prop, keine State-Anbindung: `navDrawer.ts` steuert den
+      resultierenden `<dialog>` weiterhin direkt per `showModal()`/`close()`, der alte
+      Umzugs-Kniff fuer die Navigation bleibt unangetastet (K5).
+      **Zwei DBDrawer-Eigenheiten mit `onClose={schliesseNavSchublade}` abgefangen:** Escape ruft
+      in `DBDrawer` immer `event.preventDefault()` (unterdrueckt den nativen Cancel-Schliessweg),
+      der Schliessen-Knopf-Klick immer `event.stopPropagation()` (unterbindet `navDrawer.ts`s
+      eigene `document`-Klick-Delegation) -- ohne eigenes `onClose` waeren beide Wege ins Leere
+      gelaufen. Backdrop-Klick und `[data-tab-target]`-Klicks bleiben unveraendert Sache von
+      `navDrawer.ts`.
+      `DBDrawerHeader` (Titel "Nebengeld") ersetzt das manuelle `aria-label="Menü"` durch
+      automatisches `aria-labelledby` -- wie schon bei `ImpressumDialog` (K3), User-Vorgabe: neue
+      Dialoge nutzen DB-UX-Komponenten direkt.
+      Puppeteer-verifiziert (Mobile-Viewport, gegen laufenden Dev-Server statt eigenem, um den
+      parallel laufenden User-Server nicht zu killen): Burger oeffnet, Navigation zieht in die
+      Schublade um, Escape UND Schliessen-Knopf schliessen korrekt (Navigation zurueck in
+      Kopfzeile). Details: CHANGELOG (108).
+- [x] **K5 Header/Brand/Navigation** (2026-09-12). `AppHeader.tsx` (`infrastructure/ui/`) ersetzt
+      das handgeschriebene `db-header`-Markup komplett mit `DBHeader`+`DBNavigation`+
+      `DBNavigationItem` (Marke bewusst handgeschrieben, kein `DBBrand` -- das rendert ein
+      `<div>`, kein `<a>`; unser Link-Verhalten haette sonst umgebaut werden muessen).
+      `navDrawer.ts`/`NavDrawerShell.tsx` (K4) vollstaendig geloescht -- `DBHeader` bringt den
+      Drawer eingebaut mit.
+      **Kernfund: `DBHeader` rendert seine `children` ZWEIMAL GLEICHZEITIG im DOM** (Desktop-
+      Kopfzeile + Drawer-Kopie), kein Umzugs-Kniff -- Test-verifiziert (`render()` + `querySelectorAll`).
+      Bricht jeden `querySelector('#literal-id')`-Aufrufer, der GENAU EIN Element erwartet: - `tabController.ts` war bereits sicher (Attribut-Selektoren + Sichtbarkeitsfilter) --
+      NUR die Fokus-Lookup in `zeigeTab()` ergaenzt (sichtbare Kopie bevorzugen, sonst laeuft
+      `.focus()` auf ein `display:none`-Element ins Leere). - `auth/index.ts`: `#admin-tab`-Click-Listener + `#admin`-Toggle auf `querySelectorAll`
+      umgestellt (2 Fundstellen je Vorkommen). - `#navmenu`/`#btn-navmenu` (Login/Logout/Session-Restore-Sichtbarkeit, 3 Stellen:
+      `auth/index.ts`, `loadUserDaten.ts`, `logoutUser.ts`) gibt es unter `DBHeader` nicht mehr
+      -- ersetzt durch `navigationVisibleStore.ts`/`useNavigationVisible.ts` (Store-Pattern wie
+      `globalDisableStore`). Burger-Knopf bleibt **immer sichtbar** (User-Entscheidung):
+      `DBHeader` erzeugt ihn intern ohne Sichtbarkeits-Prop. - `ThemeSwitcher` (K2) mountete bisher separat und einmalig -- jetzt direkt in
+      `AppHeader`s Navigation eingebettet, dadurch ebenfalls dupliziert. Feste Ids
+      (`bd-theme`/`bd-theme-menu`) auf `useId()` umgestellt (sonst doppelte DOM-Ids);
+      `useColorMode` von lokalem `useState` auf modul-globalen Store umgebaut (sonst haetten
+      die beiden Kopien unsynchronisierte Theme-Zustaende gehabt) -- CSS-Positionierungsregel
+      in `styles.scss` von Id- auf Klassenselektor (`.theme-umschalter-menu`) umgestellt.
+      **Zweiter Fund, main.ts-Bootstrap-Reihenfolge:** `registerAppStartTask`-Callbacks laufen in
+      Registrierungsreihenfolge, aber ES-Modul-Importe werten VOR dem Top-Level-Code des
+      importierenden Moduls aus -- `auth/index.ts`s eigener `registerAppStartTask`-Aufruf (via
+      `import './core/orchestration/auth'` am Ende von `main.ts`) landete dadurch VOR dem
+      Header/Footer-Mount in der Warteschlange, obwohl er im Quelltext spaeter steht. `auth`s Task
+      griff (`selectYear` -> `setMonatJahr`) auf `#Monat` zu, das seit K5 erst durch `AppHeader`s
+      Mount entsteht -- warf und stoppte die gesamte Restwarteschlange (inkl. Header-Mount) VOR
+      Puppeteer-Verifikation aufgefallen. Fix: Header/Footer-Mount + `initTabController()` laufen
+      jetzt synchron beim Modul-Import statt als Queue-Eintrag.
+      Login-Button (`#btnLogin`) und Monats-`<select>` (`#MonatFeld`) unveraendertes
+      Markup/Verhalten, nur im `primaryAction`-Slot statt Hand-`db-header-primary-action`.
+      Puppeteer-verifiziert (Desktop 1440px + Mobile 480px, Netzwerk zu api-dev gekappt um einen
+      Test-Artefakt durch ungueltigen Fake-Token/Auto-Logout auszuschliessen): Marke/Navigation
+      korrekt, Bereitschaft (nicht aktiviert) `d-none`, Berechnung-Klick schaltet BEIDE Kopien auf
+      `aria-selected=true`, Theme-Klick in einer Kopie synchronisiert sofort in die andere, Burger
+      oeffnet Drawer mit Navigation drin, Klick im Drawer schaltet Tab, Escape schliesst,
+      Impressum (K3) weiterhin funktionsfaehig.
+      **Drei weitere Bugs beim echten Live-Test durch den User gefunden (Puppeteer deckte sie
+      nicht auf, weil dort kein `aktivierteTabs`/Admin-Szenario mitgetestet wurde):** 1. **`{navigationSichtbar && <DBNavigation>}` bedingtes Rendern war der falsche Ansatz.**
+      Die komplette Navigation (inkl. aller Feature-Items) existierte bis zum Login GAR NICHT
+      im DOM -- jeder `querySelector`-Aufruf davor (Admin-Toggle, `updateTabVisibility()`,
+      Klick-Listener-Anmeldung in `auth/index.ts`) lief ins Leere, und nichts wiederholte
+      diese Aufrufe, nachdem die Navigation spaeter doch gemountet wurde. Fix: `<DBNavigation
+       className={sichtbar ? undefined : 'd-none'}>` -- IMMER gerendert, nur die Klasse
+      wechselt, exakt wie beim alten `#navmenu`-Div. 2. **`updateTabVisibility.ts`s `toggleFeatureTab()` nutzte `querySelector` (nur EIN
+      Element)** -- Bereitschaft/EWT/Neben/EA blieben in der Drawer-Kopie haengen, obwohl die
+      Desktop-Kopie korrekt umgeschaltet wurde. Auf `querySelectorAll` umgestellt. 3. **`d-lg-none`/`d-lg-inline` an drei Stellen zeigten auf den falschen (alten)
+      Breakpoint** -- `DBHeader` wechselt intern bei `64em`/1024px (`@media (min-width:64em)`
+      in `core-components`-CSS) von Mobile-Drawer auf Desktop-Inline-Navigation, das ist
+      unser `md`, nicht `lg` (seit der Breakpoint-Vereinheitlichung in J0 auf 1440px
+      verschoben). Betroffen: `index.html`s `#startSchnellzugriff` (Start-Tab-Buttons blieben
+      bis 1440px statt 1024px sichtbar), `AppHeader.tsx`s Einstellungen-/Admin-Icon-vs-Text-
+      Swap, `ThemeSwitcher.tsx`s "Design auswählen"-Text -- alle auf `d-md-*` umgestellt.
+      Gleiche Fehlerklasse wie der Berechnung-Tabellen-Fund weiter oben in dieser Session.
+      **Vierter Fund:** Monatswechsel-`<select id="Monat" required>` bekam durch DB-UXs
+      automatische `:user-valid`-Erfolgsfaerbung einen gruenen Rahmen (kein Formular, `required`
+      nur der Semantik wegen) -- `data-custom-validity="neutral"` ergaenzt, DB-UXs dokumentierter
+      Escape-Hatch (`:not([data-custom-validity])` in der Selektor-Bedingung), Wert bewusst
+      weder `"valid"` noch `"invalid"` (beide loesen selbst eine Farbe aus). Vorbestehend, durch
+      die K5-Fixes erst zuverlaessig sichtbar geworden.
+      Details: CHANGELOG (109).
+- [x] **K6 `tabController` -> React-State** (2026-09-12). Aktiver Tab der Hauptnavigation
+      (`#tabContent`-Gruppe) als `useSyncExternalStore`-Modul-Store (`activeTabStore.ts` +
+      `useActiveTab.ts`, analog `navigationVisibleStore`/`useNavigationVisible`); `AppHeader.tsx`
+      berechnet `aria-selected`/`tabIndex`/`className="active"`/`DBNavigationItem`s `active`-Prop
+      (-> `data-active` am `<li>`) reaktiv daraus statt aus `tabController.ts`s DOM-Handschrieb --
+      der entfaellt in `zeigeTab()` fuer die Hauptgruppe entsprechend (`if (hauptgruppe)
+    setAktivenTab(id); else { ...alter Schleifen-Code... }`). Bewusst NUR die Hauptgruppe:
+      Admins Unternavigation (`admin-pane-*`, `features/Admin/index.tsx`) ist eine eigene,
+      unabhaengige Tab-Gruppe (kann parallel zur Hauptgruppe einen ANDEREN aktiven Tab haben --
+      ein einzelner globaler "aktiver Tab" wuerde das nicht abbilden) und bleibt unveraendert am
+      alten, DOM-schreibenden Mechanismus in `zeigeTab()`s `else`-Zweig.
+      Pflicht-Kompatbruecke unangetastet: `data-tab-target` weiter auf jedem Panel/Schalter
+      lesbar, `tab:shown`-`CustomEvent` weiter auf `document` UND bubblend ausgeloest,
+      `zeigeTab`/`zeigeTabAusHash`/`setzeTabSichtbar`/`aktiverTab`-Exporte unveraendert (nur
+      intern um den `setAktivenTab`-Aufruf erweitert). `.tab-pane`-Panels bleiben statisches HTML
+      (Phase L) -- ihr Sichtbarkeits-/Aktiv-Klassenwechsel (`.active`/`.show`) laeuft weiter
+      imperativ in `zeigeTab()`, unveraendert.
+      A11y: roving `tabindex` bleibt korrekt -- "Berechnung" (Default-Fokusziel bei `aktiverTab
+    === null`, z. B. initial auf `#start`) faellt jetzt auf `tabIndex={aktiverTab === null ||
+    aktiverTab === 'Berechnung' ? 0 : -1}` zurueck statt fest auf `0`, sonst haetten nach einem
+      echten Tabwechsel zwei Eintraege gleichzeitig `tabIndex={0}` gehabt.
+      Test: `ui.tabController.test.ts` -- die Assertions auf `aria-selected`/`data-active` per
+      `document.querySelector` (Hauptgruppen-Fixture) durch `getAktivenTab()`-Pruefung ersetzt
+      (`beforeEach` resettet den Modul-Singleton-Store per `setAktivenTab('start')`, analog dem
+      `navigationVisibleStore`-Testmuster in `Einstellungen.logoutUser.test.ts`).
+      Puppeteer-verifiziert (`https://dev.otto.home64.de/`, ueber bereits laufenden Dev-Server):
+      Deep-Link `#EWT` setzt `aria-selected="true"`/`tabIndex=0`/`class="active"`/`data-active=
+    "true"` korrekt auf BEIDEN DOM-Kopien (Desktop + Drawer) gleichzeitig; Klick auf
+      `#berechnung-tab` schaltet reaktiv auf beiden Kopien um (EWT wird `false`/`-1`, Berechnung
+      `true`/`0`); initial ohne Login/Hash zeigt `#berechnung-tab` `tabIndex=0`/`aria-selected=
+    "false"` (Fallback-Fokus-Fall). `typecheck && lint && lint:css && test`(2120 pass) `&&
+    build` gruen. Details: CHANGELOG (110).
+- [x] **K7 Cleanup + Doku** (2026-09-12). Tote Dateien bereits in fruehreren K-Slices geloescht
+      (`navDrawer.ts`/`NavDrawerShell.tsx` K5, `DBColorToggler.ts` K2) -- nichts mehr zu tun.
+      `dbDialog.ts` bleibt: `erzeugeDbDialog` wird weiter von `confirmDialog.ts`/
+      `signaturDialog.ts`/`errorHandling.ts` genutzt, kein toter Code. Grep-Gate `rg
+    'data-dialog-target|prepend\(navigation\)' src/ts src/index.html` -- 0 Treffer (nur zwei
+      Doku-Kommentare in `ImpressumDialog.tsx`/`AppFooter.tsx`, die den alten Mechanismus
+      historisch referenzieren, keine echten Vorkommen mehr).
+      Doku aktualisiert: `frontend/CLAUDE.md` (Tab-basierte-SPA-Absatz + Hybrid-Rendering-Absatz
+      -- App-Shell ist jetzt React, nicht mehr Teil der statischen Hauptseite; Regel 4 entsprechend
+      geschaerft), `.claude/skills/architektur/SKILL.md` (App-Einstiegspunkte, State-Management --
+      `useSyncExternalStore`-Modul-Stores ergaenzt statt "kein reaktives State Management", und
+      Navigation-Absatz -- DBHeader-Doppel-Rendering-Falle + K6-Store dokumentiert),
+      `tasks/plan-react-umbau.md` (Phase-K-Abschnitt auf "abgeschlossen" markiert mit
+      Ergebnis-Zusammenfassung, Kritische-Dateien-Eintrag `navDrawer.ts` -> `activeTabStore.ts`
+      korrigiert). `graphify update .` nach Abschluss.
+
+**Bewusst NICHT in K (bleibt Phase L/M/N):** Tab-Panel-Inhalte (`#start`, `#Berechnung`,
+`#Einstellungen`) bleiben statisches HTML in `index.html`, nur ihre Sichtbarkeits-/Aktiv-Logik
+haengt ab K6 am neuen State. `CustomTable`, `main.tsx`-Umbenennung, restlicher `index.html`-Body.
+
+**Verifikation je Slice:** wie Phase J (`typecheck && lint && lint:css && test && build` +
+`db-ux__verify_migrated_code` + `verify`-Skill) **zusaetzlich** Deep-Link `#EWT` nach jedem
+Slice pruefen (Hash-Sync darf nie brechen) und Mobile-Viewport < 768 px fuer Drawer/Burger-Menu
+(K4/K5).
+
+## Aufgaben Phase L -- Statische Tabs nach React (Start 2026-09-12)
+
+Startbedingung erfuellt: Phase K vollstaendig abgeschlossen. Slices laut `plan-react-umbau.md`
+(Abschnitt "Phase L"): L1 Start-Tab, L2 Berechnung-Tab-Huelle, L3 Einstellungen-Tab.
+
+- [x] **L1 Start-Tab** (2026-09-12). `index.html`s Start-Tab-Markup (Willkommen-Ueberschrift +
+      Hilfe-Knopf, 3 Info-Karten, Schnellzugriff-Block, Ladeanzeige, DB-Schwelle) ->
+      `StartTab.tsx` (`infrastructure/ui/`), rein praesentational. Verkabelung bleibt bewusst
+      extern und unveraendert (`#btnHelpStart`/`#startSchnellzugriff [data-jump-tab]`-Klicks +
+      `#Willkommen`-Text in `auth/index.ts`, `#quick-*-tab`-Sichtbarkeit in
+      `updateTabVisibility.ts`, `#startSchnellzugriff`-Sichtbarkeit in `auth/index.ts` /
+      `loadUserDaten.ts` / `logoutUser.ts`, `#ladeAnzeige` in `setLoading.ts`/`clearLoading.ts`)
+      -- alle IDs/Klassen 1:1 uebernommen, keiner dieser Aufrufer musste angefasst werden. Toter
+      auskommentierter "Neuerungen"-Block (HTML-Kommentar, seit laengerem inaktiv) beim Portieren
+      entfernt.
+      **Kernfund (User-Screenshot, Schwelle riesig/falsch positioniert):** erster Versuch mountete
+      ueber ein zusaetzliches `<div id="startRoot">` INNERHALB der `#start`-Tab-Pane. Das brach
+      `styles.scss`s `#start.active > .schwelle`-Kindselektor (Fusszeilen-buendige Platzierung per
+      `margin-block-start: auto` im Flex-Layout von `#start.active`) -- die Schwelle war dadurch
+      Enkel statt Kind, landete mitten im Panel und lief unmaskiert breit. Fix: React mountet
+      direkt in `#start` selbst hinein (kein Zwischen-Div), `class="tab-pane fade show active"`
+      bleibt unveraendert Sache von `tabController.ts`, React ruehrt nur die Kinder an --
+      Puppeteer-Screenshot (Hell/Dunkel) danach: Schwelle korrekt an der Fusszeile.
+      Puppeteer-verifiziert: Start-Tab rendert fehlerfrei (Konsole ohne Errors), 3 Karten +
+      Ueberschrift vorhanden, Deep-Link `#EWT` weiterhin funktionsfaehig (Hash-Sync unveraendert,
+      greift wie zuvor nur bei gesetztem `Benutzer`-Storage-Key), Mobile-Viewport ohne Fehler.
+      `typecheck && lint && lint:css && test` (2120 pass) `&& build` gruen. Details: CHANGELOG
+      (112).
+- [x] **L2 Berechnung-Tab-Huelle** (2026-09-12). Titel, Monats-Navigation, `db-table`-Geruest ->
+      `BerechnungTab.tsx` (`infrastructure/ui/`), direkt in `#Berechnung` gemountet (kein
+      Wrapper-Div, analog L1). `#tbodyBerechnung` (bisher `generateTableBerechnung.ts` per
+      `innerHTML`-Strings) -> `BerechnungTableRows.tsx` (`Berechnung/components/`), eigener
+      React-Root direkt auf dem `<tbody>` (analog `BerechnungMobileCards`/
+      `#berechnungMobileCards` -- `BerechnungTab.tsx` rendert beide Container nur als leere
+      Blaetter). `generateTableBerechnung.ts` dadurch von ~90 auf ~25 Zeilen geschrumpft: nur noch
+      Daten berechnen (`calculateBerechnungRows`/`calculateZulagenBreakdown`) und beide
+      React-Roots mounten. Toter `nullParser`-Helper (`'&nbsp;'`-Sentinel fuers alte
+      `innerHTML`-Bauen) mit entfernt -- JSX rendert `null`-Werte jetzt direkt als `' '`.
+      `berechnungMonatsFenster.ts` (Spalten-Fenster, Prev/Next-Nav) unveraendert: liest
+      `td[data-monat]`-Zellen generisch per `querySelectorAll`, unabhaengig davon ob React oder
+      `innerHTML` sie erzeugt hat -- `wendeMonatsFensterAn()` bleibt nach dem `mount()`-Aufruf
+      synchron gueltig (`flushSync` in `reactRoot.ts`, exakt der Header/Footer-Mechanismus).
+      Bestehende Tests (`Berechnung.test.ts` inkl. `innerHTML`-Serialisierungs-Assertions,
+      `Berechnung.monatsFenster.test.ts`) liefen **ohne Anpassung** durch -- die
+      React-gerenderten Zellen serialisieren identisch zu den alten `innerHTML`-Strings.
+      Puppeteer-verifiziert (Hell/Dunkel-Screenshot Desktop, Mobile-Karten-Ansicht): 13 Zeilen,
+      Gruppen-Trennlinien, Waehrungsformat, `Summe Gesamt` Monat 3 exakt wie im Unit-Test
+      (`496,49 €`), Monatsfenster-Navigation korrekt ausgeblendet (alle 12 Monate sichtbar).
+      `typecheck && lint && lint:css && test` (2120 pass) `&& build` gruen. Details: CHANGELOG
+      (113).
+- [x] **L3 Einstellungen-Tab** (2026-09-12). Toolbar, Jahr-Formular, Accordion-Geruest (7 Items) ->
+      `EinstellungenTab.tsx` (`infrastructure/ui/`) + `PersoenlicheDatenPanel.tsx`
+      (`Einstellungen/components/`, ausgelagert wegen 500-Zeilen-Regel), direkt in `#Einstellungen`
+      gemountet (kein Wrapper-Div, analog L1/L2).
+      **Kernerkenntnis (Explore-Agent-Recherche vor Umsetzung):** anders als der Plan-Entwurf
+      vermutete ("Aufwand liegt in der Entkopplung"), ist die GESAMTE Verkabelung
+      (`saveEinstellungen.ts`, `generateEingabeMaskeEinstellungen.ts`, `Einstellungen/index.ts`,
+      `selectYear.ts`, ...) ausschliesslich `document.querySelector('#<Id>')`-basiert --
+      unabhaengig davon, ob React oder statisches HTML das Element erzeugt. Reiner 1:1-Markup-Port
+      (alle IDs/Klassen/Attribute unveraendert) genuegte deshalb; **keine einzige** dieser Dateien
+      musste angefasst werden (auch nicht `#collapseFive`-Scoping, `#PasskeyList`/
+      `#settings-zulagen-list`-Imperativ-DOM-Befuellung, `#arbeitszeit-panel`/`#fahrzeiten-panel`-
+      Sub-React-Roots oder `#tableVE`-`CustomTable`). Die im Plan vorgesehene Reihenfolge
+      "erst Teilpanels, dann Personendaten" damit hinfaellig -- ein Slice statt mehrerer.
+      Einzige echte Korrektur: zwei `<select>` (`Bundesland`/`TB`) nutzten `<option selected>` --
+      in React wirkungslos (Warnung), auf `defaultValue` am `<select>` umgestellt;
+      `<input type="range" value="9">` analog auf `defaultValue` (unveraendertes Verhalten,
+      vermeidet React-"unkontrolliert->kontrolliert"-Warnung).
+      Puppeteer-verifiziert (Hell/Dunkel-Screenshot je Accordion-Panel, Mobile-Viewport):
+      Personendaten aus `VorgabenU` korrekt vorbefuellt (inkl. `Bundesland`-Select), Passkeys-Badge + Status-Text, Sichtbare-Bereiche-Switches + AutoSave-Slider korrekt aus Storage gelesen,
+      Zulagen-Liste (3 Kategorien) imperativ befuellt, Arbeitszeit-/Fahrzeiten-Sub-Roots gemountet,
+      `#tableVE` (6 Zeilen) unveraendert funktionsfaehig. `typecheck && lint && lint:css && test`
+      (2120 pass) `&& build` gruen -- keine bestehende Test-Datei musste angepasst werden.
+      Details: CHANGELOG (114).
+- [x] **Nachtrag: Fahrzeiten-Sortieroptionen** (2026-09-12, User-Wunsch waehrend L3-Review).
+      `FahrzeitenPanel.tsx`: Spaltenkoepfe "Tätigkeitsstätte"/"Beschreibung" jetzt klickbare
+      Sortier-Knoepfe (Icon-Konvention aus `CustomTable` uebernommen: `arrows_vertical` neutral,
+      `arrow_up`/`arrow_down` aktiv; erneuter Klick auf dieselbe Spalte dreht die Richtung um).
+      Bewusst kein Live-Sort bei jedem Tastendruck (haette Zeilen waehrend der Eingabe verschoben)
+      -- Sortierung ordnet den bestehenden State einmalig per Klick um, ueber `updateRows`/die
+      bestehende `fahrzeitPanelState`-Bridge genauso persistiert wie die manuellen Auf/Ab-Knoepfe.
+      Test ergaenzt (`FahrzeitenPanel.test.tsx`): auf-/absteigend je Spalte. `typecheck && lint &&
+    test` (2121 pass) gruen. Details: CHANGELOG (115).
+
+**Verifikation je Slice:** wie Phase K, zusaetzlich Puppeteer-Screenshot (Hell+Dunkel) bei
+jedem Slice mit sichtbarem/positionierungsrelevantem Markup (Lehre aus L1).
+
+---
+
+# Fix: Berechnung-Tabelle -- komplette Ansicht seit J0 nie mehr erreichbar (2026-09-12)
+
+User-Meldung: "Tabelle gibt es in 3 Stufen (Mobil/Karten, Pfeiltasten-Fenster, komplett) --
+Stufe 3 fehlt auf dem Desktop." Puppeteer-Untersuchung bestaetigt echte Regression, kein
+Missverstaendnis.
+
+## Root Cause
+
+`berechnungMonatsFenster.ts` berechnet die sichtbaren Monatsspalten aus der Container-Breite
+(`ermittleFensterGroesse`); ein Viewport-Breakpoint (`d-xl-table-cell`/`d-xl-none` auf
+`#berechnungMonatsNav`) erzwang zusaetzlich ALLE 12 Spalten ab einer festen Viewport-Breite, egal
+was die Breiten-Rechnung ergab -- ein Relikt aus der Bootstrap-Aera (`xl` = 1200px). J0
+(Breakpoint-Vereinheitlichung auf `_breakpoints.scss`, DB-UX-Skala) verschob `xl` global auf
+1920px, ohne diese eine Stelle mitzuziehen (Berechnung ist keine `CustomTable`-Instanz, fiel
+durch J0s "alle Tabellen neu beurteilt"-Sweep).
+
+Puppeteer-gemessen: `.mitte` deckelt den Container unabhaengig vom Viewport auf ~1029px Inhalt
+(75rem bei 14px Root-Fontsize der Functional-Density = 1050px, minus `.db-table`-Padding) --
+konstant von 1280px bis 2560px Viewport-Breite getestet. Zwischen dem alten Schwellwert (1200px)
+und dem neuen (1920px) -- praktisch jeder reale Laptop/Desktop -- sah der User nur noch Stufe 2.
+
+## Fix
+
+- [x] `d-xl-table-cell`-Klassen-Toggle in `berechnungMonatsFenster.ts` entfernt; Sichtbarkeit
+      laeuft nur noch ueber `d-none`, rein breitenbasiert -- kein Viewport-Container-Mismatch
+      mehr moeglich.
+- [x] `MONAT_MIN_PX` von hartem `80` auf `70` (= `--db-sizing-xl`, Functional-Density/14px-Root,
+      Puppeteer gemessen) -- User-Vorgabe: DB-UX-Token statt Handwert. Einzige Sizing-Stufe, die
+      12 Spalten noch in den gedeckelten ~1029px-Container passen laesst (12x70=840 von 845px
+      nutzbar, ~5px Reserve). TS-Spiegel mit Kommentar auf den Token, kein Live-`getComputedStyle`
+      (Konvention wie `infrastructure/ui/breakpoints.ts`).
+- [x] `#berechnungMonatsNav` in `index.html`: `d-xl-none` entfernt, `nav.style.display='none'`
+      (JS, inline `!important`) blendet die Navigation weiterhin korrekt aus, sobald alle 12
+      sichtbar sind -- inline `!important` schlaegt Klassen-`!important` unabhaengig von
+      Verschachtelung/Breakpoint.
+- [x] `test/Berechnung.monatsFenster.test.ts` angepasst (kein `d-xl-table-cell` mehr).
+- [x] Puppeteer-Matrix 1024/1280/1440/1920px: ab 1280px alle 12 Monate sichtbar, Navigation
+      versteckt; bei 1024px 11 sichtbar mit Navigation -- Fix bestaetigt.
+
+### Verifikation
+
+`bun run typecheck && bun run lint && bun run lint:css && bun run test && bun run build` --
+alle gruen (2116 pass, gleicher Warn-Ausnahmezustand wie vorher). Details: CHANGELOG (106).
+
+---
+
+# Aktueller Plan: DB-UX-Migration -- Phase H (Bootstrap vollstaendig raus) - 2026-09-08
+
+## Ausgangslage
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase H. Vorarbeit lag als WIP-Commit `1979676` vor
+(Modal-Huellen, Raster/Akkordeon, Buttons, Formulare, Bootstrap-JS; Alerts -> `db-notification`,
+Badges -> `db-tag`, `spinner-border` -> `.laedt`). Offen waren 5 rote Tests, die Karten, die
+Reste (`nav-*`, `table-*`, `fade`, `list-group`) und der Utility-Sweep.
+
+## Aufgaben
+
+- [x] **H.1 Rote Tests.** `JsonEditor` hatte als einziges Badge noch `badge bg-*`; der Test war
+      schon auf `.db-tag` umgestellt. Markup nachgezogen, die stehengebliebene
+      `bg-danger`-Zusicherung auf `data-semantic="critical"`.
+- [x] **H.2 Karten** -> `db-card` (8 Dateien). Karten mit Kopf-/Fusszeile bekommen
+      `data-spacing="none"`, damit die Abschnitte die volle Breite behalten.
+- [x] **H.3 Navigation** -> `db-navigation`/`db-navigation-item` mit `data-active`
+      (Admin-Unternavigation, Ressourcen-Reiter, Seiten-Reiter im Formular-Editor). Die
+      Admin-Unternavigation ist jetzt eine Liste statt achtmal desselben Blocks.
+- [x] **H.4 Tabellen** -> `db-table`-Huelle (7 Stellen), `table-responsive` entfaellt.
+      Nested Label-Tabellen der Berechnung als `berechnung-label-tabelle` ausgenommen.
+- [x] **H.5 Reste:** `list-group` -> `trennliste`, `spinner-grow` -> `.laedt`, letzte
+      `badge`/`text-bg-*` -> `db-tag`, AutoSave-Punkt auf `data-semantic`.
+- [x] **H.6 `src/scss/utilities.scss`** (neu, `@layer app`): Hilfsklassen mit Bootstrap-Namen
+      auf DB-Tokens, dazu `tab-pane`/`fade` und die Gegenregeln aus `bridge.css`.
+- [x] **H.7 Bootstrap raus:** SCSS-Import, `~bootstrap`-Alias, `bridge.css`, Layer auf
+      `db-ux, app`, Pakete deinstalliert. `data-bs-*` umbenannt, `--bs-*` auf DB-Tokens,
+      `BSColorToggler` -> `DBColorToggler`.
+- [x] **H.8 Doku:** `CHANGELOG.md` (67), `CLAUDE.md`, `../WORKSPACE.md`,
+      `.claude/skills/architektur`, `.claude/skills/coding-konventionen`.
+- [x] **H.9 Stylelint als Gate** (Nachtrag auf Zuruf): `stylelint.config.mjs` lauffaehig gemacht
+      (SCSS-Parser fehlte, `//` war ein Syntaxfehler), `bun run lint:css` + `lint:css:fix` neu,
+      eingehaengt in `release:check`, `lint-staged` und `deploy.yml`. Die `db-ux/*`-Token-Regeln
+      laufen als Ratsche (`--max-warnings 93`), alles andere ist `error` und steht auf 0.
+
+## Verifikation
+
+- `bunx --bun tsc --noEmit` 0, `bun run lint` 0 Fehler / 28 Alt-Warnungen,
+  `bun run lint:css` 0 Fehler / 93 Warnungen (unter der Grenze),
+  `bun run test` **2084 pass / 0 fail** (2 skip), `bun run build` gruen (Precache 59 / 4,5 MB).
+- Grep: `data-bs-` = 0, `--bs-` = 0 in `src/` und `test/`; `bootstrap` nur noch in erklaerenden
+  Kommentaren und im app-eigenen Modul `core/bootstrap.ts` (Init-Sequenz, keine Bibliothek).
+- Browser (Chrome headless gegen den Dev-Server): Layer-Reihenfolge `db-ux, app`; 0 Bootstrap-
+  Klassen und 0 `data-bs-*` im DOM; 20 Hilfsklassen-Stichproben mit den erwarteten Werten
+  (`d-flex` flex, `gap-2` 8px, `mb-3` 12px, `border` 1px solid, `rounded` 8px, `small` 14px,
+  `visually-hidden` absolute, …); Tabwechsel setzt Panel + `data-active` + Hash
+  (`#Einstellungen`); Startkarten 381x134 px mit 12 px Polster; Admin-Unternavigation
+  waagerecht mit Aktiv-Markierung; Hell/Dunkel setzen `data-mode` und tauschen Grund
+  (`#16181b` / `#fff`) und Text; 0 Konsolenfehler.
+
+## Funde
+
+1. **`db-card` polstert aussen.** Bootstraps `card-header`/`card-footer` sitzen randlos an der
+   Kartenkante. Mit DBs Standardpolster stuenden sie eingerueckt im Kasten -- deshalb
+   `data-spacing="none"` plus Abstand an den Abschnitten, wo eine Kopfzeile existiert.
+2. **`db-table` scrollt selbst** (`overflow: auto` bei `data-width="full"`) -- `table-responsive`
+   war an den bereits migrierten Tabellen doppelt gemoppelt. `#Berechnung .table-responsive`
+   (JS-Messung der Fensterbreite + Media-Query) musste auf `.db-table` umgehaengt werden.
+3. **Ein Perl-Ersetzungslauf hat `${isSelfRow ? …}` in Template-Literalen verschluckt** --
+   `${…}` ist auch in Perl eine Variableninterpolation. Beide Stellen (`AdminUserCard`,
+   `AdminUserTable`) haetten still ihre Rahmenmarkierung verloren; der Diff hat es gezeigt.
+   Lehre steht in `tasks/lessons.md`.
+4. **Bootstraps Abstandsskala und die DB-Skala decken sich nicht.** `mb-3` ist jetzt 12 px statt
+   16 px (`--db-spacing-fixed-sm`), `p-2` bleibt 8 px. Bewusste Entscheidung: Klassennamen
+   behalten, Werte aus den Tokens -- sonst haetten die Abstaende zwei Systeme gemischt.
+5. **`body` hat keinen eigenen Hintergrund mehr** (Bootstrap setzte ihn). Der Grund kommt vom
+   `<html>` aus dem DB-Theme (`#16181b` / `#fff`), gemessen im Browser -- kein weisses Aufblitzen.
+6. **`stylelint --fix` hat eine Regression eingebaut.** `stylelint-use-logical` fasst mehrere
+   `top`/`right`/`bottom`/`left` in einem Block zu `inset: logical …` zusammen. Diese Kurzform
+   unterstuetzt kein Browser -- alle sechs Positionsvarianten der Snackbar waeren still auf die
+   Grundstellung zurueckgefallen. Datei zurueckgenommen, die fuenf Eigenschaften per `except`
+   vom Autofix ausgenommen. Ein Autofix eines Linters ist kein Freifahrtschein; der Diff gehoert
+   angesehen.
+
+## Offen / Naechste Phase
+
+- Phase I (Cleanup): `data-density`/`data-color` final, Marken-Logos und Icon-Gewichte aus dem
+  Build halten, `manifest.theme_color`/`<meta name="theme-color">` (heute `#212529`) auf
+  DB-Werte, `customtable.css` in `@layer app`, `npx @db-ux/agent-cli` neu ausfuehren.
+- Die 28 Lint-Warnungen (React-19-Hinweise auf Preact-Muster) sind weiterhin offen.
+- Gitlink-Bump des Frontends im Parent-Repo steht aus.
+
+---
+
+# Aktueller Plan: DB-UX-Migration -- Phase E (Modal-Infrastruktur -> DB-Drawer) - 2026-09-06
+
+## Ausgangslage
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase E. DB UX v5 hat keine Modal-Komponente;
+`DBDrawer` ist das Pendant und baut auf nativem `<dialog>`. 21 Aufrufstellen von `showModal`,
+dazu drei Vanilla-Dialoge (Bestaetigung, AutoSave-Fehler, Unterschrift) und zwei
+eigenstaendige (Hilfe, Platzhalter-Hilfe im FormularEditor).
+
+## Aufgaben
+
+- [x] `components/showModal.tsx` auf `DBDrawer`; Vertrag (`#modal` synchron, `.row`/`.role`,
+      Feld-Ids) unveraendert; `data-bs-dismiss="modal"` per Delegation
+- [x] `infrastructure/ui/dbDialog.ts` (neu) als Vanilla-Gegenstueck inkl. `escapeSchliesst`
+- [x] `confirmDialog`, AutoSave-Fehlerdialog, Signatur-Dialoge, Hilfe, Platzhalter-Hilfe
+- [x] Alle `Modal.getInstance(...)?.hide()` -> `schliesseModal()` (17 Dateien); `schliesseModal`
+      und `oeffneDrawer` ueber den `@/components`-Barrel
+- [x] Kopfzeilen im DB-Drawer-Aufbau (`MyModalHeader`, Signatur-Dialoge)
+- [x] Impressum von `data-bs-toggle="modal"` auf `data-dialog-target`
+- [x] Admin-Unternavigation auf den `tabController` (Tab-Gruppen statt fester `#tabContent`)
+- [x] Unterschriftenfeld nutzt im Querformat die volle Breite
+- [x] Tooltip in `AdminUserCard` auf `title` (Bootstrap-Tooltip seit Phase F weg)
+- [x] Tests: 17 Dateien von der Bootstrap-Attrappe auf `schliesseModal`/`<dialog>` umgestellt,
+      `HTMLDialogElement`-Polyfill in `test/setupBun.ts`
+
+## Verifikation
+
+- `bun run lint` 0 Fehler, `bun run test` 2083/2083 gruen, `bun run build` erfolgreich.
+- Puppeteer-Smokes gegen den Dev-Server: EWT-Dialog oeffnet mit erreichbaren Feld-Ids
+  (`#Tag`), Desktop als Seitenpanel und Handy in voller Breite; Impressum oeffnet und
+  schliesst ueber X und Fusszeilen-Knopf; Unterschriftenfeld im Querformat 685x274 statt
+  603x241 px.
+
+## Offen / Naechste Phasen
+
+- `CustomSnackbar` auf DB-Notification-Optik (kosmetisch).
+- H (Bootstrap raus -- inkl. der `.modal-*`-Huellen und der letzten Plugins `Collapse`,
+  `Popover`), danach I (Cleanup).
+
+---
+
+# Aktueller Plan: DB-UX-Migration -- Phase D (App-Shell / Navigation / index.html) - 2026-09-06
+
+## Ausgangslage
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase D. Die Kopfzeile war Bootstrap-`navbar` mit
+`.offcanvas`, `.nav-pills`, `data-bs-toggle="pill"` und dem `Tab`-Plugin. Abweichung vom Plan:
+statt einer React-Shell bleibt die Kopfzeile statisches Markup mit DB-Klassen. Grund: rund 15
+Stellen ausserhalb der Kopfzeile schalten Nav-Eintraege ueber feste Ids und `d-none`
+(`auth/index.ts`, `logoutUser`, `updateTabVisibility`, Schnellzugriff, Onboarding). Eine
+React-Shell haette all das mitziehen muessen; `DBHeader` rendert die Navigation ausserdem
+zweimal, was die Ids doppelt vergeben haette.
+
+## Aufgaben
+
+- [x] `infrastructure/ui/tabController.ts` -- Panelwechsel, `aria-selected`, Hash, `tab:shown`,
+      Tastatursteuerung, `setzeTabSichtbar`
+- [x] `infrastructure/ui/navDrawer.ts` -- mobile Schublade (`<dialog class="db-drawer">`),
+      Navigation zieht um statt doppelt zu existieren
+- [x] `index.html`: DB-Header-Markup, Tab-Eintraege als `<a href="#Ziel" data-tab-target>`
+- [x] `main.ts`: `Tab`/`Offcanvas`/`Dropdown` raus, Controller rein, Hash ueber
+      `zeigeTabAusHash()`
+- [x] `logoutUser`, `onboardingValidation`, `berechnungMonatsFenster` auf Controller/`tab:shown`
+- [x] `BSColorToggler` auf DB-Sub-Navigation; Symbolabgleich ueber `data-icon`/`app-icon`
+- [x] Dev-Service-Worker hinter `PWA_DEV=true` (lieferte alte Stylesheets aus)
+- [x] Tests: `test/ui.tabController.test.ts` (neu), `logoutUser`- und Onboarding-Test auf den
+      Controller umgestellt, Icon-Test kennt DBs `none`-Sentinel
+- [x] Doku: `CHANGELOG.md`, `.claude/skills/architektur/SKILL.md`
+
+## Verifikation
+
+- `bun run lint` 0 Fehler, `bun run test` 2083/2083 gruen, `bun run build` erfolgreich.
+- Kopfleisten-Smoke (Puppeteer, `scratchpad/smoke/kopf.mjs`) gegen den echten Dev-Server:
+  Tabwechsel setzt Panel + `data-active` + `aria-selected` + Hash (`#Berechnung`),
+  `history.back()` schaltet zurueck, Schublade oeffnet mit der Navigation darin
+  (`doppelteIds: 1`), Schliessen holt sie in die Kopfzeile zurueck.
+- Design-Smoke: Untermenue oeffnet per Hover, Auswahl "Hell" setzt `data-bs-theme=light` und
+  tauscht das Symbol (`moon` -> `sun`), `aria-label` folgt.
+- Sichtpruefung Desktop (1500px) und Handy (420px) inklusive offener Schublade.
+
+## Offen / Naechste Phasen
+
+- E (Modal-Infrastruktur -> DB-Drawer), H (Bootstrap raus), I (Cleanup).
+- `Collapse` und `Popover` sind weiterhin Bootstrap (Einstellungen-Akkordeons) -- Phase H.
+
+---
+
+# Aktueller Plan: DB-UX-Migration -- Phase F (CustomTable auf DB-Table-CSS) - 2026-09-06
+
+## Kontext
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase F. Es gibt **keine** interaktive
+DB-Tabellen-Komponente -- nur die CSS-Klassen aus `@db-ux/core-components`. Die eigene
+Sortier-/Inline-Edit-/Soft-Delete-Logik der `CustomTable`-Klasse bleibt vollstaendig
+erhalten; ausgetauscht wird nur die Praesentation.
+
+Geprueft vorab: DB erwartet `<div class="db-table" data-width="full">` als Huelle um eine
+normale `<table>`; Varianten ueber `data-variant="spaced"`, `data-divider`,
+`data-sub-header-emphasis`, `data-interactive`. Der DB-Tooltip ist reines CSS
+(`<i role="tooltip" class="db-tooltip">`) -- die Bootstrap-Tooltip-JS-Komponente entfaellt
+damit ersatzlos (sie war die 7. Bootstrap-JS-Abhaengigkeit).
+
+## Plan
+
+- [x] **F.1 Button-Mapping teilen.** `buttonLook` aus `components/MyButton.tsx` nach
+      `infrastructure/ui/dbButton.ts` verschieben und um einen Vanilla-Helfer ergaenzen
+      (`erzeugeDbButton`), damit React-Adapter und `customTableRender` dieselbe Zuordnung
+      Bootstrap-Klasse -> DB-Prop nutzen. Schichtregel: `components/` darf
+      `infrastructure/` importieren, nicht umgekehrt.
+- [x] **F.2 `customTableRender.ts`:** Footer- und Zeilen-Buttons ueber den Helfer;
+      `customButton.classes`-Konvention bleibt (Aufrufstellen unveraendert).
+- [x] **F.3 Tabellen-Markup:** `<div class="db-table" data-width="full">` statt
+      `table table-bordered table-striped table-hover align-middle` -- 5 Tabellen in den
+      Feature-Tabs plus die beiden in `index.html`.
+- [x] **F.4 Tooltips:** `bootstrap/js/dist/tooltip` raus aus `customTableRender.ts` und
+      `AdminUserList.tsx`; stattdessen ein `db-tooltip`-Element im jeweiligen Elternknoten.
+- [x] **F.5 `customtable.css`** auf DB-Tokens (heute 17 `--bs-*`-Zugriffe und
+      `[data-bs-theme='light']`-Selektoren); Responsive-Breakpoints bleiben JS-seitig.
+- [x] **F.6 Schalter in DOM-Strings:** `berechnenParser` und `schichtParser` in `EwtTab.tsx`
+      erzeugen `.form-check.form-switch`-Markup -> DB-Switch-Markup.
+
+## Verifikationskriterien (F)
+
+- `typecheck`, `lint`, `test`, `build` gruen.
+- Browser: Sortierung (auf/ab/neutral), Inline-Editing, Zeile hinzufuegen/loeschen/
+  wiederherstellen, "Alle Zeilen loeschen", Fehlerzeile mit Tooltip, Schalter in der
+  EWT-Tabelle, Responsive-Umbruch je Breakpoint.
+- Grep: `bootstrap/js/dist/tooltip` = 0.
+
+## Review (F)
+
+**Ergebnis 2026-09-06:** `typecheck`/`lint`/`build` gruen, `bun run test` 2077/0. Browser mit
+echten EWT-Daten: 11 Zeilen, 25 DB-Buttons, **0** Bootstrap-Buttons, Sortier-Icon als Glyph,
+Schalter als DB-Toggle, Kopfzeile lesbar, keine Konsolenfehler.
+
+**Der Fund der Phase:** `.db-table table { display: grid }` -- DB legt Tabellen als CSS-Grid
+aus und zaehlt die Spalten per `:has()`-Kette bis 20. Die `CustomTable` braucht aber
+`colspan` (Fusszeile, Leer-Meldung, Inline-Editor) und blendet Spalten je Breakpoint aus;
+im Grid-Modell landeten alle Fuss-Buttons in einer schmalen Spalte (Screenshot). Deshalb
+bleibt `table.customtable` beim nativen Table-Layout -- Farben, Rahmen und Abstaende kommen
+weiter aus dem DB-Layer. Das ist die zweite Stelle nach den Listen-Bullets, an der DB-CSS
+globale Elementregeln setzt, die der Bestand anders braucht.
+
+**Weiterer Fund:** `table-primary` an der Kopfzeile faerbte den Text schwarz, sobald die
+Bootstrap-`table`-Klasse weg war -- auf dunklem Grund unlesbar. Ersetzt durch
+`data-sub-header-emphasis="weak"`, das DB in beiden Modi korrekt aufloest.
+
+**Nachtrag aus dem Sichttest des Users:** vier Korrekturen -- Marker der Aktionsspalte stand
+ueber statt neben den Buttons (DB-Buttons sind Flex-Container), Zebra-Streifen fehlten
+(`data-variant="zebra"` ist das Gegenstueck zu `table-striped`), Sortier-Icons waren als
+`sort_up`/`sort_down` nicht zuzuordnen (jetzt schlichte Pfeile) und ohne `data-divider="both"`
+fehlten die Spaltenlinien. Dazu `data-size="small"` plus `white-space: nowrap` gegen die
+doppelt hohe Zeile -- mit Ausnahme von `.cell-multiline` (Zulagen-Liste), die weiter umbricht.
+**Der eigentliche Fehler dabei:** der Layout-Override hing an `table.customtable`, die
+Berechnungstabelle heisst aber `table-Berechnung` und lag noch im Grid-Modell (Kopf und Rumpf
+liefen auseinander). Die Regel steht jetzt in `bridge.css` und gilt fuer alle Tabellen in einer
+`db-table`-Huelle. Die sticky Label-Spalte der Berechnungstabelle nimmt ihren Hintergrund
+per `inherit` aus der Zeile, statt stur die Seitenfarbe zu setzen -- sonst laeuft der
+Zebra-Streifen bzw. das Kopfband dort nicht durch.
+
+**Offen:** Die Admin-Tabellen (`table table-sm table-hover`, ~30 Stellen) sind noch Bootstrap;
+sie gehoeren zu Phase H. Der `+`-Marker fuer eingeklappte Spalten ist unveraendertes
+Bestandsverhalten.
+
+---
+
+# Aktueller Plan: DB-UX-Migration -- Phase G (Material Icons -> DB-Icons) - 2026-09-06
+
+## Kontext
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase G. 59 verschiedene Material-Icons an 138
+Stellen in 39 Dateien. Der DB-Satz hat 451 Motive, deckt aber nicht alles ab -- fuer die
+Luecken erlaubt das DB-Regelwerk (Marketingportal, Funktionale Icons) **Komposition**
+(zwei bestehende Icons verbinden) und **Durchstreichung** (2-dp-Linie plus Verschnitt);
+Raster 24 dp, Schutzraum 2 dp, Strichstaerke 2 dp.
+
+## Plan -- FERTIG
+
+- [x] **G.1 Inventur + Mapping-Vorschlag.** 59 Namen erhoben, 39 mit direktem Gegenstueck,
+      20 fachliche Entscheidungen.
+- [x] **G.2 Vergleichsseite** (Artifact) mit gerendertem Alt/Neu und je 2--4 Alternativen;
+      Freigabe durch den User am 2026-09-06 (5C `market`, 8D `theme-auto`, 10D `filter-off`,
+      11C `pulse_wave`, 16C `person`, sonst Empfehlung).
+- [x] **G.3 Eigenbau-Varianten** `scripts/icon-varianten.py` -> `src/icons/theme-auto.svg`,
+      `src/icons/filter-off.svg`; eingebunden als CSS-Maske (`.app-icon`).
+- [x] **G.4 Mapping-Modul** `src/ts/components/dbIcons.ts`.
+- [x] **G.5 Codemod** ueber TSX, DOM-String-Templates und `index.html`; Groessen aus
+      Inline-`fontSize`/`small-icons`/`big-icons` auf `db-font-size-*` abgebildet.
+- [x] **G.6 Imperative Stellen** (AutoSave-Badge, Tabellen-Fehlerzeile) auf `dataset.icon`.
+- [x] **G.7 Material-Icons entfernt:** Dependency, SCSS-Import, Vite-Preload, Alias.
+
+## Verifikationskriterien (G)
+
+- Grep `material-icons` in `src/` = 0.
+- `typecheck`, `lint`, `test`, `build` gruen.
+- Browser: jedes `.db-icon[data-icon]` hat ein Glyph (kein leeres `::before`), Eigenbau-Icons
+  rendern ueber die Maske.
+
+## Review (G)
+
+**Ergebnis 2026-09-06:** 39 Dateien geaendert, 135 DB-Icons + 3 Eigenbau-Stellen.
+`typecheck`/`lint`/`build` gruen, `bun run test` **2074/0**. Browser-Pruefung auf der
+Startseite: 94 Icons im DOM, **keins ohne Glyph**, 0 `material-icons-round`-Reste,
+Groessen 20/24/28 px, keine Konsolenfehler.
+
+**Zwei Dinge, die der Plan nicht auf dem Schirm hatte:**
+
+1. `.db-icon` setzt `font-size: 0 !important` -- die bisherige Groessensteuerung ueber
+   `font-size` (Inline-Styles, `.small-icons`, `.big-icons`) war damit wirkungslos. Die
+   Groesse kommt jetzt aus `--db-icon-font-size`, gesetzt ueber die DB-Klassen
+   `db-font-size-2xs|xs|sm|md|lg`; der Codemod hat die alten rem/px-Werte darauf abgebildet.
+2. Zwei Motive fehlen im Satz. Statt semantisch schiefer Ersatzicons sind sie nach
+   DB-Regelwerk zusammengesetzt: `theme-auto` (Sonne + Mond) und `filter-off` (Trichter
+   durchgestrichen). Beim ersten Versuch lief der Strich falsch herum -- die offiziellen
+   `*_disabled`-Icons streichen von unten links nach oben rechts -- und der Modifikator sass
+   auf dem Rand statt im 2-dp-Schutzraum; beides nach Sichtvergleich mit `eye_disabled`
+   korrigiert. `link_chain` durchgestrichen wurde verworfen (Strich laeuft parallel zur Kette,
+   unleserlich), dafuer gibt es `unlink_chain` offiziell.
+
+**Nacharbeit nach dem Sichttest des Users (gleicher Tag).** Der Codemod ersetzt nur, was er
+als Literal sieht -- drei Fehlerklassen blieben:
+
+1. `data-icon={...}` mit JSX-Ausdruck (13 Stellen) trug weiter Material-Namen. Symptom: leere
+   Dashboard-Kacheln, roter Ersatzpunkt in Listen. Lehre: nach so einem Codemod **jeden**
+   Icon-Namen gegen den echten Satz pruefen, nicht nur die Literale -- dafuer gibt es jetzt
+   `test/icons.dbSet.test.ts`.
+2. `customtable.css` setzte Sortier-Icons per `content:` als Material-Ligatur und erzwang
+   `font-family: 'Material Icons Round' !important`. Ohne die Schrift stand der Name als Text
+   in der Kopfzeile. Jetzt `data-icon` am Element.
+3. Rote Punkte vor Navigations- und Listeneintraegen: DB setzt `list-style-type:
+var(--db-list-bullet)`, was Bootstraps `list-style: none` aus dem unteren Layer schlaegt.
+   Bridge-Regel ergaenzt -- dieselbe Klasse Problem wie bei den Checkbox-Groessen (DB stylt
+   `input[type=checkbox]` global auf 32 px).
+
+**Offen:** Die Icon-Fonts des DB-Satzes liegen als eigene woff2 im Build (`db-*.woff2`, aus
+dem Precache ausgenommen, siehe Phase B). Ob die App wirklich alle Icon-Gewichte braucht,
+klaert Phase I. Eigene, selbst gezeichnete Symbole kann der User spaeter unter `src/icons/`
+ergaenzen -- Einbindung wie bei den beiden erzeugten.
+
+---
+
+# Aktueller Plan: DB-UX-Migration -- Phase C (Basiskomponenten -> DB React Components) - 2026-09-06
+
+## Kontext
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase C. `src/ts/components/*` werden duenne
+Adapter ueber `@db-ux/react-core-components@5.3.0`. Barrel und Props bleiben stabil, damit die
+Aufrufstellen (MyInput 17x, MySelect 9x, MyButton/MyCheckbox je 6x, PasswordStrengthMeter 5x)
+unveraendert bleiben. Die Bootstrap-Modal-Shell bleibt bis Phase E.
+
+**Geprueft vorab (installiertes Paket, nicht geraten):**
+
+- Alle relevanten DB-Komponenten sind `forwardRef` -- `myRef` zeigt weiter auf das echte
+  `<input>`/`<select>`, die `submit*`-Utilities lesen also unveraendert per Ref/`querySelector`.
+- `DBInput` reicht `pattern`, `autoComplete`, `list`, `min`/`max`/`step`, `readOnly` durch,
+  **aber kein `defaultValue`** -- es setzt immer `value={props.value}` und haengt intern
+  `onChange`/`onInput` an. Fuer die Vorbelegungs-Felder (siehe A2) heisst das: `value` NICHT
+  durchreichen, sondern den Startwert nach dem Mounten ueber die Ref ins DOM schreiben.
+  Sonst friert React das Feld wieder ein.
+- `@db-ux/core-eslint-plugin@5.3.0` existiert.
+
+## Plan
+
+- [x] **C.1 Deps + Lint.** `@db-ux/react-core-components@5.3.0` (erledigt, keine peerDeps --
+      `react` wird aus dem Root aufgeloest, kein doppeltes React). `@db-ux/core-eslint-plugin`
+      als devDependency + Flat-Config-Eintrag.
+- [x] **C.2 `MyButton` -> `DBButton`.** `text` -> children, `clickHandler` -> `onClick`,
+      `className`-Bootstrap-Varianten -> `variant`; `dataBsDismiss`/`dataBsToggle` weiter als
+      DOM-Attribute durchreichen (Bootstrap-Modal lebt noch).
+- [x] **C.3 `MyCheckbox` -> `DBCheckbox`.** `children` -> `label`, `changeHandler` ->
+      `onChange`; Vorbelegung ohne Handler wie in A2 (`defaultChecked`-Ersatz per Ref).
+- [x] **C.4 `MySelect` -> `DBSelect`.** `options`-Array -> `<option>`-Kinder, `title` ->
+      `label`, Vorauswahl analog C.3.
+- [x] **C.5 `MyInput` -> `DBInput`.** Bootstrap-`Popover` (+ `@popperjs/core`-Nutzung in
+      dieser Datei) raus -> `message`/`DBInfotext` bzw. `DBTooltip`; `invalidFeedback*` ->
+      `invalidMessage`; Klassenkomponente wird Funktionskomponente. Startwert per Ref.
+- [x] **C.6 `PasswordStrengthMeter`** auf DB-Tokens + `DBInfotext`, Bewertungslogik unveraendert.
+- [x] **C.7 Aufrufstellen + Tests** nachziehen, wo sich Props doch aendern; Test-Doubles in
+      `test/reactRender.ts` an die neue Struktur anpassen.
+
+## Verifikationskriterien (C)
+
+- `bun run typecheck`, `bun run lint` (inkl. neuem DB-Plugin), `bun run test` gruen.
+- `bun run build` gruen.
+- `verify`-Skill: je Feature ein Add- und ein Edit-Modal, Auth-Formulare, Validierungsfehler,
+  **Tippen in vorbelegten Feldern** (die A2-Falle), Tastatur-Fokus, Hell/Dunkel.
+
+## Review (C)
+
+**Ergebnis 2026-09-06:** `typecheck`/`lint`/`build` gruen, `bun run test` **2074/0** (4 neue
+Tests fuer `buttonLook`/`MyButton`). Kein Feature-Modul musste angefasst werden -- die
+Adapter behalten die bisherigen Props.
+
+**Der Fund der Phase:** die DB-Komponenten vergeben ihre `id` erst in einem `useEffect`.
+Direkt nach `mount()`/`showModal()` steht sie also **nicht** im DOM -- gemessen: `#berechnen`
+fehlt sofort, ist nach einem Tick da. Der Bestandscode sucht seine Felder aber synchron
+(`document.querySelector('#Tag')?.addEventListener(...)` unmittelbar nach `showModal()` in
+`createAddModalEWT`), und das `?.` verschluckt den Fehlschlag lautlos -- der Buchungstag
+haette einfach nicht mehr mitgezaehlt. Ein zweites `flushSync` in `mount()` half nicht
+(Passive Effects laufen erst im naechsten Tick). Loesung: `useSofortigeId` schreibt die `id`
+im `useLayoutEffect`, der noch im `flushSync`-Commit laeuft. Im Browser bestaetigt: alle drei
+Feld-ids stehen sofort nach `showModal`.
+
+**Weitere Anpassungen, die der Plan nicht vorhergesehen hatte:**
+
+- `DBInput` reicht kein `defaultValue`-Prop weiter _als eigenes Prop_, laesst es aber ueber
+  seinen `default*`-Passthrough durch -- die A2-Regel (Vorbelegung = `defaultValue`, sonst
+  friert React das Feld ein) gilt also unveraendert weiter und ist in allen drei Feld-Adaptern
+  umgesetzt. Browser-Gegenprobe: Tippen im vorbelegten Feld ergibt `vorbelegtX`.
+- Der Ungueltig-Zustand lief bisher ueber `is-invalid` + Bootstraps Geschwister-Selektor.
+  Im DB-Markup greift beides nicht mehr; deshalb setzen `createEditorModalEWT` und
+  `addressValidation` zusaetzlich `data-custom-validity` und `.db-input .invalid-feedback`
+  wird per CSS sichtbar geschaltet. Gemessen: Feldfarbe wechselt auf den kritischen Ton,
+  Fehlertext erscheint in Rot.
+- Die DB-Lint-Regeln melden bei generischen Adaptern zwangslaeufig Fehlalarme
+  (`select-requires-options` bei `options.map(...)`, `input-type-required` beim Prop-Spread) --
+  begruendet deaktiviert; `form-label-required` war dagegen ein echter Fund und wurde
+  behoben (Text-Label als `label`-Prop statt nur als Kind).
+
+**Offen / bewusst nicht in C:** Die Bootstrap-Modal-Shell (`showModal`, `MyFormModal`,
+`MyDivModal`, `MyModalHeader/Body`) bleibt bis Phase E. Die Buttons in den Feature-Tabs
+(`*Tab.tsx`) sind rohes Bootstrap-Markup, kein `MyButton` -- die kommen mit Phase D.
+Der globale Bootstrap-`Popover`-Init in `main.ts` bleibt, weil `index.html` noch zwei
+`data-bs-toggle="popover"`-Trigger hat.
+
+---
+
+# Aktueller Plan: DB-UX-Migration -- Phase B (DB-UX-CSS-Layer + db-theme + Token-Bridge) - 2026-09-06
+
+## Kontext
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase B. Ziel: DB-UX-CSS und `db-theme` liegen
+neben Bootstrap im Build, ohne dass sich das Aussehen ausser dem Markenfarbton aendert.
+Cascade Layers halten die Reihenfolge fest, eine Bridge mappt die real genutzten `--bs-*`-
+Variablen auf DB-Tokens. Keine Komponente wird in dieser Phase ausgetauscht (das ist Phase C).
+
+Voraussetzung erfuellt: `frontend/.env` enthaelt `ASSET_PASSWORD` + `ASSET_INIT_VECTOR`
+(Install-Zeit-Env fuer das `db-theme`-Postinstall, **nicht** `VITE_`-Praefix).
+`build.cssMinify: 'esbuild'` + `esbuild`-devDependency sind bereits aus A1.9 vorhanden.
+
+## Plan
+
+- [x] **B.1 Deps + `trustedDependencies`.** `@db-ux/core-foundations`, `@db-ux/core-components`
+      (5.3.0), `@db-ux/db-theme` (6.2.0) als `dependencies`. `trustedDependencies` um
+      `@db-ux/db-theme`, `-fonts`, `-icons`, `-illustrative-icons` ergaenzen (Spike: `db-theme`
+      allein reicht nicht, die drei Asset-Pakete haben eigene Postinstalls).
+- [x] **B.2 `scripts/install.sh`** (neu): laedt `.env` und ruft `bun install` mit den
+      `ASSET_*`-Variablen als echter Prozess-Env auf.
+- [x] **B.3 `.github/workflows/deploy.yml`:** `ASSET_PASSWORD`/`ASSET_INIT_VECTOR` als `env:`
+      am Install-Step, neuer `typecheck`-Step vor dem Build. **Repo-Secrets muss der User
+      selbst anlegen** -- ohne sie baut CI ohne Markenassets.
+- [x] **B.4 `src/scss/layers.scss`** (neu): `@layer bootstrap, db-ux, bridge, app;` als
+      allererster Import; `styles.scss` kapselt den Bootstrap-Import in `@layer bootstrap`.
+- [x] **B.5 `src/scss/db-ux.css`** (neu): `db-theme/build/styles/rollup.css` und
+      `core-components/build/styles/bundle.css`, beide `layer(db-ux)`.
+- [x] **B.6 `main.ts`:** Importreihenfolge `layers.scss` -> `db-ux.css` -> `styles.scss`.
+- [x] **B.7 `src/scss/bridge.css`** (`@layer bridge`): die real genutzten `--bs-*` auf
+      DB-Tokens mappen (inkl. der Subtle-/Emphasis-Varianten aus `customtable.css`).
+- [x] **B.8 `BSColorToggler.ts`** erweitern (nicht ersetzen): zusaetzlich `color-scheme` am
+      `<html>`; `data-density="regular"` in `index.html`.
+- [x] **B.9 Fonts:** DB Screen Sans in Preload (`unplugin-inject-preload`) und Precache;
+      `globPatterns` eingrenzen (Spike: 32 woff2 / ~1,8 MB kaemen sonst zum heutigen
+      3,2-MB-Precache dazu).
+
+## Verifikationskriterien (B)
+
+- `bun run build` gruen; `grep -o 'light-dark(' dist/assets/*.css | wc -l` deutlich > 800
+  (nicht `grep -c` -- minifiziertes CSS ist eine Zeile).
+- `bun run typecheck`, `bun run lint`, `bun run test` weiter gruen.
+- Precache-Groesse bewusst gepruefte Zahl (Ausgabe von `vite-plugin-pwa`).
+- `verify`-Skill: Screens optisch unveraendert bis auf Markenfarbton, Dark/Light in beiden
+  Modi (Toggle + OS-Automatik), `--db-*`-Tokens am `:root` vorhanden.
+
+## Review (B)
+
+**Ergebnis 2026-09-06:** `typecheck`/`lint`/`test` (2070/0)/`build` gruen. Gebautes CSS
+1,56 MB roh / 118 KB gz (vorher 35 KB gz -- die 84 KB gz aus dem Spike bestaetigt).
+`grep -o 'light-dark(' dist/assets/*.css | wc -l` = **870**, der Minifier-Fall aus Phase 0
+tritt mit `cssMinify: 'esbuild'` also nicht ein. Precache 59 Eintraege / 4,9 MB (ohne die
+Font-Ausnahmen waeren es 87 / 6,5 MB; Ausgangswert vor Phase B: 43 / 3,4 MB -- der Rest ist
+das DB-CSS selbst).
+
+**Browser (Chrome headless):** Layer-Reihenfolge im CSSOM `bootstrap, db-ux, bridge, app`;
+`--db-adaptive-bg-basic-level-1-default` und `--db-brand-origin-default` loesen am `:root` auf;
+Body-Hintergrund/-Text wechseln in Hell (`#fff`/`#16181b`) und Dunkel (`#16181b`/`#edeef0`),
+Auto-Modus behaelt `color-scheme: light dark`; Schrift ist "DB Neo Screen Sans";
+`.btn-primary` ist DB-Rot `rgb(236, 0, 22)`. Die A1-Smokes (Feature-Tabs, Modal-Pfad) laufen
+unveraendert 17/17 gruen, 0 Konsolenfehler.
+
+**Nachtrag zum Plan:** Die Bridge allein faerbt die Bootstrap-Komponenten nicht um -- Bootstrap
+kompiliert `--bs-btn-bg` & Co. aus der SCSS-Variablen `$primary`, ein `var()`-Override am
+`:root` erreicht sie nie. Deshalb zusaetzlich `$primary: #ec0016` (= `--db-brand-origin-default`,
+in beiden Modi identisch) vor dem Bootstrap-Import. Ohne das waere "optisch unveraendert bis
+auf Markenfarbton" nicht erfuellt gewesen, weil alle Buttons Bootstrap-Blau geblieben waeren.
+
+**Offen / bewusst nicht in B:** `--bs-btn-*` und die Radius-Variablen bleiben Bootstrap
+(Phase C/H). Die GitHub-Repo-Secrets `ASSET_PASSWORD`/`ASSET_INIT_VECTOR` sind **noch nicht
+angelegt** -- bis dahin baut CI ohne Markenassets (Build gruen, aber Systemschrift statt
+DB Neo Screen Sans). Das DB-CSS ist als Ganzes im Bundle; Ausduennen erst in Phase I, wenn
+feststeht, welche Komponenten wirklich genutzt werden.
+
+---
+
+# Aktueller Plan: DB-UX-Migration -- Phase A1 (Preact -> React 19) - 2026-09-05
+
+## Kontext
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase A1. Groesste Risikophase: Framework-Wechsel
+**ohne** DB-UX-Code, damit React-19-Umstellung und Design-System-Umstellung getrennt
+verifizierbar bleiben. Branch `feat/db-ux`.
+
+**Wichtig:** A1 stellt nur die _App_ auf React um; die 33 Preact-rendernden Testdateien
+gehoerten zu **A2**. Geplant war ein roter `bun run test` zwischen beiden Phasen --
+tatsaechlich lief A2 in derselben Sitzung direkt hinterher, der rote Zwischenstand wurde also
+nie committet. Verifikationsanker fuer A1 sind `typecheck` + `build` + `verify`-Skill.
+
+Inventur (2026-09-05, gemessen): 48 Dateien importieren aus `preact`, 37 aus `preact/hooks`,
+3 aus `preact/compat`. Symbole: `createRef` 19x, `render` 12x, `FunctionalComponent` 12x,
+`RefObject`/`ComponentChild` je 3x, `Fragment`/`ComponentChildren`/`Component`/
+`GenericEventHandler` je 2x, `VNode`/`Ref`/`MouseEventHandler`/`JSX`/`h` je 1x.
+Hooks: `useState` 32x, `useEffect` 25x, `useMemo` 7x, `useRef` 6x.
+
+## Plan -- FERTIG (2026-09-06)
+
+- [x] **A1.1 Deps + Config.** Rein: `react@19.2.8`, `react-dom@19.2.8`, `@types/react`,
+      `@types/react-dom`, `@vitejs/plugin-react-swc@4.3.3`, `esbuild@0.28.2`. Raus: `preact`,
+      `@preact/preset-vite`. `trustedDependencies: ["@swc/core"]`. `vite.config.ts`:
+      `preact({...})` -> `react()`. `tsconfig.json`: `jsxImportSource: "react"`,
+      `types: ["bun-types","react","react-dom"]`.
+- [x] **A1.2 `infrastructure/ui/reactRoot.ts`** (neu): `WeakMap<Element, Root>`-Cache,
+      `mount(el, node)` / `unmount(el)`, Rendern per `flushSync`. Der bestehende Code liest
+      direkt nach dem Rendern aus dem DOM (Bootstrap-Modals, CustomTable, Signatur-Dialog) --
+      Preacts `render` war synchron, `root.render` ist es nicht. Barrel `ui/index.ts` mitgezogen.
+- [x] **A1.3 Import-Codemod** (74 Dateien): `preact`/`preact/hooks` -> `react`,
+      `preact/compat`-`createPortal` -> `react-dom`, `FunctionalComponent`->`FC`,
+      `ComponentChild(ren)`->`ReactNode`, `VNode`->`ReactElement`; `import 'preact/debug'` und
+      der `@jsxImportSource preact`-Pragma raus. Grep-Gate: 0 Treffer fuer `preact` in `src/`.
+- [x] **A1.4 Handverlesen:** `h()` -> `createElement` (`generateEingabeMaskeEinstellungen.ts`),
+      `GenericEventHandler` -> React-Handler, `preact.JSX.Element` -> `React.JSX.Element`,
+      DOM-`MouseEvent`/`PointerEvent`-Parameter auf die React-Typen (alias-importiert, wo der
+      DOM-Typ im selben Modul weiterlebt), `canvasKoordinate` nimmt nur noch `{clientX, clientY}`.
+- [x] **A1.5 JSX-Attribut-Codemod:** 1301x `class=`->`className=`, 25x `for=`->`htmlFor=`,
+      128x String-`style="a: b"` -> `style={{ a: 'b' }}`. Der Codemod maskiert String- und
+      Template-Literale, damit die DOM-String-Templates (`EwtTab.tsx`) unberuehrt bleiben --
+      drei Dateien mussten wegen deutscher Anfuehrungszeichen (`„X"`) im JSX-Text nachgezogen
+      werden, weil das lose `"` die Maskierung verschob.
+- [x] **A1.6 `render()`-Aufrufstellen** (12 Dateien) auf `mount`/`unmount`. In
+      `ConflictReviewBanner.tsx` hiess der Parameter selbst `mount` -> `container`.
+- [x] **A1.7 Refs, Events, Controlled Inputs.** `RefObject<T>` -> `RefObject<T | null>`
+      (React-19-`createRef`). `onSubmit` als `SubmitEventHandler`, Handler-Fabriken auf
+      `SubmitEvent<HTMLFormElement>`. Alle 79 JSX-`onInput=` -> `onChange=` (React fuehrt
+      `onChange` ueber das Value-Tracking; `value` ohne `onChange` waere ein Read-only-Feld).
+      `MyInput`/`MyCheckbox`/`MySelect` schalten ohne Handler auf `defaultValue`/`defaultChecked`
+      um -- das ist die Preact-Semantik "Vorbelegung, Endwert per Ref aus dem DOM".
+      `<option selected>` -> `defaultValue` am `<select>`; die zwei Hidden-Inputs in
+      `createEditorModalVE.tsx` sind jetzt `readOnly`. Fehlende `key`s in `AdminLogBrowser`
+      (Fragment statt `<>`) und `createShowModalBereitschaft` ergaenzt.
+- [x] **A1.8 ESLint:** `eslint-plugin-react` (flat + `jsx-runtime`) und
+      `eslint-plugin-react-hooks@7` ergaenzt. `settings.react.version` fest auf `19.2` --
+      `detect` laesst Plugin 7.37 unter ESLint 10 abstuerzen (`context.getFilename` fehlt).
+      `react/no-unescaped-entities` aus (deutsche Anfuehrungszeichen sind gewollt),
+      `react/prop-types` aus (TypeScript). Die neuen Compiler-Regeln
+      `react-hooks/set-state-in-effect` (13x) und `react-hooks/refs` (5x) stehen bewusst auf
+      `warn` -- sie treffen Muster, die unter Preact korrekt waren.
+- [x] **A1.9 Bundle:** `manualChunks` als Funktion (Rolldown), `react`-Vendor-Chunk =
+      **189,6 KB / 59,6 KB gz**; `build.cssMinify: 'esbuild'` gesetzt.
+
+## Verifikationskriterien (A1)
+
+- `bun run typecheck` exit 0 (Fortschrittsmetrik waehrend der Umstellung: Fehlerzahl).
+- `bun run lint` exit 0 (mit den neuen react/react-hooks-Regeln).
+- `bun run build` exit 0; `react`-Vendor-Chunk vorhanden; Zuwachs ~+55 KB gz erwartet.
+- `verify`-Skill: kompletter Klickpfad -- alle Tabs, je ein Add/Edit/Show-Modal pro Feature,
+  Admin-Panel, Login/Register/Reset-Modals, Signatur-Dialog; Dark/Light; Mobile-Viewport;
+  Deep-Link `#EWT`.
+- Grep-Gate: `from 'preact` = 0 in `src/`.
+- **Bewusst NICHT gruen in A1:** `bun run test` (Testsuite folgt in A2).
+
+## Review (A1)
+
+**Ergebnis 2026-09-06:** `bun run typecheck` 0 Fehler (src **und** test), `bun run lint`
+0 Fehler / 26 Warnungen (die bewusst weichgestellten Compiler-Regeln + `exhaustive-deps`),
+`bun run build` gruen mit `react`-Chunk, `bun run test` **2070/0**. A2 ist mitgelaufen
+(eigener Abschnitt unten), `release:check` ist also komplett gruen -- der geplante rote
+Zwischenzustand hat sich auf diese eine Sitzung beschraenkt.
+
+**Browser-Verifikation** (Vite-Dev + Chrome headless, `verify`-Skill, ohne Backend):
+Ohne erreichbares Backend laeuft der Auth-Lifecycle nicht an, die Feature-Tabs mounten also
+nicht von selbst; die Smokes importieren die Module deshalb direkt im Seitenkontext.
+
+- `mount`/`unmount`/Remount je Feature-Tab (Bereitschaft 70 Knoten, EWT 52, Neben 40, EA 39),
+  nach `unmount` jeweils 0 Knoten, zweites `mount` auf demselben Container funktioniert
+  (Root-Cache).
+- `showModal`: Titel, Body und Submit-Button stehen **direkt nach dem Aufruf** im DOM und
+  `myRef.current` ist gesetzt (Beleg fuer `flushSync`); Submit feuert; Schliessen raeumt den
+  Container leer (`innerHTML.length === 0`), keine offenen Modals.
+- Hilfe-Modal, Konflikt-Banner, Einstellungen-Panels (`createElement`-Pfad), Theme-Wechsel
+  dunkel/hell, Mobile-Viewport: alle gruen.
+- Vorbelegte Felder bleiben editierbar: `value="vorbelegt"` + Tippen -> `vorbelegtX`,
+  Checkbox-Klick schaltet um, `<select>` wechselt die Auswahl. Keine React-Warnung im Log.
+- Grep-Gate `class=`/`for=` im gerenderten DOM: nur die 54 `label[for]` aus dem statischen
+  `index.html`, 0 leere `class`-Attribute.
+- Konsolenfehler ausschliesslich Netzwerk (CORS/`ERR_CONNECTION_REFUSED` gegen die Dev-API),
+  0 React-Fehler oder -Warnungen.
+
+**Offen / bewusst verschoben:** die 26 Lint-Warnungen (`set-state-in-effect`, `refs`,
+`exhaustive-deps`) sind echte React-19-Hinweise auf Preact-Muster und gehoeren in eine eigene
+Aufraeum-Phase. Der Klickpfad mit echtem Backend (Login, Speichern, PDF) ist nicht abgedeckt.
+
+---
+
+# Aktueller Plan: DB-UX-Migration -- Phase A2 (Testsuite auf React) - 2026-09-06
+
+## Plan -- FERTIG
+
+- [x] **A2.1 Render-Helfer** `test/reactRender.ts`: `render(node, container)` in
+      Preact-Signatur auf Basis der echten `mount`/`unmount`, dazu `setzeWert`,
+      `klickeCheckbox`, `inputMock`, `huelleMock`.
+- [x] **A2.2 Import-Codemod** ueber 32 Testdateien: `preact`-Importe auf `react` bzw. den
+      Render-Helfer, `h` -> `createElement as h`, `ComponentChild(ren)` -> `ReactNode`.
+- [x] **A2.3 Event-Simulation an React angepasst.** Drei Klassen von Faellen: - Checkbox: `el.checked = x` + `change`-Event erreicht React nicht (React haengt an
+      `click`) -> `klickeCheckbox`. - Textfeld: `el.value = x` aktualisiert Reacts Value-Tracker mit, das folgende
+      `input`-Event gilt dann als "keine Aenderung" -> `setzeWert` schreibt ueber den
+      nativen Prototyp-Setter. - `pointerenter` bubbelt nicht; React leitet `onPointerEnter` aus `pointerover` ab.
+- [x] **A2.4 Test-Doubles React-tauglich:** `h('input', props)` reichte `children` an ein
+      Void-Element durch (React wirft), Props wie `myRef`/`submitText` landeten als
+      DOM-Attribute, Array-Kinder ohne `key`. Ersetzt durch `inputMock`/`huelleMock`,
+      `class:` -> `className:`.
+- [x] **A2.5 `Admin.lifecycle`-Test** mockt statt `preact.render` jetzt
+      `@/infrastructure/ui/reactRoot`.
+
+## Verifikationskriterien (A2)
+
+- `bun run test` gruen: **2070 pass / 0 fail** (vorher 2069 -- ein zusaetzlicher Test fuer
+  den gesteuerten `MyInput`-Fall).
+- **0 React-Warnungen** im Testlauf (Start: 115 -- 102x `value` ohne `onChange`, dazu
+  fehlende `key`s, `Invalid DOM property class`, unbekannte DOM-Props).
+- `bun run typecheck` und `bun run lint` gruen, `bun run release:check` damit komplett gruen.
+
+## Review (A2)
+
+Der Testlauf war der eigentliche Fund der Phase: die 102 `value`-ohne-`onChange`-Warnungen
+haben gezeigt, dass die Modals ihre Felder als **Vorbelegung** nutzen und den Endwert per Ref
+aus dem DOM lesen. In React waere das ein schreibgeschuetztes Feld gewesen -- die Umstellung
+auf `defaultValue`/`defaultChecked` in `MyInput`/`MyCheckbox`/`MySelect` ist deshalb kein
+Kosmetik-Fix, sondern verhindert eine echte Regression (nicht mehr editierbare Modalfelder).
+Der Browser-Test oben belegt das Verhalten.
+
+`test/components/MyInput.test.tsx` erwartete Preact-Semantik (`value`-Prop schreibt beim
+Re-Render ins DOM). Der Test prueft jetzt beide Faelle getrennt: ohne Handler bleibt der
+getippte Wert stehen, mit `onChange` folgt das Feld dem Prop.
+
+---
+
+# Aktueller Plan: DB-UX-Migration -- Phase 0 (Toolchain-Gate) - 2026-09-05
+
+## Kontext
+
+Gesamtplan: `tasks/plan-db-ux-migration.md` (Preact 10 -> React 19, Bootstrap 5.3 -> DB UX
+Design System v5.3.0, mehrmonatig). Diese Sektion ist das Phasen-Log dazu.
+
+Prueflauf des Gesamtplans (2026-09-05): Ansatz solide, externe DB-UX-Annahmen verifiziert
+(Pakete 5.3.0 / db-theme 6.2.0, React-19.2-Ziel, keine peerDeps, `DBDrawer` statt Modal,
+keine DataTable). Der alte `Status (2026-09-03)`-Block war falsch -- markierte Phase-0-Arbeit
+als erledigt, die auf `dev` nicht existierte. Mehrere Scope-Zahlen zu niedrig. Alles in der
+Plan-Doku korrigiert.
+
+Phase 0 selbst: reines Toolchain-Gate, keine Verhaltensaenderung, kein React-/DB-UX-Code.
+
+## Plan
+
+- [x] Branch `feat/db-ux` von `origin/dev` (Frontend-Submodul).
+- [x] `typecheck`-Script (`bunx --bun tsc --noEmit`) in `package.json`, `release:check`
+      vorangestellt (`typecheck && lint && test && build`).
+- [x] Plan-Doku `tasks/plan-db-ux-migration.md` korrigiert (Status, Scope-Zahlen A/F/H,
+      Phantom-Angaben, DB-UX-Doku-URLs v5.3.0).
+- [x] Vorgefundenen Testreihenfolge-Flake behoben: `test/core/bootstrap.test.ts` pinnt
+      `document.readyState='complete'` (wie die Schwester-Dateien). Vorher 2068/1 auf
+      `origin/dev`, jetzt 2069/0 reihenfolge-unabhaengig.
+- [x] `CHANGELOG.md` Eintrag (52).
+- [x] `feat/db-ux` gepusht; Parent-`main`-Divergenz per Rebase aufgeloest und gepusht
+      (`6470ce8`), `feat/db-ux-migration` auf `main` rebased + force-gepusht (`f69eefe`).
+- [x] **Wegwerf-Spike** durchgefuehrt (ausserhalb des Repos, nicht gemergt): React 19.2.8 +
+      `@db-ux/*` 5.3.0 + `db-theme` 6.2.0 mit echten Credentials, Bundle gemessen.
+      Ergebnisse in `tasks/plan-db-ux-migration.md`, Abschnitt "Spike-Ergebnisse".
+- [ ] `.env.example` -- im Sandbox durch Deny-Rule blockiert, in Phase B mit `scripts/install.sh`.
+- [ ] Parent-Submodul-Gitlink-Bumps (backend/shared/frontend) -- haengen am naechsten
+      dev->main-Release je Submodul, bewusst separat.
+
+## Spike-Kernbefunde (2026-09-05)
+
+1. `trustedDependencies` braucht **alle vier** db-theme-Pakete + `@swc/core` -- `@db-ux/db-theme`
+   allein reicht nicht (Fonts/Icons sind transitive Pakete mit eigenem `postinstall`).
+2. Entschluesselung funktioniert: 18 woff2, 3345 Icon-SVG, 247 illustrative SVG, 49 Theme-Bilder.
+   `.enc`-Dateien bleiben daneben liegen (kein Fehler).
+3. **Vite 8 = Rolldown: `manualChunks` nur als Funktion** -- Objektform bricht den Build.
+4. `cssMinify: 'esbuild'` braucht `esbuild` als explizite devDependency (Vite 8 liefert es nicht mit).
+5. **`light-dark()`-Falle bestaetigt:** Default-Minifier reduziert 867 -> 3 Vorkommen und
+   definiert die Ersatzvariablen nur unter `[data-mode=...]`; mit `cssMinify:'esbuild'` bleiben 870.
+6. Bundle: React-Runtime **59,6 KB gz** (Plan schaetzte +40), DB-UX-CSS **84 KB gz** (heute 35),
+   Fonts 32 woff2 / 1,8 MB, dazu 12 Marken-Logo-SVG (~91 KB) ungewollt.
+7. `DBDrawer` = natives `<dialog>`: `header`/`footer` als Props-Slots, `position:'fixed'` liefert
+   `showModal()` mit echtem Fokus-Trap -- Phase-E-Verifikationspunkte grossteils nativ abgedeckt.
+8. `npm ls react` im Minimalfall sauber dedupet trotz fehlender peerDeps; TS 6.0.3 typecheckt
+   React 19 + DB-Komponenten fehlerfrei (kein TS-7-Zwang).
+
+## Verifikationskriterien (Phase 0)
+
+- `bun run typecheck` exit 0 (Script existiert).
+- `bun run release:check` als Ganzes gruen: `lint` 0, `bun test` **2069 pass / 0 fail** (183
+  Dateien), `bun run build` gruen.
+- Voller `bun test`-Lauf reihenfolge-unabhaengig gruen (mehrfach + einzeln `test/core/`).
+- `git diff` beruehrt nur: `package.json`, `tasks/plan-db-ux-migration.md`, `tasks/todo.md`,
+  `CHANGELOG.md`, `test/core/bootstrap.test.ts`. Kein `src/**`, kein `vite.config.ts`.
+
+## Review (Phase 0)
+
+- Erledigt: Branch, `typecheck`-Gate, Plan-Korrekturen, Flake-Fix, Changelog, Push,
+  Parent-Repo-Reconcile, Wegwerf-Spike. `release:check` gruen verifiziert
+  (typecheck 0 / lint 0 / test 2069-0 / build ok).
+- Offen (nicht blockierend): `.env.example`, Parent-Gitlink-Bumps (haengen am dev->main-Release).
+- Der Spike hat vier Plan-Annahmen korrigiert (Punkte 1, 3, 4, 6 oben) und eine bestaetigt
+  (Punkt 5, `light-dark()`). Phase A1, B und E in der Plan-Doku entsprechend nachgezogen.
+- Phase 0 ist damit abgeschlossen; naechster Schritt ist Phase A1.
+
+---
+
+# Aktueller Plan: AutoSave-Commit-Race - Snapshot-basiertes Commit statt Live-Filter - 2026-08-05
+
+## Kontext
+
+Vertiefende Race-Condition-Pruefung nach dem AutoSave-Race-Fix vom 2026-08-03 (`queuedDuringSave`).
+Der damalige Fix loeste zuverlaessig einen Folge-Save aus, aber `_commitCreateAndUpdate`
+(`CustomTable.ts`) selbst filterte beim Commit weiterhin den _aktuellen_ Live-Tabellenzustand
+(`getEffectiveRowState`) statt eines Snapshots vom Request-Zeitpunkt. Zeilen, die waehrend eines
+laufenden Save-Requests neu angelegt oder geaendert wurden, wurden dadurch von der Antwort des
+VORHERIGEN Requests faelschlich mitcommittet — bei neuen Zeilen ohne `_id` (endgueltiger
+Datenverlust), bei geaenderten Zeilen mit Verlust der zuletzt eingetippten Aenderung. Zusaetzlich
+verschob eine liegen gebliebene Fehler-Zeile (`_state==='error'`, `_errorState==='new'`) die
+Index-Zuordnung zwischen `changeTracking.ts` (Live-Re-Filter) und `_commitCreateAndUpdate`
+(`getEffectiveRowState`-Filter) — beide filterten unabhaengig voneinander denselben Zustand.
+
+## Plan
+
+- [x] Bug-Mechanismus end-to-end nachvollzogen (`autoSave.ts` -> `changeTracking.ts` ->
+      `CustomTable.ts`), Test-Luecke bestaetigt (`autoSave.test.ts` stubbt `commitAutoSave` als
+      `vi.fn()`, deckt die echte Commit-Logik nicht ab)
+- [x] `Rows.getChangeRows()` als gemeinsame Row-Referenz-Quelle ergaenzt, `getChanges()` darauf
+      umgebaut (eine Filterlogik statt zwei unabhaengiger)
+- [x] `commitChanges`/`commitAutoSave`/`_commitCreateAndUpdate` auf optionalen `includedRows`-Snapshot
+      umgestellt — nur Zeilen aus dem Snapshot werden committet/entfernt
+- [x] `mapCreatedIdsByClientRequestId`/`mapCreatedIdsByContent` (`changeTracking.ts`) und
+      `collectRowErrorMatches` (`savePipeline.ts`) auf denselben Snapshot statt Live-Re-Filter
+      umgestellt (Index-Verschiebung durch zwischenzeitliche Aenderungen behoben)
+- [x] `markFetchErrorRows` (`errorHandling.ts`, Fehlerpfad) ebenfalls auf Snapshot umgestellt
+- [x] `saveResourceNow` (`autoSave.ts`) verdrahtet: Snapshot einmalig vor dem Request, an alle
+      Stellen durchgereicht
+- [x] Betroffene Unit-Tests (changeTracking/errorHandling/savePipeline/autoSave) an neue Signaturen
+      angepasst
+- [x] Echte Regressionstests in `CustomTable.test.ts` ergaenzt (an der realen `Rows`-Klasse, nicht
+      gemockt) — vorab gegen den alten Code verifiziert, dass sie ohne den Fix rot sind
+
+## Verifikationskriterien (AutoSave-Commit-Race)
+
+- Waehrend eines laufenden Saves neu angelegte Zeile bleibt nach `commitAutoSave` `new` ohne `_id`
+  (statt faelschlich `unchanged`)
+- Waehrend eines laufenden manuellen Saves geloeschte Zeile bleibt nach `commitChanges` erhalten
+- `bunx tsc --noEmit`, `bun run lint`, `bunx prettier --check`, `bun run test` laufen gruen
+
+## Review (AutoSave-Commit-Race)
+
+- Ergebnis: Commit nach einem Bulk-Save basiert jetzt auf einem Row-Referenz-Snapshot vom
+  Request-Zeitpunkt statt auf einem erneuten Live-Filter des aktuellen Tabellenzustands. Betrifft
+  alle 4 Ressourcen (BZ/BE/EWT/N) gleichermassen, da `_commitCreateAndUpdate` fuer alle gemeinsam
+  genutzt wird.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`,
+  `bun run lint`, `bunx prettier --check src/ test/`, `bun run test` -> `1388 pass, 0 fail`.
+
+# Aktueller Plan: Weitere Ueberschneidungs-/Duplikat-Checks mit selbem Bug wie 2026-07-30-Fix - 2026-07-31
+
+## Kontext
+
+Nach dem Fix vom 2026-07-30 (BZ/EWT-Editor-Modal blockierte Ersatz-Anlage faelschlich wegen lokal
+geloeschter, ungesynchter Zeilen) gezielt geprueft, ob dieselbe Bug-Klasse noch anderswo existiert.
+Root Cause: alle 4 Resource-Getter (BZ/BE/EWT/N) sind strukturell identisch, keiner filtert
+`__localState === 'deleted'` — der 2026-07-30-Fix patchte nur 2 Call-Sites inline statt die Getter.
+
+## Plan
+
+- [x] Alle Konsumenten der 4 Getter systematisch durchsucht und klassifiziert: Tabellen-Init/Reload
+      (muss geloeschte Zeilen zeigen) vs. Validierung/Berechnung (muss sie ausschliessen)
+- [x] `IDataQueryOptions.excludeDeleted?: boolean` (Default false, rueckwaertskompatibel)
+- [x] Filter in allen 4 Gettern (`getBereitschaftsZeitraumDaten`, `getBereitschaftsEinsatzDaten`,
+      `getEwtDaten`, `getNebengeldDaten`) eingebaut
+- [x] Echte Bug-Stellen gefixt: BE-Konflikt-Checks (`hasOverlap`/`hasLre12TooClose`/`hasConflictingLre1`),
+      BZ-Delete-Guard (`countLinkedEinsaetze`/`beImZeitraum`), BZ-Coverage (`classifyBzCoverage`,
+      3 Stellen), N-Tag-Disable (`createAddModalNeben`), EWT-Verknuepfung (`createEditorModalNeben`),
+      naechster-freier-Tag (`setNaechsterEwtTag`), Zulagen-Jahressumme (`calculateZulagenBreakdown`)
+- [x] BZ-/EWT-Editor-Modal: Inline-Checks vom 2026-07-30-Fix auf neue Getter-Option umgestellt
+- [x] Bewusst unveraendert: Tabellen-Init (`rows:`), `recalculateEwtMonat`-Reload, `overwriteUserDaten`
+      (Server-Daten ohne `__localState`)
+- [x] Tests: `EWT.getEwtDaten.test.ts` +1 Fall, `Bereitschaft.submitBereitschaftsEinsatz.test.ts`
+      Assertion ergaenzt; `tsc`/Lint sauber, Suite 1306 gruen
+
+## Review (2026-07-31)
+
+- Ergebnis: 7 weitere, bislang ungetestete Stellen mit derselben Bug-Klasse gefixt (BE-Overlap/LRE-Checks,
+  BZ-Delete-Guard, BZ-Coverage, N-Tag-Disable, EWT-Verknuepfung, naechster-freier-Tag, Zulagen-Summe).
+  Fix jetzt an der Wurzel (Getter-Option) statt pro Call-Site — verhindert Wiederholung des Musters.
+- Verifikation: `bunx tsc --noEmit` sauber, `bun run lint` sauber, `bun run test` → 1306 pass / 0 fail.
+- Details siehe `CHANGELOG.md` Eintrag 2026-07-31.
+
+---
+
+# Aktueller Plan: Speichern nach Löschen – Ersatz-Zeitraum faelschlich als Ueberschneidung blockiert - 2026-07-30
+
+### Problem
+
+User-Report: Wird ein BZ-/EWT-Datensatz gelöscht und direkt danach ein überschneidender Ersatz
+angelegt, schlägt das Speichern fehl, weil die Löschung noch nicht synchronisiert ist.
+
+### Root Cause (zwei Stellen)
+
+1. **Lokaler Ueberschneidungs-Check blockiert sofort:** `createEditorModalBereitschaftsZeit.tsx`
+   / `createEditorModalEWT.tsx` vergleichen gegen `getBereitschaftsZeitraumDaten()`/`getEwtDaten()`
+   (Storage-Snapshot) — der liest auch lokal bereits geloeschte, aber noch nicht gesendete Zeilen
+   (`__localState: 'deleted'`) mit ein. Die eigene, gerade erst lokal geloeschte Zeile blockierte
+   damit den Ersatz-Eintrag direkt im Modal.
+2. **AutoSave kann denselben Konflikt serverseitig auslösen:** AutoSave sendet Löschungen bewusst
+   nie automatisch mit (nur manuelles Speichern, Kommentar in `autoSave.ts`). Ohne Guard hätte
+   AutoSave eine ueberschneidende Neuanlage trotzdem senden können, waehrend der Server die
+   (lokal bereits geloeschte) alte Zeile noch kennt → vermeidbarer 422 im Hintergrund.
+
+### Plan
+
+- [x] Teil A: `__localState === 'deleted'` in beiden lokalen Ueberschneidungs-Checks ausschließen
+- [x] Teil A (Ergänzung, User-Hinweis): EWT-Editor reaktiviert beim Neuanlegen eine zum Löschen
+      vorgemerkte, zeitlich überschneidende Zeile (`undoDelete()` + `val()`) statt eine zweite
+      anzulegen — analog `addEwtTag.ts`; erhält `_id` (Nebengeld-`ewtRef` verwaist nicht). BZ hat
+      denselben Verlinkungsfall potenziell (`Bereitschaftseinsatz.Bereitschaftszeitraum`), wurde
+      hier aber nicht mit umgesetzt (nicht angefragt) — als bekannte Anschlussmöglichkeit vermerkt.
+- [x] Teil B: `infrastructure/autoSave/overlapGuard.ts` (neu) — erkennt Zeitfenster-Ueberschneidung
+      zwischen ausstehenden Neuanlagen/Aenderungen und ausstehenden, ungesyncten Loeschungen
+      (BZ/EWT; BE/N bewusst ausgenommen, LRE-Adjazenzregeln zu riskant zum Duplizieren)
+- [x] `errorHandling.ts`: `markOverlapBlockedRows` (rote Zeile/Tooltip/Modal-Banner wie echte
+      Server-Fehler, aber ohne Server-Request)
+- [x] `autoSave.ts`: Guard vor `saveResourceNow` bei `includeDeletes=false`; neuer `'blocked'`-Status;
+      manuelles Speichern (`includeDeletes=true`) bleibt unberührt vom Guard
+- [x] `TSaveStatus` + `autoSaveIndicator.ts`: `'blocked'`-Badge (gelb, `warning`-Icon)
+- [x] Tests: `overlapGuard.test.ts` (neu, 8 Fälle), `autoSave.test.ts` (+2), `autoSaveIndicator.test.ts` (+2)
+- [x] `frontend/CHANGELOG.md` aktualisiert
+
+### Verifikationskriterien
+
+- `bun run test` (1304 grün), `bunx tsc --noEmit -p tsconfig.json`, `bun run lint`,
+  `bun run format:check` (bis auf 2 vorbestehende, nicht angefasste Dateien) alle grün
+- Gezielte Tests: AutoSave sendet bei Ueberschneidung mit ungesyncter Löschung nichts und markiert
+  die Zeile; manuelles Speichern sendet Delete+Create trotzdem zusammen (Server verarbeitet
+  Loeschungen zuerst, siehe Backend-Plan „Bulk-Reihenfolge" vom 2026-07-17)
+
+### Review
+
+- Bewusst KEINE partielle Exklusion einzelner Zeilen aus dem AutoSave-Batch: `Rows.getChanges()`/
+  `_commitCreateAndUpdate()` zählen `createIdx` über die EFFEKTIVE Zeilen-Reihenfolge (inkl.
+  Fehler-Zeilen via `_errorState`) — ein Ausschluss nur einzelner Zeilen haette die Index-Zuordnung
+  zwischen `createdIds`-Map und Commit-Loop fuer alle NACHFOLGENDEN Zeilen verschoben (stille
+  Fehlzuordnung von IDs, im schlimmsten Fall Datenverlust durch faelschliches `_state='unchanged'`
+  ohne `_id`). Stattdessen haelt der Guard bei einer Ueberschneidung die GESAMTE Ressource fuer
+  diesen AutoSave-Zyklus zurueck (kein `sendBulk`-Aufruf, keine Commit-Logik beruehrt) — grobere
+  Granularitaet, aber ohne Aenderung an der bestehenden, gut getesteten Commit-Pipeline.
+- `getEwtWindow`-Logik (Tagesuebertrag bei Nachtschichten) bewusst lokal in `overlapGuard.ts`
+  dupliziert statt aus `features/EWT/utils/` importiert: `infrastructure/` darf laut
+  Architekturregel nicht von `features/` abhaengen. Klein und stabil genug (~10 Zeilen reine
+  dayjs-Arithmetik), um das Duplikationsrisiko gegenüber einem Layer-Verstoß hinzunehmen.
+- BE (Bereitschaftseinsatz) bewusst nicht abgesichert: Overlap-Regeln dort sind LRE-typ- und
+  Adjazenz-abhängig (`bereitschaftseinsatz.service.ts`), eine Frontend-Replikation wäre riskant
+  und fehleranfällig. Bekannte Restlücke, kein blockierendes Risiko für den gemeldeten Fall.
+
 # Aktueller Plan: Einstellungen → Fahrzeiten als editierbare Liste (Add/Delete/Reorder) - 2026-07-16
 
 ### Plan
@@ -604,3 +3064,1237 @@ Ziel: die offensichtlichsten 0%-Lücken in isolierbaren Modulen schließen.
 
 - Ergebnis: Der Cookie-/Storage-Check ist jetzt ein expliziter Gate-Schritt (`cookie:check`), der fachlich vor der Verzweigung liegt. Dadurch ist das Modell korrekt: `cookie-check -> SESSION_RESTORE_SEQUENCE` (bei vorhandener Session) oder `cookie-check -> LOGIN_INIT_SEQUENCE` (Idle/Login-Pfad).
 - Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/Login.sessionRestore.test.ts test/orchestration/initSequence.test.ts`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`.
+
+## Aktueller Plan: Hinweis auf noch nicht gespeicherten Bereitschaftszeitraum (BE/BZ)
+
+- [x] Recherche: BE↔BZ-Verknüpfung (`submitBereitschaftsEinsatz.ts`), Sync-Status-Muster von EA/Neben↔EWT (`isUnsynced`/`disabled`-Option) via Explore-Subagent
+- [x] Erster Ansatz (auto-flush + hartes Blockieren bei Submit) verworfen, nachdem User klarstellte: Speichern darf nicht fehlschlagen/blockieren, nur ein Hinweis im Modal
+- [x] `isBzUnsynced()` in `submitBereitschaftsEinsatz.ts` exportiert (Prädikat, analog EA/Neben-Muster), Kern-Submit-Logik unverändert gelassen (BE mit bereits vollständig gespeichertem BZ nicht beeinflusst)
+- [x] Reaktiver Warnhinweis in `createAddModalBereitschaftsEinsatz.tsx` und `createEditorModalBereitschaftsEinsatz.tsx`: sichtbar wenn ein BZ im Monat unsynced ist, blendet sich via `data:changed`-Subscription automatisch wieder aus
+- [x] Tests: Mocks in beiden Component-Tests um `getBereitschaftsZeitraumDaten`/`isBzUnsynced`/`onEvent` ergänzt, neuer Sichtbarkeits-Test für AddModal
+
+## Verifikationskriterien (BZ-Sync-Hinweis)
+
+- Submit-Verhalten von `submitBereitschaftsEinsatz.ts`/Editor-Modal bleibt exakt unverändert (keine neue Fehl-/Blockier-Logik)
+- Hinweis erscheint nur wenn ein Bereitschaftszeitraum im aktuellen Monat kein `_id` hat oder `__localState === 'modified'` ist
+- Hinweis verschwindet automatisch nach `data:changed`-Event für Ressource `BZ`, sobald kein unsynced BZ mehr existiert
+- `tsc --noEmit`, `lint`, komplette Testsuite laufen fehlerfrei
+
+## Review (BZ-Sync-Hinweis)
+
+- Ergebnis: EA/Neben↔EWT hatten die Absicherung bereits (disabled Option + "(wird noch gespeichert)"). Für BE↔BZ gab es keine, weil die Verknüpfung dort implizit über Zeitfenster läuft statt über ein Auswahlfeld. Jetzt zeigen beide BE-Modals einen zusätzlichen, rein informativen Hinweis, wenn ein Bereitschaftszeitraum im Monat noch nicht synchronisiert ist -- ohne Submit-Verhalten zu verändern.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx --bun tsc --noEmit`, `bunx --bun eslint src/ test/`, `TZ=Europe/Berlin bun test --isolate` → 2020/2020 bestanden.
+
+## Nachtrag: Speicherreihenfolge BZ-vor-BE doch aktiv erzwingen
+
+- [x] `ensureCompleteBzSynced()` wieder eingeführt (ohne try/catch/Blockier-Guard aus dem verworfenen ersten Versuch): bei 'complete' Coverage mit unsynced Grenz-BZ wird `flushResource('BZ')` angestossen und danach neu klassifiziert
+- [x] Bestätigt dass `flushResource`/`saveResourceNow` intern nie wirft (eigener try/catch in `autoSave.ts`) -- Aufruf ohne try/catch ist sicher, kein neuer Fehlerpfad
+- [x] In `submitBereitschaftsEinsatz.ts` und Editor-Modal eingehängt; Editor-Modal-`onSubmit` dafür (wieder) async
+- [x] Editor-Modal-Testdatei mockte `@/features/Bereitschaft/utils` komplett -- `ensureCompleteBzSynced` dort als Pass-Through-Mock ergänzt (sonst `undefined(...)`-Crash bzw. echter AutoSave-Aufruf in Unit-Tests); alle `getSubmit()`-Aufrufe in dieser Datei auf `await` umgestellt (12 Stellen)
+- [x] Neue Tests in `Bereitschaft.submitBereitschaftsEinsatz.test.ts`: Sync-vor-Speichern bei unsynced BZ, "speichert trotzdem ohne Referenz falls Sync nicht klappt" (Beleg dass nichts fehlschlägt), kein Flush wenn bereits synced
+
+### Verifikationskriterien
+
+- `flushResource('BZ')` wird nur aufgerufen wenn `coverage.kind === 'complete'` UND mindestens eine Grenz-BZ unsynced ist; bereits vollständig synchronisierte Coverage bleibt unangetastet (kein Flush-Aufruf)
+- Schlägt der Sync fehl/bleibt aus: BE wird trotzdem gespeichert (ohne BZ-Referenz), kein `failWith`/Block
+- `tsc --noEmit`, `lint`, komplette Testsuite laufen fehlerfrei
+
+### Review
+
+- Ergebnis: Anders als beim ersten (verworfenen) Versuch gibt es jetzt eine echte Order-Garantie im Erfolgsfall, ohne die "nichts darf fehlschlagen"-Vorgabe zu verletzen -- möglich, weil `flushResource` selbst nie wirft (Fehlerbehandlung passiert vollständig innerhalb von AutoSave). Der Hinweis aus dem vorherigen Schritt bleibt als zusätzliches, unabhängiges Signal bestehen für den (seltenen) Fall, dass der Sync nicht rechtzeitig durchläuft.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx --bun tsc --noEmit`, `bunx --bun eslint src/ test/`, `TZ=Europe/Berlin bun test --isolate` → 2023/2023 bestanden.
+
+## Phase H (1): Bootstrap-`.modal-*`-Huellen raus
+
+Die Dialoge liegen seit Phase E im `DBDrawer`, tragen innen aber noch Bootstraps Modal-Geruest.
+Das ist doppelt: `.modal-dialog`/`.modal-content` sind reine Huellen, deren Optik in
+`styles.scss` bereits wieder abgeraeumt wird (Rahmen weg, Hintergrund weg, Breite ueberschrieben).
+Die Groessen-Prop ist dadurch heute wirkungslos -- jeder Dialog rendert 36 rem.
+
+- [x] `.modal-dialog` (Huelle) ersatzlos entfernen, `.modal-content` -> `.dialog-rumpf`
+- [x] `.modal-body` -> `.dialog-koerper`, `.modal-footer` -> `.dialog-fuss`
+- [x] `.modal-header`/`.modal-title` entfallen (Kopf traegt bereits `.db-drawer-header`)
+- [x] `TMyModal.size` auf `'lg' | 'xl'` eindampfen, `dialogClass` streichen; Breite kommt ueber
+      `--db-drawer-max-width` am `<dialog>` (per `:has()` aus dem Rumpf gehoben)
+- [x] `size="sm"` (9 Stellen) und `size="fullscreen-sm-down"` entfernen -- beide heute wirkungslos
+- [x] `dialogClass="modal-xl ..."` (Massenbearbeitung) -> `size="xl"`
+- [x] `styles.scss`: Block `.db-drawer-content { .modal-* }` durch echte Regeln fuer die neuen
+      Klassen ersetzen; Unterschriften-Dialog (`signatur-modal-kompakt`) mitziehen
+- [x] Tests nachziehen (10 Dateien greifen per `.modal-*`-Selektor zu)
+
+### Verifikationskriterien
+
+- `grep -r "modal-dialog\|modal-content\|modal-header\|modal-title\|modal-body\|modal-footer" src/`
+  liefert keine Treffer mehr
+- Lint 0 Fehler, komplette Testsuite gruen
+- Sichtpruefung im Dev-Server: Anmelde-Dialog, ein Editor-Dialog, Impressum, Hilfe,
+  Bestaetigungsdialog, Unterschriftenfeld (Hoch- und Querformat) -- hell und dunkel
+- Breite: `sm`-Dialoge unveraendert 36 rem; nur die vier Admin-/Editor-Dialoge mit `lg`/`xl`
+  werden breiter (48 rem / 64 rem)
+
+### Review (Phase H, Schritt 1)
+
+- Ergebnis: `grep -r "modal-dialog|modal-content|modal-header|modal-title|modal-body|modal-footer|modal-backdrop" src/`
+  ist leer. Zwei Altlasten fielen dabei auf und sind mitbehoben: der tote Selektor in
+  `setNaechsterEwtTag` (seit Phase E ohne Treffer) und die leere Variable
+  `--db-divider-bg-color`, wegen der Kopf- und Fusszeile ihre Trennlinie verloren haetten.
+- Verifikation: `bunx --bun tsc --noEmit`, `bun run lint` (0 Fehler, 26 alte Warnungen),
+  `bun run test` 2085/2085. Sichtpruefung gegen den Dev-Server: Impressum, Bestaetigungs-,
+  Hilfe- und Passwort-Dialog, Platzhalter-Hilfe (`lg` = 768 px), Unterschriftenfeld in
+  Hoch- und Querformat.
+
+## Phase H (2): Raster und Akkordeon
+
+- [x] `scss/raster.scss` mit `.raster`, `.raster-auto`, `.sp-*`, `.abstand-*`, `.mitte`, `.breit`
+- [x] 383 Rasterklassen in 45 Dateien per Codemod umgestellt
+- [x] `.w200` -> `.knopfreihe` mit eigenen Spaltenregeln (gleich breit, Gruppe zentriert)
+- [x] Jahresauswahl ohne Rasterverschachtelung (`.jahr-auswahl`)
+- [x] Einstellungen-Akkordeon und Berechnungs-Monatskarten auf `db-accordion` (`<details>`)
+- [x] Bootstraps `Collapse`-Plugin entfernt (`main.ts`, `onboardingValidation.ts`)
+- [x] Floating-Label-Platzhalter wieder ausgeblendet (Layer-Reihenfolge hatte ihn eingefaerbt)
+
+### Review
+
+- Ergebnis: `.row`/`.col-*`/`.container`/`.accordion-*` kommen in `src/` nicht mehr vor. Von den
+  Bootstrap-Plugins ist nur noch `Popover` geladen. Zwei Altlasten fielen dabei auf und sind
+  behoben: die Knopfreihen waren mit gestreckten Rasterspalten nicht mehr zentriert, und die
+  Floating-Labels ueberlagerten ihren Platzhalter (Layer-Reihenfolge, war schon vorher so,
+  aber nur bei offenem Akkordeon sichtbar).
+- Verifikation: `bunx --bun tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` 2085/2085,
+  `bun run build` erfolgreich. Sichtpruefung im Dev-Server: Startseite (1300/768/412 px),
+  Einstellungen mit offenem und geschlossenem Akkordeon (1300/412 px), Passwort-Dialog
+  (1300/412 px). Kein horizontaler Ueberlauf in keiner Breite.
+
+## Phase H (3): Buttons auf DB UX
+
+- [x] 257 Button-Stellen in 59 Dateien auf `db-button` + `data-variant`/`data-color`/`data-size`
+- [x] `btn-close` -> DB-Ghost-Icon-Button mit Text (vorher ohne Namen fuer Screenreader)
+- [x] `btn-group` -> `.knopfgruppe`
+- [x] `MyButton` nimmt DB-Attribute direkt statt Bootstrap-Klassenliste
+- [x] `confirmDialog`: `confirmClass` -> `confirmVariant` + `confirmColor`
+- [x] Dark-Theme-Korrekturen fuer `.btn-outline-*` entfernt (lasen `--bs-btn-*`)
+- [x] Tests auf die neuen Selektoren umgestellt (7 Dateien)
+
+### Review
+
+- Ergebnis: `btn`-Klassen kommen in `src/` nicht mehr vor. Im Browser gemessen: 0 Elemente mit
+  Bootstrap-Button-Klasse, 27 `db-button`, alle mit `data-variant`. Ein Nebenbefund: der
+  Hinzufuegen-Knopf in `OeTagInput` hatte gar keinen zugaenglichen Namen -- jetzt
+  `aria-label="Wert hinzufügen"`.
+- Verifikation: `bunx --bun tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` 2086/2086,
+  `bun run build` erfolgreich.
+
+## Naechster Schritt (Phase H, offen)
+
+Der Utility-Sweep ist zur Haelfte erledigt (Raster, Akkordeon, Buttons). Was bleibt, nach
+Groesse sortiert -- Zahlen sind Klassenvorkommen in `class`/`className`-Attributen:
+
+- Abstaende `m*`/`p*`/`gap-*` (~960) -- braucht eigene App-Utilities oder Ersatz durch `gap`
+- Formulare `form-control`, `form-label`, `form-check`, `input-group`, `form-floating` (~578)
+  -> DB-Komponenten `db-input`, `db-select`, `db-checkbox`, `db-switch`
+- Text `text-*`, `fs-*`, `fw-*`, `lh-*` (~467)
+- Flex/Ausrichtung `d-flex`, `justify-content-*`, `align-items-*` (~347)
+- Display `d-*` (~288)
+- Komponenten `card`, `alert`, `badge`, `nav`, `table`, `list-group` (~250)
+  -> `db-card`, `db-infotext`/`db-notification`, `db-tag`, `db-tabs`, `db-table`
+- Farben/Rahmen `bg-*`, `border-*`, `rounded-*`, `shadow-*` (~223)
+- Danach: `Popover`-Plugin, `@layer bootstrap`-Import raus, `bootstrap`/`@types/bootstrap`/
+  `@popperjs/core` deinstallieren, `bridge.css` abbauen.
+
+Offener Punkt fuer die Sichtpruefung: der Seed-Login schlaegt gegen das echte Backend fehl
+(Token-Refresh), deshalb mounten die React-Tabs Bereitschaft/EWT/EA/Neben im Smoke-Test nicht.
+Entweder einen Testbenutzer bereitstellen oder die Token-Antwort per Request-Interception
+faelschen.
+
+## Phase H (4): Formulare auf DB UX
+
+Bootstraps Formular-CSS ist der letzte grosse Klassenblock vor dem Rauswurf (~578 Vorkommen in
+rund 60 Dateien). DB liefert dafuer fertige Bausteine, die ohne JS auskommen: `db-input`,
+`db-select`, `db-checkbox`, `db-switch` -- jeweils Huelle mit `<label>` + Feld darin.
+Zuordnung (aus `@db-ux/core-components/build/styles/bundle.css` verifiziert):
+
+| Bootstrap                                           | DB                                                                     |
+| --------------------------------------------------- | ---------------------------------------------------------------------- |
+| `form-floating` + `form-control`                    | `.db-input[data-variant="floating"]` (Label vor dem Feld)              |
+| `form-control` + eigenes `form-label`               | `.db-input` mit `<label>` in der Huelle                                |
+| `form-select`                                       | `.db-select`                                                           |
+| `form-control-sm`/`form-select-sm`/`input-group-sm` | `data-density="functional"` an der Huelle                              |
+| `input-group` + `input-group-text`-Icon             | `data-icon="…"` an der Huelle (reines CSS, `content: attr(data-icon)`) |
+| `input-group` mit Text-Praefix/Knopf                | App-Klasse `.feldgruppe` (DB hat keine Entsprechung)                   |
+| `form-check` (+ `form-check-input`/`-label`)        | `.db-checkbox` mit Feld **im** Label                                   |
+| `form-check form-switch`                            | `.db-switch` (`role="switch"` am Input)                                |
+| `form-text` / `invalid-feedback`                    | `.db-infotext` (`data-size="small"`, `data-semantic="critical"`)       |
+| `form-label`                                        | entfaellt (Label steht in der Huelle)                                  |
+
+- [ ] `src/index.html` (98 Stellen): Persoenliche Daten, Jahr-Auswahl, Monatswechsel
+- [ ] `main.ts`: `Popover`-Plugin raus -- der einzige verbliebene Aufrufer ist das Jahr-Feld,
+      es bekommt einen `db-tooltip` wie die Tabellenzellen seit Phase F
+- [ ] `.tsx`-Sweep (~55 Dateien), Schwerpunkt Admin/FormularEditor und die Feature-Modals
+- [ ] `addressValidation.ts`: `closest('.input-group, .form-floating, …')` auf `.db-input`,
+      Fehlertext als `db-infotext` statt `invalid-feedback`; `is-invalid` faellt weg
+      (`data-custom-validity="invalid"` wird bereits gesetzt)
+- [ ] `styles.scss`: Bootstrap-Formular-Korrekturen (Floating-Platzhalter, `.form-check`-Regeln
+      in Signatur-Fusszeile und Zulagen-Liste, `.form-floating.required`-Sternchen) durch
+      DB-taugliche Regeln ersetzen; `.feldgruppe` anlegen
+- [ ] `was-validated` (4 Dialoge): Bootstrap-Klasse ohne Wirkung im DB-Markup -- durch
+      `data-custom-validity` am jeweiligen Feld ersetzen
+- [ ] Tests nachziehen
+
+### Verifikationskriterien (H4)
+
+- `grep -rE "form-control|form-select|form-check|form-switch|form-floating|form-label|form-text|input-group|invalid-feedback|is-invalid|was-validated" src/` ist leer
+- `bootstrap/js` kommt in `src/` nicht mehr vor (Popover war das letzte Plugin)
+- `typecheck`, `lint` 0 Fehler, Testsuite ohne neue Fehlschlaege, `build` erfolgreich
+- Sichtpruefung: Einstellungen (Persoenliche Daten, Jahr-Auswahl), ein Add- und ein
+  Editor-Dialog je Feature, Admin-Vorlageneditor, Anmelde-/Registrier-Dialog -- hell und dunkel,
+  1300 px und 412 px
+
+**Umgebungshinweis:** In diesem Container fehlen `ASSET_PASSWORD`/`ASSET_INIT_VECTOR`, die
+DB-Markenassets sind deshalb unentschluesselt (`*.svg.enc`). `test/icons.dbSet.test.ts` faellt
+dadurch mit 3 Tests aus -- unabhaengig von dieser Aenderung.
+
+## Aktueller Plan: Icon-Satz austauschbar machen (Vorbereitung, KEIN Austausch)
+
+**Ziel:** Der DB-UX-Icon-Satz (`@db-ux/db-theme-icons`, DB-Font-Lizenz) soll spaeter ohne
+Anfassen der ~160 Aufrufstellen gegen einen freien Satz (z. B. Material Symbols) getauscht
+werden koennen. Jetzt nur die Umschalt-Mechanik bauen; Laufzeitverhalten bleibt exakt gleich
+(DB-Icons weiter aktiv).
+
+**Ansatz (mit User abgestimmt):** CSS-Remap-Layer. Render-Weg bleibt `data-icon` +
+Icon-Font-Ligatur. DB-UX rendert `[data-icon]::before { content: var(--db-icon, attr(data-icon)) }`
+-- der `--db-icon`-Override ist der vom Design-System vorgesehene Angelpunkt. Ein Generator
+erzeugt aus der Registry eine `iconset.<satz>.css` mit `[data-icon="<db>"]{--db-icon:"<ziel>"}`.
+Umschalten = eine `@import`-Zeile + `--db-icon-font-family` + `@font-face`.
+
+**core-components-interne Icon-Namen (~15, z. B. `.db-select`-Chevron, Notification-Icons):**
+laut Abstimmung nur dokumentiert, kein Code jetzt -- Aufgabenliste im Runbook-Kommentar.
+
+- [x] `src/ts/components/iconRegistry.ts` -- Single Source of Truth: jeder im `src/` genutzte
+      DB-Icon-Name -> `{ material: string; hinweis?: string }`. Typ `DbIconName`. Kopf-Kommentar
+      = Swap-Runbook. `theme-auto`/`filter-off` (Eigenbau-SVG, `.app-icon`-Maske) und `none`
+      (Logo-Abschaltung) bleiben aussen vor (`NICHT_REMAPPT`).
+- [x] `scripts/gen-iconset.mts` -- liest die Registry, schreibt `src/scss/iconset.material.css`
+      (deterministisch sortiert, "GENERIERT -- nicht editieren"-Kopf, eigene `@layer app`).
+      `--check`-Flag fuer den Drift-Test.
+- [x] `src/scss/iconset.material.css` -- generierte Ausgabe, eingecheckt, **nicht importiert**.
+- [x] `src/scss/db-ux.css` -- auskommentierter `@import './iconset.material.css';` plus
+      Runbook-Kommentar (Umschaltschritte).
+- [x] `src/scss/styles.scss` -- auskommentierter `ICON-SATZ`-Block (`@font-face` Material
+      Symbols lokal gebuendelt, `--db-icon-font-family`, `font-variation-settings`).
+- [x] `package.json` -- Script `"icons:gen": "bun scripts/gen-iconset.mts"`.
+- [x] `test/iconRegistry.test.ts` -- (a) jeder `data-icon="…"`-/Ternary-Literal in `src/` ist
+      Registry-Key (oder `NICHT_REMAPPT`); (b) JS-Tabellen-Icons sind Registry-Keys; (c) jedes
+      `material`-Ziel nicht leer/ohne Leerzeichen; (d) `iconset.material.css` deckungsgleich mit
+      `renderIconsetCss()` (Drift-Schutz).
+- [x] `frontend/CHANGELOG.md` (77) + Review unten.
+
+### Verifikationskriterien (Icon-Swap-Prep)
+
+- [x] `bun run typecheck` / `bun run lint` / `bun run lint:css` 0 Fehler (lint:css 90 Warnungen,
+      unter Ratsche 93, keine aus den neuen Dateien).
+- [x] `bun run icons:gen` erzeugt die Datei ohne weiteren Git-Diff (Registry und CSS synchron).
+- [x] `bun test --isolate` 2100 pass / 0 fail (davon `test/iconRegistry.test.ts` 4/4).
+- [x] `bun run build` erfolgreich; `dist/assets/index-*.css` enthaelt **keine** Remap-Regeln
+      (`grep` auf `--db-icon:"expand_more"` / `data-icon="arrow_down"` = 0) -- die neue CSS wird
+      nicht importiert.
+- [ ] Sichtpruefung Startseite + je ein Feature-Dialog: Icons unveraendert (DB-Satz aktiv) --
+      offen (Container ohne `ASSET_*`, DB-Icon-Schrift hier ohnehin nicht dekodierbar).
+
+### Review (Icon-Swap-Prep)
+
+Reine Vorbereitung, kein Verhaltens- oder Bundle-Unterschied. Der Render-Weg bleibt
+`data-icon` + Icon-Font-Ligatur; neu ist nur der vom Design-System bereits vorgesehene
+`--db-icon`-Override als generierte, noch nicht importierte Remap-Schicht. Aufrufstellen
+(~160 in ~44 Dateien) unangetastet -- der Swap ist dadurch ein Diff in 3 Dateien + ein
+Font-Bundle statt einer Sweep-Migration.
+
+Bewusste Grenzen: (1) core-components-interne Icon-Namen nur im Runbook, nicht im Generator
+(so abgestimmt). (2) Einige Material-Zuordnungen sind Naeherungen -- als `hinweis` in der
+Registry und als `/* … */` in der generierten CSS markiert, beim echten Swap zu sichten.
+(3) `iconRegistry.ts` haelt DB->Material, `dbIcons.ts` weiter Material->DB (alte
+Vergleichsseite) -- doppelte Pflege, aber `dbIcons.ts` ist nur noch Referenz.
+
+Der Container hat keine `ASSET_*`-Secrets, die DB-Icon-Schrift ist unentschluesselt; die
+visuelle Gegenprobe (Icons unveraendert) muss in einer Umgebung mit Assets erfolgen.
+
+---
+
+## PDF-Summenzeilen: leere Zelle statt 0 bei fehlender Zulagenart (2026-09-09)
+
+User-Vorgabe: Wenn eine Spalte keine Zulagen hat (kein Code / Zulagenart), sollen die
+Summenzeilen keine Zahl zeigen -> `undefined` / leere Zelle.
+
+- [x] `summeGeldwertGruppe()` / `summeBereinigtGruppe()` -> `number | undefined`; gemeinsame
+      Hilfsfunktion `zulagenEintraegeGruppe()`; leere Eintragsliste -> `undefined`.
+- [x] `wert.ts` `berechneAggregation()` + `sonderZeileZelleWert()`: `code === undefined`
+      (unbelegter dynamischer Platz) -> leere Zelle; `!gruppe` bleibt bei `0`.
+- [x] Tests angepasst/erweitert (leere-Zelle- vs. 0-Fälle getrennt).
+
+### Verifikation
+
+- `bunx tsc --noEmit` sauber, `bun run lint` 0 Fehler (21 vorbestehende Warnungen).
+- `bun test test/infrastructure/pdf/ --isolate` 395/395.
+- `bun run build` grün.
+- Vorbestehende ~9 Testfehler (Bereitschaft*/AdminLogBrowser) sind fremde WIP im Submodul,
+  ohne meine Änderung ebenfalls rot (per gezieltem `git stash` der 4 Dateien geprüft).
+
+---
+
+## Phase M0/M1: CustomTable-Rendering nach React (2026-09-12)
+
+Planungssession vorab (Web-Recherche + `db-ux`-MCP-Verifikation): TanStack Table v9 seit
+2026-08-04 GA, deckt aber weiterhin nicht den Risikoblock (autoSave-Kopplung, Inline-Edit,
+Soft-Delete/Undo, Breakpoint-Umschaltung) ab; DB UX liefert weiterhin keine interaktive
+Tabellen-Komponente. Entscheidung: **M-a Portierung** (Details: `plan-react-umbau.md`
+Abschnitt „Phase M"). Kontrakt-Recherche per Explore-Agent vor Umsetzung (Row/Rows/Column/
+autoSave-Kopplung, DOM-Struktur von `customTableRender.ts`, Test-Abdeckung).
+
+- [x] **Kernerkenntnis:** die urspruenglich geplante Slice-Reihenfolge (M1 EA, M2 Neben, ...)
+      war hinfaellig -- `CustomTable.ts` ist eine gemeinsame Klasse fuer alle 6 Instanzen
+      (`tableBZ`, `tableBE`, `tableE`, `tableN`, `tableEA`, `tableVE` -- Korrektur: 6 statt der
+      urspruenglich angenommenen 12). M0 (Spike) und M1 (Umsetzung) sind dadurch faktisch ein
+      einziger Schritt geworden, der alle 6 Tabellen gleichzeitig umstellt.
+- [x] `customTableRender.ts` (333 Z., geloescht) -> `CustomTableView.tsx`
+      (`infrastructure/table/`). `CustomTable.ts`s vier `draw*()`-Methoden rufen jetzt
+      einheitlich `mount(this.$el, <CustomTableView table={this} />)` (per `flushSync`
+      synchron, exakt der bisherige Render-Vertrag). `Row.ts`/`Rows.ts`/`Column.ts`
+      **komplett unveraendert** (bereits reine Datenklassen, riefen schon vorher nur
+      `drawRows()`/`_notifyChange()` auf). `el.instance`-Vertrag unangetastet: `$el` bleibt
+      die `<table>` selbst, React mountet direkt hinein (kein Wrapper-Div).
+- [x] **Drei echte Korrekturen unterwegs gefunden** (nicht im Plan vorgesehen): 1. `tr.data = row` wird extern gelesen (`attachBerechnenToggleListeners.ts`, EWT) --
+      per `ref`-Callback nachgebildet, nicht nur renderinternes Bookkeeping wie vermutet. 2. Mobiler Zeilen-Klick-Handler brauchte `event.view?.innerWidth`, nicht das globale
+      `window.innerWidth` -- Unterschied nur mit synthetischen Test-Events sichtbar. 3. `column.html`-Spalten (EWT: `Schicht`/`berechnen`) liefern jetzt JSX direkt statt
+      HTML-Strings fuer `dangerouslySetInnerHTML` (sauberer fuer die interaktive
+      `berechnen`-Checkbox) -- `EwtTab.tsx`s Parser umgestellt, Spaltenvertrag
+      (`parser: string | number`) unveraendert gelassen (Typ-Erweiterung auf `ReactNode`
+      haette 4 fremde Show/Edit-Modals gebrochen, die denselben Parser wiederverwenden --
+      stattdessen lokaler Cast an den zwei `html:true`-Stellen).
+- [x] Zeilen-Aktionsknoepfe (Edit/Delete/Undo) und Fusszeilen-Knoepfe (Hinzufuegen/
+      Alle-loeschen/Custom) auf echte `<DBButton>` umgestellt (User-Korrektur waehrend der
+      Umsetzung, zwei Iterationen) statt der Handmarkup-Bruecke `erzeugeDbButton`/
+      `erzeugeDbButtonAusLook` -- `infrastructure/ui/dbButton.ts` auf den `DbButtonLook`-Typ
+      eingedampft (den brauchen die `customButton`-Optionen noch), Funktionen + ihr Test
+      (`dbButton.test.ts`) geloescht.
+- [x] **Bekannte, dokumentierte Nebenwirkung (nicht behoben):** Klick auf einen
+      Zeilen-Aktionsknopf loest `React: "flushSync was called from inside a lifecycle method"`
+      in der Dev-Konsole aus (alle 6 Tab-Komponenten rufen `createCustomTable()` in ihrem
+      eigenen `useEffect()` auf -- unauffaellig bei Vanilla-DOM, sichtbar seit `draw()` intern
+      `flushSync` nutzt). Nicht fatal: Dev-only, keine Testfehlschlaege, keine beobachtbare
+      Fehlfunktion. Sauberer Fix wuerde die Trigger-Architektur aendern (z. B.
+      `useSyncExternalStore` statt synchronem `mount()`) und den `el.instance`-Vertrag
+      gefaehrden -- bewusst zurueckgestellt.
+- [x] Tests angepasst: `CustomTable.test.ts` (748 Z., `event.view`-Fix, sonst unveraendert
+      gruen), `CustomTable.xss.test.ts` (ein Test auf neuen JSX-Vertrag umgestellt).
+
+### Verifikation
+
+- `bunx tsc --noEmit` sauber, `bun run lint` 0 Fehler (21 vorbestehende Warnungen, keine neuen).
+- `bun run test`: 2119/2119 (volle Suite inkl. `autoSave`/`savePipeline`/`overlapGuard`/
+  `changeTracking`, alle 6 Tabellen indirekt mitgetestet).
+- `bun run lint:css` unveraendert (84 vorbestehende Warnungen), `bun run build` grün.
+- Puppeteer (Hell+Dunkel): `tableEA` (Sortierung auf/absteigend, Soft-Delete zeigt Undo-Button,
+  Add/Edit/Delete-Buttons, Fusszeile), `tableE`/EWT (Berechnen-Schalter korrekt
+  checked/unchecked, `Schicht`-Text "Bereitschaft + Nacht" mit Zeilenumbruch, `tr.data`
+  nachweislich gesetzt, Custom-Footer-Button "Alle Zeiten entfernen").
+- Nachtrag (User-Wunsch vor Commit): `tableN`/`tableBZ`/`tableBE`/`tableVE` zusaetzlich per
+  Puppeteer live geprueft -- Neben (2 Zeilen), Bereitschaft BZ+BE (je 1 Zeile,
+  `datetimeParser`-Formatierung korrekt), VE im Einstellungen-Accordion (4 Vorlagen-Zeilen,
+  Breakpoint-Spaltenumschaltung, Custom-Button "Standardeinstellungen"). **Alle 6 Instanzen
+  damit live bestaetigt.**
+
+---
+
+## Fix: Impressum-Schliessen-Knopf + Theme-Switcher im Burger-Menue (2026-09-12)
+
+User-Meldung: Impressum-Dialog laesst sich ueber den Fusszeilen-Knopf nicht schliessen;
+Theme-Umschalter im mobilen Burger-Menue schliesst beim Anklicken die ganze Navigation statt
+das Design-Untermenue zu oeffnen. Beide Regressionen stammen aus Phase K (K3/K5).
+
+- [x] **Impressum, zwei unabhaengige Ursachen (User meldete "geht immer noch nicht" nach dem
+      ersten Fix -- zweite Ursache erst dadurch gefunden):** 1. `ImpressumDialog.tsx`s Fusszeilen-Button hatte keinen `onClick` (Annahme war,
+      `data-action="close"` wuerde ueber einen globalen `dbDialog.ts`-Listener laufen --
+      falsch, siehe 2). Fix: `onClick={onClose}`. 2. **Eigentlicher Blocker:** `styles.scss`s `footer { pointer-events: none; }` war ein
+      Tag-Selektor (fuer `.app-footer` gedacht), traf aber JEDES `<footer>` im Dokument --
+      auch `DBDrawerFooter` (rendert selbst `<footer class="db-drawer-footer">`). Der Knopf
+      war optisch da, aber `elementFromPoint()` an seiner Position lieferte den
+      `.db-drawer-container` dahinter -- fuer echte Mausklicks unerreichbar. Per JS
+      ausgeloeste Klicks (`.click()`, keine Hit-Testing) verdeckten das in meinem ersten
+      Test. Fix: Selektor auf `.app-footer` beschraenkt.
+- [x] **Theme-Switcher:** Root-Cause im DB-UX-Quellcode verifiziert (`header.js`):
+      `DBHeader`s Drawer-Kopie der Navigation traegt einen Klick-Listener, der bei JEDEM Klick,
+      dessen Ziel `.closest('.db-navigation-item')` matcht, die Schublade schliesst
+      (`isEventTargetNavigationItem`) -- die Desktop-Kopie hat diesen Listener nicht.
+      `ThemeSwitcher.tsx`s Umschalter-Knopf sitzt in genau so einem `<li>` und rief nie
+      `stopPropagation()` auf. Fix: `stopPropagation()` im Umschalter- und in den
+      Design-Options-Klicks.
+- [x] Lessons ergaenzt (`tasks/lessons.md`): DBHeader-Drawer-Autoclose-Falle, globaler
+      `footer`-Tag-Selektor trifft `DBDrawerFooter`, `.click()` vs. echtem Klick beim Testen.
+
+### Verifikation
+
+- `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler), `bun run test` (2119 pass),
+  `bun run build` gruen.
+- Puppeteer mit ECHTEN Maus-Klicks (`page.mouse.click`, nicht `.click()`): Impressum oeffnet
+  und schliesst korrekt per Mausklick auf den Fusszeilen-Knopf (`elementFromPoint()` an dessen
+  Position liefert jetzt den Knopf selbst, nicht mehr den Container dahinter). Theme-Umschalter
+  im Drawer: Klick expandiert das Untermenue (`aria-expanded` false→true), Drawer bleibt
+  `open===true`; Themenwahl (`dark`) greift (`data-mode="dark"`), Drawer bleibt weiterhin offen.
+
+## Fix: Konsolen-Fehler (flushSync-Warnung, fehlende key-Props, PWA-Info-Log) (2026-09-13)
+
+User-Meldung: Dev-Konsole zeigte beim Laden/Login und bei jedem Tabellen-Modal (Bereitschaft)
+mehrfach `flushSync was called from inside a lifecycle method`, dazu eine `key`-Prop-Warnung
+und ein nacktes `undefined`-Log aus `main.ts`. Die `flushSync`-Warnung war in Phase M0/M1 bewusst
+zurueckgestellt und dokumentiert worden ("Sauberer Fix wuerde die gesamte Trigger-Architektur
+aendern... bewusst zurueckgestellt") -- jetzt behoben, siehe `tasks/lessons.md` fuer die
+Ursachenanalyse.
+
+- [x] **flushSync-Reentranz:** Modul-Flag in `infrastructure/ui/reactRoot.ts`s `mount()` --
+      waehrend eines laufenden `flushSync` rendert ein verschachtelter `mount()`-Aufruf ohne
+      eigenes `flushSync`. Ref-Vertraege bleiben erhalten (React committet die verschachtelte
+      Sync-Lane beim Verlassen des aeusseren `flushSync` mit), kein Fallback (Microtask-Verzoegerung
+      der Modal-Oeffnung) noetig.
+- [x] **Fehlende `key`-Props:** `createEditorModalBereitschaftsZeit.tsx` (4 Stellen),
+      `createEditorModalBereitschaftsEinsatz.tsx` (5 Stellen, inkl. `Fragment`-Fall bei `LRE`).
+- [x] **`main.ts:77 undefined`-Log:** `console.log(pwaInfo)` nur noch in Dev
+      (`import.meta.env.DEV`), mit Fallback-Text bei fehlendem `pwaInfo` (User-Wunsch: Log in
+      Dev behalten, nur in Prod entfernen).
+- [x] Nicht App-Code: `Could not establish connection. Receiving end does not exist.` stammt von
+      einer Browser-Erweiterung, keine Massnahme.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler, 21 bzw. 84 vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` 2119/2119 gruen, `bun run build` gruen.
+- Puppeteer ohne Backend (`VorgabenU`-Fixture aus `test/mockData.ts`s `VorgabenUMock`
+  uebernommen, da ein unvollstaendiges Objekt `Einstellungen/index.ts`s Boot-Task mit einem
+  `pageerror` abbricht -- siehe `tasks/lessons.md`): Bereitschaft-Tab per direktem Modul-Import
+  (`mountBereitschaftTab()`) gemountet (verschachtelter Mount #1), Bearbeiten-Button geklickt
+  (verschachtelter Mount #2 via `showModal`) -- Konsole in beiden Faellen sauber, keine
+  `flushSync`- oder `key`-Warnung, Formularfelder korrekt mit den Zeilenwerten befuellt.
+
+### Review
+
+Root-Cause statt Symptom behoben: die Warnung kam nicht von einer einzelnen Fundstelle, sondern
+strukturell von jeder Verschachtelung zweier `mount()`-Aufrufe (Tabellen-Rendering + Modal-Oeffnung,
+oder Feature-Tab-Mount + Tabellen-Erzeugung im `useEffect`). Ein Guard an der einen zentralen
+Stelle (`reactRoot.ts`) deckt damit alle heutigen UND kuenftigen Verschachtelungen ab, statt jede
+Aufrufstelle einzeln zu entschaerfen (z. B. per `queueMicrotask` in jedem Tabellen-Handler). Die
+im Plan vorgesehene Fallback-Variante (Modal-Oeffnung per Microtask entkoppeln, falls der
+Ref-Vertrag bricht) war nicht noetig -- per Puppeteer bestaetigt, dass `ref.current` direkt nach
+`showModal()` gesetzt ist.
+
+## Phase N, Slice 1: App-Shell-Konsolidierung (2026-09-13)
+
+Naechster Schritt nach Phase M0/M1 laut `frontend/tasks/plan-react-umbau.md`. Scope vorab per
+Exploration korrigiert (siehe Plandoku): Feature-`index.ts`-Konvertierung war schon erledigt,
+`dbDialog`/`featureLifecycleRegistry`/`syncFeatureTabs`/`tabController`-Hauptteil bewusst NICHT
+Teil dieser Slice (orthogonal zur Shell, siehe "Slice 2" im Plandoku).
+
+- [x] `src/ts/App.tsx` (neu): komplette `index.html`-Body-Struktur als ein React-Baum, identische
+      `id`/`class`-Attribute. `AppHeader`/`AppFooter`/`StartTab`/`BerechnungTab`/
+      `EinstellungenTab` jetzt echte JSX-Kinder statt fuenf separater `mount()`-Aufrufe;
+      `#appHeaderRoot`/`#appFooterRoot`-Wrapper-Divs entfallen (nirgends sonst referenziert).
+- [x] `main.ts` → `main.tsx`, `index.html` auf `<noscript>` + `<div id="app">` reduziert.
+- [x] `frontend/CLAUDE.md` (Architektur/Hybrid-Rendering) aktualisiert.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler), `bun run test --isolate` 2119/2119
+  unveraendert, `bun run build` gruen.
+- Puppeteer ohne Backend: kompletter Boot-Log identisch zum Vor-Umbau-Stand (`boot:berechnung` →
+  `boot:einstellungen` → `cookie:check` → `Benutzer gefunden` → `sr:*` → `boot:auth` →
+  `boot:main-ui`, kein `pageerror`), Tab-Wechsel per Klick, Hash-Sync ueberlebt vollen Reload,
+  `#start.active > .schwelle`-Selektor weiterhin erfuellt, verschachtelte `mount()`-Aufrufe
+  (Feature-Tab + Tabellen-Modal) unveraendert warnungsfrei.
+
+### Review
+
+Ein direktes `createRoot(#app).render(<App/>)` (erster Versuch) verletzte die dokumentierte
+Ordering-Invariante aus `main.ts` fuer den Boot-Ablauf: es committet das DOM synchron, plant
+`useEffect`s aber nur asynchron ein -- der erste `registerAppStartTask`-Callback lief dadurch vor
+`EinstellungenTab`s Tabellen-Effekt und warf `Tabelle nicht gefunden`. Nur per echtem
+Browser-Boot-Lauf gefunden, nicht durch `tsc`/`lint`/`bun test`/`build` (kein Test rendert die
+volle Boot-Sequenz). Fix: Root-Mount ueber denselben `mount()`-Helfer wie alle anderen
+Mount-Stellen im Code (`flushSync`, arbeitet Effekte synchron mit ab) statt `createRoot()` direkt
+-- Lehre in `tasks/lessons.md` festgehalten. Damit bestaetigt: das Vorab-Verifizieren im echten
+Browser (statt nur `tsc`/`lint`/Tests zu vertrauen) hat hier einen Boot-Blocker gefunden, der sonst
+erst beim naechsten manuellen Test im Browser aufgefallen waere.
+
+## Fix: Datumsfeld "Anfang" in "Neue Bereitschaft eingeben" nicht aenderbar (2026-09-13)
+
+User-Meldung waehrend der Verifikation von Phase N: im Add-Modal (`createAddModalBereitschaftsZeit.tsx`)
+liess sich das Anfangs-Datum nicht mehr aendern, auffaellig aber: die abgeleitete Zeit aktualisierte
+sich trotzdem korrekt. Alt-Bug, unabhaengig von der heutigen Phase-N-/Konsolen-Fehler-Arbeit (Datei
+zuletzt in Phase J5/J8 geaendert) -- User bat um sofortigen Fix trotz fehlendem Bezug zum Tagesthema.
+
+- [x] Root-Cause: `datumInput()`, `createDateInputElement`, `createSonderDateInputElement`
+      setzten `value={...}` (React "controlled") auf Feldern, deren Folgewert tatsaechlich per
+      `applyBereitschaftsVorgabe`/`updateBereitschaftsDatum` imperativ per `input.value = ...`
+      von aussen gesetzt wird -- ohne begleitenden State-Re-Render sprang React den Wert beim
+      naechsten Tick auf den zuletzt gerenderten `value` zurueck.
+- [x] Fix: alle drei Stellen in `createAddModalBereitschaftsZeit.tsx` auf `defaultValue`
+      umgestellt (chirurgisch, nur diese Datei -- `DbFeld.tsx` selbst NICHT angefasst, da dort
+      ~60 andere Aufrufstellen haengen und `MyInput.tsx`s bereits vorhandene, aehnliche Loesung
+      fuer Faelle MIT `onChange` ohnehin nicht ausreicht, siehe `tasks/lessons.md`).
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen unveraendert),
+  `bun run test --isolate` 2119/2119 unveraendert, `bun run build` gruen.
+- Puppeteer: Modal ueber `btnESZ` geoeffnet, `#bA` per echtem `input`/`change`-Event auf einen vom
+  berechneten Default ABWEICHENDEN Wert gesetzt (sonst waere der Test aussagelos, siehe Lehre) --
+  Wert bleibt nach dem Event UND nach zusaetzlicher Wartezeit erhalten (kein Snapback mehr),
+  `#bE` korrekt auf den neuen Wochenzyklus nachgezogen, keine Konsolenfehler.
+
+## Phase N Slice 2 — `tabController`-Pane-Toggle in Store/Hook verlagert (2026-09-13)
+
+Laut Plandoku bewusst riskant und fuer eine eigene Session zurueckgestellt (Slice 1 lief bereits
+gebuendelt in den Root-Gitlink). User-Entscheidung nach Rueckfrage: jetzt umsetzen.
+
+- [x] `tabController.ts`s `zeigeTab()`: `.tab-pane`-Klassen-Toggle (`active`/`show`) der
+      Hauptgruppe (`#tabContent`) entfernt -- `App.tsx`s Panes lesen `activeTabStore` per
+      `useActiveTab()` und berechnen ihre Klasse selbst. "Schon aktiv"-Kurzschluss nutzt dafuer
+      `getAktivenTab()` statt `classList.contains('active')`. Admin-Subnav (eigene, nicht-
+      Hauptgruppe) unveraendert am alten DOM-Mechanismus.
+- [x] `reactRoot.ts`: `flushExtern()` aus `mount()`s bestehendem `flushSync`+Re-Entranz-Guard
+      extrahiert (generischer nutzbar als nur fuer Root-Renders). `zeigeTab()` ruft
+      `flushExtern(() => setAktivenTab(id))` fuer die Hauptgruppe.
+- [x] `aktiverTab()` (exportierter Helfer in `tabController.ts`) liest jetzt `activeTabStore`
+      statt DOM.
+- [x] `test/ui.tabController.test.ts`: zwei DOM-Klassen-Assertions fuer Hauptgruppen-Panes
+      entfernt (kein React-Baum in diesem Unit-Test -- das ist jetzt `App.tsx`s Job).
+- [x] `tasks/plan-react-umbau.md` Slice-2-Abschnitt abgehakt/dokumentiert.
+
+### Warum ueberhaupt riskant (und wie geloest)
+
+`berechnungMonatsFenster.ts` hoert auf `tab:shown` und misst darin synchron `#Berechnung`s
+`clientWidth` (`ermittleFensterGroesse()`) -- ein Pane, das erst asynchron sichtbar wird
+(React-Default ohne `flushSync`), liefert dort `clientWidth: 0` und eine falsche Spaltenzahl.
+Vorher war das kein Problem, weil `zeigeTab()` die Pane-Klassen synchron per DOM-Handschrieb
+gesetzt hat, VOR dem Event-Dispatch. Fix: derselbe `flushSync`-Trick wie bei `mount()` (Slice 1,
+Konsolen-Fehler-Fix) -- `flushExtern()` zwingt Reacts Reaktion auf die Store-Aenderung synchron
+vor die Fortsetzung von `zeigeTab()`.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen unveraendert),
+  `bun run test --isolate` 2119/2119, `bun run build` gruen.
+- Puppeteer (`bun run dev:local`, eigener Port, NICHT den laufenden User-Dev-Server anfassen):
+  Klick auf Hauptnav-Switcher -> Pane hat `display:block`/`active`/`show` DIREKT nach `.click()`,
+  noch OHNE `await`/Tick (Beweis fuer die synchrone Flush-Garantie) -- keine `flushSync`-Konsolen-
+  Warnung. Hash-Sync, Tastatur-Navigation (`ArrowRight`), Deep-Link-Reload (`#Einstellungen`) und
+  `#start.active > .schwelle`-Selektor unveraendert funktionsfaehig.
+- A/B per `git stash`: dieselbe Puppeteer-Pruefung gegen den unveraenderten Vor-Slice-2-Stand
+  laufen lassen, wenn ein Symptom unklar bleibt, ob es eine Regression ist -- so gefunden, dass
+  `berechnungMonatsFenster.ts`s Label/Spaltenzahl in einer Backend-losen Testsession (kein echter
+  Login, `#berechnung-tab` bleibt via `navigationVisibleStore` unsichtbar) auf BEIDEN Staenden
+  identisch leer bleiben -- keine Slice-2-Regression, ausserhalb des Scopes.
+
+### Review
+
+Kein neuer Testfall fuer `App.tsx`s Pane-Klassenberechnung selbst angelegt (kein bestehendes
+Render-Test-Setup fuer die volle App-Shell, waere ein groesserer separater Aufwand mit vielen
+Mocks) -- stattdessen ausschliesslich per Puppeteer im echten Browser verifiziert. Bei kuenftigen
+Aenderungen an `App.tsx`s Pane-Struktur oder `activeTabStore` erneut per Puppeteer gegenpruefen,
+nicht nur auf `tsc`/`bun test` verlassen.
+
+## `data-density="regular"`-Untersuchung + Fix: Zeilen-Knoepfe zu klein (2026-09-13)
+
+User-Anstoss: `data-density="functional"` auf `regular` umstellen, vorher/nachher ueber alle Tabs
+und Breakpoints testen.
+
+- [x] Automatisierte Messung: 7 Tabs (Start/Bereitschaft/EWT/Neben/EA/Berechnung/Einstellungen)
+      x 4 Breakpoints (375/768/1024/1440px) x 2 Dichten, per Puppeteer (Feature-Tabs ueber
+      direkten Modul-Import + `mount<Feature>Tab()`, da kein Backend/Login verfuegbar).
+      Automatisiert erfasst: Body-/Pane-/Nav-Overflow, Ueberlauf-Kandidaten (Elemente ueber den
+      Viewport-Rand hinaus), Konsolenfehler, `berechnungMonatsFenster`-Kennzahlen.
+- [x] Einzige gefundene Abweichung: 375px/Bereitschaft. Per Screenshot bestaetigt: zwei echte
+      Regressionen unter `regular` -- (1) Bereitschaftszeitraum-Tabelle ueberlaeuft (Pause-Spalte
+      faellt raus), (2) fixierter App-Footer rutscht in den Seiteninhalt (`body {
+    padding-block-end: 3.5rem }` in `styles.scss:631` ist ein Hartwert, kalibriert auf die
+      Footer-Hoehe bei `functional`s 14px-Wurzel -- bei `regular` reicht die reservierte Flaeche
+      nicht mehr).
+- [x] Rueckfrage ergab: das eigentliche Problem war nicht die globale Dichte, sondern
+      `size="small"` an den Zeilen-Aktions-Knoepfen (Bearbeiten/Loeschen). Chirurgischer Fix
+      OHNE Density-Aenderung: `CustomTableView.tsx`s `editingButton()` auf `size="medium"` --
+      17.5x17.5px -> 28x28px Klickflaeche (Puppeteer gemessen), gilt fuer alle Tabellen.
+- [x] Zusatzwunsch waehrend der Pruefung: `BereitschaftTab.tsx`s Von/Bis-Zellen zweizeilig
+      (Datum, Zeit) statt einer langen Zeile -- per `html: true`-Parser, Praezedenzfall
+      `EwtTab.tsx`s `schichtParser`.
+- [x] `index.html` NICHT commitet: User bearbeitet die Datei parallel selbst weiter (Stand beim
+      Abschluss dieser Aufgabe: `data-density="regular"` gesetzt, mit den zwei oben genannten,
+      weiterhin unbehobenen Bugs) -- bewusst dem User ueberlassen. `NebenTab.tsx` (Tag-Parser
+      mit "-"-Fallback) ebenfalls eine parallele User-Aenderung, nicht commitet.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen unveraendert),
+  `bun run test --isolate` 2119/2119, `bun run build` gruen.
+- Puppeteer: Buttons in Bereitschaft-/EWT-Tabellen sichtbar groesser (Screenshot), bestehende
+  zweizeilige `html: true`-Zellen (EWT "Bereitschaft + Nacht") unveraendert funktionsfaehig,
+  kein neuer Layout-Bruch bei 375px/1024px.
+
+### Review
+
+Sollte `regular` spaeter doch gewuenscht sein: `body`s `padding-block-end`-Hartwert in
+`styles.scss:631` durch eine tatsaechlich gemessene/CSS-Variable-basierte Footer-Hoehe ersetzen
+(nicht per Auge neu kalibrieren -- das bricht bei der naechsten Footer-Inhalts-Aenderung wieder),
+und die Bereitschaftszeitraum-Tabelle bei schmalen Breakpoints auf Ueberlauf pruefen (Pause-Spalte
+ggf. wie in EWT/Neben per `breakpoints`-Property ausblenden).
+
+## `data-density="regular"` doch eingefuehrt + Kopfzeilen-Fix (2026-09-13, Folgesession)
+
+User hat sich fuer `regular` entschieden (`index.html` steht seither so) und meldete: volle
+Kopfzeilen-Navigation erst ab 1215px sichtbar, darunter rechts abgeschnitten.
+
+- [x] Ursache gefunden: `DBHeader`s Mobil/Desktop-Weiche ist eine feste CSS-Media-Query
+      `min-width: 64em` -- `em` in Media Queries bezieht sich auf die Browser-Standard-
+      Schriftgroesse (16px), NICHT auf `data-density`s tatsaechliche `:root`-Groesse. Bei
+      `regular` (16px-Wurzel, groessere Abstaende als `functional`s 14px) braucht die Navigation
+      real mehr als die 1024px, ab denen `DBHeader` schon in den Desktop-Modus schaltet --
+      1024-1215px war eine Luecke, in der Inhalt abgeschnitten wurde.
+- [x] Fix: `useHeaderForceMobile()` (neu, `infrastructure/ui/useHeaderForceMobile.ts`) haelt
+      `DBHeader`s Burger-Navigation per offiziellem `forceMobile`-Prop bis zur tatsaechlich
+      benoetigten Breite erzwungen -- density-abhaengiger Schwellwert (`functional`: 1024px =
+      `DBHeader`s eigene Weiche, No-op; `regular`: 1215px, per Puppeteer-Bisektion gemessen mit
+      voll sichtbarer Navigation: eingeloggt, alle Tabs aktiviert, Admin-Rolle). In `AppHeader.tsx`
+      per `forceMobile={forceMobile}` verdrahtet.
+- [x] Erwogen und verworfen: kompletter Umstieg auf `db-control-panel-desktop`/`-mobile`
+      (vom User verlinkt, im installierten `@db-ux/react-core-components` 5.4.0 vorhanden) --
+      geprueft, ob diese Komponenten selbst Container-basiert automatisch umschalten: NEIN, auch
+      dort waere die Mobil/Desktop-Grenze eine von der App selbst zu setzende, feste Breite (kein
+      eingebauter Vorteil gegenueber `DBHeader` + eigenem `forceMobile`). Ein Komplettumbau der
+      gesamten Kopfzeile waere ein groesseres, riskanteres Vorhaben ohne belegten Mehrwert fuer
+      dieses konkrete Problem -- nicht gemacht.
+- [x] `index.html` (jetzt `data-density="regular"`, inkl. der parallelen User-Formatierung) sowie
+      `AppHeader.tsx`, `useHeaderForceMobile.ts` commitet. `BereitschaftTab.tsx`/`NebenTab.tsx`
+      weiterhin NICHT commitet -- laufende eigene Aenderungen des Users (Datumsformat DD.MM.YY,
+      LRE-Parser).
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen unveraendert),
+  `bun run test --isolate` 2119/2119, `bun run build` gruen.
+- Puppeteer: `.db-header-navigation-bar`s `scrollWidth === clientWidth` (kein Overflow) bei
+  1213-1300px unter `regular`, Burger sichtbar bis 1214px, volle Nav ab 1215px. Burger-Drawer
+  oeffnet weiterhin korrekt (Klick-Test), zeigt volle Navigation. `functional` bei 1024px
+  unveraendert (Hook wirkt dort als No-op).
+
+### Review
+
+Zwei aus der vorherigen Session bekannte, mit `regular` weiterhin offene Baustellen (siehe Review
+oben) bleiben unveraendert offen, da nicht Teil dieses Auftrags: Footer-`padding-block-end`-
+Hartwert (`styles.scss:631`) und Bereitschaftszeitraum-Tabellen-Ueberlauf bei 375px. Bei
+Gelegenheit nachziehen. Der `MIN_DESKTOP_WIDTH_PX`-Schwellwert in `useHeaderForceMobile.ts` ist,
+wie `berechnungMonatsFenster.ts`s `MONAT_MIN_PX`, ein gemessener Hartwert -- bei kuenftigen
+Aenderungen an den Hauptnav-Eintraegen (mehr/weniger/laengere Eintraege) per Puppeteer neu
+vermessen, im Code-Kommentar dokumentiert.
+
+## Header-Umbau: DBHeader -> DB UX Shell (2026-09-13, Folgesession)
+
+`useHeaderForceMobile.ts`s 1024/1215px-Notloesung durch einen echten Komponentenwechsel ersetzt --
+User-Entscheidung nach Rueckfrage (Plan-Mode, siehe `.claude/plans` der Session): kompletter
+Umstieg von `DBHeader`/`DBNavigation` auf DB UX' neueres "Shell"-System
+(`DBShell`/`DBControlPanelDesktop`/`DBControlPanelMobile`/`DBControlPanelNavigation(Item)`).
+
+- [x] `AppHeader.tsx` liefert nur noch die zwei Control-Panels (kein eigenes `DBShell` --
+      dessen CSS-Grid braucht Control-Panels UND `DBShellContent` als direkte Geschwister, siehe
+      `App.tsx`). Alle 8 Hauptnav-Punkte weiterhin FLACH (keine Gruppierung/Drilldown noetig,
+      siehe unten).
+- [x] `App.tsx`: `<DBShell><AppHeader/><DBShellContent>{...}</DBShellContent><AppFooter/></DBShell>`.
+- [x] `useHeaderForceMobile.ts` geloescht -- Shells eigene CSS-Weiche bei 48em (768px, exakt DB-
+      Quellcode-verifiziert: `shell.css` versteckt `.db-control-panel-mobile`/`-desktop`
+      wechselseitig bei `48em<width`/`width<=48em`) deckt den Bedarf bereits ab, ohne JS.
+- [x] Feature-Drilldown NICHT gebaut: `DBControlPanelNavigationItemGroup` (das Drilldown-Element)
+      ist zwingend an `DBControlPanelNavigation`s Shell-Kontext gekoppelt (kein Problem mehr seit
+      dem Shell-Umstieg) -- aber User stellte waehrend der Verifikation fest, dass
+      `DBControlPanelNavigation` bereits eingebaute Scroll-Buttons fuer nicht-passende Breiten
+      mitbringt (`.overflow-scroll-right-button`, per `ResizeObserverListener`) -- deckt die
+      urspruengliche Luecke (1024-1215px bei `regular`) bereits ab, Drilldown erwies sich als
+      unnoetig.
+- [x] `ThemeSwitcher.tsx` von Hell/Dunkel/Auto-Flyout (brach im neuen horizontal scrollenden
+      Nav-`<menu>`, funktionierte aber weiterhin mobil -- User-Fund) auf einfachen
+      Icon-Schalter umgestellt: `iconLeading="moon"` `iconTrailing="sun"` `visualAid` (offiziell
+      dokumentiertes `DBSwitch`-Muster, User lieferte Referenzbild). Text-Label nur noch per
+      `.visually-hidden` (User-Wunsch: kein sichtbares Label).
+- [x] `styles.scss`: `.db-header`-Sticky-Regel auf `.db-control-panel-desktop`/`-mobile` migriert,
+      `.db-drawer:not(...)`-Scoping auf `.db-control-panel-mobile-drawer` aktualisiert, tote
+      `.db-header-navigation-bar`/`.nav-trenner`/`.nav-rechts`-Regeln entfernt (Flex-Workarounds
+      unnoetig, Shell nutzt CSS-Grid mit expliziten Spalten), `.theme-umschalter-menu`-
+      Ueberlaufschutz von 64em auf 48em verschoben (passend zur neuen Weiche),
+      `#start.active`s Hoehen-Hartwert neu vermessen (7.125rem statt 5.75rem, neue Kopf-/
+      Fusszeilenhoehe bei `regular`-Dichte), `#tabContent`-Abstand `mt-1` -> `mt-3` (User-Fund:
+      zu wenig Luft zwischen Kopfzeile und Seiteninhalt).
+- [x] `BereitschaftTab.tsx`/`NebenTab.tsx` weiterhin NICHT commitet -- laufende eigene
+      Aenderungen des Users (Datumsformat, LRE-Parser).
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen unveraendert),
+  `bun run test --isolate` 2119/2119, `bun run build` gruen.
+- Puppeteer gegen den laufenden User-Dev-Server (Port 8080): Burger-Nav <=768px, volle Nav ab
+  769px ohne Overflow (`scrollWidth === clientWidth`, beide Dichten), Drawer oeffnet per Klick,
+  Nav-Klick im Drawer schliesst ihn automatisch (Auto-Close-Detection funktioniert weiterhin,
+  `isEventTargetNavigationItem` prueft sowohl `.db-navigation-item` als auch
+  `.db-control-panel-navigation-item`), Horizontal-Scroll-Button bei 900px sichtbar und
+  funktionsfaehig, Theme-Umschalter schaltet `data-mode`/localStorage korrekt um (Desktop + Mobile).
+
+### Review
+
+Nicht abschliessend reproduziert: eine vom User gemeldete Ausrichtungs-Abweichung zwischen
+Admin/Theme-Schalter/Monatsfeld in der Kopfzeile -- eigene Messung zeigte nur ~2px Hoehen-
+Unterschied (Formular-Elemente vs. Nav-Items), visuell bei 1440px kein auffaelliges Ergebnis.
+Moeglich, dass es sich um einen zwischenzeitlichen Zustand waehrend der schnellen Iterationen
+handelte (mehrere Vite-HMR-Updates kurz hintereinander). Beim naechsten Live-Test erneut pruefen,
+falls das Bild weiterhin auftritt: genauer Viewport/Zustand (eingeloggt? welche Breite?) noetig.
+
+## AutoSave-Badge und Login-Button: DOM-Huelle -> React-Store (2026-09-17)
+
+Ziel: mehr echte React-Logik statt duenner Huelle um Legacy-Klassen (User-Auftrag). Plan unter
+`~/.claude/plans/plane-im-frontend-mehr-floating-phoenix.md`, zwei Bereiche identifiziert und
+umgesetzt, ein dritter (CustomTable-Datenmodell) bewusst zurueckgestellt.
+
+- [x] `autoSaveStatusStore.ts`/`useAutoSaveStatus.ts` neu -- `useSyncExternalStore`-Store analog
+      `buttonLoadingStore.ts`, dockt an `onAutoSaveStatus()` aus `autoSave.ts` an.
+- [x] `AutoSaveBadge.tsx` neu -- deklarative Portierung von `autoSaveIndicator.ts`s
+      `updateBadge()` (Icon/Semantik/Tooltip/2s-Fade als lokaler Component-State).
+- [x] `DBLoadingButton.tsx`: neues optionales Prop `autoSaveResources`, rendert die Badge als Kind.
+- [x] Alle 5 Speichern-Buttons migriert: `EaTab`/`NebenTab`/`EwtTab`/`BereitschaftTab` (jeweils
+      `registerAutoSaveButton()`-Aufruf entfernt, Prop ergaenzt) und `EinstellungenTab.tsx`
+      (`btnSaveEinstellungen` war rohes `<button>`, jetzt `<DBLoadingButton>`).
+- [x] `autoSaveIndicator.ts` entfernt (keine Aufrufer mehr) -- inkl. Aufrufstellen in
+      `userLoginSuccess.ts`/`auth/index.ts`/`logoutUser.ts` (dort durch
+      `resetAutoSaveStatusStore()` ersetzt) und der alten Testdatei. `initSequence.ts`/
+      `DEPENDENCIES.md`: Schritt-Namen bleiben als reine Ordnungs-Checkpoints erhalten
+      (Beschreibung aktualisiert), keine Test-Ordnungskette angefasst.
+- [x] `btnLogin` (`AppHeader.tsx`) beim Nachpruefen als gleiches Huelle-Muster gefunden (rohes
+      `<button>`, `setLoading`/`clearLoading` per DOM statt Store) -- ebenfalls auf
+      `DBLoadingButton` umgestellt. Redundante manuelle `.disabled`-Zuweisungen in
+      `loginUser.ts`/`loginWithPasskey.ts` entfernt (galten auch fuer das bereits migrierte
+      `btnLoginModal`). `clearLoading.ts`s toter `btnLogin`-Textfallback entfernt.
+- [x] Neue Tests: `test/Utilities/autoSaveStatusStore.test.ts`,
+      `test/components/AutoSaveBadge.test.tsx`. Bestehende Mocks in mehreren Testdateien
+      (`onAutoSaveStatus` fehlte in Teil-Mocks von `autoSave.ts`) ergaenzt, wo `DBLoadingButton`
+      transitiv importiert wird.
+- [ ] Phase 2 (CustomTable-Datenmodell, `Row`/`Rows`/`TableChanges` in React-State heben) bewusst
+      nicht umgesetzt -- Team hatte das am 2026-09-12 wegen `savePipeline`/`overlapGuard`-Kopplung
+      an Objektidentitaet zurueckgestellt. Bewertungsrahmen im Plan festgehalten, nach Bedarf neu
+      aufgreifen.
+
+### Verifikationskriterien
+
+- `bun run test` (2120 pass, 0 fail), `bun run lint`/`lint:css` (0 Fehler, 20 vorbestehende
+  Warnungen unveraendert), `bun run build` gruen.
+
+### Review
+
+Umsetzung deckungsgleich mit dem Plan, keine Abweichungen. Zwei zusaetzliche Huelle-Faelle
+(`btnSaveEinstellungen`, `btnLogin`) erst beim Nachpruefen des Diffs durch den User gefunden --
+beide nicht in der urspruenglichen Explore-Recherche aufgefallen, weil sie keine
+`createCustomTable()`/`registerAutoSaveButton()`-Aufrufe in einem Tab-`useEffect` waren, sondern
+rohes Button-Markup mit eigener DOM-Verkabelung. Lehre: bei "React-Huelle"-Suche gezielt auch
+nach rohem `<button>`-Markup mit `setLoading`/`clearLoading`-Kopplung suchen, nicht nur nach dem
+`createCustomTable`-Muster.
+
+## flushSync-Nebenwirkung (CustomTable): erledigt sich von selbst (2026-09-17)
+
+Als naechster, kleinerer Schritt aus [[project-react-umbau-phase-j]] gewaehlt: die in Phase M
+dokumentierte Dev-Warnung "flushSync was called from inside a lifecycle method" (Klick auf
+Zeilen-Aktionsknopf) per `useSyncExternalStore`-Wrapper um `CustomTable.draw()` beheben.
+
+- [x] Vor dem Fix per Puppeteer (`bun run dev:local` + `puppeteer-core`, `mountEaTab()` direkt
+      importiert, `activeTabStore.setAktivenTab('EA')` erzwungen, `page.mouse.click` auf
+      Delete- und Edit-Button von `tableEA`) neu geprueft, ob die Warnung ueberhaupt noch
+      auftritt -- Ergebnis: **nein**, Konsole blieb in beiden Faellen sauber (Edit oeffnet zudem
+      ein verschachteltes `mount()` ueber `showModal()`).
+- [x] `plan-react-umbau.md`s "Bekannte Nebenwirkung"-Absatz (Phase M) und den Plan unter
+      `~/.claude/plans/plane-im-frontend-mehr-floating-phoenix.md` entsprechend aktualisiert --
+      kein Code-Fix noetig, die Doku war stale.
+
+### Review
+
+Vermutliche Ursache des Verschwindens: `reactRoot.ts`s Re-Entranz-Guard (`imFlush`/
+`flushExtern()`) wurde nach der urspruenglichen Phase-M-Dokumentation ergaenzt (siehe
+`tasks/lessons.md`s Eintrag zu verschachtelten `flushSync`-Aufrufen) und deckt den
+Zeilen-Aktionsknopf-Fall inzwischen mit ab. Kein CustomTable-Code angefasst.
+
+## Ansatz 1 (ID-Entkopplung, Vorstufe fuer CustomTable-State): direkte Row-Mutation gekapselt (2026-09-17)
+
+Reiner Refactor, kein Verhaltensunterschied -- Vorbereitung fuer einen spaeteren (noch nicht
+beschlossenen) React-State-Umbau von `CustomTable`. Scope nach Rueckfrage: AutoSave-Pfad
+UND Cross-Tabellen-Sync (beide vom User bestaetigt).
+
+- [x] Zwei neue Methoden auf `Rows.ts`, nach dem Vorbild von `_commitCreateAndUpdate()`
+      (Aufrufer übergibt nur Batch-Daten, keine State-Verzweigung von außen): - `syncCellsSilently(transform)` -- Content-Sync ohne Dirty-Flag (Server-Antwort nach
+      einem Save; Zeile soll NICHT erneut als `modified` erscheinen). Zieht
+      `_originalCells` mit, wenn die Zeile `unchanged` ist. - `patchCellsAsModified(transform)` -- echte lokale Aenderung (z.B. aus einer
+      verknuepften Ressource abgeleitete Felder), markiert `unchanged` -> `modified`.
+      Beide rufen bewusst KEIN `drawRows()` selbst -- der Aufrufer behaelt seine bisherige
+      Redraw-Bedingung (unconditional vs. nur bei echter Aenderung) ueber den Rueckgabewert.
+- [x] `savePipeline.ts`: `applyServerRowsToTable`, `unlinkNebengeldRefsForDeletedEwtIds`,
+      `unlinkEaRefsForDeletedEwtIds` nutzen jetzt `syncCellsSilently` statt direkter
+      `row.cells =`/`row._originalCells =`-Mutation in eigener Schleife.
+- [x] `syncFieldsFromEwtRows.ts` (Cross-Tabellen-Sync EWT -> Neben/EA, aufgerufen aus
+      `syncEwtToNeben.ts`/`syncEwtToEa.ts`, unabhaengig vom Save-Zyklus) nutzt jetzt
+      `patchCellsAsModified`.
+- [x] `changeTracking.ts`s `_clientRequestId`-Zuweisung bewusst NICHT angefasst -- separater,
+      kleinerer Fall, nicht Teil des bestaetigten Scopes.
+- [x] Test-Fakes (hand-gebaute `{ rows: { array } }`-Objekte ohne echte `Rows`-Instanz) in
+      `savePipeline.test.ts`, `autoSave.test.ts`, `Neben.syncEwtToNeben.test.ts`,
+      `EA.syncEwtToEa.test.ts` um eine Spiegel-Implementierung der jeweils benutzten Methode
+      ergaenzt (gleiche Semantik wie die echte Klasse).
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 20 vorbestehende Warnungen unveraendert),
+  `bun run test` (2120/2120 pass, identische Anzahl wie vorher -- reiner Refactor, keine
+  neuen/entfernten Tests), `bun run build` gruen.
+
+### Review
+
+Vor dem Schreiben von Code mehrfach mit dem User durchgesprochen (Nachfragen zu `row._id`-
+Herkunft, `_state: 'new'`-Editier-Fall, Scope AutoSave-vs-Cross-Tabellen-Sync) -- dabei zwei
+eigene Designfehler im ersten Entwurf aufgedeckt: (1) ein einzelnes `applyServerSync(id, patch)`
+haette nicht auf brandneue Zeilen (noch keine `_id`) gepasst -- deren Erstvergabe laeuft ueber
+einen komplett anderen Korrelationsschluessel (`_clientRequestId`, siehe `_commitCreateAndUpdate`).
+(2) eine State-Verzweigung im AUFRUFER (statt intern in der Methode) haette exakt das
+Caller-muss-State-kennen-Problem eingefuehrt, das die bestehende `_commitCreateAndUpdate`
+bereits vermeidet. Lehre: bei Row-Mutations-Refactors zuerst ALLE echten Aufrufer + deren
+State-Branching lesen, nicht von der Aehnlichkeit des Mutationsmusters auf gleiche Semantik
+schliessen -- `applyServerRowsToTable` (Content-Sync, bleibt "unchanged") und
+`syncFieldsFromEwtRows` (Content-Patch, wird "modified") sehen im Code fast identisch aus,
+sind aber bewusst unterschiedlich.
+
+**Offen, weiterhin bewusst nicht umgesetzt:** der eigentliche `useReducer`-Umbau
+(Ansatz 3 im Plan `~/.claude/plans/plane-im-frontend-mehr-floating-phoenix.md`). Diese
+Kapselung ist Vorbereitung, keine Vorentscheidung dafuer.
+
+## Phase 0: 5 Risikostellen gehaertet -- Vorbedingung fuer useReducer-Umbau (2026-09-17)
+
+Nach zwei Explore-Agenten (kartierten 14 externe `.instance`-Aufrufer + 5 Stellen mit hartem
+synchronem Read-nach-Mutation) und einem Plan-Agenten wurde Phase 0 aus dem Plan-Dokument
+`~/.claude/plans/plane-im-frontend-mehr-floating-phoenix.md` (Teil 1) vollstaendig umgesetzt.
+
+- [x] `customTableTypes.ts`: `getRowKey(row)` neu -- stabiler ID-Schluessel
+      (`new:<_clientRequestId>` / `id:<_id>`), wirft bei inkonsistentem Row-State.
+- [x] `Rows.ts`: `commitChanges`/`commitAutoSave`/`_commitCreateAndUpdate` auf
+      `ReadonlySet<string>` umgestellt; `findById(id)`, `markRowsDirtyByMatch(matcher)`,
+      `reconcileDeletedRows(serverRows, matcher)` neu.
+- [x] `CustomTable.ts`: `getRowKey` per Barrel-Export.
+- [x] `autoSave.ts`: `includedRows`/`failedRows`-Sets per `.map(getRowKey)`.
+- [x] `loadUserDaten.conflict.ts`: `markRowsForAutosave`/`reconcileRowsAsDeleted` auf die neuen
+      `Rows.ts`-Methoden umgestellt, `Row`-Import entfernt.
+- [x] `submitBereitschaftsEinsatz.ts`: Stelle A (echte Zellen-Aenderung) auf `row.val(...)`,
+      Stellen B/C/D (reiner State-Flip) auf `findById(...)`.
+- [x] `createAddModalBereitschaftsZeit.tsx`: `onSubmit` awaitet `submitBereitschaftsZeiten`
+      jetzt -- einzige echte Verhaltensaenderung im Umfang (Modal bleibt bei Fehler offen).
+- [x] `generateEingabeMaskeEinstellungen.ts`: klaerender Kommentar, kein Bug.
+- [x] Tests nachgezogen: `test/class/CustomTable.test.ts` (Race-Tests auf `getRowKey`, neuer
+      Reihenfolge-Unabhaengigkeits-Test fuer `markRowsDirtyByMatch`/`reconcileDeletedRows`),
+      `test/Login.LadeUserDaten.test.ts` (Mock um funktionale Implementierungen erweitert),
+      `test/Utilities/autoSave.test.ts` (Test-Fixtures brauchten `_clientRequestId` fuer
+      `_state: 'new'`-Zeilen, analog dem echten `Row`-Konstruktor -- war vorher nie eine
+      Invariante, die etwas geprueft hat).
+- [ ] Schritt 11 (dedizierter Test fuer die Await-Reihenfolge in
+      `createAddModalBereitschaftsZeit.tsx`) bewusst NICHT geschrieben -- der Sibling-Test
+      vergleichbarer Komplexitaet ist 264 Zeilen fuer ein einzelnes Modal; unverhaeltnismaessig
+      fuer ein einzelnes Call-Ordering-Faktum. `tsc` bestaetigt die Typkorrektheit. Bei Bedarf
+      spaeter nachziehen.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 20 vorbestehende Warnungen unveraendert),
+  `bun run test` (2121/2121 pass, identische Anzahl wie vor Phase 0), `bun run build` gruen.
+
+### Review
+
+Eigener Fehler waehrend der Verifikation: zwei Testfehler in
+`test/Bereitschaft.submitBereitschaftsEinsatz.test.ts` fälschlich als "vorbestehend, unabhaengig
+von meinen Aenderungen" gemeldet -- Beleg dafuer war ein isolierter `git worktree`-Vergleich bei
+Commit `d699488`, ABER ohne die vom `package.json`-Testskript gesetzte `TZ=Europe/Berlin`-
+Env-Variable ausgefuehrt (die Tests rechnen explizit mit Berlin-Zeitzonen-Grenzen). Mit
+korrektem `bun run test`-Aufruf (TZ gesetzt) waren es 0 Fehler, auch vorher schon. Lehre: ein
+Vergleich "alt vs. neu" ist nur aussagekraeftig, wenn beide Seiten mit IDENTISCHEM Befehl
+laufen -- projekteigenes `test`-Skript nutzen (`bun run test`), nie einen eigenen `bun test`-
+Aufruf ohne Pruefung der Env-Variablen im Skript als Vergleichsbasis nehmen.
+
+**Naechster Schritt:** Phase A (Reducer-Kern, `Row`/`Rows`/`Column`/`CustomTable` als
+`useReducer`) -- zwangsweise atomar fuer alle 6 Tabellen, siehe Plan-Dokument Teil 2. Noch nicht
+begonnen.
+
+## Phase A: Reducer-Kern + `.instance`-Shim -- Zielzustand "(b)" (2026-09-17)
+
+- [x] `customTableTypes.ts`: `RowRecord<T>`/`ColumnRecord<T>`/`TableReducerState<T>`/
+      `TableAction<T>` ergaenzt (15 Aktionstypen, 1:1 Spiegel jeder bisherigen
+      `Row`/`Rows`/`CustomTableView`-Methode).
+- [x] `tableReducer.ts` (neu): reiner `tableReducer(state, action)`, `createRowRecord()`
+      exportiert (fuer `CustomTable`s Konstruktor). 16 isolierte Unit-Tests
+      (`test/class/tableReducer.test.ts`), alle gruen vor jeder Live-Verkabelung.
+- [x] `Row.ts`/`Rows.ts`/`Column.ts` auf Shims umgestellt: Felder als Getter/Setter (Row) bzw.
+      reine Getter (Column, kein Wrapper-Cache noetig), Methoden dispatchen. `Rows`s
+      Wrapper-Cache (`uid` -> `Row`-Instanz) + `state.rows`-Referenz-Cache fuer `.array`
+      erhalten sowohl die `===`-Garantie der 6 Editor-Modals als auch `CustomTableView.tsx`s
+      In-Render-Sortiermutation, ohne `CustomTableView.tsx` selbst groesser anfassen zu muessen.
+- [x] `CustomTable.ts`: `tableState`-Instanzfeld + `getState()`/`dispatch()`/`getRowRecord()`;
+      Konstruktor baut initialen State direkt aus `options.rows`/`options.columns` (nicht per
+      `LOAD`-Aktion -- die restauriert zusaetzlich Meta-Felder, die der alte `Rows`-Konstruktor
+      nie anfasste). `deleteAllRows()`-Fallback delegiert an `rows.deleteAll()` (Soft-Delete)
+      statt rohem Array-Clear (Zweig praktisch unerreicht, siehe Review).
+- [x] `CustomTableView.tsx`: nur `toggleColumnSort()` angefasst (dispatcht jetzt
+      `TOGGLE_COLUMN_SORT`) -- alles andere (Rendering, In-Render-Sort) unveraendert, weil der
+      `.array`-Vertrag erhalten blieb.
+- [x] Tests nachgezogen: `test/Utilities/mergeVisibleResourceRows.test.ts` (Row-Konstruktion
+      auf `rows.add(value, state)` umgestellt, alter 3-Arg-`new Row(...)`-Konstruktor entfaellt),
+      `test/Utilities/savePipeline.test.ts` (Test-Fake fuer `_originalCells`-Schreibzugriff
+      lokal typisiert), `test/class/CustomTable.test.ts` (2 Tests an neue, bewusst geaenderte
+      Semantik angepasst: `deleteAllRows`-Fallback jetzt Soft-Delete; Sortier-Test liest
+      `Column` nach dem zweiten Klick frisch statt eine gehaltene Referenz weiterzuverwenden --
+      `Column` hat seit Phase A keinen Identitaets-Vertrag mehr, siehe Review).
+- [x] `frontend/CHANGELOG.md` Eintrag (138) ergaenzt.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit` clean, `bun run lint` (0 Fehler, 20 vorbestehende Warnungen unveraendert),
+  `bun run lint:css` (0 Fehler, 84 vorbestehende Warnungen unveraendert), `bun run test`
+  (2137/2137 pass), `bun run build` gruen, `bun run format` vor Commit.
+- Manueller Puppeteer-Durchklick gegen den laufenden Dev-Server (`tableN`-artige Test-Instanz,
+  nicht die echte `NebenTab`-Tabelle): Sortier-Klick x2 (ASC->DESC->ASC, korrekte Reihenfolge),
+  `rows.add()` (State `new`), `row.val()` (State `modified`), Row-Identitaet ueber zwei
+  `.array`-Zugriffe stabil, `deleteRow()`+`undoDelete()` (State-Restauration korrekt),
+  `deleteRow()` einer `new`-Zeile (vollstaendig entfernt). Keine Konsolenfehler.
+
+### Review
+
+**Kein neuer Bug gefunden, zwei bewusste, dokumentierte Verhaltensaenderungen:**
+
+1. `CustomTable`s privater `deleteAllRows()`-Fallback (nur aktiv, wenn eine Tabelle KEIN eigenes
+   `options.editing.deleteAllRows` liefert -- per Grep verifiziert: alle 6 produktiven Tabellen
+   tun das, dieser Zweig ist im Betrieb also unerreicht) loeschte vorher hart
+   (`rows.array.length = 0`). Da `rows.array` seit Phase A ein reiner Getter auf den
+   Reducer-State ist, ist ein roher Array-Clear nicht mehr moeglich -- der Fallback delegiert
+   jetzt an `rows.deleteAll()` (Soft-Delete, konsistent mit dem Rest der Tabelle). Test
+   entsprechend angepasst.
+2. `Column`-Instanzen sind seit Phase A KEIN Identitaets-Vertrag mehr (anders als `Row`): jeder
+   `.array`-Zugriff synthetisiert frische Objekte aus dem aktuellen `ColumnRecord`. Eine ueber
+   die Zeit gehaltene `Column`-Referenz ist dadurch ein Snapshot, kein live Objekt mehr -- per
+   Grep verifiziert, dass ausser dem jetzt entfernten `toggleColumnSort()`-Direktmutations-Code
+   nirgends eine `Column`-Referenz laenger als einen Render-Zyklus gehalten wird. Ein
+   Test hielt eine solche Referenz ueber zwei Klicks; angepasst auf frisches Nachlesen.
+
+**Bewusst zurueckgestellt (kein Blocker, siehe Plan-Dokument "Offene Risiken"):** Wenn eine
+`Row`-Referenz aus dem Wrapper-Cache verschwindet (echte Entfernung aus dem State, z. B. durch
+`RECONCILE_DELETED`/`LOAD`), wirft ein spaeterer Lesezugriff auf diese Instanz jetzt hart
+(`Row: kein RowRecord fuer uid ... `) statt vorher stillschweigend als "Zombie"-Objekt
+weiterzuleben. Betrifft nur den theoretischen Fall "Zeile wird waehrend eines offenen
+Editor-Modals von einem anderen Flow entfernt" -- kein bekannter produktiver Pfad tut das,
+daher keine Aenderung vorgenommen.
+
+**Naechster Schritt:** Achse B (State je Tabelle in einen echten `useReducer`-Hook verschieben,
+`CustomTableView.tsx`-Props auf `state`/`dispatch`, `Row`-Setter dann mit `flushExtern`
+wrappen). Migrationsreihenfolge laut Plan-Dokument: NebenTab -> EaTab -> EwtTab ->
+BereitschaftTab -> EinstellungenTab/tableVE. Noch nicht begonnen. Zielzustand "(a)" (14
+`.instance`-Aufrufer invertieren) bleibt bewusst ausserhalb des Scopes.
+
+## Achse B: alle 6 Tabellen auf echten `useReducer`-Hook (2026-09-17)
+
+Abweichung vom urspruenglichen Plan (der von unabhaengiger Pro-Tabelle-Migration ausging): beim
+Umsetzen zeigte sich, dass `CustomTable`s Konstruktions-Vertrag sich fuer ALLE Tabellen
+gleichzeitig aendert (Hook-Konstruktion kann das DOM-Element beim ersten Aufruf noch nicht
+nachschlagen, `dispatch()` muss auf echten `useReducer`-Dispatch umschalten) -- vom User bestaetigt:
+"Alle 6 Tabellen in einem Zug".
+
+- [x] `CustomTable.ts`: Konstruktor privat, zwei Fabriken (`fromElement` fuer Achse A/Tests,
+      `forHook` fuer Achse B, kein DOM-Zugriff). `attachRuntime(state, dispatch)`/
+      `attachElement(el)` als spaetes Binden. `dispatch()` prueft `reactDispatch`: gesetzt ->
+      `flushExtern`-gewrapptes echtes Hook-`dispatch`; sonst (Achse A) unveraendert synchrone
+      Zuweisung. `draw()`/`drawRows()`/`drawHeader()`/`drawFooter()`/`render()` No-Op sobald
+      `reactDispatch` gesetzt ist. Neuer Hook `useCustomTableState()` + Helper `asAnyTable()`
+      (zentralisiert den `CustomTable<T>` -> `CustomTable<CustomTableTypes>`-Cast fuer
+      `<CustomTableView table={...} />` als JSX-Kind).
+- [x] `CustomTableView.tsx`: `{table}`-Props unveraendert. Neuer `useEffect` loest
+      `customFunction`-Hooks fuer Achse-B-Tabellen aus (`isReactManaged()`-Guard verhindert
+      Doppelfeuerung, falls je eine Achse-A-Tabelle `customFunction` nutzt). `toggleColumnSort()`
+      unveraendert (das vorhandene `table.draw()` ist in Achse B bereits ein No-Op).
+- [x] `NebenTab.tsx`/`EaTab.tsx`/`EwtTab.tsx`/`BereitschaftTab.tsx` (tableBZ+tableBE): Tabellen-
+      konstruktion aus dem `useEffect(() => {...}, [])` in den Komponenten-Body verschoben,
+      `bindClickHandlers()`/`setFilter()` in einem eigenen `useEffect(() => {...}, [])`
+      belassen. `<table>` traegt jetzt einen Ref-Callback (`attachElement`) und rendert
+      `<CustomTableView table={asAnyTable(ftX)} />` als Kind statt eines leeren `<table>`.
+- [x] `tableVE`: neue Feature-Komponente `features/Einstellungen/components/VorgabenBTable.tsx`
+      (Spalten/Editing/customButton-Logik aus `generateEingabeTabelleEinstellungenVorgabenB.ts`
+      dorthin verschoben) -- NICHT in `infrastructure/ui/EinstellungenTab.tsx` selbst, weil die
+      Huelle bewusst infrastructure-schichtig ist (analog `PersoenlicheDatenPanel`).
+      `generateEingabeTabelleEinstellungenVorgabenB()` ist jetzt ein reiner Daten-Nachlader
+      (`document.querySelector('#tableVE')?.instance` + `rows.load()`); `generateEingabeMaskeEinstellungen.ts`
+      unveraendert (dessen `ftVE instanceof CustomTable`-Zweig ist jetzt immer wahr).
+- [x] Tests nachgezogen: `test/features/Einstellungen/utils/generateEingabeTabelleEinstellungenVorgabenB.test.ts`
+      komplett neu (testet jetzt den Daten-Nachlader), neue
+      `test/features/Einstellungen/components/VorgabenBTable.test.tsx` (Spalten/Editing-Callback-
+      Tests, jetzt echte DOM-Interaktion statt `createCustomTable`-Mock).
+- [x] `frontend/CHANGELOG.md` Eintrag (139) ergaenzt.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit` clean, `bun run lint` (0 Fehler, 20 vorbestehende Warnungen unveraendert),
+  `bun run lint:css` (0 Fehler, 84 vorbestehende Warnungen unveraendert), `bun run test`
+  (2141/2141 pass), `bun run build` gruen, `bun run format` vor Commit.
+- Manuelle Puppeteer-Durchklicks gegen den laufenden Dev-Server: isolierte Testkomponente
+  (Sortier-Klick x2, Add/Edit/Delete/Undo, externe synchrone Feld-Schreibzugriffe erscheinen
+  sofort im DOM, Row-Identitaet ueber zwei `.array`-Zugriffe stabil); alle 6 echten Tabellen
+  mounten mit funktionierendem `.instance`; `tableVE`s "Standardeinstellungen"-Knopf laedt im
+  Offline-Fallback korrekt die `BereitschaftsEinsatzZeiträume`. Keine Konsolenfehler in allen
+  Durchlaeufen.
+
+### Review
+
+Kein neuer Bug gefunden. Die einzige echte Abweichung vom urspruenglichen Plan-Dokument ist die
+oben beschriebene Scope-Korrektur (alle 6 Tabellen statt Pro-Tabelle-Migration) -- inhaltlich
+folgt die Umsetzung sonst genau dem geplanten `.instance`-Shim-Design.
+
+**Naechster Schritt:** keiner vorgesehen -- Zielzustand "(b)" ist damit vollstaendig erreicht.
+Ein spaeterer Zielzustand "(a)" (die 14 `.instance`-Aufrufer zusaetzlich invertieren) bleibt
+bewusst ausserhalb des Scopes, ist aber durch den UI-/Shim-agnostischen Reducer-Kern
+(`tableReducer.ts`) architektonisch nicht verbaut.
+
+## CustomSnackbar auf React umgebaut (2026-09-18)
+
+Naechster Kandidat der "mehr echtes React"-Initiative nach dem `CustomTable`-Umbau, per
+`graphify` (god_nodes) als meistverbundener verbliebener Vanilla-DOM-Knoten identifiziert (152
+Kanten, 124 Aufrufstellen). Siehe Plan-Dokument `plane-im-frontend-mehr-floating-phoenix.md`
+Teil 1 fuer die volle Architektur-Begruendung; Teil 2-4 (Zulagen-Checkboxen, `tabController.ts`
+Admin-Unternavigation, `showModal.tsx`-Rest) sind dort nur grob skizziert, noch nicht begonnen.
+
+- [x] **Vorbereitung** (eigener Commit): 4 Snackbar-Meldungen entfernt, die dieselbe Information
+      wiederholten, die bereits anderweitig sichtbar war (globale Offline-Banner,
+      AutoSaveBadge-Tooltip) -- auf expliziten Nutzerwunsch geprueft ("nur zeigen, was noetig
+      ist"), nicht alle 124 Aufrufstellen pauschal reduziert (siehe Plan-Dokument fuer die
+      Einzelfall-Begruendung).
+- [x] `snackbarStore.ts`/`useSnackbars.ts`/`SnackbarHost.tsx`/`SnackbarItem.tsx` neu,
+      `CustomSnackbar.ts` auf duennen Wrapper reduziert (`createSnackBar()`-Vertrag fuer alle
+      124 Aufrufstellen unveraendert), `<SnackbarHost />` in `App.tsx` gemountet.
+- [x] Karte nutzt `<DBNotification variant="overlay">` (DB-UX-Baustein, per
+      `mcp__db-ux__get_component_props` verifiziert -- laut Doku explizit fuer Snackbar-artige
+      Overlays gedacht) statt handgebauter Divs; `CustomSnackbar.css` blieb unveraendert (keine
+      Regeln fuer die jetzt ersetzten Elemente enthalten).
+- [x] `test/class/CustomSnackbar.test.ts` komplett neu (53 Faelle, gleiche Abdeckung wie vorher
+      -- rendert jetzt echt `<SnackbarHost />`, prueft ueber DOM/Public-API statt private
+      Felder). Stolperstein: `document.body.innerHTML = ''` zwischen Tests brach Reacts eigene
+      Buchhaltung fuer die `createPortal(..., document.body)`-Root (`removeChild`-Fehler in
+      SPAETEREN Tests) -- Host wird jetzt einmal fuer die ganze Datei gemountet,
+      `resetSnackbarStore()` + Zwei-Microtask-`flush()` raeumt zwischen Tests stattdessen ueber
+      normale Reconciliation auf (gleiches `flush()`-Pattern wie `AutoSaveBadge.test.tsx`).
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit` clean, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test` (2141/2141 pass), `bun run build` gruen, `bun run format` vor
+  Commit.
+- Manueller Puppeteer-Durchklick gegen den laufenden Dev-Server: HTML-Message, Semantik-Mapping,
+  geteilter Container bei gleicher Position/separater bei unterschiedlicher, `fixed:true`,
+  Aktion mit `dismiss` (Funktion + Schliessen), spaetes `.Close()` auf gehaltene Referenz
+  (`setOffline.ts`-Muster), Close-Button, Auto-Close nach Timeout -- keine Konsolenfehler.
+
+### Review
+
+Kein neuer Bug gefunden. Die einzige echte Ueberraschung war der `DBNotification`-Fund selbst
+(nicht im urspruenglichen Plan-Entwurf, erst durch gezielte `mcp__db-ux__*`-Abfrage auf
+Nutzeranstoss entdeckt) -- reduziert die Handarbeit in `SnackbarItem.tsx` spuerbar und haelt die
+Karte visuell konsistent mit dem Rest des Design-Systems.
+
+**Naechster Schritt:** Teil 2 (Zulagen-Checkboxen in `generateEingabeMaskeEinstellungen.ts`) --
+noch nicht begonnen, Detailplanung folgt direkt davor (inkl. erneuter `mcp__db-ux__*`-Pruefung).
+
+## Zulagen-Checkboxen auf React umgebaut (2026-09-18)
+
+Teil 2 der "mehr echtes React"-Initiative, direkt nach CustomSnackbar (Teil 1). Siehe
+`plane-im-frontend-mehr-floating-phoenix.md` fuer die volle Detailplanung; Teil 3/4
+(`tabController.ts` Admin-Unternavigation, `showModal.tsx`-Rest) bleiben Skizze.
+
+- [x] `ZulagenCheckboxList.tsx` neu (`features/Einstellungen/components/`), gemountet per
+      `mount()` in `#settings-zulagen-list` -- exakt dasselbe lokale Muster wie
+      `ArbeitszeiteingabePanel`/`FahrzeitenPanel` in `generateEingabeMaskeEinstellungen.ts`.
+      Kein neuer Store noetig: `populateZulagenCheckboxes` ist nur aus 3 Stellen aufgerufen
+      (Login, Act-as-Wechsel, Tab-Mount), keine 124-Aufrufer-Problematik wie bei CustomSnackbar.
+- [x] Karte nutzt `<DBCheckbox>` (DB-UX-Baustein, per `mcp__db-ux__get_component_props` +
+      kompilierte Quelle verifiziert) statt handgebauter `db-checkbox`-Divs; `id`/
+      `data-zulage-code`/`data-zulage-category` unveraendert, `saveEinstellungen.ts` (liest
+      per DOM-Query) unangetastet.
+- [x] Kategorie-Limit-Logik (max. Auswahl je Kategorie) als abgeleiteter State statt manuellem
+      Increment/Decrement-Bookkeeping -- gleiches Ergebnis, weniger Fehlerflaeche.
+- [x] `generateEingabeMaskeEinstellungen.ts`: ~120 Zeilen `document.createElement`-Code entfernt,
+      `populateZulagenCheckboxes` auf 3-Zeilen-`mount()`-Aufruf reduziert.
+- [x] `test/Einstellungen/generateEingabeMaskeEinstellungen.test.ts`: Toggle-Interaktion von
+      `checked=true`+`dispatchEvent` auf `input.click()` umgestellt (React-kontrollierte
+      Checkbox), `flush()`-Helper ergaenzt (gleiches Muster wie `CustomSnackbar.test.ts`).
+      Stolperstein: ein Lint-Autofix (`db-ux/form-label-required`) haengte automatisch eine
+      `label`-Prop an `<DBCheckbox>`, die alte `children`-Text blieb aber stehen -- Text waere
+      doppelt gerendert (Komponente rendert `label` UND `children`); `children` entfernt.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit` clean, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test` (2141/2141 pass), `bun run build` gruen, `bun run format` vor
+  Commit.
+- Manueller Puppeteer-Durchklick: Zulagen-Tab (Accordion "Zulagen") -- Vorbelegung nach
+  Login/Act-as-Wechsel, Kategorie-Limit greift beim 8. Erschwernis-Haken und lockert sich nach
+  Abwahl wieder, Speichern persistiert die gecheckten Codes -- keine Konsolenfehler.
+
+### Review
+
+Kleiner Umbau als Teil 1: keine 124-Aufrufer-Huelle, kein neuer Store noetig, da
+`populateZulagenCheckboxes` eine reine interne Funktion war und bereits ein etabliertes lokales
+`mount()`-Muster direkt daneben existierte. Einzige echte Ueberraschung: der Lint-Autofix, der
+beim ersten `bun run lint`-Lauf automatisch die `label`-Prop ergaenzte, statt nur zu warnen --
+ohne Review haette das zu doppelt sichtbarem Checkbox-Text gefuehrt.
+
+**Naechster Schritt:** Teil 3 (`tabController.ts` Admin-Unternavigation) -- noch nicht begonnen,
+Detailplanung folgt direkt davor (inkl. erneuter `mcp__db-ux__*`-Pruefung fuer
+`tabs`/`tab-list`/`tab-item`/`tab-panel`).
+
+## Admin-Unternavigation auf React umgebaut (2026-09-18)
+
+Teil 3 der "mehr echtes React"-Initiative, direkt nach Zulagen-Checkboxen (Teil 2). Siehe
+`plane-im-frontend-mehr-floating-phoenix.md` fuer die volle Detailplanung; Teil 4
+(`showModal.tsx`-Rest) bleibt Skizze.
+
+- [x] `activeAdminTabStore.ts`/`useActiveAdminTab.ts` neu (`infrastructure/ui/`) -- exakte Kopie
+      des `activeTabStore.ts`/`useActiveTab.ts`-Musters, eigener Store (Haupt- und Admin-Gruppe
+      bewusst nicht gekoppelt).
+- [x] `tabController.ts`: `zeigeTab()`s Verzweigung generalisiert (`TAB_GRUPPEN_STORES`-Lookup
+      ueber den Eltern-Container statt binaerer `hauptgruppe`-Unterscheidung fuer die
+      Store-vs-DOM-Frage). Hash-Schreibung bleibt exklusiv an die Hauptgruppe gebunden. Der
+      alte DOM-schreibende `else`-Zweig + der verwaiste `gruppe()`-Helper sind komplett
+      entfallen -- keine Gruppe braucht sie mehr.
+- [x] `features/Admin/index.tsx`: `aktiverUnterTab` liest jetzt `useActiveAdminTab()` reaktiv
+      statt einer hartkodierten Konstante; `paneKlasse()`-Helfer (analog `App.tsx`) macht alle
+      8 Panes reaktiv statt nur der ersten zwei. `<nav>`/`<menu>` nutzt `<DBNavigation>`
+      (DB-UX-Baustein, reiner Markup-Wrapper).
+- [x] **Gefundener Nebenbug behoben**: `aktiverUnterTab` war zuvor eine bei jedem Render neu
+      berechnete Konstante -- ein Re-Render aus anderem Grund (z. B. Act-as-Wechsel-Event)
+      ueberschrieb den von `zeigeTab()` per DOM gesetzten Zustand wieder mit dem Default. Neuer
+      Test `AdminTab.subnav.test.tsx` deckt genau diesen Fall ab (Regression waere ohne den Fix
+      sofort aufgefallen).
+- [x] **`DBNavigationItem` geprueft und verworfen**: sah im Quelltext wie ein reiner Wrapper aus
+      (`children` durchgereicht ohne `<menu>`-Kind), die Sub-Navigation-Erkennung laeuft aber
+      per `useEffect` NACH dem ersten Commit -- im ersten Render wickelt die Komponente das Kind
+      immer erst in einen eigenen `<button class="db-navigation-item-expand-button">`, was hier
+      ein ungueltiges `<button>` in `<button>` erzeugt. Erst beim Test (nicht beim Lesen der
+      Quelle) aufgefallen. Die `<li>`s bleiben deshalb roh, `<DBNavigation>` (ohne
+      `-Item`-Pendant) allein war unproblematisch.
+- [x] **Weiterer gefundener Bug (eigene Umsetzung)**: der Store haelt die volle Pane-Id
+      (`admin-pane-dashboard`), `unterTabs`/`paneKlasse` arbeiten mit der kurzen Id
+      (`dashboard`) -- ohne `.replace(/^admin-pane-/, '')` blieb `data-active` dauerhaft
+      `false`. Durch den neuen Test sofort aufgefallen, vor dem Commit korrigiert.
+- [x] `test/ui.tabController.test.ts` um einen zweiten Gruppen-Fall erweitert (Store-Wechsel
+      ohne Hash-Schreibung, Unabhaengigkeit der beiden Stores).
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit` clean, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test` (2145/2145 pass), `bun run build` gruen, `bun run format` vor
+  Commit.
+- Puppeteer-Durchklick der Hauptnavigation (Start/Berechnung/Einstellungen, Hash + Klick auf die
+  Wortmarke) gegen den laufenden Dev-Server: keine Regression durch die generalisierte
+  `zeigeTab()`-Verzweigung, keine Konsolenfehler. Die Admin-Unternavigation selbst liess sich
+  live nicht pruefen (braucht eine echte Admin-JWT-Session, kein Backend verfuegbar) -- dafuer
+  tragen die beiden neuen dedizierten Tests die Hauptlast.
+
+### Review
+
+Zwei echte Bugs gefunden, beide erst durch das TESTEN (nicht durch Lesen der Quelle) aufgefallen:
+der Admin-Nebenbug (Ziel des Umbaus) und der selbst eingefuehrte Pane-Id-Praefix-Fehler. Zeigt,
+warum ein dedizierter Render-Test hier lohnte, obwohl es vorher keinen fuer `AdminTab` gab.
+`DBNavigationItem` war der einzige DB-UX-Fund dieses Teils, der sich als ungeeignet erwies (nach
+Teil 1s `DBNotification`- und Teil 2s `DBCheckbox`-Erfolgen) -- gut, dass der Prop-Vertrag am
+echten Test statt nur am Quelltext verifiziert wurde.
+
+**Naechster Schritt:** Teil 4 (`showModal.tsx`-Rest) -- noch nicht begonnen, Detailplanung folgt
+direkt davor (inkl. erneuter `mcp__db-ux__*`-Pruefung des `drawer`-Vertrags).
+
+## showModal: MutationObserver-Bruecke entfernt (2026-09-18)
+
+Teil 4 (letzter Teil) der "mehr echtes React"-Initiative, direkt nach der Admin-Unternavigation
+(Teil 3). Siehe `plane-im-frontend-mehr-floating-phoenix.md` fuer die volle Detailplanung --
+damit ist die Initiative (Teile 1-4) abgeschlossen.
+
+- [x] `beiModalSchliessen()` nutzte einen `MutationObserver` (`isConnected`-Polling), um zu
+      erkennen, wann `#modal`s Inhalt verschwindet -- Ersatz fuer das seit Bootstrap-Entfernung
+      tote `hide.bs.modal`-Event. Ersetzt durch eine neue `aufraeumer`-`WeakMap` (analog der
+      bestehenden `schliesser`-Map): `schliesseModal()` und `showModal()`s Ersetzen-Zweig rufen
+      die registrierte Funktion jetzt direkt und synchron auf -- beide Stellen sind bekannter,
+      eigener Code, kein DOM-Beobachten mehr noetig.
+- [x] `beiModalSchliessen(fn)` bleibt fuer alle 6 Aufrufstellen unveraendert (Signatur +
+      Aufruf-Zeitpunkt) -- eine Signaturaenderung von `showModal(children, onClose)` haette die
+      Aufrufer NICHT vereinfacht (der Cleanup-Callback wird oft erst nach `showModal()` anhand
+      von dessen Rueckgabewert berechnet).
+- [x] **Globaler Klick-Delegator bewusst NICHT angefasst**: `data-dialog-dismiss="modal"` ist
+      kein Vanilla-DOM-Rest, sondern weiterhin das passende Muster (11 Verwendungen quer durch
+      wiederverwendete Bausteine wie `MyModalHeader`/`MyEditorFooter`/`MyHelpModal` -- eine
+      Ablösung durch Prop-Threading waere deutlich invasiver, ohne fachlichen Gewinn).
+- [x] `DBDrawer`s `onClose`/`close`-Vertrag per `mcp__db-ux__get_component_props` erneut
+      geprueft: weiterhin reine Callback-Props, ausgeloest von der drawer-eigenen
+      Schliess-Mechanik, nicht von React-Unmount -- bestaetigt, dass der Ersetzen-Fall ohnehin
+      nie ueber `onClose` liefe.
+- [x] Neuer Test `test/components/showModal.test.tsx` (4 Faelle): deckt `beiModalSchliessen`s
+      tatsaechliches Verhalten erstmals ab (vorher in allen betroffenen Tests komplett gemockt).
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit` clean, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test` (2149/2149 pass), `bun run build` gruen, `bun run format` vor
+  Commit.
+- Puppeteer-Durchklick versucht (Neben-Tab, `#btnESN`-Dialog): Feature-Tab-Root liess sich ohne
+  vollen Boot-Zyklus (kein Backend) nicht zuverlaessig genug isoliert mounten, um den Dialog
+  echt zu oeffnen -- abgebrochen. Die 4 neuen Unit-Tests simulieren beide Teardown-Pfade
+  (expliziter Close, direktes Ersetzen) bereits direkt und decken damit die eigentliche
+  Verhaltensaenderung ab.
+
+### Review
+
+Kleinster Umbau der vier Teile: keine Aufrufstellen-Aenderung, keine neue Abstraktion -- nur ein
+`MutationObserver` durch zwei direkte Aufrufe an bereits bekannten Stellen ersetzt. Die
+Hauptarbeit war das Verifizieren, dass wirklich ALLE Teardown-Pfade abgedeckt sind (beide Wege,
+wie `#modal`-Inhalt verschwindet, liefen schon vorher durch `schliesseModal()`/`showModal()`s
+Ersetzen-Zweig) und dass der globale Klick-Delegator bewusst NICHT Teil des Umbaus ist -- ein
+reflexhafter "alles auf Callback-Props umstellen"-Ansatz haette hier unnoetig viele
+wiederverwendete Bausteine angefasst.
+
+**Damit ist die "mehr echtes React"-Initiative (Teile 1-4) abgeschlossen.**
+
+---
+
+## EA-Tag-Parser: Kaskade strikt-deutsch -> locker - 2026-09-18
+
+### Plan
+
+- [x] `EaTab.tsx`s neuen `tagParser` (uncommittetes WIP, siehe Diff) von nur-lockerem
+      `dayjs(s)` auf Kaskade umstellen: erst `dayjs(s, 'DD.MM.YYYY', true)`, dann
+      `dayjs(s)`-Fallback. Grund: `dataEA` enthaelt zwei Formate -- lokale Writes als
+      `DD.MM.YYYY` (`addEaTag.ts`, `createEditorModalEA.tsx`), Server-Werte als ISO
+      (Mongo `Date`). Locker allein reichte deutsch unformatiert durch (sichtbarer Bug:
+      nur Server-Zeilen wurden zu `dd DD.MM.`), Format allein wuerde umgekehrt ISO
+      durchreichen.
+
+### Verifikation
+
+- `bunx tsc --noEmit` clean; `bun run lint` 0 Fehler (54 vorbestehende Warnings, keine aus
+  `EaTab.tsx`); `bun run format:check` clean; `bun test test/EA.*` 27/27 pass.
+- Laufzeitprobe (bun -e, echtes `configDayjs`): `14.09.2026` -> `Mo 14.09.`,
+  `2026-02-09T23:00:00.000Z` -> `Di 10.02.`, `kein datum` -> Durchreichung. Gegenprobe:
+  `dayjs('14.09.2026')` und `dayjs(iso, 'DD.MM.YYYY')` beide Invalid Date.
+
+### Review
+
+Einzeiler-Symptom, Ursache in den Daten (zwei Formate in `dataEA`), nicht in der Tabelle:
+`CustomTableView` ruft den Parser auf jeder Zelle auf. Kaskade-Muster aus `getMonatFromEA`
+uebernommen. Langfristig sauberer waere Normalisierung beim Laden/Speichern -- bewusst
+nicht angefasst (groesserer Eingriff, eigener Task). Commit nur `EaTab.tsx`;
+`CHANGELOG.md`/`todo.md` enthalten WIP des DB-Komponenten-Umbaus und bleiben uncommittet.
+
+
+**Abschluss (2026-09-20):** 339 Dateien, +9446/-2635 Zeilen (Kommentare/JSDoc). Verifikation: Checker gegen HEAD
+(nur 3 Nutzer-Aenderungen als "Code veraendert": `styles.scss`, `datenKatalog.ts`, `aggregatoren.ts`), AST-Pruefung 1515
+Funktionen (38 ohne JSDoc = erlaubte Daten-/Inline-Lambdas, 1 Falschmeldung `getEmptyText`), `tsc`, `lint`, `lint:css`
+(87 Warnungen, Grenze 93), `bun run test` (2172 pass), `bun run build` gruen. Ablauf: 15 parallele Subagenten, 13 durch
+Session-Limit abgebrochen, Rest neu verteilt (`rest_01..08`).

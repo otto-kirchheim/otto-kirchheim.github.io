@@ -1,0 +1,714 @@
+// Admin-Bereich (`pages/admin/**`): gemeinsame Bausteine statt Bootstrap-Klassen. Abstaende und Farben kommen aus DB-Tokens.
+@use 'breakpoints' as bp;
+
+// Farben fuer Symbole, Zahlen und Kurztexte (Semantik wie `DBInfotext`/`DBTag`).
+.farbe-primary {
+  color: var(--db-brand-origin-default);
+}
+
+.farbe-info {
+  color: var(--db-informational-on-bg-basic-emphasis-100-default);
+}
+
+.farbe-warnung {
+  color: var(--db-warning-on-bg-basic-emphasis-100-default);
+}
+
+.farbe-erfolg {
+  color: var(--db-successful-on-bg-basic-emphasis-100-default);
+}
+
+.farbe-gefahr {
+  color: var(--db-critical-on-bg-basic-emphasis-100-default);
+}
+
+.farbe-gedaempft {
+  color: var(--db-adaptive-on-bg-basic-emphasis-70-default);
+}
+
+// Karte ohne Rahmen mit Schatten, volle Hoehe der Rasterzelle (Dashboard).
+.admin-karte {
+  block-size: 100%;
+  border: 0;
+  box-shadow: var(--db-elevation-sm);
+}
+
+// Kennzahl-Kachel (`AdminDashboard.tsx`).
+.kennzahl-wert {
+  display: block;
+  margin-block-start: var(--db-spacing-fixed-2xs);
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.kennzahl-einheit {
+  margin-inline-start: var(--db-spacing-fixed-2xs);
+  font-size: 1rem;
+  font-weight: normal;
+  color: var(--db-adaptive-on-bg-basic-emphasis-70-default);
+}
+
+// Zeile einer Kennzahl-Liste: Beschriftung links, Wert rechts, Trennlinie darunter.
+.kennzahl-zeile {
+  padding-block: var(--db-spacing-fixed-xs);
+  border-block-end: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.admin-block {
+  margin-block-end: var(--db-spacing-fixed-md);
+}
+
+.admin-rechts {
+  margin-block-start: var(--db-spacing-fixed-sm);
+  text-align: end;
+}
+
+.admin-laden {
+  padding-block: var(--db-spacing-fixed-xl);
+  text-align: center;
+}
+
+.nur-screenreader {
+  position: absolute;
+  inline-size: var(--db-border-width-3xs);
+  block-size: var(--db-border-width-3xs);
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nicht-schrumpfen {
+  flex-shrink: 0;
+}
+
+.kennzahl-beschriftung {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.kennzahl-zuwachs {
+  margin-inline-start: var(--db-spacing-fixed-2xs);
+}
+
+.kennzahl-fussnote {
+  margin-block-start: var(--db-spacing-fixed-xs);
+  font-size: 0.7rem;
+}
+
+.admin-karte--auto {
+  block-size: auto;
+}
+
+.admin-kopf {
+  margin-block-end: var(--db-spacing-fixed-xs);
+}
+
+.symbol-vor-text {
+  margin-inline-end: var(--db-spacing-fixed-2xs);
+  vertical-align: middle;
+}
+
+.admin-leer {
+  padding-block: var(--db-spacing-fixed-sm);
+  text-align: center;
+}
+
+.admin-laden--klein {
+  padding-block: var(--db-spacing-fixed-sm);
+}
+
+// Memory-Karte (`adminDashboardCharts.tsx`).
+.heap-aktuell {
+  margin-block-end: var(--db-spacing-fixed-xs);
+  color: var(--db-adaptive-on-bg-basic-emphasis-70-default);
+  font-size: 0.875rem;
+
+  p {
+    margin-block-end: 0;
+  }
+}
+
+.heap-aktuell__umgebung {
+  margin-block-end: var(--db-spacing-fixed-2xs);
+}
+
+.heap-legende {
+  margin-block-start: var(--db-spacing-fixed-2xs);
+}
+
+.heap-legende__eintrag {
+  display: flex;
+  align-items: center;
+  gap: var(--db-spacing-fixed-2xs);
+}
+
+.heap-ereignisse {
+  padding-block-start: var(--db-spacing-fixed-xs);
+  margin-block-start: var(--db-spacing-fixed-xs);
+  border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.heap-ereignis {
+  padding-block: var(--db-spacing-fixed-2xs);
+  border-block-end: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.heap-ereignis__name {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.heap-ereignis__meta {
+  padding-inline-start: var(--db-spacing-fixed-lg);
+  font-size: 0.72rem;
+  color: var(--db-adaptive-on-bg-basic-emphasis-70-default);
+}
+
+.heap-seiten {
+  margin-block-start: var(--db-spacing-fixed-xs);
+  font-size: 0.75rem;
+}
+
+// Abstaende (Token-Stufen xs/sm/md) als Klassen: `luft-oben-sm`, `luft-unten-md`, ...
+@each $stufe in ('2xs', 'xs', 'sm', 'md') {
+  .luft-oben-#{$stufe} {
+    margin-block-start: var(--db-spacing-fixed-#{$stufe});
+  }
+
+  .luft-unten-#{$stufe} {
+    margin-block-end: var(--db-spacing-fixed-#{$stufe});
+  }
+
+  .luft-links-#{$stufe} {
+    margin-inline-start: var(--db-spacing-fixed-#{$stufe});
+  }
+
+  .luft-rechts-#{$stufe} {
+    margin-inline-end: var(--db-spacing-fixed-#{$stufe});
+  }
+}
+
+.ohne-luft {
+  margin: 0;
+}
+
+.ohne-luft-unten {
+  margin-block-end: 0;
+}
+
+.ohne-luft-oben {
+  margin-block-start: 0;
+}
+
+.fett {
+  font-weight: 600;
+}
+
+.halbfett {
+  font-weight: 500;
+}
+
+.normal-fett {
+  font-weight: normal;
+}
+
+.kursiv {
+  font-style: italic;
+}
+
+.durchgestrichen {
+  text-decoration: line-through;
+}
+
+.ohne-unterstrich {
+  text-decoration: none;
+}
+
+.grossbuchstaben {
+  text-transform: uppercase;
+}
+
+.anzeige-block {
+  display: block;
+}
+
+.schrift-mono {
+  font-family: var(--db-font-family-mono, ui-monospace, 'SFMono-Regular', 'Menlo', monospace);
+}
+
+// Nur in einem Breakpoint-Bereich sichtbar (Ersatz fuer `d-md-none`, `d-none d-md-inline`, ...).
+.ab-md-inline,
+.ab-sm-inline {
+  display: none;
+}
+
+@media screen and (min-width: #{bp.$sm}px) {
+  .ab-sm-inline {
+    display: inline;
+  }
+}
+
+@media screen and (min-width: #{bp.$md}px) {
+  .ab-md-inline {
+    display: inline;
+  }
+
+  .nur-unter-md {
+    display: none;
+  }
+}
+
+// Tabellenzellen (`db-table`): Ausrichtung, kleine Schrift, Umbruch.
+.zelle-rechts {
+  text-align: end;
+}
+
+.zelle-mitte {
+  text-align: center;
+}
+
+.zelle-klein {
+  font-size: 0.875rem;
+}
+
+.zelle-luft {
+  padding-block: var(--db-spacing-fixed-md);
+}
+
+.zelle-luft-klein {
+  padding-block: var(--db-spacing-fixed-sm);
+}
+
+.zelle-hinterlegt {
+  background-color: var(--db-adaptive-bg-basic-level-3-default);
+}
+
+.umbrechen {
+  overflow-wrap: anywhere;
+}
+
+// Spalten, die erst ab einem Breakpoint erscheinen.
+.spalte-ab-md,
+.spalte-ab-lg {
+  display: none;
+}
+
+@media screen and (min-width: #{bp.$md}px) {
+  .spalte-ab-md {
+    display: table-cell;
+  }
+}
+
+@media screen and (min-width: #{bp.$lg}px) {
+  .spalte-ab-lg {
+    display: table-cell;
+  }
+}
+
+.admin-leiste {
+  margin-block-end: var(--db-spacing-fixed-sm);
+}
+
+.admin-pre {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+}
+
+.abschneiden {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.waechst {
+  flex-grow: 1;
+}
+
+.admin-label {
+  display: block;
+  margin-block-end: var(--db-spacing-fixed-2xs);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+// Benutzerkarte (`AdminUserCard.tsx`).
+.admin-user-card {
+  overflow: hidden;
+}
+
+.admin-user-card--ich {
+  border-color: var(--db-brand-on-bg-basic-emphasis-70-default);
+}
+
+.admin-user-card--geaendert {
+  border-color: var(--db-warning-on-bg-basic-emphasis-70-default);
+}
+
+.admin-user-card__kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--db-spacing-fixed-xs) var(--db-spacing-fixed-sm);
+  cursor: pointer;
+  background-color: var(--db-adaptive-bg-basic-level-2-default);
+  border-block-end: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.admin-user-card__name {
+  display: block;
+}
+
+.admin-user-card__zeile {
+  padding: var(--db-spacing-fixed-xs) var(--db-spacing-fixed-sm);
+}
+
+.admin-user-card__wert {
+  font-weight: 500;
+}
+
+.admin-user-card__abschnitt {
+  margin-inline-start: var(--db-spacing-fixed-xs);
+}
+
+.admin-user-card__detail {
+  padding: var(--db-spacing-fixed-sm);
+  border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.admin-user-card__aktionen {
+  padding-block-start: var(--db-spacing-fixed-xs);
+  margin-block-start: var(--db-spacing-fixed-sm);
+  border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+// Leiste mit Mehrfachauswahl, bleibt beim Scrollen oben stehen.
+.auswahl-leiste {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1020;
+  padding: var(--db-spacing-fixed-xs);
+  margin-block-end: var(--db-spacing-fixed-sm);
+  background-color: var(--db-adaptive-bg-basic-level-3-default);
+  border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+// Filterkarte der Ressourcen-Ansicht (`AdminResourceBrowser.tsx`) und Suchfeld mit Loeschknopf.
+.admin-filterkarte {
+  margin-block-end: var(--db-spacing-fixed-sm);
+  background-color: var(--db-adaptive-bg-basic-level-2-default);
+  border: 0;
+}
+
+.admin-filterkarte__inhalt {
+  padding: var(--db-spacing-fixed-xs) var(--db-spacing-fixed-sm);
+}
+
+.feld-mit-knopf {
+  position: relative;
+}
+
+.feld-mit-knopf__loeschen {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: 0;
+  padding: 0;
+  padding-inline-end: var(--db-spacing-fixed-xs);
+  transform: translateY(-50%);
+}
+
+// Aufklappbare Vorlagen-Karte (`AdminProfileTemplatesManager.tsx`).
+.vorlagen-karte {
+  border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.vorlagen-karte--geaendert {
+  border-color: var(--db-warning-on-bg-basic-emphasis-70-default);
+}
+
+.vorlagen-karte__kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: start;
+}
+
+.vorlagen-karte__inhalt {
+  padding: var(--db-spacing-fixed-sm);
+  border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.formular-spalte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--db-spacing-fixed-sm);
+}
+
+.admin-details {
+  padding: var(--db-spacing-fixed-xs);
+  background-color: var(--db-adaptive-bg-basic-level-2-default);
+  border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.admin-ueberschrift {
+  padding-block-end: var(--db-spacing-fixed-xs);
+  margin-block-end: var(--db-spacing-fixed-sm);
+  border-block-end: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.admin-abschnitt-oben {
+  padding-block-start: var(--db-spacing-fixed-sm);
+  margin-block-start: var(--db-spacing-fixed-md);
+  border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+// JSON-Editor (`JsonEditor.tsx`): einklappbarer Kasten mit Kopfzeile.
+.json-editor {
+  border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.json-editor--offen {
+  border-color: var(--db-brand-on-bg-basic-emphasis-60-default);
+}
+
+.json-editor--fehler {
+  border-color: var(--db-critical-on-bg-basic-emphasis-100-default);
+}
+
+.json-editor__kopf {
+  display: flex;
+  align-items: center;
+  gap: var(--db-spacing-fixed-xs);
+  padding: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-xs);
+  cursor: pointer;
+  user-select: none;
+  background-color: var(--db-adaptive-bg-basic-level-2-default);
+  border-radius: inherit;
+}
+
+.json-editor__kopf--offen {
+  border-block-end: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.json-editor__kopf--fehler {
+  background-color: var(--db-critical-bg-basic-level-1-default);
+}
+
+.json-editor__inhalt {
+  padding: var(--db-spacing-fixed-xs);
+}
+
+.json-editor__textarea {
+  inline-size: 100%;
+}
+
+.oe-level-input--gefuellt {
+  font-weight: 600;
+  border-color: var(--db-warning-on-bg-basic-emphasis-70-default);
+  border-width: var(--db-border-width-2xs);
+}
+
+.gruppe--voll {
+  block-size: 100%;
+}
+
+.gruppe--spalte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--db-spacing-fixed-sm);
+}
+
+.tabellenkopf-fix {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1020;
+  background-color: var(--db-adaptive-bg-basic-level-1-default);
+}
+
+// Code-Werte in Dialogen (`AdminResourceEditModal.tsx`).
+.code-feld {
+  padding: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-xs);
+  font-size: 0.875rem;
+  background-color: var(--db-adaptive-bg-basic-level-2-default);
+}
+
+.code-feld-sperre {
+  color: var(--db-adaptive-on-bg-basic-emphasis-70-default);
+  background-color: var(--db-adaptive-bg-basic-level-2-default);
+}
+
+.titel-code {
+  font-size: 1rem;
+}
+
+.feld-leer-hinweis {
+  border-color: var(--db-warning-on-bg-basic-emphasis-70-default);
+}
+
+// Breite, Hintergruende, Ausrichtung (Formular-Editor).
+.volle-breite {
+  inline-size: 100%;
+}
+
+.mitte-auto {
+  margin-inline: auto;
+}
+
+.hinterlegt-1 {
+  background-color: var(--db-adaptive-bg-basic-level-1-default);
+}
+
+.hinterlegt-2 {
+  background-color: var(--db-adaptive-bg-basic-level-2-default);
+}
+
+.hinterlegt-3 {
+  background-color: var(--db-adaptive-bg-basic-level-3-default);
+}
+
+.ausrichtung-mitte {
+  align-items: center;
+}
+
+.ausrichtung-unten {
+  align-items: flex-end;
+}
+
+.ausrichtung-oben {
+  align-items: flex-start;
+}
+
+.ausrichtung-basis {
+  align-items: baseline;
+}
+
+// Formular-Editor.
+.rahmen-box {
+  padding: var(--db-spacing-fixed-xs);
+  border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.summary-zeile {
+  display: flex;
+  align-items: center;
+  gap: var(--db-spacing-fixed-xs);
+  cursor: pointer;
+}
+
+.summary-zeile--eng {
+  flex-wrap: wrap;
+  gap: var(--db-spacing-fixed-2xs);
+}
+
+.zeile-basis {
+  display: flex;
+  align-items: baseline;
+  gap: var(--db-spacing-fixed-xs);
+  padding-block: var(--db-spacing-fixed-2xs);
+}
+
+.canvas-huelle {
+  position: relative;
+}
+
+.canvas-rahmen {
+  overflow: auto;
+  border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.canvas-overlay {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+}
+
+.canvas-marker {
+  position: absolute;
+  background-color: var(--db-adaptive-bg-basic-level-1-default);
+  border: var(--db-border-width-2xs) solid var(--db-critical-on-bg-basic-emphasis-70-default);
+  border-radius: var(--db-border-radius-full);
+  box-shadow: var(--db-elevation-md);
+}
+
+.skalierleiste {
+  padding: var(--db-spacing-fixed-xs);
+  margin-block-end: var(--db-spacing-fixed-xs);
+  font-size: 0.875rem;
+  background-color: var(--db-brand-bg-basic-level-1-default, var(--db-adaptive-bg-basic-level-2-default));
+  border: var(--db-border-width-3xs) solid var(--db-brand-on-bg-basic-emphasis-70-default);
+}
+
+.einzug-linie {
+  padding-inline-start: var(--db-spacing-fixed-xs);
+  margin-block-end: var(--db-spacing-fixed-2xs);
+  margin-inline-start: var(--db-spacing-fixed-2xs);
+  border-inline-start: var(--db-border-width-2xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.einzug-linie--duenn {
+  margin-inline-start: 0;
+  border-inline-start-width: var(--db-border-width-3xs);
+}
+
+// Zweigeteilte Ansicht: Canvas links, ziehbarer Griff, Panel rechts (ab lg nebeneinander).
+.split-layout {
+  @media screen and (min-width: #{bp.$lg}px) {
+    display: flex;
+    gap: var(--db-spacing-fixed-xs);
+  }
+}
+
+.split-links {
+  margin-block-end: var(--db-spacing-fixed-xs);
+
+  @media screen and (min-width: #{bp.$lg}px) {
+    margin-block-end: 0;
+  }
+}
+
+.split-griff {
+  display: none;
+
+  @media screen and (min-width: #{bp.$lg}px) {
+    display: flex;
+    align-items: stretch;
+  }
+}
+
+.zeile-mitte {
+  display: flex;
+  align-items: center;
+  gap: var(--db-spacing-fixed-xs);
+}
+
+@media screen and (min-width: #{bp.$sm}px) {
+  .nur-unter-sm {
+    display: none;
+  }
+}
+
+// Admin-Bereich (`pages/admin/index.tsx`).
+.admin-huelle {
+  padding-inline: var(--db-spacing-fixed-xs);
+
+  @media screen and (min-width: #{bp.$md}px) {
+    padding-inline: var(--db-spacing-fixed-md);
+  }
+}
+
+.admin-kopfzeile {
+  position: relative;
+  margin-block-end: var(--db-spacing-fixed-sm);
+  text-align: center;
+}
+
+.admin-titel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--db-spacing-fixed-2xs);
+  color: var(--db-adaptive-on-bg-basic-emphasis-100-default);
+}

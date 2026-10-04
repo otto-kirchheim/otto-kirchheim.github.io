@@ -1,0 +1,19 @@
+/* Freie Variante (`DB_ASSETS` aus, `vite.base-config.ts`): ersetzt die DB-Markenassets, ohne den DB-Code zu entfernen.
+   - Icons: Material Symbols Outlined (Apache 2.0) als Ligatur-Schrift, die zusaetzlich jeden DB-Icon-Namen kennt
+     (`scripts/gen-icon-font.py`, Zuordnung aus `iconRegistry.ts`) -- `data-icon` und die Komponenten-CSS bleiben unveraendert.
+   - Text: Systemschrift statt DB Neo Screen Sans/Head -- das erledigt der PostCSS-Filter `freieAssets` in
+     `vite.base-config.ts` (die Theme-Tokens tragen den Familiennamen fest im Wert); er entfernt auch die DB-@font-face
+     und das DB-Logo. */
+@font-face {
+  font-family: 'Material Symbols DB';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('../fonts/material-symbols-db.woff2') format('woff2');
+}
+
+@layer app {
+  :root {
+    --db-icon-font-family: 'Material Symbols DB';
+  }
+}

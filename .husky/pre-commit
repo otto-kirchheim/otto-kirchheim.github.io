@@ -13,4 +13,3 @@ if ! command -v bun >/dev/null 2>&1; then
 fi
 
 bun run lint-staged
-bun run test

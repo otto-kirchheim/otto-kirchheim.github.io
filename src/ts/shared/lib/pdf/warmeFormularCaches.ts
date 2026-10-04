@@ -1,0 +1,63 @@
+import { featureRegistry } from '@/shared/lib/feature';
+import dayjs from '@/shared/lib/date/configDayjs';
+import { warmeVorlagenCache } from './ladeFormular';
+
+/**
+ * Formular-Code (`meta.pdf.formular`) zu einem `aktivierteTabs`-Wert (`meta.legacy.tabKey`).
+ *
+ * @param tab - Wert aus `aktivierteTabs`.
+ * @returns Formular-Code oder `undefined`, wenn kein Feature den Tab mit PDF anmeldet.
+ */
+function formularFuerTab(tab: string): string | undefined {
+  return featureRegistry.metas().find(meta => meta.legacy.tabKey === tab)?.pdf?.formular;
+}
+
+/**
+ * Fuehrt `aufgabe` bei Leerlauf des Browsers aus (spaetestens nach 10 s), sonst per `setTimeout`.
+ *
+ * @param aufgabe - Auszufuehrende Arbeit.
+ */
+function plane(aufgabe: () => void): void {
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(aufgabe, { timeout: 10_000 });
+  } else {
+    setTimeout(aufgabe, 0);
+  }
+}
+
+/**
+ * Vorwaermer fuer den Formular-Vorlagen-Cache, damit ein spaeterer PDF-Export auch funktioniert, wenn
+ * die Verbindung nach dem Laden der Seite wegbricht. Laeuft im Hintergrund und blockiert nicht: der
+ * Aufrufer (`loadUserDaten.ts`) wartet nicht darauf, die Arbeit haengt zusaetzlich in
+ * `requestIdleCallback`.
+ *
+ * Gecacht wird nur fuer die aktivierten Feature-Tabs und den gewaehlten Monat -- der Cache-Schluessel
+ * enthaelt den Stichtag, ein anderer Monat bleibt also ein Cache-Miss, bis er selbst geladen wurde.
+ *
+ * @param aktivierteTabs - Aktivierte Feature-Tabs der Einstellungen; leer/`undefined` = Alt-User (Features mit `meta.legacyDefaultOn`, wie in `syncFeatureTabs.ts`).
+ * @param monat - Gewaehlter Monat, 1-basiert.
+ * @param jahr - Gewaehltes Jahr.
+ */
+export function warmeFormularCaches(aktivierteTabs: string[] | undefined, monat: number, jahr: number): void {
+  const tabs =
+    !aktivierteTabs || aktivierteTabs.length === 0
+      ? featureRegistry
+          .metas()
+          .filter(meta => meta.legacyDefaultOn)
+          .map(meta => meta.legacy.tabKey)
+      : aktivierteTabs;
+  const formulare = [...new Set(tabs.map(formularFuerTab).filter((f): f is string => Boolean(f)))];
+  if (formulare.length === 0) return;
+
+  const stichtag = dayjs([jahr, monat - 1, 1]).format('YYYY-MM-DD');
+
+  plane(() => {
+    // Sequentiell, damit nicht alle vier Vorlagen-PDFs gleichzeitig ziehen. `warmeVorlagenCache`
+    // ist best-effort und wirft nicht -- das `.catch` ist nur der Gurt, damit ein unerwarteter
+    // Fehler die restlichen Formulare nicht ueberspringt.
+    void formulare.reduce(
+      (kette, formular) => kette.then(() => warmeVorlagenCache(formular, stichtag).catch(() => undefined)),
+      Promise.resolve(),
+    );
+  });
+}

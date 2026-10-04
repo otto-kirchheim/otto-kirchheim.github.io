@@ -1,0 +1,232 @@
+import type { Feld } from '@otto-kirchheim/nebengeld-shared';
+import { gruppiere, katalogFelder, type FormularCode, type KatalogEintrag } from './datenKatalog';
+import { DBButton, DBStack } from '@db-ux/react-core-components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
+
+/**
+ * Wählt EINEN Datenpfad. Für Kopf-/Fuß-Felder im "Datenfeld"-Modus ist der Objekt-Schlüssel selbst
+ * der Pfad (`umbenennen()` in `FeldListe`), ein Pfad kann dort also nur von EINEM Feld belegt sein.
+ * `belegt` (Pfade anderer Felder, das eigene ausgenommen) markiert diese Optionen als `disabled`:
+ * sonst bräche `umbenennen()` bei einem belegten Pfad still ab (`felder[neu]` existiert schon), und
+ * der Titel änderte sich ohne erkennbaren Grund. Denselben Wert an zwei Positionen zeigt der
+ * "Text"-Modus mit `{Pfad}`-Platzhalter. Andere Aufrufer (Spalten-Schlüssel, `Feld.quellen`) haben
+ * die Einschränkung nicht und lassen `belegt` leer.
+ *
+ * @param props - `wert` gewählter Pfad, `eintraege` wählbare Katalogeinträge, `belegt` bereits
+ *   vergebene Pfade, `onChange` bei neuer Wahl (auch für frei getippte Pfade).
+ */
+export function DatenpfadWahl({
+  wert,
+  eintraege,
+  belegt = new Set(),
+  onChange,
+}: {
+  wert: string;
+  eintraege: KatalogEintrag[];
+  belegt?: Set<string>;
+  onChange: (pfad: string) => void;
+}) {
+  const bekannt = eintraege.some(e => e.pfad === wert);
+  return (
+    <div>
+      <DBStack direction="row" alignment="end" gap="x-small" className="feldgruppe">
+        <DbAuswahl
+          beschriftung="Datenfeld"
+          dicht
+          value={bekannt ? wert : '__frei'}
+          onChange={e => onChange(e.target.value)}
+        >
+          {gruppiere(eintraege).map(([gruppe, felder]) => (
+            <optgroup key={gruppe} label={gruppe}>
+              {felder.map(f => (
+                <option key={f.pfad} value={f.pfad} disabled={belegt.has(f.pfad)}>
+                  {f.label}
+                  {belegt.has(f.pfad) ? ' (bereits von einem anderen Feld verwendet)' : ''}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+          <option value="__frei">Freier Datenpfad…</option>
+        </DbAuswahl>
+        {!bekannt && (
+          <DbFeld
+            beschriftung="Freier Datenpfad"
+            dicht
+            feldKlasse="schrift-mono"
+            ungueltig={belegt.has(wert)}
+            placeholder="Datenpfad"
+            value={wert === '__frei' ? '' : wert}
+            onChange={e => onChange(e.target.value)}
+          />
+        )}
+      </DBStack>
+      {!bekannt && belegt.has(wert) && (
+        <div className="zelle-klein farbe-gefahr">Dieser Datenpfad wird schon von einem anderen Feld verwendet.</div>
+      )}
+    </div>
+  );
+}
+
+const TRENNER: { wert: string; label: string }[] = [
+  { wert: ' ', label: 'Leerzeichen' },
+  { wert: ', ', label: 'Komma  ( , )' },
+  { wert: ' / ', label: 'Schrägstrich  ( / )' },
+  { wert: '; ', label: 'Semikolon  ( ; )' },
+  { wert: ' - ', label: 'Bindestrich  ( - )' },
+  { wert: ' | ', label: 'Senkrechter Strich  ( | )' },
+  { wert: '\n', label: 'Neue Zeile (braucht Zeilenumbruch)' },
+];
+
+/**
+ * Mehrere Datenpfade in eine Zelle, verbunden mit einem frei wählbaren Trennzeichen. Anders als
+ * Text+Platzhalter (`PlatzhalterPicker`) werden leere/fehlende Teile übersprungen, statt eine
+ * Trennzeichen-Lücke zu hinterlassen (z.B. optionales `Adress2`).
+ *
+ * @param props - `feld` das bearbeitete Feld (`quellen`, `trenner`), `formular` Formularcode für den
+ *   Katalog, `onChange` mit dem geänderten Feld.
+ */
+export function ZusammengesetzteQuellen({
+  feld,
+  formular,
+  onChange,
+}: {
+  feld: Feld;
+  formular: FormularCode;
+  onChange: (feld: Feld) => void;
+}) {
+  const quellen = feld.quellen ?? [];
+  const eintraege = katalogFelder(formular);
+  const bekannterTrenner = TRENNER.some(t => t.wert === (feld.trenner ?? ' '));
+
+  return (
+    <div className="luft-unten-2xs">
+      {quellen.map((pfad, i) => (
+        <DBStack key={i} direction="row" gap="2x-small" className="luft-unten-2xs">
+          <div className="waechst">
+            <DatenpfadWahl
+              wert={pfad}
+              eintraege={eintraege}
+              onChange={neu => onChange({ ...feld, quellen: quellen.map((p, j) => (j === i ? neu : p)) })}
+            />
+          </div>
+          <DBButton
+            type="button"
+
+            variant="outlined"
+            data-color="critical"
+            size="small"
+            onClick={() => onChange({ ...feld, quellen: quellen.filter((_, j) => j !== i) })}
+            title="Teil entfernen"
+          >
+            ×
+          </DBButton>
+        </DBStack>
+      ))}
+      <DBStack direction="row" alignment="center" gap="2x-small">
+        <DBButton
+          type="button"
+          variant="outlined"
+          size="small"
+          onClick={() => onChange({ ...feld, quellen: [...quellen, eintraege[0]?.pfad ?? ''] })}
+        >
+          + Teil
+        </DBButton>
+        <span className="zelle-klein farbe-gedaempft">getrennt durch</span>
+        <DbAuswahl
+          beschriftung="Trennzeichen"
+          dicht
+
+          value={bekannterTrenner ? (feld.trenner ?? ' ') : '__frei'}
+          onChange={e => {
+            const v = e.target.value;
+            onChange({ ...feld, trenner: v === '__frei' ? '' : v });
+          }}
+        >
+          {TRENNER.map(t => (
+            <option key={t.wert} value={t.wert}>
+              {t.label}
+            </option>
+          ))}
+          <option value="__frei">eigenes…</option>
+        </DbAuswahl>
+        {!bekannterTrenner && (
+          <DbFeld
+            beschriftung="Zeichen"
+            dicht
+
+            feldKlasse="schrift-mono"
+            huelleStyle={{ maxWidth: '6rem' }}
+            placeholder="Zeichen"
+            value={feld.trenner ?? ''}
+            onChange={e => onChange({ ...feld, trenner: (e.target as HTMLInputElement).value })}
+          />
+        )}
+      </DBStack>
+    </div>
+  );
+}
+
+/**
+ * Fügt einen Datenpfad als `{pfad}`-Platzhalter an der Cursorposition eines Textfelds ein -- per
+ * Klick statt Freihand-Tippen, denn ein falscher Pfad liefert still einen leeren Wert.
+ *
+ * @param props - `formular` Formularcode für den Katalog, `inputRef` das Textfeld (Cursorposition),
+ *   `wert` aktueller Text, `onEinfuegen` mit dem neuen Gesamttext.
+ */
+export function PlatzhalterPicker({
+  formular,
+  inputRef,
+  wert,
+  onEinfuegen,
+}: {
+  formular: FormularCode;
+  inputRef: { current: HTMLInputElement | null };
+  wert: string;
+  onEinfuegen: (neuerText: string) => void;
+}) {
+  /**
+   * Setzt `{pfad}` an die Cursorposition bzw. ans Textende, meldet den neuen Text und stellt danach
+   * Fokus und Cursor hinter der Einfügung wieder her.
+   *
+   * @param pfad - Gewählter Datenpfad; leer = nichts tun.
+   */
+  function einfuegen(pfad: string) {
+    if (!pfad) return;
+    const einfuegung = `{${pfad}}`;
+    const el = inputRef.current;
+    const start = el?.selectionStart ?? wert.length;
+    const end = el?.selectionEnd ?? wert.length;
+    const neu = wert.slice(0, start) + einfuegung + wert.slice(end);
+    onEinfuegen(neu);
+    // Cursor hinter die Einfügung setzen, nach dem Re-Render mit dem neuen Wert.
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(start + einfuegung.length, start + einfuegung.length);
+    });
+  }
+
+  return (
+    <DbAuswahl
+      beschriftung="Datenpfad an der Cursorposition einfügen"
+      dicht
+      className="luft-unten-2xs"
+      value=""
+      title="Datenpfad an der Cursorposition einfügen"
+      onChange={e => {
+        einfuegen((e.target as HTMLSelectElement).value);
+        (e.target as HTMLSelectElement).value = '';
+      }}
+    >
+      <option value="">− Datenpfad einfügen −</option>
+      {gruppiere(katalogFelder(formular)).map(([gruppe, felder]) => (
+        <optgroup key={gruppe} label={gruppe}>
+          {felder.map(f => (
+            <option key={f.pfad} value={f.pfad}>
+              {f.label}
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </DbAuswahl>
+  );
+}

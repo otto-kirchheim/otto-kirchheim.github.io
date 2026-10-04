@@ -1,0 +1,370 @@
+import type { TUserRole } from '@/types';
+import { joinOeLevels, splitOeInput } from '@/shared/lib/ressource/oeLevels';
+import type { AdminUserRow } from '../api/api';
+import createAdminUserLinksModal from './createAdminUserLinksModal';
+import createAdminUserPasswordModal from './createAdminUserPasswordModal';
+import { OeLevelBoxes } from './OeLevelBoxes';
+import { OeTagInput } from './OeTagInput';
+import { ROLE_LABELS, type UserEditState } from './adminUserListTypen';
+import {
+  DBButton,
+  DBCheckbox,
+  DBInfotext,
+  DBLoadingIndicator,
+  DBStack,
+  DBTag,
+  DBTooltip,
+} from '@db-ux/react-core-components';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
+import { DbAuswahl } from '@/shared/ui/form/DbFeld';
+
+type Props = {
+  currentUser: AdminUserRow;
+  edit: UserEditState;
+  isSuperAdmin: boolean;
+  isSelfRow: boolean;
+  isSaving: boolean;
+  isExpanded: boolean;
+  isSelected: boolean;
+  changed: boolean;
+  editable: boolean;
+  roleEditable: boolean;
+  permissionEditable: boolean;
+  onToggleExpand: () => void;
+  onToggleSelection: () => void;
+  updateEdit: (patch: Partial<UserEditState>) => void;
+  onSave: () => void;
+  onResetEdit: () => void;
+  onLoadAsUser: () => void;
+  onDelete: () => void;
+};
+
+/**
+ * Benutzer-Karte: kompakte Kopfzeile und Übersicht (immer sichtbar) plus aufklappbarer Bearbeitungsbereich.
+ *
+ * @param props - Benutzerzeile, Bearbeitungsstand, Berechtigungs-/Zustands-Flags und die Callbacks der Liste.
+ */
+export function AdminUserCard({
+  currentUser,
+  edit,
+  isSuperAdmin,
+  isSelfRow,
+  isSaving,
+  isExpanded,
+  isSelected,
+  changed,
+  editable,
+  roleEditable,
+  permissionEditable,
+  onToggleExpand,
+  onToggleSelection,
+  updateEdit,
+  onSave,
+  onResetEdit,
+  onLoadAsUser,
+  onDelete,
+}: Props) {
+  const roleInfo = ROLE_LABELS[currentUser.role];
+
+  return (
+    <div className="admin-user-card-col">
+      <div
+        className={`db-card admin-user-card ${isSelfRow ? 'admin-user-card--ich' : ''} ${changed ? 'admin-user-card--geaendert' : ''}`}
+        data-spacing="none"
+        style={{ overflow: 'hidden' }}
+      >
+        <div
+          className="admin-user-card__kopf"
+          onClick={onToggleExpand}
+          title={isExpanded ? 'Details einklappen' : 'Details ausklappen'}
+        >
+          <DBStack direction="row" alignment="center" gap="x-small" className="abschneiden">
+            {isSuperAdmin && !isSelfRow && (
+              <DBCheckbox
+                className="nicht-schrumpfen"
+                size="small"
+                label={`${currentUser.userName} für Massenänderung auswählen`}
+                showLabel={false}
+                checked={isSelected}
+                onClick={e => e.stopPropagation()}
+                onChange={onToggleSelection}
+              />
+            )}
+            <span className="db-icon farbe-gedaempft db-font-size-md" data-icon="person" />
+            <span className="abschneiden">
+              <strong className="abschneiden admin-user-card__name">
+                {currentUser.fullName || currentUser.userName}
+              </strong>
+              {currentUser.fullName && (
+                <DBInfotext showIcon={false} className="infotext-block abschneiden">
+                  {currentUser.userName}
+                </DBInfotext>
+              )}
+            </span>
+          </DBStack>
+          <DBStack direction="row" alignment="center" gap="x-small" className="nicht-schrumpfen">
+            <DBTag semantic={roleInfo.semantic} emphasis="strong" className="rollen-tag">
+              {roleInfo.label}
+            </DBTag>
+            <span
+              className="db-icon farbe-gedaempft db-font-size-md"
+              data-icon={isExpanded ? 'chevron_up' : 'chevron_down'}
+              style={{ transition: 'transform 0.2s' }}
+            />
+          </DBStack>
+        </div>
+
+        <div className="admin-user-card__zeile">
+          <DBStack direction="row" wrap gap="x-small" alignment="center" className="zelle-klein">
+            <DBInfotext showIcon={false}>OE:</DBInfotext>
+            <strong className="admin-user-card__wert">{joinOeLevels(currentUser.oe) || '–'}</strong>
+
+            <DBTag
+              semantic={currentUser.emailVerified ? 'successful' : 'critical'}
+              title={currentUser.email || undefined}
+            >
+              {currentUser.emailVerified ? 'E-Mail verifiziert' : 'E-Mail nicht verifiziert'}
+            </DBTag>
+
+            {currentUser.adminForTeamOes.length > 0 && (
+              <>
+                <DBInfotext showIcon={false} className="admin-user-card__abschnitt">
+                  Team:
+                </DBInfotext>
+                {currentUser.adminForTeamOes.map(oe => (
+                  <DBTag key={oe} semantic="informational">
+                    {oe}
+                  </DBTag>
+                ))}
+              </>
+            )}
+            {currentUser.adminForOrganizationOes.length > 0 && (
+              <>
+                <DBInfotext showIcon={false} className="admin-user-card__abschnitt">
+                  Org:
+                </DBInfotext>
+                {currentUser.adminForOrganizationOes.map(oe => (
+                  <DBTag key={oe} semantic="warning">
+                    {oe}
+                  </DBTag>
+                ))}
+              </>
+            )}
+          </DBStack>
+        </div>
+
+        {isExpanded && (
+          <DBStack gap="small" className="admin-user-card__detail">
+            <div>
+              <DbAuswahl
+                beschriftung="Rolle"
+                beschriftungZeigen
+                dicht
+                value={edit.role}
+                onChange={e => updateEdit({ role: (e.target as HTMLSelectElement).value as TUserRole })}
+                disabled={!roleEditable || isSelfRow}
+              >
+                <option value="member">Mitglied</option>
+                <option value="team-admin">Team-Admin</option>
+                <option value="org-admin">Org-Admin</option>
+                <option value="super-admin">Super-Admin</option>
+              </DbAuswahl>
+            </div>
+
+            <div>
+              <label className="admin-label">OE</label>
+              <OeLevelBoxes value={edit.oe} onChange={value => updateEdit({ oe: value })} disabled={!editable} />
+            </div>
+
+            <OeTagInput
+              label="Team-Admin OEs"
+              values={edit.adminForTeamOes}
+              onChange={values => updateEdit({ adminForTeamOes: values })}
+              disabled={!editable}
+              placeholder="Team-OE hinzufügen…"
+              defaultLevelCount={splitOeInput(edit.oe).length}
+            />
+
+            <OeTagInput
+              label="Org-Admin OEs"
+              values={edit.adminForOrganizationOes}
+              onChange={values => updateEdit({ adminForOrganizationOes: values })}
+              disabled={!editable}
+              placeholder="Org-OE hinzufügen…"
+              defaultLevelCount={splitOeInput(edit.oe).length}
+            />
+
+            <Gruppe titel="Spezielle Admin-Berechtigungen">
+              <DBStack gap="2x-small">
+                <div>
+                  <DBCheckbox
+                    size="small"
+                    id={`perm-vorgaben-${currentUser._id}`}
+                    label="Darf VorgabenGeld bearbeiten"
+                    checked={edit.canEditVorgabenGeld}
+                    onChange={e => updateEdit({ canEditVorgabenGeld: (e.target as HTMLInputElement).checked })}
+                    disabled={!permissionEditable}
+                  />
+                </div>
+
+                <div>
+                  <DBCheckbox
+                    size="small"
+                    id={`perm-templates-${currentUser._id}`}
+                    label="Darf Profile-Templates bearbeiten"
+                    checked={edit.canEditProfileTemplates}
+                    onChange={e => {
+                      const checked = (e.target as HTMLInputElement).checked;
+                      updateEdit({
+                        canEditProfileTemplates: checked,
+                        canEditOwnTeamTemplatesOnly: checked ? edit.canEditOwnTeamTemplatesOnly : false,
+                      });
+                    }}
+                    disabled={!permissionEditable}
+                  />
+                </div>
+
+                <div>
+                  <DBCheckbox
+                    size="small"
+                    id={`perm-teamonly-${currentUser._id}`}
+                    label="Profile-Templates nur im eigenen Team/OE-Scope"
+                    checked={edit.canEditOwnTeamTemplatesOnly}
+                    onChange={e => updateEdit({ canEditOwnTeamTemplatesOnly: (e.target as HTMLInputElement).checked })}
+                    disabled={!permissionEditable || !edit.canEditProfileTemplates}
+                  />
+                </div>
+
+                <div>
+                  <DBCheckbox
+                    size="small"
+                    id={`perm-formulare-erstellen-${currentUser._id}`}
+                    label="Darf Formular-Vorlagen erstellen"
+                    checked={edit.canCreateFormularVorlagen}
+                    onChange={e => updateEdit({ canCreateFormularVorlagen: (e.target as HTMLInputElement).checked })}
+                    disabled={!permissionEditable}
+                  />
+                  <DBInfotext showIcon={false} className="infotext-block">
+                    Erstellen beinhaltet automatisch Bearbeiten.
+                  </DBInfotext>
+                </div>
+
+                <div>
+                  <DBCheckbox
+                    size="small"
+                    id={`perm-formulare-bearbeiten-${currentUser._id}`}
+                    label="Darf Formular-Vorlagen bearbeiten"
+                    checked={edit.canEditFormularVorlagen}
+                    onChange={e => updateEdit({ canEditFormularVorlagen: (e.target as HTMLInputElement).checked })}
+                    disabled={!permissionEditable}
+                  />
+                </div>
+
+                {!permissionEditable && (
+                  <DBInfotext showIcon={false} className="infotext-block">
+                    Nur Super-Admin kann diese Flags ändern.
+                  </DBInfotext>
+                )}
+              </DBStack>
+            </Gruppe>
+
+            <DBStack direction="row" wrap gap="x-small" className="admin-user-card__aktionen">
+              {editable && (
+                <>
+                  <DBButton
+                    type="button"
+                    className="waechst"
+                    variant="brand"
+                    size="small"
+                    icon="save"
+                    onClick={onSave}
+                    disabled={!changed || isSaving}
+                    data-disabler
+                  >
+                    <DBLoadingIndicator overlay autoDisable={false} state={isSaving ? 'active' : 'inactive'}>
+                      Speichert
+                    </DBLoadingIndicator>
+                    {isSaving ? 'Speichern…' : 'Speichern'}
+                  </DBButton>
+                  {changed && (
+                    <DBButton
+                      type="button"
+                      variant="outlined"
+                      size="small"
+                      icon="undo"
+                      noText
+                      onClick={onResetEdit}
+                      disabled={isSaving}
+                      data-disabler
+                    >
+                      <DBTooltip>Änderungen verwerfen</DBTooltip>
+                    </DBButton>
+                  )}
+                </>
+              )}
+              <DBButton
+                type="button"
+                className="waechst"
+                variant="outlined"
+                size="small"
+                icon={isSelfRow ? 'house' : 'eye'}
+                onClick={onLoadAsUser}
+                disabled={isSaving}
+                data-disabler
+              >
+                {isSelfRow ? 'Eigene Daten' : 'Daten laden'}
+              </DBButton>
+              {editable && (
+                <DBButton
+                  type="button"
+                  variant="outlined"
+                  data-color="warning"
+                  size="small"
+                  icon="key"
+                  noText
+                  onClick={() => createAdminUserPasswordModal(currentUser._id, currentUser.userName)}
+                  disabled={isSaving}
+                  data-disabler
+                >
+                  <DBTooltip>Passwort für diesen Benutzer setzen</DBTooltip>
+                </DBButton>
+              )}
+              {editable && (
+                <DBButton
+                  type="button"
+                  variant="outlined"
+                  data-color="informational"
+                  size="small"
+                  icon="link_chain"
+                  noText
+                  onClick={() =>
+                    createAdminUserLinksModal(currentUser._id, currentUser.userName, currentUser.emailVerified)
+                  }
+                  disabled={isSaving}
+                  data-disabler
+                >
+                  <DBTooltip>Verifizierungs-/Passwort-Reset-Link erzeugen</DBTooltip>
+                </DBButton>
+              )}
+              {editable && (
+                <DBButton
+                  type="button"
+                  variant="outlined"
+                  data-color="critical"
+                  size="small"
+                  icon="bin"
+                  noText
+                  onClick={onDelete}
+                  disabled={isSaving}
+                  data-disabler
+                >
+                  <DBTooltip>Benutzer löschen</DBTooltip>
+                </DBButton>
+              )}
+            </DBStack>
+          </DBStack>
+        )}
+      </div>
+    </div>
+  );
+}

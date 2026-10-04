@@ -1,0 +1,19 @@
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
+import { default as Storage } from '@/shared/lib/storage/Storage';
+import { authApi } from '@/shared/api/apiService';
+
+/**
+ * Fordert eine neue Verifizierungs-E-Mail an und bestätigt per Snackbar.
+ *
+ * @param email - Zieladresse; ohne Angabe die gespeicherte `BenutzerEmail`, sonst leer (Server entscheidet).
+ */
+export default async function requestVerificationMail(email?: string): Promise<void> {
+  const fallbackEmail = Storage.get<string>('BenutzerEmail', { default: '' });
+  await authApi.resendVerificationEmail(email ?? (fallbackEmail || undefined));
+  createSnackBar({
+    message: 'Falls erforderlich, wurde eine neue Verifizierungs-E-Mail versendet.',
+    status: 'info',
+    timeout: 4000,
+    fixed: true,
+  });
+}

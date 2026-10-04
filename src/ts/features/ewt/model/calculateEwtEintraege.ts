@@ -1,0 +1,222 @@
+import type { Duration } from 'dayjs/plugin/duration';
+import type { IDatenEWT, IVorgabenE, IVorgabenU } from '@/types';
+import { resolveSchichtDay } from '@/shared/lib/schicht/resolveSchichtDay';
+import { default as getDurationFromTime } from '@/shared/lib/date/getDurationFromTime';
+import dayjs from '@/shared/lib/date/configDayjs';
+import calculateBuchungstagEwt from '@/features/ewt/model/calculateBuchungstagEwt';
+
+// BN ist Legacy-Alias für N (svzA identisch); SP wird als explizite Spätschicht unterstützt
+type SchichtKeys = 'T' | 'SP' | 'N' | 'S';
+
+/**
+ * Berechnet die fehlenden Zeiten der EWT-Einträge aus Schicht, Fahrzeiten und Arbeitszeit-Vorgaben.
+ * Nur Einträge mit `berechnen` werden verändert; bereits gefüllte Zeitfelder (`HH:mm`) bleiben
+ * erhalten. Die übergebenen Objekte werden direkt mutiert.
+ *
+ * @param vorgabenU - Persönliche Vorgaben (Arbeitszeit je Schicht, Fahrzeiten je Einsatzort).
+ * @param daten - EWT-Einträge; werden in-place ergänzt.
+ * @returns Dasselbe `daten`-Array.
+ * @throws {Error} Bei fehlenden bzw. unvollständigen Vorgaben oder wenn `daten` kein Array ist.
+ */
+export default function calculateEwtEintraege(vorgabenU: IVorgabenU, daten: IDatenEWT[]): IDatenEWT[] {
+  if (vorgabenU == null || daten == null || !Array.isArray(daten)) {
+    throw new Error('Daten fehlen');
+  }
+  if (
+    !('Arbeitszeit' in vorgabenU) ||
+    !('Fahrzeit' in vorgabenU) ||
+    !vorgabenU.Arbeitszeit ||
+    typeof vorgabenU.Arbeitszeit !== 'object' ||
+    !vorgabenU.Fahrzeit ||
+    !Array.isArray(vorgabenU.Fahrzeit)
+  ) {
+    throw new Error('Vorgaben unvollständig');
+  }
+  const { getPascalEnde, initializeVorgabenE, calculateTimes, getSchichtDaten } = createHelpers(vorgabenU);
+
+  const vorgabenE = initializeVorgabenE();
+
+  const eOrte = Object.keys(vorgabenE.fZ);
+
+  for (const TagDaten of daten) {
+    if (!TagDaten.berechnen) continue;
+    const datum = dayjs(TagDaten.Tag);
+    const schichtDaten = getSchichtDaten(TagDaten.Schicht as SchichtKeys, datum);
+
+    Object.assign(
+      TagDaten,
+      calculateTimes(TagDaten, datum, schichtDaten, eOrte.includes(TagDaten.Einsatzort), vorgabenE, getPascalEnde()),
+    );
+    TagDaten.Buchungstag = calculateBuchungstagEwt(TagDaten);
+  }
+
+  return daten;
+}
+
+/**
+ * Bündelt die von den Vorgaben abhängigen Hilfsfunktionen der Zeitberechnung.
+ *
+ * @param userSettings - Persönliche Vorgaben des Nutzers.
+ * @returns `getPascalEnde`, `initializeVorgabenE`, `calculateTimes` und `getSchichtDaten`.
+ */
+function createHelpers(userSettings: IVorgabenU) {
+  const { Arbeitszeit: aZ } = userSettings;
+
+  /**
+   * Sonderzuschlag von 5 Minuten auf "An Wohnung" für einen bestimmten Nutzer (Pascal Ackermann).
+   *
+   * @returns 5 Minuten für diesen Nutzer, sonst 0.
+   */
+  const getPascalEnde = (): Duration =>
+    userSettings.Pers.Vorname === 'Pascal' && userSettings.Pers.Nachname === 'Ackermann'
+      ? dayjs.duration(5, 'm')
+      : dayjs.duration(0, 'm');
+
+  /**
+   * Liefert Beginn, Ende und Vor-/Nachlaufzeiten der Schicht für den Wochentag.
+   * `svzA` liegt zwischen Arbeitsbeginn und Abfahrt von der 1. Tätigkeitsstätte, `svzE` zwischen
+   * Ankunft dort und Arbeitsende; bei Nacht liegt das Ende am Folgetag.
+   *
+   * @param schicht - Schichtkürzel (`T`, `SP`, `N`, `S`; `BN` gilt als `N`).
+   * @param datum - Tag der Schicht (bestimmt den Wochentag der Überschreibungen).
+   * @returns Schichtdaten mit `beginn`, `ende`, `svzA`, `svzE`, `overnight`.
+   * @throws {Error} Wenn die Schicht nicht konfiguriert oder unbekannt ist.
+   */
+  const getSchichtDaten = (schicht: string, datum: dayjs.Dayjs) => {
+    const isoWeekday = datum.isoWeekday();
+    const key: SchichtKeys = schicht === 'BN' ? 'N' : (schicht as SchichtKeys);
+
+    switch (key) {
+      case 'T': {
+        const fruehConfig = resolveSchichtDay(aZ.frueh, isoWeekday);
+        const spaetConfig = aZ.spaet.aktiv ? resolveSchichtDay(aZ.spaet, isoWeekday) : null;
+        const config = fruehConfig ?? spaetConfig ?? aZ.frueh.default;
+        return {
+          beginn: getDurationFromTime(config.beginn),
+          ende: getDurationFromTime(config.ende),
+          svzA: dayjs.duration(20, 'm'),
+          svzE: dayjs.duration(20, 'm'),
+          overnight: false,
+        };
+      }
+      case 'SP': {
+        const spaetConfig = aZ.spaet.aktiv ? resolveSchichtDay(aZ.spaet, isoWeekday) : null;
+        const fruehConfig = resolveSchichtDay(aZ.frueh, isoWeekday);
+        const config = spaetConfig ?? fruehConfig ?? aZ.frueh.default;
+        return {
+          beginn: getDurationFromTime(config.beginn),
+          ende: getDurationFromTime(config.ende),
+          svzA: dayjs.duration(20, 'm'),
+          svzE: dayjs.duration(20, 'm'),
+          overnight: false,
+        };
+      }
+      case 'N': {
+        if (!aZ.nacht.aktiv) throw new Error('Nachtschicht nicht konfiguriert');
+        const config = resolveSchichtDay(aZ.nacht, isoWeekday) ?? aZ.nacht.default;
+        return {
+          beginn: getDurationFromTime(config.beginn),
+          ende: getDurationFromTime(config.ende).add(1, 'd'),
+          svzA: dayjs.duration(45, 'm'),
+          svzE: dayjs.duration(45, 'm'),
+          overnight: true,
+        };
+      }
+      case 'S': {
+        if (!aZ.sonder.aktiv) throw new Error('Sonderschicht nicht konfiguriert');
+        return {
+          beginn: getDurationFromTime(aZ.sonder.beginn),
+          ende: getDurationFromTime(aZ.sonder.ende),
+          svzA: dayjs.duration(20, 'm'),
+          svzE: dayjs.duration(20, 'm'),
+          overnight: false,
+        };
+      }
+      default:
+        throw new Error('Schicht unbekannt');
+    }
+  };
+
+  /**
+   * Wandelt Fahrzeit-Vorgaben in Durationen um.
+   *
+   * @returns `rZ` (Fahrzeit Wohnung–Tätigkeitsstätte) und `fZ` (Fahrzeit je Einsatzort-Schlüssel).
+   */
+  const initializeVorgabenE = (): IVorgabenE => {
+    const fZ: IVorgabenE['fZ'] = {};
+    userSettings.Fahrzeit.forEach(place => {
+      fZ[place.key] = getDurationFromTime(place.value);
+    });
+    return {
+      rZ: getDurationFromTime(aZ.fahrzeit),
+      fZ,
+    };
+  };
+
+  /**
+   * Berechnet alle Zeitfelder eines Eintrags; bereits gefüllte Felder (`HH:mm`) bleiben erhalten,
+   * Einsatzort-Zeiten werden nur für bekannte Einsatzorte ergänzt.
+   *
+   * @param TagDaten - Eintrag mit ggf. schon vorhandenen Zeiten.
+   * @param datum - Tag der Schicht.
+   * @param schichtDaten - Ergebnis von `getSchichtDaten`.
+   * @param eOrt - true, wenn der Einsatzort in den Fahrzeit-Vorgaben existiert.
+   * @param vorgabenE - Fahrzeiten aus `initializeVorgabenE`.
+   * @param endePascal - Zuschlag aus `getPascalEnde`.
+   * @returns Die Zeitfelder `beginE`, `endeE`, `abWE`, `ab1E`, `an1E`, `anWE`, `anEE`, `abEE`.
+   */
+  const calculateTimes = (
+    TagDaten: IDatenEWT,
+    datum: dayjs.Dayjs,
+    schichtDaten: ReturnType<typeof getSchichtDaten>,
+    eOrt: boolean,
+    vorgabenE: IVorgabenE,
+    endePascal: Duration,
+  ) => {
+    /**
+     * Setzt eine `HH:mm`-Angabe auf den Tag des Eintrags; bei Nacht/BN und `addTag` wird der Tag um 1 verringert.
+     *
+     * @param value - Uhrzeit `HH:mm`.
+     * @param addTag - true für Zeiten der zweiten Schichthälfte (Ende-Seite).
+     * @param Tag - Eintrag, dessen `Tag` und `Schicht` verwendet werden.
+     * @returns dayjs-Zeitpunkt.
+     */
+    const convertToDayjs = (value: string, addTag: boolean, Tag: IDatenEWT): dayjs.Dayjs => {
+      const [stunden, minuten] = value.split(':');
+      let tag = dayjs(Tag.Tag).date();
+      if (addTag && ['BN', 'N'].includes(Tag.Schicht ?? '')) tag -= 1;
+      return dayjs([datum.year(), datum.month(), tag, +stunden, +minuten, 0, 0]);
+    };
+
+    const beginE_dayjs =
+      TagDaten.beginE.length === 5 ? convertToDayjs(TagDaten.beginE, false, TagDaten) : datum.add(schichtDaten.beginn);
+    const beginE = beginE_dayjs.format('LT');
+    const endeE_dayjs =
+      TagDaten.endeE.length === 5 ? convertToDayjs(TagDaten.endeE, true, TagDaten) : datum.add(schichtDaten.ende);
+    const endeE = endeE_dayjs.format('LT');
+
+    const abWE = TagDaten.abWE.length === 5 ? TagDaten.abWE : beginE_dayjs.subtract(vorgabenE.rZ).format('LT');
+    const ab1E_dayjs =
+      TagDaten.ab1E.length === 5 ? convertToDayjs(TagDaten.ab1E, false, TagDaten) : beginE_dayjs.add(schichtDaten.svzA);
+    const ab1E = ab1E_dayjs.format('LT');
+
+    const an1E_dayjs =
+      TagDaten.an1E.length === 5
+        ? convertToDayjs(TagDaten.an1E, true, TagDaten)
+        : endeE_dayjs.subtract(schichtDaten.svzE);
+    const an1E = an1E_dayjs.format('LT');
+    const anWE =
+      TagDaten.anWE.length === 5 ? TagDaten.anWE : endeE_dayjs.add(vorgabenE.rZ).add(endePascal).format('LT');
+
+    const anEE = !(eOrt && TagDaten.anEE === '')
+      ? TagDaten.anEE
+      : ab1E_dayjs.add(vorgabenE.fZ[TagDaten.Einsatzort]).format('LT');
+    const abEE = !(eOrt && TagDaten.abEE === '')
+      ? TagDaten.abEE
+      : an1E_dayjs.subtract(vorgabenE.fZ[TagDaten.Einsatzort]).format('LT');
+
+    return { beginE, endeE, abWE, ab1E, an1E, anWE, anEE, abEE };
+  };
+
+  return { getPascalEnde, initializeVorgabenE, calculateTimes, getSchichtDaten };
+}

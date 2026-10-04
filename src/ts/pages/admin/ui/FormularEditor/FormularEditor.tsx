@@ -1,0 +1,957 @@
+import { SIGNATUR_LINIE_ANTEIL } from '@/shared/lib/pdf/signaturePad';
+import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
+
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
+import { hoeheFuer, maxZeilenFuer, spaltenFuer, startYFuer } from '@/shared/lib/pdf/spaltenFuer';
+import type { Feld, Schriftart, SeitenDef, Spalte, Version } from '@otto-kirchheim/nebengeld-shared';
+import { build } from '@/shared/lib/pdf/build';
+import { konfigSchema } from '@/shared/lib/pdf/configSchema';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
+import { PdfCanvas, type Achse, type Messung, type RasterMarke, type Rechteck } from './PdfCanvas';
+import { FeldPanel, type Armed } from './FeldPanel';
+import { erzeugeDummyDaten, erzeugeVorschau, type Werteart } from './dummyDaten';
+import { beispielSignatur } from './beispielSignatur';
+import { seitenMasse } from './pdfjsLoader';
+import {
+  benenneSonderzeileUm,
+  dreheKonfig,
+  skaliereKonfig,
+  type Drehwinkel,
+  type SkalierFaktoren,
+} from './skaliereKonfig';
+import { dreheTabellenZelle, entdrehePunkt } from '@/shared/lib/pdf/tabellenDrehung';
+import { SkalierLeiste } from './SkalierLeiste';
+import { vorlageFontFamilien, type VorlageFontFamilie } from './vorlageFonts';
+import { schriftKurz } from './schriftartHelfer';
+import { leereSeite, zeilenHoeheAus } from './seitenHelfer';
+import { SchriftartDialog } from './SchriftartDialog';
+import type { FormularCode } from './datenKatalog';
+import { DBButton, DBCheckbox, DBStack, DBTextarea } from '@db-ux/react-core-components';
+import { DbAuswahl } from '@/shared/ui/form/DbFeld';
+
+type Masse = { w: number; h: number };
+type SkalierState = {
+  alt: Masse | null;
+  neu: Masse | null;
+  faktoren: SkalierFaktoren;
+  gekoppelt: boolean;
+  drehung: Drehwinkel;
+};
+
+export type Konfig = { schriftart?: Schriftart; seiten: SeitenDef[]; tabellen: Version['tabellen'] };
+
+type Props = {
+  formular: FormularCode;
+  datei: File;
+  value: Konfig;
+  onChange: (value: Konfig) => void;
+};
+
+/**
+ * Bildet ein Feld als Rechteck für die PDF-Vorschau ab.
+ *
+ * @param f - Feld mit Position.
+ * @param label - Beschriftung des Rechtecks.
+ * @param aktiv - `true`, wenn das Feld scharfgeschaltet ist.
+ * @returns Rechteck des Feldes; ohne `x2`/`y2` 40 Punkte breit bzw. eine Schriftgröße hoch.
+ */
+function feldRechteck(f: Feld, label: string, aktiv: boolean): Rechteck {
+  return { x: f.x, y: f.y, x2: f.x2 ?? f.x + 40, y2: f.y2 ?? f.y + f.size, label, aktiv };
+}
+
+/**
+ * Spalten übernehmen nur die x-Kanten, das Zeilenraster nur die y-Kanten -- das Canvas zeigt beim Ziehen
+ * deshalb ein Band statt eines Rechtecks, dessen halbe Angabe verworfen würde.
+ *
+ * @param armed - Scharfgeschalteter Bereich oder `null`.
+ * @returns `x` für Spalten, `y` für Zeilenraster, erste Datenzeile und Sonderzeilen, sonst `beide`.
+ */
+function achseFuer(armed: Armed | null): Achse {
+  if (armed?.bereich === 'spalte') return 'x';
+  if (armed?.bereich === 'tabelle' || armed?.bereich === 'letzteZeile' || armed?.bereich === 'sonderzeile') return 'y';
+  return 'beide';
+}
+
+/**
+ * Spannweite jeder Tabelle dieser Seite als Zeilenraster-Indikator neben der jeweils ersten Spalte
+ * (seitenspezifische Spalten siehe `spaltenFuer`). Gedrehte Tabellen bekommen keinen (vertikalen)
+ * Indikator -- die Zell-Rechtecke zeigen ihre Lage.
+ *
+ * @param seite - Aktuelle Seite.
+ * @param tabellen - Alle Tabellen-Definitionen.
+ * @param armed - Scharfgeschalteter Bereich oder `null`; die Marke der scharfen Tabelle ist aktiv.
+ * @returns Eine Marke je nicht gedrehter Tabelle der Seite.
+ */
+function sammleRaster(seite: SeitenDef, tabellen: Version['tabellen'], armed: Armed | null): RasterMarke[] {
+  return seite.bereiche.flatMap(bereich => {
+    const tabelle = tabellen[bereich.tabelle];
+    if (!tabelle) return [];
+    if ((bereich.drehung ?? tabelle.drehung ?? 0) !== 0) return [];
+    const spalten = spaltenFuer(bereich, tabelle);
+    return [
+      {
+        // Ohne Spalten (leere Tabelle) Rückfall auf x = 0.
+        x: spalten.length > 0 ? Math.min(...spalten.map(s => s.x)) : 0,
+        startY: startYFuer(bereich, tabelle),
+        hoehe: hoeheFuer(bereich, tabelle),
+        zeilen: maxZeilenFuer(bereich, tabelle),
+        aktiv: Boolean(
+          (armed?.bereich === 'tabelle' || armed?.bereich === 'letzteZeile') && armed.tabelle === bereich.tabelle,
+        ),
+      },
+    ];
+  });
+}
+
+/**
+ * Sammelt alle Rechtecke der Seite für die PDF-Vorschau.
+ *
+ * @param seite - Aktuelle Seite.
+ * @param tabellen - Alle Tabellen-Definitionen.
+ * @param armed - Scharfgeschalteter Bereich oder `null`; sein Rechteck ist aktiv.
+ * @param seiteGroesse - Seitenmaße in PDF-Punkten, nötig zum Drehen gedrehter Tabellen.
+ * @returns Rechtecke für Felder, Tabellen (Spalten, erste Zeile, Sonderzeilen) und Signatur-Fläche.
+ */
+function sammleRechtecke(
+  seite: SeitenDef,
+  tabellen: Version['tabellen'],
+  armed: Armed | null,
+  seiteGroesse?: Masse,
+): Rechteck[] {
+  const rechtecke: Rechteck[] = [];
+
+  for (const [key, feld] of Object.entries(seite.felder) as [string, Feld][]) {
+    rechtecke.push(feldRechteck(feld, feld.label ?? key, Boolean(armed?.bereich === 'feld' && armed.key === key)));
+  }
+
+  for (const bereich of seite.bereiche) {
+    const tabelle = tabellen[bereich.tabelle];
+    if (!tabelle) continue;
+
+    const spalten = spaltenFuer(bereich, tabelle);
+    const hoehe = hoeheFuer(bereich, tabelle);
+    const startY = startYFuer(bereich, tabelle);
+    // Die Tabellen-Konfiguration ist aufrecht; bei gedrehter Vorlage dreht `dreheRect` die fertigen
+    // Rechtecke wie der Renderer (siehe `tabellenDrehung.ts`).
+    const drehung = bereich.drehung ?? tabelle.drehung ?? 0;
+    /**
+     * Dreht ein Tabellen-Rechteck um den Seitenmittelpunkt.
+     *
+     * @param rr - Rechteck in aufrechten Tabellen-Koordinaten.
+     * @returns Das gedrehte Rechteck; unverändert ohne Drehung, ohne Seitenmaße oder ohne x-Kanten.
+     */
+    const dreheRect = (rr: Rechteck): Rechteck => {
+      if (drehung === 0 || !seiteGroesse || rr.x === undefined || rr.x2 === undefined) return rr;
+      const g = dreheTabellenZelle({ x: rr.x, x2: rr.x2, y: rr.y, y2: rr.y2 }, drehung, seiteGroesse.w, seiteGroesse.h);
+      return { ...rr, x: g.x, x2: g.x2, y: g.y, y2: g.y2 };
+    };
+    const tabellenRechtecke: Rechteck[] = [];
+
+    spalten.forEach((spalte: Spalte, index) => {
+      tabellenRechtecke.push({
+        x: spalte.x,
+        y: startY,
+        x2: spalte.x2 ?? spalte.x + 40,
+        y2: startY + hoehe,
+        label: spalte.label ?? spalte.key,
+        aktiv: Boolean(armed?.bereich === 'spalte' && armed.tabelle === bereich.tabelle && armed.index === index),
+      });
+    });
+
+    // Der Tabellenrahmen hat selbst keine x-Kanten: er spannt so weit wie seine Spalten, sonst über
+    // die ganze Seitenbreite (x/x2 undefined) -- keine festen Werte, die bei Querformat brechen.
+    const links = spalten.map(s => Math.min(s.x, s.x2 ?? s.x));
+    const rechts = spalten.map(s => Math.max(s.x, s.x2 ?? s.x));
+    tabellenRechtecke.push({
+      x: links.length > 0 ? Math.min(...links) : undefined,
+      y: startY,
+      x2: rechts.length > 0 ? Math.max(...rechts) : undefined,
+      y2: startY + hoehe,
+      label: `${bereich.tabelle}: erste Zeile`,
+      aktiv: Boolean(armed?.bereich === 'tabelle' && armed.tabelle === bereich.tabelle),
+      // Linke Kante teilt sich der Rahmen mit der ersten Spalte -- Beschriftung deshalb nach rechts.
+      labelRechts: true,
+    });
+
+    // Sonderzeilen-Platzierungen (Kopf-/Summenzeile über mehrere Spalten, siehe SonderZeile) spannen wie
+    // der Tabellenrahmen über die Spaltenbreite; `index` ist die Position im Array (ein Name kann
+    // mehrfach vorkommen, z.B. Überschrift oben + Kopie unten).
+    (bereich.sonderzeilen ?? []).forEach((platz, index) => {
+      tabellenRechtecke.push({
+        x: links.length > 0 ? Math.min(...links) : undefined,
+        y: platz.y,
+        x2: rechts.length > 0 ? Math.max(...rechts) : undefined,
+        // Ohne eigenes y2 ein schmaler Platzhalter-Streifen -- reine Anzeige, übernommen wird nur, was
+        // der Klick liefert.
+        y2: platz.y2 ?? platz.y + 12,
+        label: `${bereich.tabelle}: ${platz.name}`,
+        aktiv: Boolean(armed?.bereich === 'sonderzeile' && armed.tabelle === bereich.tabelle && armed.index === index),
+        labelRechts: true,
+      });
+    });
+
+    for (const rr of tabellenRechtecke) rechtecke.push(dreheRect(rr));
+  }
+
+  if (seite.signaturBild) {
+    const s = seite.signaturBild;
+    rechtecke.push({
+      x: s.x,
+      y: s.y,
+      x2: s.x + s.w,
+      y2: s.y + s.h,
+      label: 'Signatur',
+      aktiv: Boolean(armed?.bereich === 'signaturBild'),
+      linieAnteil: SIGNATUR_LINIE_ANTEIL,
+    });
+  }
+
+  return rechtecke;
+}
+
+/**
+ * Visueller Editor für die Vorlagen-Konfiguration: Zellen werden als Rechteck auf der echten PDF-Vorschau
+ * aufgezogen statt per Hand ins JSON getippt. Läuft komplett gegen die lokal gewählte `datei`, kein
+ * Server-Roundtrip nötig; die Rohkonfiguration bleibt über `KonfigJson` editierbar.
+ *
+ * @param props - Formular, lokal gewählte Vorlagen-PDF, Konfiguration (`value`) und `onChange` mit der geänderten.
+ */
+export function FormularEditor({ formular, datei, value, onChange }: Props) {
+  const [tab, setTab] = useState(0);
+  const [armed, setArmed] = useState<Armed | null>(null);
+  const [vorschauLaeuft, setVorschauLaeuft] = useState<Werteart | null>(null);
+  // Anteil des Canvas an der Splitbreite in Prozent.
+  const [splitAnteil, setSplitAnteil] = useState(58);
+  const splitRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Startet das Ziehen des Trenners zwischen Canvas und Feldpanel; der Canvas-Anteil bleibt zwischen 25 und 75 Prozent.
+   *
+   * @param e - Mouse-Down-Ereignis auf dem Trenner.
+   */
+  function starteSplitZiehen(e: ReactMouseEvent<HTMLDivElement>) {
+    e.preventDefault();
+    const container = splitRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    /**
+     * Setzt den Canvas-Anteil aus der Mausposition relativ zum Split-Container.
+     *
+     * @param ev - Mausbewegung im Fenster.
+     */
+    function onMove(ev: MouseEvent) {
+      const anteil = ((ev.clientX - rect.left) / rect.width) * 100;
+      setSplitAnteil(Math.min(75, Math.max(25, anteil)));
+    }
+    /**
+     * Beendet das Ziehen und entfernt die Fenster-Listener.
+     */
+    function onUp() {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    }
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }
+
+  // Nach dem Entfernen der letzten Seite zeigt `tab` ins Leere -- dann auf die letzte gültige.
+  const seitenIndex = Math.min(tab, value.seiten.length - 1);
+  const aktiveSeite = value.seiten[seitenIndex];
+  // Beispielwerte samt Renderer-Kontext -- die Feldliste zeigt damit dieselben Zahlen wie das PDF.
+  // Neu berechnet, sobald sich die Konfiguration oder der Seiten-Tab ändert.
+  const vorschau = useMemo(
+    () => erzeugeVorschau(value.tabellen, value.seiten, seitenIndex, formular),
+    [value.tabellen, value.seiten, seitenIndex, formular],
+  );
+
+  const [skalier, setSkalier] = useState<SkalierState | null>(null);
+  const prevDateiRef = useRef(datei);
+
+  // Referenzgröße je Seite nachtragen (alte Konfigurationen ohne `groesse`), einmal je Datei.
+  useEffect(() => {
+    let abbruch = false;
+    void (async () => {
+      const seiten = await Promise.all(
+        value.seiten.map(async s => {
+          if (s.groesse) return s;
+          const m = await seitenMasse(datei, s.quelle).catch(() => null);
+          return m ? { ...s, groesse: m } : s;
+        }),
+      );
+      if (!abbruch && seiten.some((s, i) => s !== value.seiten[i])) onChange({ ...value, seiten });
+    })();
+    return () => {
+      abbruch = true;
+    };
+    // Bewusst nur an `datei` gehängt: läuft beim Laden und bei jedem Vorlagen-Wechsel. Liest
+    // bewusst die jeweils aktuelle Konfiguration (`value.seiten`/`onChange` sind keine Deps).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [datei]);
+
+  // Vorlagen-Wechsel: Skalierfaktor aus alter (Config) und neuer (gemessener) Seitengröße vorschlagen.
+  useEffect(() => {
+    const prev = prevDateiRef.current;
+    prevDateiRef.current = datei;
+    if (!prev || prev === datei) return;
+    const hatInhalt = value.seiten.some(s => Object.keys(s.felder).length > 0 || s.bereiche.length > 0);
+    if (!hatInhalt) return;
+    let abbruch = false;
+    void (async () => {
+      const quelle = value.seiten[seitenIndex]?.quelle ?? 0;
+      // `alt` ist die gemessene Größe der ZULETZT angezeigten Vorlage (`prev`), nicht die in der Konfiguration
+      // eingefrorene `groesse`: nach einem Wechsel ohne „Anwenden" gehört `groesse` noch zum ursprünglichen
+      // Template, und „Muster (A4) → leere Vorlage (A4)" käme fälschlich als „gleich groß" heraus, obwohl die
+      // Koordinaten am zwischenzeitlich gezeigten Muster (andere Größe) gesetzt wurden. `groesse` bleibt nur
+      // Rückfall, falls `prev` nicht lesbar ist.
+      const alt = (await seitenMasse(prev, quelle).catch(() => null)) ?? value.seiten[seitenIndex]?.groesse ?? null;
+      const neu = await seitenMasse(datei, quelle).catch(() => null);
+      if (abbruch || !alt || !neu) return;
+      if (Math.abs(alt.w - neu.w) < 1 && Math.abs(alt.h - neu.h) < 1) return;
+      const fx = Number((neu.w / alt.w).toFixed(4));
+      const fy = Number((neu.h / alt.h).toFixed(4));
+      setSkalier({
+        alt,
+        neu,
+        faktoren: { x: fx, y: fy, dx: 0, dy: 0 },
+        gekoppelt: Math.abs(fx - fy) < 0.002,
+        drehung: 0,
+      });
+    })();
+    return () => {
+      abbruch = true;
+    };
+    // Bewusst nur an `datei` gehängt: der Vorschlag entsteht genau beim Wechsel der Datei.
+    // Liest bewusst die aktuelle Konfiguration (`value.seiten`/`seitenIndex` sind keine Deps).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [datei]);
+
+  const skalierAlt = skalier?.alt ?? aktiveSeite?.groesse ?? null;
+
+  /**
+   * Skalieren + Drehen in EINEM Bezugssystem: erst im aufrechten Layout skalieren (`x` mit `f.x`, `y` mit
+   * `f.y` -- Felder UND Tabellen gleich), dann drehen, damit erst danach die Achsen tauschen. `alt` für die
+   * Drehung ist die mitskalierte Seitengröße.
+   *
+   * @param k - Konfiguration, auf die die Skalierung (und ggf. Drehung) aus `skalier` angewandt wird.
+   * @param mitGroesse - Nur beim „Anwenden": ohne Drehung wird dann die neue Referenzgröße in die Konfiguration geschrieben (mit Drehung setzt `dreheKonfig` sie stets).
+   * @returns Transformierte Kopie; `k` selbst, solange keine Skalierung offen ist.
+   */
+  function skalierenUndDrehen(k: Konfig, mitGroesse: boolean): Konfig {
+    if (!skalier) return k;
+    if (skalier.drehung === 0) {
+      return skaliereKonfig(k, skalier.faktoren, mitGroesse ? (skalier.neu ?? undefined) : undefined);
+    }
+    const skaliert = skaliereKonfig(k, skalier.faktoren);
+    const alt = skalierAlt ?? { w: 0, h: 0 };
+    return dreheKonfig(skaliert, skalier.drehung, {
+      w: alt.w * skalier.faktoren.x,
+      h: alt.h * skalier.faktoren.y,
+    });
+  }
+
+  // Hängt bewusst an value/skalier/skalierAlt -- `skalierenUndDrehen` liest nur diese. Die lokale
+  // Funktion entsteht bei jedem Render neu; als Dep wuerde sie das Memo wertlos machen.
+  const anzeigeKonfig = useMemo(
+    () => (skalier ? skalierenUndDrehen(value, false) : value),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [value, skalier, skalierAlt],
+  );
+  const anzeigeSeite = anzeigeKonfig.seiten[seitenIndex];
+
+  /**
+   * Öffnet die Skalier-Leiste mit Faktor 1; die Ausgangsgröße wird an der gezeigten `datei` gemessen.
+   */
+  async function oeffneSkalierenManuell() {
+    // Die tatsächlich gezeigte `datei` messen statt `aktiveSeite.groesse` zu vertrauen -- letzteres kann
+    // nach einem abgebrochenen Vorlagen-Wechsel noch zum alten Template gehören (siehe Vorlagen-Wechsel-
+    // Effekt oben). `groesse` nur als Rückfall.
+    const masse =
+      (await seitenMasse(datei, aktiveSeite?.quelle ?? 0).catch(() => null)) ?? aktiveSeite?.groesse ?? null;
+    setSkalier({ alt: masse, neu: null, faktoren: { x: 1, y: 1, dx: 0, dy: 0 }, gekoppelt: true, drehung: 0 });
+  }
+
+  /**
+   * Schreibt die skalierte (und ggf. gedrehte) Konfiguration samt neuer Referenzgröße zurück und schließt die Skalier-Leiste.
+   */
+  function skalierAnwenden() {
+    if (!skalier) return;
+    onChange(skalierenUndDrehen(value, true));
+    setSkalier(null);
+  }
+
+  const [messModus, setMessModus] = useState(false);
+
+  // In der Vorlage eingebettete Schriftfamilien -- nur für die Vorschau (siehe `vorlageFonts.ts`). Einmal
+  // je Datei gelesen.
+  const [vorlageFonts, setVorlageFonts] = useState<VorlageFontFamilie[]>([]);
+  const [unbrauchbareFonts, setUnbrauchbareFonts] = useState<string[]>([]);
+  useEffect(() => {
+    let abbruch = false;
+    void vorlageFontFamilien(datei).then(r => {
+      if (abbruch) return;
+      setVorlageFonts(r.familien);
+      setUnbrauchbareFonts(r.unbrauchbar);
+    });
+    return () => {
+      abbruch = true;
+    };
+  }, [datei]);
+  const eingebetteteFonts = useMemo(() => new Map(vorlageFonts.map(f => [f.id, f.schnitte])), [vorlageFonts]);
+  const [schriftDialogOffen, setSchriftDialogOffen] = useState(false);
+
+  /**
+   * Setzt nur die Schriftgröße des scharfgeschalteten Feldes/der Spalte -- für den Messmodus.
+   *
+   * @param size - Schriftgröße in pt.
+   * @returns `true`, wenn ein Feld oder eine Spalte scharf war und geändert wurde, sonst `false`.
+   */
+  function setzeGroesseAmArmed(size: number): boolean {
+    if (!armed || !aktiveSeite) return false;
+    if (armed.bereich === 'feld') {
+      const feld = aktiveSeite.felder[armed.key];
+      if (!feld) return false;
+      setzeAktiveSeite({ ...aktiveSeite, felder: { ...aktiveSeite.felder, [armed.key]: { ...feld, size } } });
+      return true;
+    }
+    if (armed.bereich === 'spalte') {
+      const tabelle = value.tabellen[armed.tabelle];
+      if (!tabelle) return false;
+      const bereich = aktiveSeite.bereiche.find(b => b.tabelle === armed.tabelle);
+      /**
+       * Setzt die Schriftgröße an der scharfgeschalteten Spalte.
+       *
+       * @param s - Spalte.
+       * @param i - Index der Spalte.
+       * @returns Die Spalte mit neuer Größe, wenn sie die scharfgeschaltete ist, sonst unverändert.
+       */
+      const gesetzt = (s: Spalte, i: number) => (i === armed.index ? { ...s, size } : s);
+      if (bereich?.spalten) {
+        setzeAktiveSeite({
+          ...aktiveSeite,
+          bereiche: aktiveSeite.bereiche.map(b =>
+            b.tabelle === armed.tabelle ? { ...b, spalten: b.spalten!.map(gesetzt) } : b,
+          ),
+        });
+      } else {
+        onChange({
+          ...value,
+          tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, spalten: tabelle.spalten.map(gesetzt) } },
+        });
+      }
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Übernimmt die gemessene Schriftgröße ins scharfe Feld/die scharfe Spalte; sonst kopiert sie sie in die Zwischenablage.
+   *
+   * @param m - Gemessenes Textstück.
+   */
+  function handleGemessen(m: Messung) {
+    if (setzeGroesseAmArmed(m.size)) {
+      createSnackBar({
+        message: `Schriftgröße ${m.size} pt übernommen (${m.fontFamily})`,
+        status: 'success',
+        timeout: 3000,
+      });
+      return;
+    }
+    void navigator.clipboard?.writeText(String(m.size));
+    createSnackBar({
+      message: `Gemessen: ${m.size} pt · ${m.fontFamily} — in die Zwischenablage kopiert`,
+      status: 'info',
+      timeout: 3500,
+    });
+  }
+
+  /**
+   * Ersetzt eine Seite der Konfiguration.
+   *
+   * @param index - Index der Seite.
+   * @param seite - Neue Seitendefinition.
+   */
+  function setzeSeite(index: number, seite: SeitenDef) {
+    onChange({ ...value, seiten: value.seiten.map((s, i) => (i === index ? seite : s)) });
+  }
+
+  /**
+   * Ersetzt die aktuell gezeigte Seite der Konfiguration.
+   *
+   * @param seite - Neue Definition der aktuell gezeigten Seite.
+   */
+  function setzeAktiveSeite(seite: SeitenDef) {
+    setzeSeite(seitenIndex, seite);
+  }
+
+  /**
+   * Übernimmt das aufgezogene Rechteck in das scharfgeschaltete Element (Feld, Spalte, Zeilenraster, Sonderzeile oder Signatur-Fläche) und hebt die Scharfschaltung auf; bei gedrehten Tabellen wird vorher zurück in aufrechte Koordinaten gerechnet.
+   *
+   * @param r0 - Aufgezogenes Rechteck in PDF-Punkten der (ggf. gedrehten) Vorschau.
+   */
+  function handleRechteck(r0: { x: number; y: number; x2: number; y2: number }) {
+    if (!armed || !aktiveSeite) return;
+
+    // Für ein Tabellen-Element einer gedrehten Tabelle: die auf der (gedrehten) Vorschau gezogene
+    // Fläche zurück in aufrechte Tabellen-Koordinaten rechnen -- die Konfiguration bleibt aufrecht.
+    let r = r0;
+    if ('tabelle' in armed) {
+      const t = value.tabellen[armed.tabelle];
+      const b = aktiveSeite.bereiche.find(x => x.tabelle === armed.tabelle);
+      const grad = b?.drehung ?? t?.drehung ?? 0;
+      const g = aktiveSeite.groesse;
+      if (grad !== 0 && g) {
+        const [ax, ay] = entdrehePunkt(r0.x, r0.y, grad, g.w, g.h);
+        const [bx, by] = entdrehePunkt(r0.x2, r0.y2, grad, g.w, g.h);
+        r = { x: Math.min(ax, bx), y: Math.min(ay, by), x2: Math.max(ax, bx), y2: Math.max(ay, by) };
+      }
+    }
+
+    if (armed.bereich === 'feld') {
+      const feld = aktiveSeite.felder[armed.key];
+      if (!feld) return;
+      setzeAktiveSeite({
+        ...aktiveSeite,
+        felder: { ...aktiveSeite.felder, [armed.key]: { ...feld, x: r.x, y: r.y, x2: r.x2, y2: r.y2 } },
+      });
+    } else if (armed.bereich === 'spalte') {
+      // Spalten liegen im Zeilenraster ihrer Tabelle -- nur die x-Kanten stammen aus der Markierung.
+      const tabelle = value.tabellen[armed.tabelle];
+      if (!tabelle) return;
+      const bereich = aktiveSeite.bereiche.find(b => b.tabelle === armed.tabelle);
+      /**
+       * Setzt die x-Kanten an der scharfgeschalteten Spalte.
+       *
+       * @param s - Spalte.
+       * @param i - Index der Spalte.
+       * @returns Die Spalte mit neuen x-Kanten, wenn sie die scharfgeschaltete ist, sonst unverändert.
+       */
+      const gesetzt = (s: Spalte, i: number) => (i === armed.index ? { ...s, x: r.x, x2: r.x2 } : s);
+      // Hat die Seite ein eigenes Spaltenraster, gilt die Markierung nur dort -- sonst verschöbe
+      // das Nachjustieren auf Seite 2 auch die Spalte auf Seite 1.
+      if (bereich?.spalten) {
+        setzeAktiveSeite({
+          ...aktiveSeite,
+          bereiche: aktiveSeite.bereiche.map(b =>
+            b.tabelle === armed.tabelle ? { ...b, spalten: b.spalten!.map(gesetzt) } : b,
+          ),
+        });
+      } else {
+        onChange({
+          ...value,
+          tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, spalten: tabelle.spalten.map(gesetzt) } },
+        });
+      }
+    } else if (armed.bereich === 'letzteZeile') {
+      // Zeilenhöhe über ALLE Zeilen gemittelt statt aus einer einzelnen Messung: eine Ungenauigkeit
+      // von Bruchteilen eines Punktes summiert sich sonst über die Tabelle zu einem sichtbaren
+      // Versatz auf, weil der Renderer je Zeile dieselbe `hoehe` abzieht.
+      const tabelle = value.tabellen[armed.tabelle];
+      const bereich = aktiveSeite.bereiche.find(b => b.tabelle === armed.tabelle);
+      if (!tabelle || !bereich) return;
+      const effMaxZeilen = maxZeilenFuer(bereich, tabelle);
+      const gemessen = zeilenHoeheAus(startYFuer(bereich, tabelle), r.y, effMaxZeilen);
+      if (gemessen === null) {
+        createSnackBar({ message: 'Die letzte Zeile muss unter der ersten liegen', status: 'warning', timeout: 3000 });
+        return;
+      }
+      // Hat diese Seite schon eine eigene Platzierung (startY/Höhe/Zeilen zusammen, siehe
+      // "eigene je Seite"-Checkbox), bleibt die Messung dort, sonst gilt sie für die ganze Tabelle
+      // (gleiches Muster wie die Spalten-Markierung oben).
+      if (bereich.startY !== undefined) {
+        setzeAktiveSeite({
+          ...aktiveSeite,
+          bereiche: aktiveSeite.bereiche.map(b => (b.tabelle === armed.tabelle ? { ...b, hoehe: gemessen } : b)),
+        });
+      } else {
+        onChange({ ...value, tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, hoehe: gemessen } } });
+      }
+      createSnackBar({
+        message: `Zeilenhöhe: ${gemessen} pt (aus ${effMaxZeilen} Zeilen)`,
+        status: 'success',
+        timeout: 3000,
+      });
+    } else if (armed.bereich === 'sonderzeile') {
+      const bereich = aktiveSeite.bereiche.find(b => b.tabelle === armed.tabelle);
+      if (!bereich) return;
+      const platzierungen = bereich.sonderzeilen ?? [];
+      const naechste = platzierungen.map((p, i) => (i === armed.index ? { ...p, y: r.y, y2: r.y2 } : p));
+      setzeAktiveSeite({
+        ...aktiveSeite,
+        bereiche: aktiveSeite.bereiche.map(b => (b.tabelle === armed.tabelle ? { ...b, sonderzeilen: naechste } : b)),
+      });
+    } else if (armed.bereich === 'tabelle') {
+      // Erste Datenzeile: y liefert die Startposition, die Höhe den Zeilenabstand. Beides gilt nur
+      // dann für diese Seite allein, wenn sie schon eine eigene Platzierung hat ("eigene je Seite")
+      // -- sonst bleiben sie beim gemeinsamen Tabellenwert, den JEDE Seite ohne eigenen Wert erbt.
+      const tabelle = value.tabellen[armed.tabelle];
+      if (!tabelle) return;
+      const bestehenderBereich = aktiveSeite.bereiche.find(b => b.tabelle === armed.tabelle);
+      const eigenePlatzierung = bestehenderBereich?.startY !== undefined;
+      const gemessen = Math.max(r.y2 - r.y, 1);
+      const bereiche = bestehenderBereich
+        ? aktiveSeite.bereiche.map(b =>
+            b.tabelle === armed.tabelle && eigenePlatzierung ? { ...b, startY: r.y, hoehe: gemessen } : b,
+          )
+        : [...aktiveSeite.bereiche, { tabelle: armed.tabelle }];
+      onChange({
+        ...value,
+        tabellen: eigenePlatzierung
+          ? value.tabellen
+          : { ...value.tabellen, [armed.tabelle]: { ...tabelle, startY: r.y, hoehe: gemessen } },
+        seiten: value.seiten.map((s, i) => (i === seitenIndex ? { ...aktiveSeite, bereiche } : s)),
+      });
+    } else {
+      setzeAktiveSeite({ ...aktiveSeite, signaturBild: { x: r.x, y: r.y, w: r.x2 - r.x, h: r.y2 - r.y } });
+    }
+    setArmed(null);
+  }
+
+  /**
+   * Baut das PDF mit erzeugten Testdaten und öffnet es in einem neuen Fenster; Fehler erscheinen als Snackbar.
+   *
+   * @param art - Art der Testwerte (Beispieldaten oder Platzhalter).
+   */
+  async function testdatenVorschau(art: Werteart) {
+    setVorschauLaeuft(art);
+    try {
+      const daten = erzeugeDummyDaten(value.tabellen, value.seiten, formular, art);
+      const bytes = await build(
+        {
+          version: 'vorschau',
+          gueltigVon: '2026-01-01',
+          gueltigBis: null,
+          layout: { template: URL.createObjectURL(datei), schriftart: value.schriftart, seiten: value.seiten },
+          tabellen: value.tabellen,
+          formular,
+        },
+        daten,
+        // Sonst bliebe die Signaturfläche als einziges Element ohne Beispielwert.
+        beispielSignatur(),
+        undefined,
+        // Eingebettete Vorlagen-Schriften nur hier durchreichen -- der Download-Pfad hat sie nicht.
+        eingebetteteFonts,
+      );
+      const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
+      window.open(URL.createObjectURL(blob), '_blank');
+    } catch (error) {
+      createSnackBar({
+        message: `Vorschau fehlgeschlagen: ${error instanceof Error ? error.message : String(error)}`,
+        status: 'error',
+        timeout: 4000,
+        fixed: true,
+      });
+    } finally {
+      setVorschauLaeuft(null);
+    }
+  }
+
+  return (
+    <Gruppe>
+      <DBStack direction="row" alignment="center" gap="x-small" className="luft-unten-xs">
+        <nav className="db-navigation admin-unternavigation waechst" aria-label="Seiten der Vorlage">
+          <menu>
+            {value.seiten.map((s, i) => (
+              <li className="db-navigation-item" data-active={String(i === seitenIndex)} key={i}>
+                <button type="button" onClick={() => setTab(i)}>
+                  Seite {i + 1}
+                  {s.wiederholt ? ' ↻' : ''}
+                </button>
+              </li>
+            ))}
+            <li className="db-navigation-item">
+              <button
+                type="button"
+                title="Weitere Seite anhängen — die Seitenfolge bildet das Formular ab (Bereitschaft: 1, 2, 3 unterschiedlich)"
+                onClick={() => {
+                  // Quelle der letzten Seite + 1 als Vorschlag: Vorlagen-PDFs sind in der Regel in
+                  // derselben Reihenfolge aufgebaut wie das Formular.
+                  const letzte = value.seiten.at(-1);
+                  onChange({ ...value, seiten: [...value.seiten, leereSeite((letzte?.quelle ?? -1) + 1)] });
+                  setTab(value.seiten.length);
+                }}
+              >
+                + Seite
+              </button>
+            </li>
+          </menu>
+        </nav>
+        <DBButton
+          type="button"
+          variant="outlined"
+          size="small"
+          title="Alle Koordinaten proportional umrechnen — z.B. nach dem Wechsel auf eine Vorlage mit anderer Seitengröße"
+          disabled={skalier !== null}
+          onClick={() => void oeffneSkalierenManuell()}
+        >
+          Skalieren…
+        </DBButton>
+        <DBButton
+          type="button"
+          variant="outlined"
+          size="small"
+          title="Formularweite Schriftfamilie je Schnitt wählen — mit Live-Vorschau"
+          onClick={() => setSchriftDialogOffen(true)}
+        >
+          Schrift: {schriftKurz(value.schriftart)}
+        </DBButton>
+        <DBButton
+          type="button"
+          variant={messModus ? 'filled' : 'outlined'}
+          data-color={messModus ? 'warning' : undefined}
+          size="small"
+          title="Auf ein Textstück der PDF klicken, um dessen Schriftgröße abzulesen — z.B. an einer ausgefüllten Vorlage"
+          onClick={() => setMessModus(m => !m)}
+        >
+          {messModus ? 'Messen beenden' : 'Schriftgröße messen'}
+        </DBButton>
+        <DBStack direction="row" wrap gap="2x-small">
+          <DBButton
+            type="button"
+            variant="brand"
+            title="Fachlich passende Werte aus dem Datenkatalog — sieht aus wie ein ausgefülltes Formular"
+            disabled={vorschauLaeuft !== null}
+            onClick={() => void testdatenVorschau('beispiel')}
+          >
+            {vorschauLaeuft === 'beispiel' ? 'Erzeugt…' : 'Beispieldaten'}
+          </DBButton>
+          <DBButton
+            type="button"
+            variant="outlined"
+            title="Generische Füllwerte — zeigt vor allem, welche Zelle zu welchem Eintrag gehört"
+            disabled={vorschauLaeuft !== null}
+            onClick={() => void testdatenVorschau('platzhalter')}
+          >
+            {vorschauLaeuft === 'platzhalter' ? 'Erzeugt…' : 'Platzhalter'}
+          </DBButton>
+        </DBStack>
+      </DBStack>
+
+      {schriftDialogOffen && (
+        <SchriftartDialog
+          value={value.schriftart}
+          vorlageFonts={vorlageFonts}
+          unbrauchbareFonts={unbrauchbareFonts}
+          onChange={schriftart => onChange({ ...value, schriftart })}
+          onClose={() => setSchriftDialogOffen(false)}
+        />
+      )}
+
+      {aktiveSeite && (
+        <DBStack direction="row" wrap gap="small" alignment="center" className="luft-unten-xs zelle-klein">
+          <DBCheckbox
+            size="small"
+            id="seite-wiederholt"
+            label="Diese Seite bei Überlauf wiederholen"
+            title="Bei Zeilenüberlauf wird genau diese Seite so oft wiederholt, wie noch Zeilen übrig sind"
+            checked={Boolean(aktiveSeite.wiederholt)}
+            onChange={e => setzeAktiveSeite({ ...aktiveSeite, wiederholt: e.target.checked || undefined })}
+          />
+
+          {value.seiten.length > 1 && (
+            <DBStack direction="row" gap="2x-small" alignment="center">
+              <DbAuswahl
+                beschriftung="Einstellungen übernehmen von"
+                beschriftungZeigen
+                id="seite-kopieren"
+                dicht
+
+                value=""
+                onChange={e => {
+                  const quelle = value.seiten[Number(e.target.value)];
+                  e.target.value = '';
+                  if (!quelle) return;
+                  // `quelle` (die PDF-Seite) bleibt, alles andere wird übernommen -- gemeint ist
+                  // „gleiches Layout, andere Vorlagenseite", nicht „dieselbe Seite zweimal".
+                  setzeAktiveSeite({ ...structuredClone(quelle), quelle: aktiveSeite.quelle });
+                }}
+              >
+                <option value="">— Seite wählen —</option>
+                {value.seiten.map((_, i) =>
+                  i === seitenIndex ? null : (
+                    <option key={i} value={i}>
+                      Seite {i + 1}
+                    </option>
+                  ),
+                )}
+              </DbAuswahl>
+            </DBStack>
+          )}
+        </DBStack>
+      )}
+
+      {skalier && anzeigeSeite && (
+        <SkalierLeiste
+          alt={skalier.alt}
+          neu={skalier.neu}
+          faktoren={skalier.faktoren}
+          gekoppelt={skalier.gekoppelt}
+          drehung={skalier.drehung}
+          onChange={next =>
+            setSkalier(s => {
+              if (!s) return s;
+              const naechste = { ...s, ...next };
+              // Drehung geändert und beide Seitenmaße bekannt: Faktoren so vorschlagen, dass das im
+              // AUFRECHTEN Layout skalierte Formular nach dem Drehen genau auf die neue Seite passt
+              // (bei 90/270 tauscht die Drehung anschließend x↔y, deshalb hier über Kreuz).
+              if (next.drehung !== undefined && next.drehung !== s.drehung && s.alt && s.neu) {
+                const quer = next.drehung === 90 || next.drehung === 270;
+                const fx = Number(((quer ? s.neu.h : s.neu.w) / s.alt.w).toFixed(4));
+                const fy = Number(((quer ? s.neu.w : s.neu.h) / s.alt.h).toFixed(4));
+                naechste.faktoren = { ...naechste.faktoren, x: fx, y: fy };
+                naechste.gekoppelt = Math.abs(fx - fy) < 0.002;
+              }
+              return naechste;
+            })
+          }
+          onAnwenden={skalierAnwenden}
+          onAbbrechen={() => setSkalier(null)}
+        />
+      )}
+
+      {aktiveSeite && anzeigeSeite && (
+        <div className="split-layout" ref={splitRef}>
+          <div className="split-links" style={{ flex: `1 1 ${splitAnteil}%`, minWidth: 0 }}>
+            <PdfCanvas
+              datei={datei}
+              seiteIndex={anzeigeSeite.quelle}
+              rechtecke={sammleRechtecke(anzeigeSeite, anzeigeKonfig.tabellen, armed, anzeigeSeite.groesse)}
+              raster={sammleRaster(anzeigeSeite, anzeigeKonfig.tabellen, armed)}
+              scharfGeschaltet={armed !== null && !messModus && !skalier}
+              messModus={messModus}
+              onGemessen={handleGemessen}
+              achse={achseFuer(armed)}
+              hinweis={
+                armed?.bereich === 'letzteZeile'
+                  ? 'Band über die LETZTE Datenzeile ziehen — die Zeilenhöhe wird daraus über alle Zeilen gemittelt.'
+                  : undefined
+              }
+              ziehLinieAnteil={armed?.bereich === 'signaturBild' ? SIGNATUR_LINIE_ANTEIL : undefined}
+              onRechteck={handleRechteck}
+              onQuelleWaehlen={pageIndex => setzeAktiveSeite({ ...aktiveSeite, quelle: pageIndex })}
+              aktiveSeiteLabel={`Seite ${seitenIndex + 1}`}
+            />
+            {value.seiten.length > 1 && (
+              <DBButton
+                type="button"
+                className="luft-oben-xs"
+                variant="outlined"
+                data-color="critical"
+                size="small"
+                onClick={() => {
+                  onChange({ ...value, seiten: value.seiten.filter((_, i) => i !== seitenIndex) });
+                  setTab(Math.max(seitenIndex - 1, 0));
+                }}
+              >
+                Seite {seitenIndex + 1} entfernen
+              </DBButton>
+            )}
+          </div>
+          <div
+            className="split-griff"
+            style={{ width: '10px', cursor: 'col-resize', touchAction: 'none' }}
+            onMouseDown={starteSplitZiehen}
+            title="Breite ziehen"
+          >
+            <div
+              className="mitte-auto"
+              style={{ width: '2px', background: 'var(--db-adaptive-on-bg-basic-emphasis-60-default)' }}
+            />
+          </div>
+          <div style={{ flex: `1 1 ${100 - splitAnteil}%`, minWidth: 0, maxHeight: '70vh', overflowY: 'auto' }}>
+            <FeldPanel
+              formular={formular}
+              seite={aktiveSeite}
+              onSeiteChange={setzeAktiveSeite}
+              tabellen={value.tabellen}
+              onTabellenChange={t => onChange({ ...value, tabellen: t })}
+              armed={armed}
+              onArm={setArmed}
+              vorschau={vorschau}
+              onSonderzeileUmbenannt={(tabelle, alt, neu) => {
+                const naechste = benenneSonderzeileUm(value, tabelle, alt, neu);
+                if (naechste !== value) onChange(naechste);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      <KonfigJson value={value} onChange={onChange} />
+    </Gruppe>
+  );
+}
+
+/**
+ * Rohansicht der kompletten Konfiguration -- zum Sichern, Übertragen auf ein anderes Formular oder
+ * für Massenänderungen, die im visuellen Editor Feld für Feld zu mühsam wären. Übernommen wird
+ * erst auf Knopfdruck, damit halbfertiges Tippen den Editor nicht laufend zurücksetzt.
+ *
+ * @param props - Konfiguration (`value`) und `onChange` für die übernommene Konfiguration.
+ */
+function KonfigJson({ value, onChange }: { value: Konfig; onChange: (value: Konfig) => void }) {
+  const [entwurf, setEntwurf] = useState<string | null>(null);
+  const [fehler, setFehler] = useState<string | null>(null);
+  const angezeigt = entwurf ?? JSON.stringify(value, null, 2);
+
+  /**
+   * Validiert den JSON-Entwurf gegen `konfigSchema`, übernimmt ihn per `onChange` und meldet Fehler im Textfeld.
+   */
+  function uebernehmen() {
+    try {
+      onChange(konfigSchema.parse(JSON.parse(angezeigt)));
+      setEntwurf(null);
+      setFehler(null);
+      createSnackBar({ message: 'Konfiguration übernommen', status: 'success', timeout: 2000 });
+    } catch (error) {
+      setFehler(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  return (
+    <details className="luft-oben-xs">
+      <summary className="zelle-klein fett" style={{ cursor: 'pointer' }}>
+        Konfiguration als JSON (kopieren / einfügen)
+      </summary>
+      <DBTextarea
+        className="luft-oben-2xs"
+        data-density="functional"
+        id="konfig-json"
+        label="Konfiguration als JSON"
+        showLabel={false}
+        validation={fehler ? 'invalid' : undefined}
+        invalidMessage={fehler ?? undefined}
+        style={{ fontSize: '0.7rem', minHeight: '12rem' }}
+        spellCheck={false}
+        value={angezeigt}
+        onChange={e => {
+          setEntwurf((e.target as HTMLTextAreaElement).value);
+          setFehler(null);
+        }}
+      />
+      <DBStack direction="row" gap="2x-small" className="luft-oben-2xs">
+        <DBButton type="button" variant="brand" size="small" disabled={entwurf === null} onClick={uebernehmen}>
+          Übernehmen
+        </DBButton>
+        <DBButton
+          type="button"
+          variant="outlined"
+          size="small"
+          disabled={entwurf === null}
+          onClick={() => (setEntwurf(null), setFehler(null))}
+        >
+          Verwerfen
+        </DBButton>
+        <DBButton
+          type="button"
+          className="knopf-rechts"
+          variant="outlined"
+          size="small"
+          onClick={() => void navigator.clipboard?.writeText(angezeigt)}
+        >
+          In Zwischenablage
+        </DBButton>
+      </DBStack>
+    </details>
+  );
+}

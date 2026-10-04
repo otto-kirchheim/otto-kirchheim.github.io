@@ -29,11 +29,24 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2.2.0
         with:
-          bun-version: latest
+          bun-version: 1.4.0
       - name: Install dependencies
+        # @otto-kirchheim/nebengeld-shared ist eine public Git-Branch-Dependency -- kein Token noetig.
+        # ASSET_* entschluesseln im Postinstall von @db-ux/db-theme die Markenassets (Schriften,
+        # Icons). Fehlen die Repo-Secrets, laeuft der Build durch -- aber ohne DB-Schriften.
+        # Schalter: Repo-Variable DB_ASSETS=1 -- nur dann werden die Secrets uebergeben (sonst freie Variante).
         run: bun install --frozen-lockfile
+        env:
+          ASSET_PASSWORD: ${{ vars.DB_ASSETS == '1' && secrets.ASSET_PASSWORD || '' }}
+          ASSET_INIT_VECTOR: ${{ vars.DB_ASSETS == '1' && secrets.ASSET_INIT_VECTOR || '' }}
+      - name: Typecheck
+        run: bun run typecheck
+      - name: Stylelint
+        run: bun run lint:css
       - name: Build
         run: bun run build
+        env:
+          DB_ASSETS: ${{ vars.DB_ASSETS }}
       - name: Setup Pages
         uses: actions/configure-pages@v6
       - name: Upload artifact

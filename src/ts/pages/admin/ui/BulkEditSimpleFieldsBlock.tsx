@@ -1,0 +1,51 @@
+import { FIELD_LABELS, SIMPLE_FIELD_KEYS, type SimpleFieldKey } from '../model/bulkEditOe';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
+import { DBCheckbox, DBStack } from '@db-ux/react-core-components';
+import { DbFeld } from '@/shared/ui/form/DbFeld';
+
+export type SimpleFieldState = { enabled: boolean; value: string };
+
+type Props = {
+  fields: Record<SimpleFieldKey, SimpleFieldState>;
+  onChange: (key: SimpleFieldKey, patch: Partial<SimpleFieldState>) => void;
+};
+
+/**
+ * "Weitere Felder setzen": Betrieb/Gewerk/Erste TkgSt/TkgSt Adresse als Checkbox+Textfeld.
+ *
+ * @param props - `fields` (Zustand je Feld) und `onChange` für Aktivierung bzw. Wert.
+ */
+export function BulkEditSimpleFieldsBlock({ fields, onChange }: Props) {
+  return (
+    <Gruppe>
+      <div className="fett luft-unten-xs">Weitere Felder setzen</div>
+      <DBStack direction="column" gap="x-small">
+        {SIMPLE_FIELD_KEYS.map(key => (
+          <div key={key}>
+            <div>
+              <DBCheckbox
+                size="small"
+                id={`bulkSimple-${key}`}
+                label={FIELD_LABELS[key]}
+                checked={fields[key].enabled}
+                onChange={e => onChange(key, { enabled: (e.target as HTMLInputElement).checked })}
+              />
+            </div>
+            {fields[key].enabled && (
+              <div className="luft-oben-2xs luft-links-md">
+                <DbFeld
+                  type="text"
+                  beschriftung={`Neuer Wert für ${FIELD_LABELS[key]}`}
+                  dicht
+                  placeholder={FIELD_LABELS[key]}
+                  value={fields[key].value}
+                  onChange={e => onChange(key, { value: e.target.value })}
+                />
+              </div>
+            )}
+          </div>
+        ))}
+      </DBStack>
+    </Gruppe>
+  );
+}

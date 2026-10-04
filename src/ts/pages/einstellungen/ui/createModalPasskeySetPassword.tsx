@@ -1,0 +1,141 @@
+import { DBInfotext } from '@db-ux/react-core-components';
+import { createRef, type SubmitEvent } from 'react';
+
+import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
+import MyFormModal from '@/shared/ui/modal/MyFormModal';
+import MyInput from '@/shared/ui/form/MyInput';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import PasswordStrengthMeter from '@/shared/ui/form/PasswordStrengthMeter';
+import showModal, { schliesseModal } from '@/shared/ui/modal/showModal';
+import { authApi } from '@/shared/api/apiService';
+import { getUserCookie } from '@/shared/api/token/decodeAccessToken';
+import { getPasskeyErrorMessage } from '@/shared/api/token/passkeys';
+import { resetTokenState } from '@/shared/api/token/tokenErneuern';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
+import { PASSWORD_MIN_LENGTH, getPasswordValidationMessage } from '@/shared/lib/validation/passwordValidation';
+
+/**
+ * Passwort neu setzen ohne altes Passwort: die Identität wird stattdessen
+ * über eine frische Passkey-Assertion (Fingerprint/Face ID/PIN) nachgewiesen.
+ */
+export default function createModalPasskeySetPassword(): void {
+  const ref = createRef<HTMLFormElement>();
+  const passwortRef = createRef<HTMLInputElement>();
+
+  const modal = showModal(
+    <MyFormModal myRef={ref} title="Passwort per Passkey neu setzen" submitText="Passwort setzen" onSubmit={onSubmit()}>
+      <MyModalBody>
+        <div>
+          <DBInfotext showIcon={false} className="infotext-block">
+            Du bestätigst die Änderung mit deinem Passkey (Fingerprint, Face ID oder Geräte-PIN) – dein altes Passwort
+            wird nicht benötigt. Andere Sitzungen werden abgemeldet.
+          </DBInfotext>
+        </div>
+        <MyInput
+          myRef={passwortRef}
+          divClass="sp-12"
+          required
+          type="password"
+          id="PasskeyPasswortNeu"
+          name="Neues Passwort"
+          minLength={PASSWORD_MIN_LENGTH}
+          autoComplete="new-password"
+          popover={{
+            content: '-Mindestens 8 Zeichen <br/>',
+            placement: 'right',
+            html: true,
+            title: 'Hinweis',
+            trigger: 'focus',
+          }}
+        >
+          Neues Passwort
+        </MyInput>
+        <PasswordStrengthMeter passwordInputRef={passwortRef} />
+        <MyInput
+          divClass="sp-12"
+          required
+          type="password"
+          id="PasskeyPasswortNeu2"
+          name="Neues Passwort wiederholen"
+          minLength={PASSWORD_MIN_LENGTH}
+          autoComplete="new-password"
+        >
+          Neues Passwort wiederholen
+        </MyInput>
+      </MyModalBody>
+    </MyFormModal>,
+  );
+
+  if (ref.current === null) throw new Error('referenz nicht gesetzt');
+  const form = ref.current;
+
+  /**
+   * Erzeugt den Submit-Handler: prüft Eingaben, Browser-Unterstützung und Verbindung, bestätigt per Passkey-Assertion und setzt das Passwort. Fehler erscheinen im Meldungsfeld des Modals.
+   *
+   * @returns Asynchroner Submit-Handler des Formulars.
+   */
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => Promise<void> {
+    return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
+      if (!(form instanceof HTMLFormElement)) return;
+      event.preventDefault();
+      if (form.checkValidity && !form.checkValidity()) return;
+
+      const errorMessage = modal.querySelector<HTMLSpanElement>('#errorMessage');
+      const passwordInput = modal.querySelector<HTMLInputElement>('#PasskeyPasswortNeu');
+      const repeatInput = modal.querySelector<HTMLInputElement>('#PasskeyPasswortNeu2');
+
+      if (!errorMessage || !passwordInput || !repeatInput) {
+        throw new Error('Passkey-Passwort-Dialog konnte nicht initialisiert werden');
+      }
+
+      errorMessage.textContent = '';
+
+      const newPassword = passwordInput.value;
+      const repeatedPassword = repeatInput.value;
+
+      const passwordError = getPasswordValidationMessage(newPassword, 'Das neue Passwort');
+      if (passwordError) {
+        errorMessage.textContent = passwordError;
+        return;
+      }
+
+      if (newPassword !== repeatedPassword) {
+        errorMessage.textContent = 'Passwörter stimmen nicht überein';
+        return;
+      }
+
+      if (!browserSupportsWebAuthn()) {
+        errorMessage.textContent = 'Dieser Browser unterstützt keine Biometrie-Anmeldung.';
+        return;
+      }
+
+      if (!navigator.onLine) {
+        errorMessage.textContent = 'Keine Internetverbindung';
+        return;
+      }
+
+      const userName = getUserCookie()?.userName;
+      if (!userName) {
+        errorMessage.textContent = 'Benutzer konnte nicht ermittelt werden. Bitte neu anmelden.';
+        return;
+      }
+
+      try {
+        const { options, challengeToken } = await authApi.beginPasskeyLogin(userName);
+        const credential = await startAuthentication({ optionsJSON: options, useBrowserAutofill: false });
+        await authApi.setPasswordWithPasskey(credential, challengeToken, newPassword);
+        resetTokenState();
+
+        schliesseModal();
+        createSnackBar({
+          message: 'Passwort wurde neu gesetzt.',
+          status: 'success',
+          timeout: 3000,
+          fixed: true,
+        });
+      } catch (error: unknown) {
+        errorMessage.textContent = getPasskeyErrorMessage(error, 'Passwort konnte nicht gesetzt werden');
+      }
+    };
+  }
+}

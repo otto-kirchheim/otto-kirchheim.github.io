@@ -1,0 +1,76 @@
+import { createRef, type SubmitEvent } from 'react';
+
+import MyFormModal from '@/shared/ui/modal/MyFormModal';
+import MyInput from '@/shared/ui/form/MyInput';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import showModal, { schliesseModal } from '@/shared/ui/modal/showModal';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
+import { authApi } from '@/shared/api/apiService';
+
+/**
+ * Öffnet den Dialog "Passwort vergessen" (E-Mail auf `@deutschebahn.com` beschränkt).
+ * Der Reset-Link wird über die API angefordert; die Erfolgsmeldung ist bewusst bedingt formuliert ("Falls ... registriert ist").
+ */
+export default function createModalForgotPassword(): void {
+  const ref = createRef<HTMLFormElement>();
+
+  const modal = showModal(
+    <MyFormModal myRef={ref} title="Passwort vergessen" submitText="Reset-Link senden" onSubmit={onSubmit()}>
+      <MyModalBody>
+        <MyInput
+          divClass="sp-12"
+          required
+          type="email"
+          id="EmailReset"
+          name="E-Mail"
+          pattern={new RegExp(/^[A-Za-z0-9._%+-]+@deutschebahn\.com$/).source}
+          autoComplete="email"
+        >
+          E-Mail (@deutschebahn.com)
+        </MyInput>
+      </MyModalBody>
+    </MyFormModal>,
+  );
+
+  if (ref.current === null) throw new Error('referenz nicht gesetzt');
+  const form = ref.current;
+
+  /**
+   * Baut den Submit-Handler: prüft Formular und Online-Status, fordert den Reset-Link an, schließt den Dialog und zeigt eine Snackbar.
+   * Fehlertexte landen in `#errorMessage`.
+   */
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => Promise<void> {
+    return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
+      if (!(form instanceof HTMLFormElement)) return;
+      if (form.checkValidity && !form.checkValidity()) return;
+      event.preventDefault();
+
+      const errorMessage = document.querySelector<HTMLDivElement>('#errorMessage');
+      if (!errorMessage) throw new Error('Error Nachrichtenfeld nicht gefunden');
+      errorMessage.textContent = '';
+
+      const emailInput = modal.querySelector<HTMLInputElement>('#EmailReset');
+      if (!emailInput) throw new Error('E-Mail Input nicht gefunden');
+
+      if (!navigator.onLine) {
+        errorMessage.textContent = 'Keine Internetverbindung';
+        return;
+      }
+
+      try {
+        await authApi.forgotPassword(emailInput.value.trim());
+        schliesseModal();
+        createSnackBar({
+          message:
+            'Falls die E-Mail verifiziert registriert ist, wurde ein Reset-Link versendet. Bitte auch den Junk-E-Mail-Ordner prüfen.',
+          status: 'success',
+          timeout: 4000,
+          fixed: true,
+        });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errorMessage.textContent = msg;
+      }
+    };
+  }
+}

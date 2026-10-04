@@ -2,7 +2,5529 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-04 (219)
+
+### feat (Illustrationen auf Startseite und Admin-Dashboard)
+
+- Neue Komponente `shared/ui/icons/Illustration.tsx`: mehrfarbige 64x64-Illustrationen aus `@db-ux/db-theme-illustrative-icons` an grossen, dekorativen Stellen -- Startseiten-Karten (`account`, `calendar`, `pdf`) und Kennzahl-Kacheln im Admin-Dashboard (`account`/`error`, `user_manual`, `cyber_security`, `alarm_clock`). Knoepfe, Kopfzeile und Tabellen behalten die einfarbigen Icons; leere Tabellen bewusst ohne Illustration.
+- Schalter `DB_ASSETS`: Alias `@illustrationen` -> `illustrationen.db.ts` (bindet die SVGs) bzw. `illustrationen.frei.ts` (leer, auch fuer Typecheck/Tests). Aus erscheint das bisherige Icon als Ersatz; im Build landet dann keine Illustration (geprueft: an 5 SVG-Dateien + 2 inline, aus keine).
+
+## 2026-10-04 (218)
+
+### feat (Impressum aktualisiert, Datenschutzerklaerung)
+
+- Impressum: `§ 5 TMG` -> `§ 5 DDG und § 18 Abs. 1 MStV` (TMG seit 14.05.2024 abgeloest; die App dient nicht nur privaten Zwecken). Zeile `§ 18 Abs. 2 MStV` entfernt (nur fuer journalistisch-redaktionelle Inhalte). Hinweis "privates, unentgeltliches Angebot, kein Angebot der Deutschen Bahn AG".
+- Neue Datenschutzerklaerung (Art. 13 DSGVO) als zweiter Abschnitt im Drawer (`DatenschutzInhalt.tsx`): Daten und Zwecke, Rechtsgrundlagen, `localStorage` (§ 25 TDDDG), Dienstleister (GitHub Pages, Homeserver/Cloud Run Frankfurt, MongoDB Atlas Belgien, Resend, OpenPLZ API), Speicherdauern (Admin-Protokoll 12 Monate per Backend-TTL, Logs 14/31/30 Tage), Betroffenenrechte, Aufsichtsbehoerde Hessen. Knopf und Kopf heissen "Impressum & Datenschutz".
+
+## 2026-10-04 (217)
+
+### feat (Schalter `DB_ASSETS`: DB-Markenassets oder freie Alternativen)
+
+- Ein Schalter `DB_ASSETS=1` (Prozess-Env/`.env`, im CI Repo-Variable `vars.DB_ASSETS`) in `vite.base-config.ts`. Aus (Standard): keine DB-Designs genutzt -- Icons ueber Material Symbols (Apache 2.0, `src/fonts/material-symbols-db.woff2`, erzeugt von `scripts/gen-icon-font.py` / `bun run icons:font`; die Schrift kennt jeden DB-Icon-Namen als Ligatur, `data-icon` und Komponenten-CSS bleiben unveraendert), Systemschrift statt DB Neo, im PDF keine DB-Neo-Schriften (gespeicherte `db-sans`/`db-head` -> Helvetica, Auswahl im Editor ausgeblendet). An: unveraendertes DB-Theme.
+- Nichts geloescht, nur deaktiviert: `dbFonts.ts`, DB-Schriftwahl, Font-Preload und `install.sh` bleiben, gesteuert ueber `DB_ASSETS` (CSS-Alias `@asset-satz` -> `asset-satz.db.css`/`asset-satz.frei.css`, TS `shared/lib/dbAssets.ts`). `install.sh` und `deploy.yml` geben `ASSET_*` nur bei `DB_ASSETS=1` weiter.
+- Ungenutzte `DB_Schwelle`-SVGs entfernt (eigener Commit).
+- Nachtrag: Der Schalter wird aus `frontend/.env` gelesen (`loadEnv`, `envDir` = Frontend-Ordner; Vite startet bei Aenderung neu). Die freie Variante tauscht die Schrift per PostCSS-Filter `freieAssets` (`vite.base-config.ts`): Die Typografie-Tokens tragen "DB Neo Screen Sans/Head" fest im Wert, eine Variable reichte nicht. Der Filter entfernt ausserdem die `@font-face` der DB-Schriften und DB-Icon-Schriften (nichts davon landet in `dist/`) und setzt das DB-Logo des Themes (`--db-logo-url` -> `@db-ux/db-theme`) auf `none`; das eigene App-Icon bleibt.
+
+## 2026-10-04 (216)
+
+### fix (Unterschrift: weniger dick und wellig, Pad im Hochformat mittig)
+
+- Strichstaerke im PDF 0.8 bis 2pt (vorher 0.6 bis 3), `velocityFilterWeight` 0.4, Startpunkt `dotSize` nur noch `minWidth` (vorher `maxWidth`): hohes Gewicht liess die Breite springen und der dicke Startpunkt wirkte als Klecks, die Unterschrift sah "punktartig" aus.
+- Hochformat: Das Feld sitzt vertikal mittig im Inhaltsbereich des Vollbild-Drawers (`flex: 1`, `align-items: center`), die Fusszeile liegt am unteren Rand. Nach dem Drehen misst der Dialog nach 250ms und bei `orientationchange` erneut (die Browser melden die neue Hoehe oft verspaetet); gleiche Fenstergroesse wie zuletzt loest nichts aus.
+- Hilfslinie als Orientierung: Das Unterschriftenfeld zeigt unten eine duenne Linie (`SIGNATUR_LINIE_ANTEIL` = 0.8 der Hoehe, CSS-Hintergrund, nicht im PNG und nicht im PDF). Der Formular-Editor zeigt dieselbe Linie im Signatur-Rechteck und beim Aufziehen der Flaeche, damit sich die Flaeche so setzen laesst, dass die Linie auf der Formularlinie liegt.
+- Livetest `5c` prueft Feld mittig und Fusszeile unten im Hochformat.
+
+## 2026-10-04 (215)
+
+### fix (Unterschrift im PDF kraeftiger, Pad beim Drehen)
+
+- Das Pad (`signaturePad.ts`) waehlt die Strichbreiten jetzt relativ zur Canvas-Breite (`strichbreiten()`): Das PNG wird beim Einbetten auf die Unterschriftsflaeche geschrumpft, feste Pixelwerte (1 bis 3.5) wurden auf grossen Feldern im PDF haarduenn (~0.5pt). Ziel im PDF jetzt 1.1 bis 2.2pt bei angenommener Flaechenbreite 140pt, unabhaengig von Feldgroesse und `devicePixelRatio`.
+- Tempo wirkt deutlicher auf die Strichstaerke: Zielstaerken 0.6pt (schnell) bis 3pt (langsam) statt 1.1 bis 2.2, `velocityFilterWeight` 0.85 (die erste Fassung mit 0.3 glaettete die Wirkung weg). `signature_pad` rechnet `max(maxWidth / (Tempo + 1), minWidth)`, je groesser der Abstand, desto sichtbarer. Bereits gespeicherte Unterschriften behalten ihre alte Staerke.
+- Unterschrift-Dialog beim Drehen: Der Dialog wechselt jetzt beim Ueberschreiten der Handy-Grenze (`sm`) zwischen zentriertem Dialog und Vollbild-Drawer und uebernimmt die bisherige Zeichnung skaliert (PNG) ins neue Pad; auch ohne Wechsel der Dialogart bleibt die Zeichnung beim Drehen erhalten (vorher ging sie verloren). Livetest `5c` prueft Desktop, Handy, Querformat und zurueck; Unit-Tests fuer Zeichnungsuebernahme und Dialogwechsel.
+
+## 2026-10-04 (214)
+
+### refactor (`DBDialog` auch fuer Schriftart-, Admin-Bearbeiten-, Bestaetigungs-, Unterschrift- und Speicherfehler-Dialog)
+
+- Schriftart-Dialog, Admin-Dialoge Ressource/Profil bearbeiten nutzen `MyDialog` (`DBDialog` ab `sm`, Vollbild-`DBDrawer` auf dem Handy; Kopf `MyModalHeader` mit optionaler Kennung `zusatz`, Fuss `MyDialogFooter`). `MyDialog` nimmt `onClose` fuer selbst gemountete Dialoge, `useVollbild()` entscheidet ohne `DialogKontext` einmalig beim ersten Rendern. `size="xl"` = 64rem (`--db-dialog-max-width`), `lg` = `large` (48rem).
+- Die Vanilla-Dialoge (`confirmDialog`, Speicherfehler, Unterschrift-Entscheidung und -Pad) bauen ueber `erzeugeDbDialog` jetzt DB-Dialog- bzw. Drawer-Markup (Kopf `titel`, Inhalt, Fusszeile `fuss`); Fokus geht an den Dialog selbst. Das Unterschriftenfeld rechnet seine Groesse aus dem Dialog (`berechneCanvasGroesse(dialog, inhalt, fuss, ...)`), `.signatur-drawer` entfaellt.
+- Bleibt wie es ist: Hilfe, Impressum, Platzhalter-Hilfe.
+- Sichtvergleich-Ansicht `admin-profil-bearbeiten` neu.
+
+## 2026-10-04 (213)
+
+### refactor (Pull-to-Refresh mit `DBLoadingIndicator`)
+
+- Der Zieh-Indikator (`pullToRefresh.ts`) ist ein `DBLoadingIndicator` (Kreis, mittel), der sich mit der Zugstrecke fuellt, ab der Schwelle gruen wird (`--db-loading-indicator-segment-color` ueber `.ptr-indikator--bereit`, "jetzt loslassen") und nach dem Ausloesen als gruener Dauer-Spinner laeuft. React-Komponente `PullIndikator.tsx`, Zustand in `pullZustand.ts`. Der Zustand bleibt immer `active`: `state="successful"` tauscht Spinner und Symbol im Layout und liess den Kreis springen; `gap: 0` zentriert den Spinner. Alte Icon-Regeln (`.ptr-indikator__symbol`, `.laedt`) entfernt.
+- Sichtvergleich-Ansichten `pull-halb`/`pull-bereit` (Touch-Ereignisse im Browser).
+
+## 2026-10-03 (212)
+
+### refactor (`DBDialog` fuer Add-/Editor-/Show-Dialoge)
+
+- `MyFormModal`/`MyDivModal` rendern einen zentrierten `DBDialog` (Header-/Footer-Slot) statt im `DBDrawer`: `MyModalHeader` ist ein `DBDialogHeader` (Titel, Hilfe-Knopf im `endSlot`, Schliessen-Knopf; `aria-labelledby` macht DB), Fusszeilen sind `DBDialogFooter` (`MyEditorFooter`, `MyShowFooter`, neu `MyDialogFooter` fuer eigene Footer). Formular-Dialoge liegen als `<form><dialog>`, damit Submit-Knoepfe in den Slots zum Formular gehoeren. Neu: `MyDialog`, `DialogKontext` (liefert `onClose` und `vollbild`), `oeffneDialog` in `showModal.tsx`. Auch Login, Passwort-Dialoge, Hilfe, Massenaenderung und Login-Hilfe laufen so.
+- Unter `sm` (Handy) oeffnet statt des Dialogs ein nativer Vollbild-`DBDrawer` (`containerSize="full"`; Header/Footer per `DialogKontext` als `DBDrawerHeader`/`DBDrawerFooter`), ab `sm` der zentrierte `DBDialog` (Breite ueber `TMyModal.size`: `lg` = `large`, `xl` = `full`, 8px Randabstand). Die Wahl faellt einmal beim Oeffnen. Alle Fusszeilen (`db-dialog-footer`, `db-drawer-footer`, `.dialog-fuss`) stehen einheitlich als Zeile, gleichmaessig verteilt.
+- Weiterhin `DBDrawer`: Impressum, Schriftart-Dialog, Admin-Bearbeiten-Dialoge (Ressource, Profil), Platzhalter-Hilfe; HTML-Dialoge (`confirmDialog`, `signaturDialog`, `errorHandling`) bleiben Vanilla-Drawer.
+- Pull-to-Refresh startet nicht mehr in offenen Dialogen/Drawern (`touchstart` im `dialog[open]` wird ignoriert).
+- Livetest um Dialog-Pruefungen (Fokus, Abbrechen, Escape, Schliessen-Knopf) erweitert (50/50).
+
+## 2026-10-03 (211)
+
+### refactor (`DBLoadingIndicator` statt eigener Ladeanzeigen)
+
+- `DBLoadingButton` und alle Buttons mit Ladezustand (Speichern/Vorschau/Erzeugen/Uebernehmen in Admin-Dialogen, Heap-Snapshot) zeigen einen `DBLoadingIndicator` als Overlay (`overlay`, `autoDisable={false}`): Inhalt und Breite bleiben stehen, die Breiten-Fixierung (`min-inline-size`) in `setLoading` entfaellt. Seitenladungen (Start-Ladeanzeige `#ladeAnzeige`, Admin-Dashboard/-Listen/-Tabellen, Memory-Karte, Passkey-Liste) nutzen den Indikator als Kreis.
+- `setLoading`/`clearLoading`: nur noch `DBLoadingButton`s zeigen einen sichtbaren Ladezustand, andere Buttons werden nur gesperrt (`loadingButtonState.ts` und der DOM-Spinner entfallen). `#btnAuswaehlen` (Einstellungen) ist dafuer ein `DBLoadingButton`. `.laedt` bleibt nur fuer den Zieh-Indikator (`pullToRefresh.ts`).
+- Sichtvergleich: Ansichten `laedt-knopf`, `laedt-start`, `laedt-einstellungen` (Ladezustand per `setLoading`) neu; uebrige 132 Fotos gleich, Livetest 45/45.
+
+## 2026-10-03 (210)
+
+### chore (`@db-ux/*` 5.6.0 auf 5.6.1)
+
+- `core-components`, `core-foundations`, `react-core-components`, `core-eslint-plugin`, `core-stylelint`, `agent-cli` auf 5.6.1 (reine Patch-Fixes: DBShell, DBControlPanel, DBPopover, Dialog-/Drawer-Ueberschrift). `db-theme` bleibt 6.3.0.
+- Gate gruen, Sichtvergleich 132/132 gleich, Livetest 45/45.
+
+## 2026-10-03 (209)
+
+### refactor (Bootstrap-Rueckbau R9 + R10: Abschluss)
+
+- R9: `pages/admin/index.tsx` und `pages/admin/features/*` (VorgabenB-/Fahrzeit-/Zulagen-Editoren) ohne Bootstrap-Klassen.
+- R10: `src/scss/utilities.scss` (Bootstrap-kompatible Hilfsklassen) geloescht; die drei Gegenregeln zum DB-Layer (Listenpunkte, `.db-heading`-Ausrichtung, `.db-table`-Tabellenlayout) liegen in `src/scss/db-gegenregeln.scss`. Ratsche `GRENZE = 0` (`db-table` ist als DB-Klasse aus der Liste genommen), Test-Fixtures und Doku (`CLAUDE.md`, Skill `coding-konventionen`) bereinigt.
+- Sichtvergleich nach dem Loeschen: alle 132 Fotos gleich, Livetest 45/45.
+
+## 2026-10-03 (208)
+
+### refactor (Bootstrap-Rueckbau R8: Formular-Editor)
+
+- Alle Dateien unter `pages/admin/ui/FormularEditor/` ohne Bootstrap-Klassen (gleiche Skript-Umstellung wie R7: Klassen-Abbildung, `DBStack`, `Gruppe`, neue Klassen in `admin.scss` fuer Canvas, Split-Ansicht, Klapp-Abschnitte). Tests (`font-monospace` zu `schrift-mono`) angepasst. Ratsche 91.
+- Der Editor selbst ist im Sichtvergleich nicht abgedeckt (Fake-Backend ohne Vorlagen); die Admin-Tabs sind pixelgleich.
+
+## 2026-10-03 (207)
+
+### refactor (Bootstrap-Rueckbau R7: `pages/admin/ui` ohne FormularEditor)
+
+- Admin-Dashboard, Benutzerliste/-karten, Profil-/Ressourcen-Browser, Bearbeiten-Dialoge, Vorlagen-/Vorgaben-Editor, Massenaenderung, JSON-Editor, Log-Browser ohne Bootstrap-Klassen: `DBStack`, `DBInfotext`, `Gruppe`, neue Datei `src/scss/admin.scss` (Farben `farbe-*`, Abstaende `luft-*`, Zellen `zelle-*`, Karten-/Editor-Bausteine). Mechanische Umstellung per Skript (Klassen-Abbildung, `<div class="d-flex ...">` zu `DBStack`, `border p-N` zu `Gruppe`), danach von Hand nachgezogen.
+- Tests auf die neuen Klassen angepasst. Ratsche 527.
+- Sichtbare Abweichungen: Zeilentexte in Dashboard-Karten (Rollen, Ressourcen, Auth) grau statt schwarz (`DBInfotext`), Kartenueberschriften etwas dichter, einzelne Abstaende um wenige px.
+
+## 2026-10-03 (206)
+
+### refactor (Bootstrap-Rueckbau R6: `pages/start`, `berechnung`, `einstellungen`)
+
+- Start-Tab (Kopf, Karten, Schnellzugriff), Berechnung (Karten unter sm, Tabelle ab sm, Monatsfenster) und Einstellungen (Sicherheit, Sichtbare Bereiche, AutoSave, Passkey-Liste, Passwort-Dialoge) ohne Bootstrap-Klassen; neue Klassen in `styles.scss` (`start-*`, `berechnung-*`, `passkey-*`, `monatskarte-*`, `infotext-block`, `ausrichtung-start` u. a.).
+- Ein-/Ausblenden per `hidden` statt `d-none` (Monatsfenster-Spalten, Entgeltgruppe-Feld; Tests angepasst). Deaktivierte Einstellungen-Abschnitte per `abschnitt-versteckt`, weil `hidden` bei `DBAccordionItem` am inneren `<details>` landet. Ratsche 1311.
+- Sichtvergleich: Start-Tab pixelgleich; Einstellungen-Sicherheit bis etwa 6px Abstandsabweichung, Titel mit Hilfeknopf mit kleinem Abstand.
+
+## 2026-10-03 (205)
+
+### refactor (Bootstrap-Rueckbau R5: `features/ewt`, `ez`, `ea`)
+
+- Tab-Koepfe, Fahrzeiten-Panel, EWT-/Neben-/EA-Dialoge und Zulagen-Einstellungen ohne Bootstrap-Klassen: `DBNotification` (Hinweis in Neben-Dialog), `Gruppe` (Zulagen), `DBStack`/`DBInfotext`, neue Klassen in `styles.scss` (`zeit-pfeile`, `zeit-kopf`, `zelle-zentriert`, `zulagen-*`, `anzeige-koerper` u. a.). Standard `anzeige-tag` ersetzt den Bootstrap-Rest in `showModalHelpers`.
+- Buchungstag-Hinweis der EWT-Dialoge wird per `hidden` statt `d-none` ein-/ausgeblendet (Tests angepasst). Ratsche 1454.
+
+## 2026-10-03 (204)
+
+### refactor (Bootstrap-Rueckbau R4: `features/ber`)
+
+- Bereitschafts-Dialoge und -Tab ohne Bootstrap-Klassen: Hinweise per `DBNotification` (Sync-Hinweis in einer Huelle, die Ein-/Ausblenden uebernimmt), Zeitgruppen per `Gruppe` (jetzt mit optionalem `titel`, `id`, `style`), Zeilen per `DBStack`/`DBInfotext`, Wochentag-Raster und Tab-Kopf ueber neue Klassen in `styles.scss` (`zeitzeile*`, `wochentag-*`, `tab-abschnitt`, `titel-mit-hilfe`, `knopfreihe-luft`, `knopf-rechts`).
+- Sichtbare Abweichungen: Gruppen-Rahmen enger (Token `xs` statt `p-3`), Gruppen-Titel dunkler/fett, Hinweise als DB-Notification mit Symbol, Knopfreihe der Tabs 3px tiefer. Unbenutztes leeres `#schichtHinweisText` entfernt. Ratsche 1768 auf 1593.
+- Begruessung `#Willkommen` per `textContent` (siehe 203).
+- Fusszeilen-Reservierung als `margin-block-end` statt `padding-block-end` an `.db-shell-content`: der Scrollbalken endet ueber der fixierten Fusszeile statt dahinter. Die Hoehe misst `AppFooter` per `ResizeObserver` (`--app-footer-hoehe`), damit weder Luecke noch Ueberdeckung bleibt (feste 3rem/5rem liessen eine Luecke).
+
+## 2026-10-03 (203)
+
+### fix (Sicherheit: XSS in `confirmDialog`, Begruessung per `textContent`)
+
+- `confirmDialog` maskiert Nachricht, Titel und Button-Texte per `escapeHtml` (nur `\n` wird zu `<br>`). Vorher landete z. B. der Benutzername aus der Admin-Loeschabfrage ungeprueft in `innerHTML` (gespeichertes XSS gegen Admins).
+- Begruessung `#Willkommen` (`app/session/index.ts`, `loadUserDaten.ts`) per `textContent` statt `innerHTML` (Vorname/Benutzername waren ungemaskiert).
+- Test: HTML in Nachricht/Titel/Labels wird nicht als Markup gerendert.
+
+## 2026-10-03 (202)
+
+### refactor (Bootstrap-Rueckbau R3 `features/auth` + `features/onboarding`)
+
+- Neu `shared/ui/gruppe/Gruppe.tsx` (umrandete Feldgruppe mit Titel): Registrieren, Passwort-Reset, Login (Passkey), Arbeitszeit-Editor.
+- Konflikt-Banner als `DBNotification`, Ersteinrichtungs-Panel mit `DBStack`/`DBInfotext`, Login-Fusszeile mit `DBStack`.
+- Fix: Rollen-Abzeichen (`Super-Admin`) in der Benutzerkarte brach um und wurde abgeschnitten (`rollen-tag`).
+- Fix: Label-Spalte der Berechnung wieder 11.5rem (10rem brach `040 Fahrentsch.` um); Tabellen-Knopfleiste bleibt bei breiten Tabellen im sichtbaren Bereich (`position: sticky`, `100cqi`).
+- Sichtvergleich `--nur a,b` (Liste), Ansichten Login/Registrieren/Passwort/Ersteinrichtung; Ratsche 1768.
+
+## 2026-10-03 (201)
+
+### refactor (Bootstrap-Rueckbau R1 Rest + R2 `shared/ui`)
+
+- HTML-Dialoge: Speicherfehler mit `db-stack`/`db-infotext`/`db-tag`, Kopf `db-color-critical` (hellrot statt vollrot);
+  Unterschrift-Abfrage mit `db-infotext` statt `small text-body-secondary`.
+- Arbeitszeit-Editor (`SchichtSection`, `ArbeitszeiteingabePanel`): `DBStack`, `DBInfotext` fuer „min“/„keine Pause“/
+  „Arbeitsfrei“, `<strong>` fuer Tage, Komponentenklassen `schicht-neu`/`schicht-zeile`; Loeschknopf `data-color="critical"`.
+- `berechnungBausteine`, `PasswordStrengthMeter`, `CustomTableView`-Knopfleiste (`customtable-aktionen`), Dialog-Fehler
+  (`dialog-fehler`), `MyModalBody` (`db-color-critical`), `DBLoadingButton` (Abzeichen-Position per `:has`),
+  `MyShowElement` (`anzeige-zeile`, Label `<strong>`), `feld-zentriert`.
+- `.db-stack` mit `block-size: auto` (ein Stack in einer gestreckten Rasterzelle ueberlappte den naechsten).
+- Sichtvergleich: neue Ansichten Speicherfehler, Unterschrift (+ Pad), EWT-/Einsatz-Anzeige, Ausloesung per Modul-Import;
+  `--backend` fuer das echte Backend (Testbenutzer `livetest-fsd`, Super-Admin). Ratsche zaehlt auch `divClass`/
+  `feldKlasse`/... der My*-Wrapper (1877).
+- Abweichungen laut Sichtvergleich: Einstellungen > Arbeitszeit (Tage fett, Abstaende wenige px), EWT-Anzeige (Zeilen
+  6px enger), Speicherfehler- und Unterschrift-Dialog (s. o.).
+
+## 2026-10-03 (200)
+
+### refactor (Bootstrap-Rueckbau R0 + R1 Teil 1: Sichtbarkeit per `hidden`, Tab-Zustand ohne Bootstrap-Klassen)
+
+- Tab-Panels in `App.tsx`/Admin ohne `tab-pane fade show active`/`tab-content`: aktiver Tab per `hidden`, Berechtigung per
+  `data-gesperrt`; `tabController` erkennt Panels an `role="tabpanel"`. `.tab-pane`/`.fade` aus `utilities.scss` entfernt.
+- `d-none`-Umschaltungen in `app/session`, `main.tsx`, `logoutUser`, `actAsStatus`, `setLoading`/`clearLoading` und im
+  `AppHeader` auf `hidden`; totes `#loginDisplay` entfernt. Global `[hidden] { display: none !important }`.
+- Act-As-Hinweis: `DBNotification` mit `headline`, Text + Knopf im `DBStack` (vorher Bootstrap-Flex/`fw-semibold`/`small`).
+- Hilfedialog mit `DBStack`; `ThemeSwitcher` mit `aria-label` statt `visually-hidden`; Admin-Panes `admin-pane--<farbe>`,
+  Rahmen `admin-rahmen`, Hinweise `app-hinweise`, Start `start-schnellzugriff`/`start-ladeanzeige` (Token-Werte).
+- Werkzeug: Fake-Backend mit festen Admin-Daten (`scripts/livetest/adminDaten.ts`), Sichtvergleich um Impressum und
+  Start-Hilfe erweitert; Ratsche `test/app/bootstrapRueckbau.test.ts` (Grenze 2024).
+- Sichtvergleich gegen den Stand vorher: 88/96 gleich, abweichend nur der Hilfedialog (Fusszeile 12px hoeher).
+
+## 2026-10-03 (199)
+
+### fix (Monats-/Jahreswechsel reagierte nicht)
+
+- `pages/einstellungen/index.ts`: `change` auf `#Monat`/`#Jahr` delegiert am `document` statt am Element. `DBSelect`/`DBInput`
+  setzen die `id` erst nach dem Mount; zum Startzeitpunkt fand `querySelector('#Monat')` nichts, der Monatswechsel in der
+  Kopfzeile filterte die Tabellen nicht um. Regressionstest `test/pages/einstellungen/index.test.ts`.
+- `scripts/livetest.ts`: Testdaten/Backends nach `scripts/livetest/backends.ts`, Browser-Start/Login nach
+  `scripts/livetest/browser.ts`; der Login wechselt in den Testmonat (vorher hing der Test am heutigen Monat). 45/45.
+- Neu `scripts/sichtvergleich.ts` (Fotos fester Ansichten je Farbschema/Viewport, Pixel-Vergleich zweier Laeufe), Ablage in
+  `.sichtvergleich/` (gitignoriert).
+
+## 2026-10-03 (198)
+
+### style (stylelint ohne Warnungen und ohne `stylelint-disable`, DB-Tokens statt fester Werte)
+
+- `lint:css` mit `--max-warnings 0` (vorher Ratsche 93, Stand 87); keine `stylelint-disable`-Kommentare mehr (User-Vorgabe),
+  `use-sizing` mit `allowCalc` (Viewport-/Spaltenrechnungen, das Plugin zerlegt `calc()` an Leerzeichen).
+- Token-gleich ersetzt (Optik unveraendert): 0.25/0.5/0.75/1/1.5/5rem, 4/8/2px, 1px/2px-Rahmen, 14rem, 2.5rem.
+- Auf die naechste Stufe gezogen (Optik aendert sich leicht, Sichtpruefung): Icon-Knopf-Abstand 0.4 -> 0.5rem,
+  Signatur-Fusszeile 0.35 -> 0.25rem, Berechnung mobil Kopfzeilen 0.65 -> 0.75rem, Schalter in Zellen 1.7 -> 1.5rem,
+  Sortier-Icon-Platz 30px -> 2rem, Fehler-Icon 0.35 -> 0.25rem, „Bestaetigungsmail“-Knopf mobil 0.2/0.4 -> 0.25/0.5rem;
+  Knopfreihe max. 250px -> 16rem, gleich breite Knoepfe 12 -> 10rem (zuerst 14rem: Jahr/Auswaehlen lief mobil ueber den Rand, Nachtrag), Kartentitel 3.5 -> 4rem, `u-min-w-120` -> 6rem,
+  Label-Spalte der Berechnung zuerst 11.5 -> 10rem, nach Hinweis des Users zurueck auf 11.5rem als
+  `calc(sizing-2xl + sizing-sm)` (10rem brach „040 Fahrentsch.“ um), Fahrzeit-Label 9.25 -> 10rem,
+  Knopf max. 8.5 -> 10rem, Einsatzort-Kappung 120/140/240/480/650px -> 6/10/15/32/42rem, Onboarding-Panel und Snackbar
+  26 -> 24rem (Snackbar mobil `100vw - 2rem`), Monatsauswahl min. 8 -> 10rem, Fusszeilen-Reservierung 3.5 -> 3rem,
+  Snackbar-Abstand unten 4 -> 5rem (mobil zweizeiliger Footer 69px).
+- Rahmenfarben wie bei DB-Formularfeldern: `.border-primary/-danger/-warning` und Outlined-Semantikknoepfe
+  `<farbe>-on-bg-basic-emphasis-70`, `.border-*-subtle` `-emphasis-50` (vorher `origin` bzw. `bg-basic-level-3`).
+- Sortier-Icon per `translate: 0 -50%` statt `margin-block-start: -12px` zentriert; `.visually-hidden` ohne `margin: -1px`.
+- `.raster`/`.raster-auto`: `.abstand-*` setzt `gap` direkt (statt `--raster-abstand`); Utility-Maps mit Token-Namen.
+- Admin-Unter-Tabs ohne `.bg-darkmode-override` (fest kodierte Bootstrap-Farben im Dark Mode), DB faerbt adaptiv.
+- Tote Klassen entfernt: `jahr-auswahl`, `big-icons`, `einstellungen-icons`, `alertstyle`, `offcanvas-impressum`.
+
+## 2026-10-03 (197)
+
+### refactor (Wertelisten und Ja/Nein-Felder des Formular-Editors je Feature, Audit-Rest)
+
+- `KatalogEintrag.werte`/`boolean`: die Werteliste von `LRE` steht im Katalog von `ber`, die sechs vorberechneten
+  Ja/Nein-Felder (`Wohnung8bis14` … `TkgStUeber24`) im Katalog von `ewt`. `datenKatalog.ts` ohne `WERTE`/`BOOLEAN_FELDER`;
+  `werteAuswahl(feld)`/`istBooleanFeld(feld)` suchen in den geladenen Admin-Anteilen, Signaturen unverändert (keine
+  Konsumenten angepasst). Ohne den Admin-Anteil von `ber`/`ewt` entfallen Werteliste bzw. Ja/Nein-Vorschlag.
+- Test `datenKatalog.test.ts`: Entfernbarkeit `ber`/`ewt`, LRE-Werte exakt.
+
+## 2026-09-27 (196)
+
+### refactor (Formular-Katalog und Storage-Ressourcen ohne feste Feature-Listen, Audit F/G)
+
+- F: Katalog des Formular-Editors über das Admin-Manifest: `AdminFeature.formular.katalog` (aus `katalog.ts` des
+  Admin-Ordners); `datenKatalog.ts` importiert keine Feature-Ordner mehr (`zeilenQuellen()`, `listenVorlagen()`,
+  `vorlagenKategorie()` statt der Konstanten `ZEILEN_QUELLEN`/`LISTEN_VORLAGEN`/`VORLAGEN_KATEGORIE`), `FormularCode` ist
+  `string`. Ohne Admin-Anteil eines Features hat dessen Formular einen leeren Katalog statt eines Build-Fehlers. Geladen
+  wird weiterhin nur im Admin-Chunk (nur Admins).
+- G: `Storage.ts` ohne feste `RESOURCE_KEYS`: den `{ data, timestamp }`-Wrapper bekommen `VorgabenU` und die
+  `meta.resources[].storageKey` der angemeldeten Features.
+- `scripts/new-feature.ts` `HANDARBEIT` entsprechend gekürzt. Tests: `datenKatalog.test.ts` (Entfernbarkeit ea),
+  `Storage.test.ts` (Keys aus der Registry), `ListenGruppen.test.tsx`. Livetest 44/44 + 34/34, Katalog im Browser geprüft.
+
+## 2026-09-27 (195)
+
+### chore (Audit Schritt E: geschlossene Typen)
+
+- `scripts/new-feature.ts`: `HANDARBEIT` nennt nach dem Anlegen die geschlossenen Typen/Listen, die ein Feature je nach
+  Umfang von Hand erweitern muss (`StorageData` + `RESOURCE_KEYS`, `FeaturePdfModus`, `FormularCode` + `FEATURE_KATALOGE`,
+  `IVorgabenBerechnungMonat`/`IBerechnungMonatsErgebnis`); Test in `scripts.newFeature.test.ts`. Befund und Folgeschritte
+  (Katalog ueber das Admin-Manifest, `RESOURCE_KEYS` aus der Registry) in `tasks/todo.md`.
+
+## 2026-09-27 (194)
+
+### refactor (Feldtypen des Admin-Ressourcenbrowsers je Feature, Audit Schritt D)
+
+- `AdminResourceConfig.nurDatumFelder`/`zeitFelder`: jede Ressource meldet in ihrem Admin-Anteil
+  (`pages/admin/features/<id>/index.ts`), welche ISO-Felder nur ein Datum tragen und welche `HH:mm`-Strings sind. Die
+  globalen Listen `DATE_ONLY_FIELDS`/`TIME_STRING_FIELDS` in `adminResourceBrowserGemeinsam.ts` entfallen;
+  `formatCell(resource, feld, wert)`, `istNurDatumFeld`, `istZeitFeld`. Zuordnung unverändert (BE/NG: Tag + Beginn/Ende,
+  EWT: Tag/Buchungstag + 8 Zeitfelder, EA: Tag + Dauer, BZ: keine).
+- Tests: `adminResourceFeldtypen.test.tsx` (Zuordnung je Ressource, `formatCell`, Eingabetypen im Editor).
+  `scripts/livetest.ts` Schritt 7 (Ressourcenbrowser eigenständig gemountet, EWT: Tag ohne Uhrzeit, Editor date/time).
+
+## 2026-09-27 (193)
+
+### fix (AdminUserCard: abgeschnittene Kartenecke)
+
+- `db-card` (DB UX) setzt `border-radius`, aber nie `overflow` -- der Kopfzeilen-Div (`bg-body-secondary`, flush an
+  den Kartenrand) hat dadurch die obere Rundung ueberdeckt. `overflow: hidden` auf dem `db-card`-Div ergaenzt
+  (`AdminUserCard.tsx`).
+
+## 2026-09-27 (193)
+
+### refactor (Entgeltgruppe in den Einstellungen-Teil von ea, Audit Schritt C)
+
+- Neues optionales Feld `IFeatureEinstellungen.PersFelder` (Komponente): Features steuern damit Felder im Panel „Persönliche
+  Daten“ bei (nach „Tätigkeit“), Befüllen/Einsammeln über ihr `read`/`collect`.
+- ea hat jetzt einen Einstellungen-Teil (`features/ea/parts/einstellungen.ts`, ohne eigenen Abschnitt): Feld
+  `Entgeltgruppe` (`features/ea/ui/EntgeltgruppeFeld.tsx`) samt Prüfung. `PersoenlicheDatenPanel`, `saveEinstellungen` und
+  `generateEingabeMaskeEinstellungen` kennen das Feld nicht mehr; ohne ea fehlt es, der gespeicherte Wert bleibt erhalten.
+  Ist EA unter „Sichtbare Bereiche“ abgewählt, blendet sich das Feld aus (`PersFelder` bekommt `versteckt`, wie die
+  Feature-Abschnitte), bleibt aber im DOM und wird weiter gespeichert.
+- `addressValidation`: Entgeltgruppe raus aus `PERS_FIELD_LABELS`, neue `validateOptionalTextInput` (optionaler Freitext,
+  auch für Tätigkeit genutzt).
+- fix: `setElementValues` leert Felder, deren Wert `undefined` ist (Server liefert optionale Pers-Felder so), statt
+  „unbekannter Wert“ zu werfen -- bisher verdeckt durch `Entgeltgruppe ??= ''`.
+- Tests: `featureSlots.test.tsx` (ea-Slot: Position im Panel, read/collect, ungültig, ohne ea, EA abgewählt),
+  `saveEinstellungen.test.ts` (ohne Modul ea bleibt die Entgeltgruppe), Regressionstest `generateEingabeMaskeEinstellungen`,
+  `featureAbnahme` (ea liefert Einstellungen). `scripts/livetest.ts` Schritt 5 (Einstellungen: Entgeltgruppe
+  lesen/speichern, EA ab- und wieder anwählen, zurücksetzen; beide Modi).
+
+## 2026-09-27 (192)
+
+### refactor (Admin-Profilvorlagen nach Features, Audit Schritt B)
+
+- Neuer Slot `AdminFeature.profilVorlage` (`pages/admin/adminFeatures.ts`): `abschnitte` (`AdminVorlagenAbschnitt`: `id`,
+  `label`, `ausVorlage`, `inVorlage`, `hatDaten`, `Editor`) und `persFelder`. Der Vorlagen-Editor kennt nur noch Pers,
+  Arbeitszeit und die sichtbaren Bereiche; alles Feature-Eigene steckt in `TemplateContentDraft.abschnitte`.
+- ber: `VorgabenB` (Editor inkl. Navigation/Standard/Verschieben, bisher im Manager verteilt) ->
+  `pages/admin/features/ber/{vorgabenB.ts,VorgabenBEditor.tsx,profilVorlage.ts}`, `VorgabenBWeekRangeEditor` dorthin
+  verschoben; ewt: `Fahrzeit`; ez: `Einstellungen.benoetigteZulagen` als eigener Abschnitt **„Zulagen“** (bisher unter
+  „Einstellungen“); ea: Pers-Felder Tätigkeit/Entgeltgruppe.
+- Fehlt ein Feature, bleiben seine Daten in der Vorlage erhalten (Abschnitt wird weder gelesen noch geschrieben); unbekannte
+  Schlüssel in `Einstellungen` bleiben ebenfalls erhalten (bisher verworfen). Der Manager lädt die Vorlagen erst nach
+  den Admin-Anteilen.
+- Tests: `profileTemplateAbschnitte.test.ts` (Roundtrip, fehlendes Feature, leere Abschnitte, Zulagen-Dirty-Check),
+  `features/ber/vorgabenB.test.tsx` (Hinzufügen/Standard/Verschieben/Entfernen), Editor-Test auf Abschnitte umgestellt.
+  Gate: typecheck 0, lint 0, Tests 2309/2309, build i.o. `scripts/livetest.ts` um Schritt 5 (Admin > Profile-Templates,
+  Fake-Backend als Team-Admin) erweitert.
+
+## 2026-09-26 (191)
+
+### chore (DB UX 5.6.0 / db-theme 6.3.0)
+
+- `@db-ux/core-components`, `core-foundations`, `react-core-components`, `core-eslint-plugin` 5.5.0 -> 5.6.0,
+  `agent-cli`/`core-stylelint` ^5.6.0, `db-theme` 6.2.0 -> 6.3.0 (neue Icons, `db-theme-icons` 4.3.0).
+- Anpassungen an Breaking Changes: DB benennt die Titel-Huelle im Drawer-Kopf `db-drawer-header-container` ->
+  `db-drawer-header-content` -- unser nachgebautes Kopf-Markup in `MyModalHeader.tsx` und `signaturDialog.ts` zieht
+  mit (Titelgroesse bleibt 20px/fett ueber `styles.scss`, im Browser geprueft). `DBDrawer.onClose` feuert jetzt auf dem
+  nativen `close`-Event; `showModal`/Impressum/Admin-Dialoge werten das Event nicht aus, keine Aenderung noetig.
+- ESLint-Plugin 5.6: `text-or-children-required` zaehlt `DBIcon` nicht mehr als Inhalt -> `AutoSaveBadge` (Eck-Badge,
+  Name ueber `label`) mit begruendetem Disable; `sub-component-required-parent` erkennt die Accordion-Unterkomponenten
+  jetzt selbst -> zwei ueberfluessige Disables entfernt.
+- Neu verfuegbar, nicht eingesetzt: `DBDialog` (zentrierter nativer Dialog; Kandidat fuer `showModal`, eigener Task),
+  `DBPagination`, `DBLoadingIndicator`.
+- Gate: typecheck 0, lint 0, `lint:css` 87 Warnungen (unveraendert), Tests 2296/2296, build i.o., `icons:gen` ohne
+  Aenderung, Livetest 27/27.
+
+## 2026-09-26 (190)
+
+### refactor (Feature-Logik aus `shared`/`app` in die Features, Audit Schritt A)
+
+- Backend-Grenze je Feature in `features/<id>/model/backend.ts`: Dokumenttyp, `*FromBackend`/`*ToBackend` und Endpunkte
+  (bisher `shared/lib/ressource/fieldMapper.ts` und `shared/api/dataApi.ts`). Die fünf gleichförmigen API-Objekte baut
+  jetzt `createResourceEndpoints(resource, fromBackend, toBackend)` (`shared/api/resourceApi.ts`); `ResourceName` ist ein
+  freier String. `fieldMapper`/`dataApi` behalten nur Profil, Vorgaben und `loadAllYearData`.
+  `nebengeldZulagen` → `features/ez/model` (einziger Nutzer); `resolveYearMonth` → `shared/lib/date/periodFromDate`.
+- Monatsermittlung je Ressource in `features/<id>/model/monat.ts` (`getMonatFromBZ/BE`, `getMonatFromN`, `getMonatFromEA`);
+  in `shared/lib/date/getMonatFromItem` bleiben EWT (für `getEwtDaten`), `monatAusTag` (EZ/EA) und `filterByMonat`.
+- AutoSave: `FeatureResource.overlapWindow` (BZ, EWT) statt fester Resolver in `overlapGuard.ts` (Kopie `getEwtWindowLocal`
+  entfällt, EWT nutzt `features/ewt/model/getEwtWindow`); `FeatureResource.onDeleted` statt `resource === 'EWT'` für
+  `ewt:deleted`; Ressourcen-Zustände werden bei Bedarf angelegt statt fest für `BZ/BE/EWT/N/EA`.
+- `loadUserDaten`: Ressourcen-Map für die Berechnung aus der Registry statt fester Keys.
+- Tests gespiegelt (`fieldMapper`/`getMonatFromItem` je Feature aufgeteilt, Mocks auf neue Pfade); Anzahl unverändert.
+  Gate: typecheck 0, lint 0, Tests 2296/2296, format, build i.o. (Entry 157 kB, Precache 141).
+- Neu: `scripts/livetest.ts` -- Live-Test im Browser (Puppeteer) gegen den Dev-Server; Standard mit Fake-Backend per
+  Request-Interception, mit `--backend http://localhost:8081/api/v2` gegen das lokale Backend (eigener Testbenutzer
+  `livetest-fsd`, legt Testdaten an und raeumt sie wieder ab). Optionen `--base`, `--headful`, `--slow`.
+
+## 2026-09-26 (189)
+
+### feat (Module steckbar: weiche Abhängigkeit ez/ea → ewt)
+
+- `FeatureMeta.benoetigt` (weich) + `featureRegistry.fehlende(id)`; `ez` und `ea` deklarieren `['ewt']`. Fehlt `ewt`
+  im Manifest, laufen beide manuell weiter: keine EWT-Zuordnung, keine Tag-Schnellauswahl (auch nicht aus Alt-Daten in
+  `dataE`), `createAddModalNeben` öffnet direkt die manuelle Zeile statt der Fehlermeldung „Erst EWT ausfüllen“.
+- Neuer Helfer `shared/lib/ressource/getEwtDatenFuerZuordnung(featureId, options)` in den Add-/Editor-Modals von `ez`/`ea`.
+- Tests: `fehlende` (Registry), Helfer, `createAddModalNeben` ohne `ewt`, Abnahme je Teilmenge prüft `fehlende`.
+  Gate: typecheck 0, lint 0, Tests 2296/2296.
+
+## 2026-09-23 (188)
+
+### refactor (P10: FSD-Abschluss)
+
+- `main.tsx`/`App.tsx` → `app/` (`index.html` lädt `ts/app/main.tsx`); `pullToRefresh`/`setOffline`/`setVersionOutdated`
+  → `app/shell`; `reactRoot` → `shared/lib/react-root`; `tabController`/`updateTabVisibility` → `shared/model/navigation`;
+  `bootstrap`/`initSequence` (+ `DEPENDENCIES.md`) → `shared/lib/lifecycle`, `syncFeatureTabs` → `shared/lib/feature`
+  (Pages, `saveDaten` und `features/auth` rufen sie auf); `selectYear` zurück nach `pages/einstellungen/model`;
+  `getEwtDaten` → `shared/lib/ressource`, `nebengeldZulagen` → `shared/lib/zulagen` (je ≥ 2 Konsumenten).
+- Legacy-Ordner `core`, `components`, `infrastructure` samt Barrels und Aliasen (tsconfig, Vite) gelöscht; 121 Dateien
+  importieren jetzt die konkreten Module, 29 Test-`vi.mock` auf Barrels wurden je Modul aufgeteilt.
+- `features/auth` → `features/onboarding` über den neuen Hook `onboarding:open-once`.
+- Schichtgrenzen als `error` in `eslint.config.js` (Import nur abwärts, keine Slice-Querimporte, Module nur über die
+  Registry; Slices werden aus den Ordnern gelesen); `eslint.fsd.config.js` und `lint:fsd` entfallen.
+- Scaffold `bun run new-feature` erzeugte noch Importe aus `@/core/hooks`/`@/infrastructure/ui` → `@/shared/...`.
+- Tests gespiegelt (`test/Utilities`, `test/ui.*`, `test/app/init` aufgelöst); verwaiste Snapshots `test/__snapshots__`
+  (Duplikate der verschobenen ber-Tests) gelöscht.
+- Doku: `CLAUDE.md` (FSD-Schichten), Skills `architektur`, `coding-konventionen`, `tests`; Root-`.claude/CLAUDE.md` (PDF-Pfade).
+- Gate: typecheck 0, lint 0, Tests 2289/2289, `lint:css` i.o., build i.o. (Precache 115 → 136: ohne die Sammel-Barrels
+  bildet Rolldown feinere gemeinsame Chunks).
+
+## 2026-09-23 (187)
+
+### refactor (FSD: Aufrufe gegen die Schichtrichtung über Hooks)
+
+- Die vorhandene Hook-Registry (`shared/lib/feature/hookRegistry.ts`) bekommt drei Hooks: `auth:login-success`
+  (`userLoginSuccess`), `session:load-month` (`loadUserDaten`) und `help:open` (`openHelpModal`). `main.tsx`
+  registriert sie beim Start.
+- `features/auth` (Login, Passkey, Registrierung), `pages/admin` (`actAs`), `selectYear`, `MyModalHeader` und die
+  Modul-Tabs rufen jetzt `invokeHook` auf, statt `app/session` bzw. `widgets/help-modal` zu importieren.
+  `VorgabenBTable` (ber) nutzt dafür den bestehenden Hook `pre-save:settings`. Pages importieren
+  `openHelpModal` direkt, weil sie über den Widgets liegen; `core/index.ts` reicht es nicht mehr weiter.
+- In 6 Tests ersetzt `registerHook` die bisherigen `vi.mock` auf die alten Module.
+- Gate: typecheck 0, lint 0, `lint:fsd` 4, Tests 2289/2289.
+
+## 2026-09-23 (186)
+
+### refactor (P9: Admin als Page)
+
+- `features/Admin` → `pages/admin`: `components` → `ui` (FormularEditor unverändert mit), `utils` → `model`,
+  `utils/api.ts` + `formularVersionenApi.ts` → `api/` (ein API-Segment); Admin-Feature-Ordner `features/<key>/` und
+  Manifest `adminFeatures.ts` ziehen mit. Tests unter `test/pages/admin/…`.
+- `eslint.fsd.config.js` prüft nur noch die vier Module; `bun run new-feature --admin` legt den Admin-Ordner unter
+  `pages/admin/features/<slug>/` an.
+- Gate: typecheck 0, lint 0, `lint:fsd` 4, Tests 2289/2289, build i.o. (Admin weiter eigener Lazy-Chunk).
+
+## 2026-09-23 (185)
+
+### refactor (P8: globale Bereiche als Pages)
+
+- `features/Einstellungen` → `pages/einstellungen/{ui,model}`, `features/Berechnung` → `pages/berechnung` (`ui/`),
+  `StartTab`/`BerechnungTab`/`EinstellungenTab` → `pages/<seite>/ui/`.
+- Vorher herausgelöst, was nur ein Modul nutzt: Bereitschafts-Voreinstellungen (`VorgabenBTable`, VE-Dialoge,
+  `SchichtOverrideEditor`, Tabellen-Helfer) nach `features/ber`, `FahrzeitenPanel` nach `features/ewt`,
+  `ZulagenCheckboxList` nach `features/ez`. Arbeitszeit-Editor nach `shared/ui/arbeitszeit-editor`, `setMonatJahr`/
+  `changeMonatJahr` nach `shared/model/period`, `berechnungBausteine` nach `shared/ui/berechnung`, `MonatUeberschrift`
+  nach `shared/ui/monat-ueberschrift`, `einstellungenTeile` nach `shared/model/einstellungen`, `selectYear` nach
+  `app/session` (lädt Daten, deshalb nicht shared).
+- Barrels der Einstellungen-Seite nur noch mit eigenen Exporten. `lint:fsd` 14 → 4 (übrig: ea/ez → `ewt/model`).
+- Gate: typecheck 0, lint 0, `lint:fsd` 4, Tests 2289/2289, build i.o. (Precache 115, drei neue kleine gemeinsame Chunks).
+
+## 2026-09-23 (184)
+
+### refactor (P7: Feature-Module unter ihren Schlüsseln)
+
+- `features/{EA,Neben,EWT,Bereitschaft}` → `features/{ea,ez,ewt,ber}` (Ordner = `meta.id`), darin `components` → `ui`,
+  `utils` → `model`, Tab-Komponente → `ui/`; `meta.ts` und `parts/` an der Modulwurzel. Tests gespiegelt unter
+  `test/features/<key>/{ui,model}/`.
+- `eslint.fsd.config.js` auf die neuen Namen; Admins eigene Unterordner `features/Admin/features/<key>` gelten nicht
+  mehr als Modul-Import (vier Fehlalarme weg). `lint:fsd` 16 → 14.
+- `bun run new-feature` legt neue Module im selben Layout an (`features/<slug>/…`, Tab unter `ui/`).
+- Gate: typecheck 0, lint 0, `lint:fsd` 14, Tests 2289/2289, build i.o. (Precache 113).
+
+## 2026-09-23 (183)
+
+### refactor (P6: Widgets)
+
+- `AppHeader` mit `ThemeSwitcher`, `useColorMode`, `useMediaQuery` nach `widgets/app-header`; `AppFooter` mit
+  `ImpressumDialog` nach `widgets/app-footer`; `openHelpModal` + `MyHelpModal` nach `widgets/help-modal`;
+  `helpContent.ts` (Typen + Loader) nach `shared/lib/help`.
+- **Abweichungen vom Plan (User-Entscheid):** kein eigenes `widgets/theme-switcher` (einziger Konsument ist der Header,
+  sonst widget→widget); Hilfe aufgeteilt, weil `helpContent`-Typen von `shared` und `features/onboarding` gebraucht
+  werden. Snackbar-Host und `AutoSaveBadge` bleiben in `shared/ui` (schon in P3 verschoben).
+- Barrels ohne schichtfremde Re-Exporte (`components` ohne `MyHelpModal`, `infrastructure/ui` ohne `useColorMode`);
+  `core/index.ts` reicht `openHelpModal` bis P10 durch. `lint:fsd` 18 → 16.
+- Bekannt, eigener Commit: Aufrufe von `openHelpModal` aus `shared/ui/modal/MyModalHeader` und den Modul-Tabs über `@/core`
+  sind Aufwärts-Importe → Öffner-Registrierung in `shared/lib/help`. Gate: typecheck 0, lint 0, `lint:fsd` 16,
+  Tests 2289/2289, build i.o. (Precache 113).
+
+## 2026-09-23 (182)
+
+### refactor (P5: geteilte Features, `app/session`, `app/init`)
+
+- `core/orchestration/auth` aufgeteilt: Modals + `ConflictReviewBanner` nach `features/auth/ui`, Login-Utils
+  (`loginUser`, `loginWithPasskey`, `checkNeuerBenutzer`, `handleAuthUrlState`, `requestVerificationMail`) und
+  `logoutUser` (aus `Einstellungen/utils`) nach `features/auth/model`; `loadUserDaten.*`, `overwriteUserDaten`,
+  `userLoginSuccess` und die Start-Verdrahtung (`auth/index.ts`) nach `app/session`. `syncFeatureTabs`, `initSequence`,
+  `bootstrap` (+ `DEPENDENCIES.md`) nach `app/init`; Onboarding nach `features/onboarding/{ui,model}`.
+- **Abweichung vom Plan (User-Entscheid):** `infrastructure/autoSave` nach `shared/lib/autosave` und `infrastructure/pdf`
+  + `generatePDF.ts` nach `shared/lib/pdf` statt `features/{autosave,pdf-export}` -- beide werden von den Modulen
+  ber/ewt/ea/ez und von `shared` (`saveDaten`, `unlinkEwtRefs`, `AutoSaveBadge`) genutzt, als Feature wären das
+  Same-Layer- bzw. Aufwärts-Importe. `actAsStatus` → `shared/model/session`, `monatJahrStore` → `shared/model/period`.
+- Moves durch den User in der IDE (Tests auf Wunsch per `git mv`); nachgezogen: nicht aktualisierte Alias-Importe und
+  `vi.mock`-Strings, Barrel-Mocks auf konkrete Dateien, Barrels ohne schichtfremde Re-Exporte, `main.tsx`,
+  Fixture-Pfade (`dbFonts.test.ts` lief vorher wegen falschem Asset-Pfad still als übersprungen).
+- Bekannt, eigener Commit (Event-Inversion): `features/auth` ruft noch aufwärts `app/session` (`userLoginSuccess`) und
+  `app/init` (`syncFeatureTabs`). Gate: typecheck 0, lint 0, `lint:fsd` 18, Tests 2289/2289, build i.o. (Precache 113).
+
+## 2026-09-23 (181)
+
+### refactor (P4: Domänen-Shared nach `shared/lib/ressource`/`shared/lib/zulagen`)
+
+- `infrastructure/data/*` (13 Dateien mit ≥2 Konsumenten quer über ber/ewt/ez/ea bzw. Admin/core:
+  `berechnungWerte`, `confirmDeleteAllRows`, `createDatenGetter`, `fieldMapper`, `mergeVisibleResourceRows`,
+  `metaFields`, `normalizeResourceRows`, `oeLevels`, `persistTableData`, `resourceConfig`, `saveDaten`,
+  `syncFieldsFromEwtRows`, `tableToArray`) nach `shared/lib/ressource/`; `Einstellungen/utils/zulagenCatalog.ts`
+  (3 Konsumenten: Admin, Einstellungen, Neben) nach `shared/lib/zulagen/`.
+- Einzel-Konsumenten statt shared: `DatenSortieren.ts` nach `features/Bereitschaft/utils/`,
+  `persistEwtTableData.ts` nach `features/EWT/utils/`. `zulagenWerte.ts` (nur 1 Konsument `wert.ts`) und
+  `generatePDF.ts` bewusst nicht verschoben -- beide gehören zum PDF-Formel-Motor, der komplett erst mit
+  `infrastructure/pdf` → `features/pdf-export` in P5 umzieht.
+- **Abweichung vom Prozess:** Move diesmal per `git mv` + manueller Import-Korrektur statt IDE-Move durch den
+  User (wie bei P0/P2/P3) -- auf Rückfrage entschieden, den bereits tsc-sauberen Stand zu behalten. Ab P5
+  wieder strikt nach Plan-Protokoll (Zielordner + Alt→Neu-Liste, User verschiebt in der IDE).
+- `lint:fsd`-Ratsche 47 → 37 (`package.json` nachgezogen). Gate: typecheck 0, lint 0, `lint:fsd` 37,
+  Tests 2289 unverändert, build i.o. (Precache weiterhin 113 Einträge). Details `tasks/todo.md`.
+
+## 2026-09-22 (180)
+
+### refactor (P3: Shared-UI nach `shared/ui`/`shared/model`/`shared/lib`)
+
+- `components/*` (außer `MyHelpModal.tsx`, bleibt für P6 Widgets) + die generische `infrastructure/ui`-*Store*/`use*`-Familie
+  + `infrastructure/table` (+SCSS) nach `shared/ui/{dialog,snackbar,button-loading,icons,form,modal,custom-table}` verschoben
+  (User in der IDE). Tab-/Sichtbarkeits-Stores (`activeTabStore`, `activeAdminTabStore`, `featureTabsStore`,
+  `navigationVisibleStore`, `offenerAbschnittStore`, `schliesseMobilenDrawer` + `use*`-Pendants) nach `shared/model/navigation`;
+  `bindClickHandlers.ts` (4 Feature-Konsumenten) nach `shared/lib/dom`; `applySelectOptions.ts` aus `features/Neben/utils/`
+  nach `shared/ui/form` (lag als generischer Code in einem Feature, Plan-Vorgabe).
+- **Abweichung vom Plan:** `AutoSaveBadge.tsx` nicht nach `widgets/autosave-badge` (P6) wie im Plan notiert, sondern
+  zusammen mit `DBLoadingButton.tsx` nach `shared/ui/button-loading` -- einziger Konsument, sonst müsste `shared`
+  von `widgets` importieren (verbotene Richtung).
+- Zurückgestellt (spätere Phasen, unverändert an Ort und Stelle): App-Shell-Tabs/Widgets (P6/P8), `tabController`/
+  `pullToRefresh`/`reactRoot`/`setOffline`/`setVersionOutdated` (P10), `actAsStatus.ts`/`monatJahrStore.ts` (P5, mit
+  Auth/Session), `useMediaQuery.ts`/`useColorMode.ts` (einzige Konsumenten bleiben vorerst).
+- Nacharbeit: zwei vom IDE-Move übersehene Dateigruppen (Snackbar-Familie, `CustomTable.ts`-Duplikat in
+  `infrastructure/table/` mit veraltetem Column-Importpfad) von Hand nachgezogen bzw. gelöscht; danach ~40 Dateien mit
+  gebrochenen Innen-Importen der verschobenen Dateien selbst (Tiefe/Ziel falsch, analog P2) und -- groesster Batzen --
+  ca. 40 Test-Dateien mit `mock.module`/`vi.mock`-Strings auf alte `@/infrastructure/ui/*`-Pfade (v. a. `CustomSnackbar`,
+  da in fast jedem Fehlerpfad-Test gemockt) per Bulk-Ersetzung korrigiert; `gen-iconset.mts` + zwei SCSS-Kommentare
+  (`db-ux.css`, `styles.scss`) auf neuen `iconRegistry.ts`-Pfad, `iconset.material.css` neu generiert;
+  `customtable.scss`s `@use '../../../scss/breakpoints'` auf neue Verschachtelungstiefe (`../../../../`) korrigiert.
+  `@/components`-Barrel bleibt bewusst als Re-Export-Fassade über `shared/ui/*` bestehen (74 Konsumenten importieren
+  weiterhin darüber) -- kein Auftrag für einen Massenumzug aller Aufrufstellen in dieser Phase.
+- Gate: typecheck 0, lint 0, `lint:fsd` 47 (Ratsche vom User bereits während des Moves nachgezogen, 73 → 47), Tests
+  2289 unverändert, build i.o. (Precache weiterhin 113 Einträge), `lint:css` 87 unverändert.
+
+## 2026-09-22 (179)
+
+### refactor (P2: Shared-Leaves nach `shared/`)
+
+- `infrastructure/{api,tokenManagement,storage,validation,date}` und `core/{state,events,hooks,types}` nach `shared/{api,api/token,lib/{storage,validation,version,date,state,events,feature,schicht},types}` verschoben (User in der IDE, Import-Update aktiv). Ausnahmen: `compareVersion.ts` -> `shared/lib/version` (nicht `shared/lib/validation`), `calculateBuchungstagEwt.ts` -> `features/EWT/utils` (nur EWT-Konsumenten, kein Shared-Fall), `resolveSchichtDay.ts`+`mergePerWeekdaySchicht`/`groupBySchedule`/`isOvernightSchicht` -> `shared/lib/schicht` (Bereitschaft UND EWT nutzen es, daher nicht `features/ber/lib`; nicht mehr aus dem `@/types`-Barrel re-exportiert, 8 Konsumenten auf den direkten Pfad umgestellt).
+- Alias `@/types` zeigt jetzt auf `shared/types` (Name bleibt, Ziel wechselt, wie im Plan vorgesehen); neuer Alias `@/shared/*`. `@/infrastructure`-Bare-Alias entfernt (Barrel `infrastructure/index.ts` war ungenutzt, geloescht).
+- Nacharbeit an ~340 Dateien noetig, die der IDE-Move nicht erfasst hat: gebrochene Alias-Importe (`@/core/types`, `@/core/hooks`, `@/core/state`, `@/core/events`, `@/infrastructure/{api,date,tokenManagement,storage,validation}`) per Bulk-Ersetzung; dazu von Hand falsch nachgezogene *relative* Importe innerhalb der verschobenen Dateien selbst (z. B. `shared/api/FetchRetry.ts` importierte nach dem Move noch `../tokenManagement/tokenErneuern`/`../ui/CustomSnackbar`/`../storage/Storage`/`../validation/compareVersion` -- alte Tiefe, falsches Ziel), `core/index.ts`-Barrel auf die neuen Ziele umgehaengt, `mock.module`-Strings in Tests mitgezogen.
+- `lint:fsd`-Ratsche 111 -> 73 (P2 räumt einen Großteil der vorherigen `core`-darf-`infrastructure`-nicht-importieren-Warnungen weg, da `types`/`state`/`events`/`hooks` jetzt in `shared` liegen). Gate: typecheck 0, lint 0, `lint:fsd` 73, Tests 2289 (unveraendert), build i.o. (PWA-Precache weiterhin 113 Eintraege), `lint:css` 87 (unveraendert).
+
+## 2026-09-22 (178)
+
+### docs (CLAUDE.md an FSD-Feature-Contract angepasst)
+
+- `frontend/CLAUDE.md` beschrieb noch das alte `index.ts` (`featureLifecycleRegistry.registerFeature()`)-Muster und einen `core/`-Bereich "ohne Feature-Abhaengigkeiten (ausser lazy-imports fuer Admin)" -- beides seit P1a-P1i ueberholt.
+- Verzeichnisbaum + 3-Schichten-Abschnitt jetzt: `app/features.ts` (Feature-Manifest), `core/hooks/featureRegistry.ts` (Contract/Registry, kennt kein Modul selbst), `core/help/`, Admin-Feature-Ordner (`features/Admin/features/{ber,ewt,ez,ea}/` + `adminFeatures.ts`), Berechnung/Einstellungen/Admin als "globale Bereiche" statt Feature-Module.
+- Neuer Abschnitt "Feature-Contract der vier Module": `meta.ts` (eager) + `parts/{ui,data,berechnung,einstellungen,pdf,help,events}` (lazy, je Slot ein Chunk), `bun run new-feature <slug> [--admin]`-Scaffold. Regel 1 in Abschnitt 2 entsprechend aktualisiert.
+- Keine Code-Aenderung, nur Doku. Gate nicht erneut noetig (Markdown).
+
+## 2026-09-22 (177)
+
+### feat (Scaffold: optionaler Admin-Ordner)
+
+- `bun run new-feature <slug> --admin` legt zusaetzlich einen leeren Admin-Ordner an (`features/Admin/features/<slug>/{index,katalog}.ts`) und traegt ihn im Admin-Manifest (`features/Admin/adminFeatures.ts`) ein.
+  `index.ts` ist ein `AdminFeature`-Stub (`resources: []`, `statsRows: []`), `katalog.ts` ein `FeatureKatalog`-Stub (nur relevant, sobald das Feature ein PDF-Formular bekommt); beides bleibt von Hand zu befuellen, `features/Admin/features/ea` dient als vollstaendige Vorlage. Ohne `--admin` bleibt es beim generischen Ressourcenbrowser-Fallback aus `meta.resources`.
+- `planeFeature()` nimmt dafuer optional den aktuellen Inhalt von `adminFeatures.ts` als drittes Argument; ohne `optionen.admin` unveraendertes Verhalten (Ruecksprung getestet).
+- Beim ersten Anlauf fuegte die Manifest-Zeile ohne Zeilenumbruch an die vorherige an (`ea'),  demo: ...`); vor dem Commit im echten `bun run new-feature ... --admin`-Lauf gefunden und behoben (Einfuegepunkt hinter statt vor dem Zeilenumbruch), Test um eine formatgenaue Prüfung ergaenzt, damit das nicht wieder unbemerkt durchrutscht.
+- Test: `test/scripts.newFeature.test.ts` um drei Faelle ergaenzt (mit `admin`, ohne `admin`, `admin: true` ohne `adminManifest`). Testanzahl 2286 -> 2289. Gate: typecheck, lint 0, `lint:fsd` 111 unveraendert, build i.o.
+
+## 2026-09-22 (176)
+
+### refactor (P1i: datenKatalog.ts nach Feature aufgeteilt)
+
+- **Katalog-Beitrag je Formular-Feature** (`features/Admin/features/{ber,ewt,ez,ea}/katalog.ts`, Typ `FeatureKatalog`): Basis-Zusatzfelder (Bereitschaftszulage, nur `ber`), Zeilenfelder, Zeilenquellen und -- nur bei `ez` -- die Zulagen-Listen-Vorlagen samt Kategorie-Zuordnung.
+  Zuvor lagen alle vier Formulare als `Record<FormularCode, ...>` in einer Datei (`ZEILEN_FELDER`, `ZEILEN_QUELLEN`, `LISTEN_VORLAGEN`, `VORLAGEN_KATEGORIE`).
+- **`datenKatalog.ts`** behaelt die Basis (Zeitraum/Person/Dienststelle), Schriftarten, Formate, Helfer (`katalogFelder`, `katalogZeilenFelder`, `werteAuswahl`, `istBooleanFeld`, `gruppiere`, `beispielWert`, `zulagenKurztexte`) und setzt `ZEILEN_QUELLEN`/`LISTEN_VORLAGEN`/`VORLAGEN_KATEGORIE` aus den vier Katalog-Beitraegen zusammen (`FEATURE_KATALOGE`). Oeffentliche API (Namen, Signaturen, `FormularCode`) unveraendert -- keine der 17 FormularEditor-Konsumenten musste angepasst werden.
+- Geteilte Typen (`FormularCode`, `KatalogEintrag`, `BeispielWert`, `ListenVorlage`, `FeatureKatalog`) und Vorschau-Helfer (`tag`, `zeitpunkt`) liegen jetzt in `katalogTypen.ts` (Zyklus vermieden: die Feature-Katalog-Dateien importieren keine `datenKatalog.ts`).
+- Statische Imports der Admin-eigenen Unterordner `features/ewt`/`features/ea` bleiben innerhalb des ohnehin admin-only lazy Chunks (FormularEditor laedt nur fuer Admins); `lint:fsd`-Ratsche auf 111 (+2, dauerhaft): die Boundary-Regel prueft Import-Pfade grosskleinschreibungs-unabhaengig und trifft dabei zufaellig Admins eigene `features/ewt`/`features/ea`-Unterordner (Admin-interne Gliederung, keine echte Grenzverletzung zu den echten Feature-Modulen `EWT`/`EA`) -- kein `eslint-disable`, weil das im Haupt-Lint (`bun run lint`, dort ist die Regel nicht aktiv) als "unused directive" auffiele.
+- Test: `test/features/Admin/FormularEditor/datenKatalog.test.ts` (neu, haelt die Zusammenfuehrung fest: Basis/Zeilenfelder/-quellen je Formular, Bereitschaft BZ/BE-Trennung, Zulagen-Listen nur bei EZ, Beispielwerte). Testanzahl 2272 -> 2286 (14 neu). Gate: typecheck, lint 0, `lint:fsd` 111, build i.o. (113 Precache-Eintraege unveraendert, kein neuer Chunk).
+- Offen (aus dem Plan): "Scaffold um Admin-Ordner erweitern" (`bun run new-feature` legt bislang keinen Admin-/Katalog-Ordner an) ist nicht Teil dieses Commits, siehe `tasks/todo.md`.
+
+## 2026-09-22 (175)
+
+### fix (Hilfetexte Einstellungen/Berechnung korrigiert, Berechnung fehlte ganz)
+
+- **`tab.einstellungen`** (`core/help/helpContent.ts`) war veraltet: nannte "Passwort ändern" und "Logout" als Buttons dieses Tabs, dabei liegt "Passwort Ändern" im Abschnitt "Sicherheit" und Logout in der `AppHeader`-Kopfzeile; die
+  `eingaberegeln` gehoerten inhaltlich zur Arbeitszeitvorgabe (`modal.einstellungen.ve`, dort schon vorhanden) und waren hier eine Dopplung. Neu beschrieben: Persönliche Daten, Sicherheit (Biometrie/Passwort), Arbeitszeit, die
+  Abschnitte der aktiven Bereiche, sichtbare Bereiche, AutoSave, Jahreswechsel (Buttons "Auswählen"/"Speichern"/"Biometrie einrichten"/"Passwort Ändern"), plus ein Hinweis auf ungesicherte Aenderungen beim Abwaehlen eines Bereichs.
+- **`tab.berechnung` fehlte komplett** -- der Berechnung-Tab (`infrastructure/ui/BerechnungTab.tsx`) hatte gar keinen Hilfe-Knopf. Neu: `#btnHelpBerechnung` (gleiches Muster wie die Feature-Tabs) plus neuer Kern-Hilfe-Kontext
+  `tab.berechnung` (Monatsuebersicht, Monatsfenster-Navigation).
+- Tests: `test/ui.BerechnungTab.test.tsx` (neu, haelt den Hilfe-Knopf fest), `help.helpContent.test.ts` um `tab.berechnung` ergaenzt. Testanzahl 2270 -> 2272. Gate: typecheck, lint, `lint:fsd` 109 unveraendert, build i.o.
+- Anlass: User-Hinweis nach dem P1h-Browser-Check ("Fehlerhafte/Unvollständige Hilfen: Einstellungen, Berechnung"); weitere Hilfen (Tabs, Dialoge) sind noch nicht einzeln geprueft, siehe `tasks/todo.md`.
+
+## 2026-09-20 (174)
+
+### refactor (FSD-Umbau P1h: Hilfe und Ersteinrichtung ueber Feature-Slots, Scaffold, Abnahmetests)
+
+- **Neuer lazy Teil `help`** je Feature (`features/<Ordner>/parts/help.ts`): die Hilfetexte von Tab und Dialogen wandern aus `core/help/helpContent.ts` in ihr Feature; `meta.helpKeys` nennt die Schluessel
+  (bestimmt, welches Feature einen Schluessel besitzt). `helpContent.ts` behaelt nur `tab.start` und `tab.einstellungen`. `HelpContextKey` ist jetzt Kern-Schluessel oder String (Feature-Schluessel).
+- **`getHelpContent`/`openHelpModal` sind async** (`openHelpModal` wirft nie: bei Ladefehler oder unbekanntem Schluessel erscheint eine Snackbar statt des Dialogs). Der Text wird erst beim Oeffnen der Hilfe geladen.
+- **Ersteinrichtung aus Slots**: `IEinstellungenSection.onboarding` (Titel, Beschreibung) erzeugt den Pruef-Schritt eines Feature-Abschnitts (Bereitschaft `collapseThree`, Fahrzeiten `collapseFour`) statt fest verdrahteter
+  Schritte; die Tour-Hilfe holt `getHelpContent(tab.<tabKey>)`. Das Panel laedt beides asynchron. **Verhaltensaenderung (auf User-Hinweis):** Ist der Tab eines Features ausgeblendet, entfaellt auch dessen Pruef-Schritt
+  (vorher zeigte er auf einen versteckten Abschnitt). Der Schritt "Arbeitszeit pruefen" bleibt global.
+- **PDF-Body-Typen in die Features**: `IPdfBereitschaftszeitraum`/`IPdfBereitschaftseinsatz`/`IBereitschaftszeitraumPdfBody`, `IPdfEWT`/`IEwtPdfBody`, `IPdfNebengeld`/`INebengeldPdfBody`, `IPdfEA`/`IEntgeltausgleichPdfBody` liegen
+  jetzt in `features/<Ordner>/utils/pdfDaten.ts`; `infrastructure/pdf/pdfDaten.ts` behaelt die Basis (`IPdfBase`, `IPdfPers`, `IPdfFahrzeit`, `IPdfVorgabenGeld`). `Bereitschaftszulage` nutzt `Partial<BereitschaftszulageWerte>`
+  statt der Inline-Kopie (der Zyklus entfaellt).
+- **Scaffold** `bun run new-feature <slug> [--ordner] [--label] [--icon] [--dry-run]` (`scripts/new-feature.ts`): legt `meta.ts`, Tab-Komponente, `parts/ui.tsx`, `parts/help.ts`, einen Test und den Manifest-Eintrag an
+  (`resources: []`; weitere Teile, Ressourcen und ein Eintrag im Admin-Manifest `features/Admin/adminFeatures.ts` von Hand, `features/EA` als Vorlage; ein neues Datenobjekt braucht zusaetzlich `TResourceKey` im shared-Paket).
+- **Abnahme** `test/app/featureAbnahme.test.tsx`: (a) Vertrag je Manifest-Feature (Eindeutigkeit von Ids/Keys/DOM-Ids, Teile passen zu `meta`), (b) Nav, Start, Ressourcen, Berechnung, Einstellungen, Hilfe, PDF-Modus und Tab-Sync
+  laufen mit **jeder der 16 Teilmengen** der vier Features, (c) ein Dummy-Feature erscheint in Nav, Schnellzugriff, Ressourcen, PDF-Modus, Hilfe, Einstellungen und Wake-Events ohne Aenderung ausserhalb des Manifests,
+  (d) Teile laden lazy und je Teil einmal. Dazu `test/scripts.newFeature.test.ts`, Hilfe-Vertrag in `help.helpContent.test.ts` (Schluessel je Feature, im Quellcode verwendete Schluessel loesen auf), Ersteinrichtungs-Tests
+  fuer Dummy-Feature und ausgeblendete Tabs. `test/app/features.test.ts` bezieht sich auf die Kern-Features (weitere Features brechen es nicht).
+- Build: 113 PWA-Precache-Eintraege (vorher 109: +4 `help`-Chunks, je Feature einer, nicht im Eager-Satz). Eager-JS 1274 kB (P0-Baseline ca. 1200 kB): das Ziel "Haupt-Bundle kleiner als Baseline" ist nicht erreicht; die Feature-Komponenten
+  in `features/Einstellungen/components/index.ts` (Barrel) und geteilte Bausteine bleiben statisch im Eager-Satz, das loesen die Move-Phasen (P2 ff.).
+- Gate: typecheck, lint, `lint:fsd` 109 (temporaer +2: `core/help` und `core/orchestration/onboarding` importieren Infrastruktur; sinkt mit P5/P6), Tests 2172 -> 2270, build i.o.
+
+## 2026-09-20 (173)
+
+### refactor (FSD-Umbau P1g: Admin nach Features gegliedert, Admin-Manifest)
+
+- **Admin-Manifest** `features/Admin/adminFeatures.ts` (`AdminFeature`, `ladeAdminFeatures`, `useAdminFeatures`) und je Feature ein eigener Admin-Ordner `features/Admin/features/{ber,ewt,ez,ea}/index.ts`
+  (Ziel spaeter `pages/admin/features/<key>/`). Die Feature-Module enthalten keinen Admin-Code; der Admin kennt die Features nur ueber ihren Schluessel (`meta.id`). Die Ordner werden mit `Promise.allSettled`
+  gleichzeitig geladen (nur im Admin-Chunk, also nur fuer Admins); ein fehlgeschlagener Ordner blockiert die anderen nicht, wird nicht gemerkt (naechster Aufruf versucht es erneut) und im Ressourcenbrowser gemeldet;
+  ein Admin-Ordner ohne im Feature-Manifest angemeldetes Feature wird ignoriert.
+- **Was die Ordner liefern**: Ressourcen des Ressourcenbrowsers (Endpunkt, Labels, Tabellen- und Schema-Felder), Verweis-Felder **per Endpunkt statt Array-Index** (`EWT` -> `einsatzwechseltaetigkeiten`,
+  `Bereitschaftszeitraum` -> `bereitschaftszeitraeume`; fehlt das Ziel-Feature, entfaellt der Link), feste Feldwerte (`LRE`, `Schicht`), das PDF-Formular fuer den Formular-Upload (Code, Label, Reihenfolge) und die
+  Zeilen der Dashboard-Karte "Ressourcenbestand". Die Konstanten `RESOURCES`, `CROSS_REFS`, `SCHEMA_FIELDS`, `FIELD_ENUMS` in `adminResourceBrowserGemeinsam.ts` und `FORMULAR_CODES`/`FORMULAR_LABELS` in `FormularUpload.tsx` entfallen.
+- **Umgestellt**: `AdminResourceBrowser` (Tabs aus den Ressourcen, Sprung zu verlinkten Eintraegen per Endpunkt, Ladezustand/Fehlermeldung statt leerer Liste), `AdminResourceEditModal`, `AdminDashboard`, `FormularUpload`
+  (fehlt das gewaehlte Formular, gilt das erste verfuegbare). Die Auswahl der sichtbaren Bereiche im Profil-Template kommt aus `featureRegistry.metas()` (`tabOptions()` statt `TAB_OPTIONS`; Langname, `tabKey`).
+- Reihenfolge und Beschriftungen unveraendert (Ressourcen BE, BZ, EWT, NG, EA; Formulare EZ, EWT, B, EA).
+- Tests: `test/features/Admin/adminFeatures.test.tsx` (neu: Reihenfolge und Inhalte, Chunk-Fehler mit Retry, Entfernbarkeit eines Features samt entfallendem Link, Ressourcenbrowser-Tabs); `profileTemplates.shared`- und
+  `AdminProfileTemplateContentEditor`-Test mit Manifest. Testanzahl 2217 -> 2221. `lint:fsd` unveraendert 107.
+- Offen (P1h/Folge): `datenKatalog.ts` (Feldlisten je Formular) bleibt handgepflegt und zentral; ein generischer Admin-Fallback fuer Features ohne Admin-Ordner ist nicht moeglich, solange `meta.resources` keinen Admin-Endpunkt kennt
+  (ein neues Feature legt deshalb seinen Admin-Ordner und eine Manifest-Zeile an; `new-feature` erzeugt beides).
+
+## 2026-09-20 (172)
+
+### refactor (FSD-Umbau P1f: Einstellungen-Abschnitte und -Felder ueber Feature-Slots)
+
+- **Neuer lazy Teil `einstellungen`** fuer Bereitschaft, EWT und EZ (`features/<Ordner>/parts/einstellungen.ts`, `IFeatureEinstellungen` in `core/types/IEinstellungen.ts`):
+  `sections` (Id, Titel, `order`, Inhalt), `read(vorgabenU)` (Felder befuellen) und `collect(vorgabenU)` (Felder einsammeln und validieren).
+  - Bereitschaft: Abschnitt `collapseThree` mit der Einsatzzeitraum-Tabelle `#tableVE` (Standard-Einsatzzeitraeume, `saveTableDataVorgabenU`, `VorgabenB`).
+  - EWT: Abschnitt `collapseFour` "Fahrzeiten" (`FahrzeitenPanel`, `collectFahrzeiten` samt Fehler-Snackbar).
+  - EZ: Abschnitt `collapseSix` "Zulagen" (`ZulagenCheckboxList`, `benoetigteZulagen`).
+  Die Abschnitts-Ids, die Container-Ids (`#fahrzeiten-panel`, `#settings-zulagen-list`, `#tableVE`) und die Reihenfolge im Akkordeon bleiben unveraendert.
+- **`EinstellungenTab` kennt die Feature-Abschnitte nicht mehr**: er rendert die globalen Abschnitte (Persoenliche Daten, Sicherheit, Arbeitszeit, Einstellungen & Bereiche) und die der Features
+  aus `infrastructure/ui/einstellungenTeile.ts` (Store + `ladeEinstellungenTeile()`; synchron per `flushExtern`), sortiert nach `order`. Die Abschnitts-Komponenten der Features liegen
+  in eigenen Dateien (`components/*EinstellungenAbschnitt.tsx`), die Slots sind reines TypeScript.
+- **`generateEingabeMaskeEinstellungen` ist `async`** (wartet auf die Slots, ruft danach je Slot `read`), **`saveEinstellungen` sammelt die Felder ueber die geladenen Slots** (`collect`, Reihenfolge der
+  `Einstellungen`-Schluessel unveraendert: `aktivierteTabs`, Feature-Felder, AutoSave). Ein Feature ohne geladenen Slot laesst seine Werte unveraendert. Aufrufer (`loadUserDaten`, `overwriteUserDaten`,
+  Start-Task der Einstellungen) warten darauf. `loadUserDaten` und `overwriteUserDaten` laden `#tableVE` nicht mehr selbst (macht der Slot der Bereitschaft).
+- **`featureRegistry.loadAll(part)`** ueberspringt Features ohne diesen Teil (EA hat keinen `einstellungen`-Slot); ein Ladefehler zeigt eine Snackbar und blockiert die anderen Slots nicht.
+- Tests: `test/features/Einstellungen/featureSlots.test.tsx` (neu: Ids/Reihenfolge, Rendering im Akkordeon, Entfernbarkeit, Chunk-Fehler, `read`/`collect` der Bereitschaft); `generateEingabeMaskeEinstellungen`- und
+  `saveEinstellungen`-Tests mit Manifest und `await`; `#tableVE`-Erwartungen aus den Login-Tests entfernt. Testanzahl 2210 -> 2217.
+- `lint:fsd`-Baseline 103 -> 107 (`--max-warnings 107`), **temporaer**: die Slots importieren die Komponenten noch aus `features/Einstellungen/` (`VorgabenBTable`, `FahrzeitenPanel`, `ZulagenCheckboxList`,
+  `fahrzeitPanelState`, Hilfsfunktionen); sie sinken, sobald die Dateien in die Features verschoben werden (P7/P8, durch dich in der IDE).
+- **Abschnitte deaktivierter Features sind ausgeblendet** (`d-none`, ohne Abbau): sobald `aktivierteTabs` gesetzt ist (`updateTabVisibility`, Login und Speichern), verschwinden die Einstellungen-Abschnitte
+  "Bereitschaft", "Fahrzeiten" und "Zulagen" fuer abgewaehlte "Sichtbare Bereiche". Felder und Werte bleiben im DOM erhalten; `saveEinstellungen` sammelt sie weiter, es gehen also keine
+  Fahrzeiten, Zulagen oder Einsatzzeitraeume verloren. Vorher (auch vor P1f) waren alle Abschnitte immer sichtbar. Test in `featureSlots.test.tsx`.
+- **`main.tsx` laedt die Einstellungen-Slots vor dem App-Mount** (`await ladeEinstellungenTeile()`): kaemen sie erst danach, wuerden die Feld-Komponenten des Einstellungen-Tabs (u. a. `PersoenlicheDatenPanel`) neu gemountet
+  und Handler, die ein Start-Task an sie gehaengt hat (z. B. `#btnResendVerificationEmail`), gingen verloren.
+- Nicht Teil dieses Schritts: `Bundesland`/`Taetigkeit`/`Entgeltgruppe` (bleiben in `PersoenlicheDatenPanel`), `ArbeitszeiteingabePanel` (Ber + EWT + Admin, wandert in P3 nach `shared/ui`), Onboarding-Schritte und Hilfe (P1h).
+
+## 2026-09-20 (171)
+
+### fix (Berechnung blendet einen deaktivierten Tab nicht sofort aus)
+
+- Die Berechnung liest `aktivierteTabs` erst beim Rendern (`generateTableBerechnung`) und rendert nur bei Login/Laden und `data:changed`. Nach dem Speichern geaenderter Einstellungen
+  blieb eine deaktivierte, datenlose Gruppe deshalb bis zum Neuladen stehen (vorbestehend, im Browser nach P1e aufgefallen). `saveDaten` meldet jetzt nach dem Tab-Sync
+  `data:changed` mit `resource: 'settings'`, wenn sich die Tab-Auswahl geaendert hat (Reihenfolge egal, `undefined` = leer); `Berechnung` rendert daraufhin neu, AutoSave
+  ignoriert `settings`. Tests in `test/Utilities/saveDaten.test.ts` (Aenderung meldet, gleiche Auswahl in anderer Reihenfolge nicht).
+
+## 2026-09-20 (170)
+
+### fix (Ausloggen in der mobilen Schublade ohne Wirkung)
+
+- `Einstellungen/index.ts` haengte den Logout-Handler mit `querySelector('#btnLogout')` nur an die erste Kopie. `#btnLogout` existiert im `AppHeader` zweimal
+  (Desktop-Kopfzeile und Mobil-Schublade, siehe `970f813` fuer `#btnLogin`/`#Monat`); die Mobil-Kopie blieb ohne Handler. Jetzt `querySelectorAll` ueber alle Kopien.
+  Vorbestehend, nicht durch den FSD-Umbau entstanden. Kein automatischer Test: der Handler haengt in einem App-Start-Task mit vielen Abhaengigkeiten.
+
+## 2026-09-20 (169)
+
+### refactor (FSD-Umbau P1e: Berechnung ueber Feature-Slots)
+
+- **Neuer lazy Teil `berechnung`** je Feature (`features/<Ordner>/parts/berechnung.tsx`, `IFeatureBerechnung` in `core/types/IBerechnung.ts`):
+  Aggregation der Zeilen eines Monats (`aggregate`), Formeln (`calc`: Beitrag mit Ergebnisfeldern, Zwischensumme und `zaehltInGesamtsumme`), Sichtbarkeit
+  (`hatDaten`, optional `hatZusatzDaten`), Hilfsdaten (`vorbereite`, z. B. Zulagen-Aufschluesselung), Tabellenzeilen (`tabelle`) und Monatskarte (`karte`).
+  Die Zwischensummen bauen sich wie bisher per `+=` je Feature auf (die frueheren `sums[0..2]`); die Reihenfolge folgt `meta.order` (ber, ewt, ez), Entgeltausgleich
+  zaehlt nicht in `summeGesamt`. Auch die bisherigen Randfaelle (offene Buckets aelterer Snapshots ohne `EA`, `+=` ohne Startwert) sind unveraendert uebernommen.
+- **`features/Berechnung` kennt kein Feature mehr**: `aktualisiereBerechnung` (`aggregate` je Feature und Monat, Bucket-Schluessel aus dem Slot),
+  `calculateBerechnungRows(…, teile)` (fasst die Beitraege zusammen), `generateTableBerechnung` sowie `BerechnungTableRows`/`BerechnungMobileCards` (Zeilen
+  und Karten je Feature aus dem Slot, Sichtbarkeitsregel `isGroupVisible` bleibt global) lesen die Slots aus `ladeBerechnungsTeile()`. Ein fehlgeschlagener Slot blockiert
+  die anderen nicht (Snackbar "Berechnung unvollstaendig …", Log). `aktualisiereBerechnung` und `generateTableBerechnung` sind dadurch `async`; `loadUserDaten`
+  und der App-Start-Task warten darauf, der `data:changed`-Handler faengt Fehler ab.
+- **Umgezogen**: `calculateZulagenBreakdown` nach `features/Neben/utils/` (nutzt `ZULAGEN_CATALOG` aus `@otto-kirchheim/nebengeld-shared` statt aus `Einstellungen`);
+  Formatter (`timeConvert`, `formatCurrency`, `parseDauerToMinutes`, `anzeige`, `currency`) nach `infrastructure/data/berechnungWerte.ts`; `IBerechnungMonatsErgebnis`/`TarifKraft`
+  nach `core/types/IBerechnung.ts`; gemeinsame Darstellungs-Komponenten (`LabelTabelle`, `DetailZeile`, `GruppenTitel`, `SchwellenZeilen`) nach `infrastructure/ui/berechnungBausteine.tsx`.
+  `gruppeHatDaten`/`BerechnungGruppe` entfallen (jetzt `hatDaten` im Slot).
+- Tests: die Berechnung-Tests (`aktualisiereBerechnung`, `calculateBerechnungRows`, `groupVisibility`, `monatsFenster`, `Berechnung`, `BerechnungMobileCards`) pruefen
+  unveraendert dieselben Ausgaben, nur mit `await`, Manifest-Import und den Slots als Parameter. Neu: `test/features/Berechnung/featureSlots.test.tsx`
+  (Reihenfolge und Bucket-Schluessel, Entfernbarkeit eines Features, Chunk-Fehler, Erweiterbarkeit mit einem Fantasie-Feature). Testanzahl 2203 -> 2207.
+  `lint:fsd`-Baseline 107 -> 103 (`features/Berechnung` importiert kein anderes Feature mehr).
+- `calculateBerechnungRows` nimmt fuer einen fehlenden Bucket (aelterer/unvollstaendiger Snapshot, oder Feature beim Speichern nicht geladen) den leeren Bucket des Features (`aggregate({}, monat)`) statt zu werfen (im Browser aufgefallen: `Cannot read properties of undefined (reading 'A8')`). Test in `featureSlots.test.tsx`; Testanzahl damit 2208.
+- Offen (Latent-Bugs, nicht Teil dieses Schritts): leeres `aktivierteTabs` zeigt in der Berechnung alle Gruppen (inkl. EA), Nav/Tabs nur die Legacy-Default-Features;
+  `calculateZulagenBreakdown` filtert `getNebengeldDaten` ab 2024, die Aggregation liest `dataN` ungefiltert.
+
+## 2026-09-20 (168)
+
+### refactor (FSD-Umbau P1d: PDF-Daten je Feature statt zentral in `generatePDF`)
+
+- **`meta.pdf`** (`modus`, `formular`, `dateiPraefix`) je Feature und neuer lazy Teil **`pdf`** (`features/<Ordner>/parts/pdf.ts`,
+  `baueDaten(FeaturePdfContext)`), im Manifest ergaenzt. `generatePDF` kennt kein Feature mehr: es baut nur die Basisdaten (`VorgabenU`, `VorgabenGeld`,
+  `Monat`, `Jahr`), sucht das Feature per `featureRegistry.metaByPdfModus`, laedt dessen `pdf`-Teil und mischt dessen Daten ein; `FORMULAR_JE_MODUS`,
+  `vorDateiName` und der `switch (modus)` entfallen. Der Datenaufbau laeuft jetzt innerhalb des `try` (Chunk-/Aufbaufehler zeigen die Snackbar und geben den
+  Button frei); ein unbekannter Modus wirft weiter `Modus fehlt`. Formular-Codes und Dateipraefixe bleiben unveraendert.
+- **`features/{Bereitschaft,EWT,Neben,EA}/utils/pdfDaten.ts`** enthalten den Datenaufbau und die Ableitungen (`bzAbgeleiteteWerte`, `beAbgeleiteteWerte`,
+  `bereitschaftszulageAbgeleiteteWerte`, `ewtAbgeleiteteWerte`, `ezAbgeleiteteWerte`), 1:1 aus `generatePDF.ts` und der geloeschten
+  `infrastructure/pdf/abgeleiteteWerte.ts`. Die Zulagen-Regeln und -Summen (`geldwertZulagenCode`, `bereinigteZulagenStunden`, `summe*Gruppe`) liegen jetzt
+  in `infrastructure/pdf/zulagenWerte.ts` (nur die PDF-Pipeline nutzt sie; `wert.ts` importiert von dort).
+- **`warmeFormularCaches`** liest Formular-Codes aus `meta.pdf.formular` statt aus einer eigenen Tab-Tabelle.
+- Tests: `abgeleiteteWerte.test.ts` in `EWT.pdfDaten`, `Bereitschaft.pdfDaten`, `Neben.pdfDaten` und `infrastructure/pdf/zulagenWerte` aufgeteilt (Inhalt unveraendert);
+  `generatePDF.test.ts` unveraendert (Ausgabe-Vertrag, nur Manifest-Import); Registry-/Manifest-Tests um `metaByPdfModus`/`pdf` erweitert. Testanzahl 2201 -> 2203.
+- Root-`.claude/CLAUDE.md` (PDF-Pipeline): Hinweis, dass abgeleitete Felder im Feature-`pdfDaten.ts` entstehen und `datenKatalog.ts` von Hand nachzuziehen ist.
+- Offen/Folge: `datenKatalog.ts` bleibt handgepflegt; Zulagen-Formel-Duplikat `N_ZULAGEN_CALC` <-> `geldwertZulagenCode` zusammenfuehren (Folge-Refactoring).
+
+## 2026-09-20 (167)
+
+### refactor (FSD-Umbau P1c-2: Backend-Adapter je Ressource, `ewt:deleted`, Monat/Jahr-Store)
+
+- **Backend-Adapter in `meta.resources[].api`** (`FeatureResourceApi`: `fromBackend`, `loadYear`, `bulk`; gebaut mit `createResourceApi` aus
+  `infrastructure/api/resourceApi.ts`, spaete Bindung an die API-Objekte in `dataApi`). Dazu `periodOf` (Speicher-Zeitraum aus dem Datumsfeld je
+  Format, `periodFromDate`) und `signatureOmitKeys` (`EWT` bei N/EA). Ersetzt die `switch (resource)` in `sendBulk` (Zeitraum + Bulk-Aufruf),
+  `mapServerDocToFrontend` und `rowSignature`. Der Adapter liegt bewusst in `meta` (eager, ohne Chunk): Speichern und Laden muessen ohne
+  nachzuladenden Chunk funktionieren (Offline-Queue).
+- **`loadAllYearData` generisch**: laedt Profil, Vorgaben und je angemeldetes Feature dessen Ressourcen parallel; `LoadedYearData` behaelt die flachen Keys
+  (`BZ`, `BE`, ...) und `SyncTimestamps` wird zu `{ VorgabenU, [storageKey] }`.
+- **`saveDaten`**: die Zuordnung Speichern-Button -> Ressourcen kommt aus `meta.legacy.saveButtonId` (`btnSaveB/E/N/EA`), `shouldMarkSavedAfterFlush` per
+  Schleife ueber `resourceKeys()`.
+- **Neues Event `ewt:deleted`** (`{ ids }`, `core/events/types.ts`): AutoSave meldet geloeschte EWT-Ids, EZ und EA loesen ihre `EWT`-Verweise per Wake-Event
+  (`meta.wakeOn`, `parts/events.ts`) mit der gemeinsamen `infrastructure/data/unlinkEwtRefs.ts` (ersetzt die zwei fast gleichen
+  `unlinkNebengeldRefs…`/`unlinkEaRefs…` in `savePipeline.ts`). Damit kennt `autoSave` EZ/EA nicht mehr.
+- **Monat/Jahr-Store** (`infrastructure/ui/monatJahrStore.ts`, `MonatUeberschrift.tsx`): `setMonatJahr` schreibt nicht mehr in `#MonatB/E/N/EA/Berechnung`
+  per `querySelector`, sondern in den Store; jeder Tab (und `BerechnungTab`) rendert seine Ueberschrift selbst daraus. Das Nachschreiben nach jedem
+  Mounten in `syncFeatureTabs` entfaellt. `#Monat` (Auswahlfeld) bleibt DOM-basiert; die Ids der Ueberschriften bleiben.
+- Tests: `resourceConfig.test.ts` (Zeitraum, Signatur, Adapter), `features.test.ts` (Wake `ewt:deleted`), `MonatUeberschrift.test.tsx` (neu),
+  `setMonatJahr.test.ts` (auf Store umgestellt); 6 Tests importieren `@/app/features`. Testanzahl 2196 -> 2201. `lint:fsd`-Baseline 109 -> 107.
+- Bleibt statisch (typisierter Vertrag mit shared/Backend): Storage-Enum/`RESOURCE_KEYS`, `TResourceKey`, die Mapper in `fieldMapper.ts` und `dataApi.ts`
+  (Dateien wandern erst in den Move-Phasen).
+
+## 2026-09-20 (166)
+
+### refactor (FSD-Umbau P1c-1: Ressourcen-Meta und Daten-Teil je Feature)
+
+- **`meta.resources` ist jetzt beschreibend** (`FeatureResource`): Schluessel, Storage-Key (`dataBZ` ...), Tabellen-Id (`tableBZ` ...), Anzeigename fuer die
+  Konfliktmeldung, `monatOf`/`inMonat` (EWT: auch Buchungstag) und die Jahres-Gates `minYear`/`filterMinYear` (Neben ab 2024 in beiden, EA ab 2025 nur beim
+  Laden -- die bisherige Abweichung ist unveraendert uebernommen, Latent-Bug). Die vier `meta.ts` tragen diese Werte; `featureRegistry.resources()` und
+  `featureIdOfResource()` liefern sie gesammelt.
+- **`infrastructure/data/resourceConfig`** (`resourceDefs`, `resourceKeys`, `resourceDef`, `resourceByStorageKey`, `storageKeyOf`, `tableIdOf`, `isRowInMonat`)
+  ersetzt die Tabellen `RESOURCE_STORAGE_MAP`/`RESOURCE_TABLE_ID_MAP`. Nutzer: `autoSave` (inkl. der Ressourcen-Schleifen), `savePipeline`, `persistTableData`,
+  `mergeVisibleResourceRows` (Monatsermittlung statt `switch`), `warmeFormularCaches` (Legacy-Default-Tabs aus `meta`), `actAs` (Cache leeren je Ressource).
+- **Laden und Konflikte generisch**: `loadUserDaten` (Tabellen laden/filtern, Konflikt-Aktionen ueber `applyConflictToTables`), `loadUserDaten.sync`
+  (`syncLoadedYearResources({ resources })` -> `rows`), `loadUserDaten.helpers` und `.conflict` arbeiten ueber `resourceDefs()` statt je Ressource
+  hartkodierter Bloecke; `changeMonatJahr` filtert alle Tabellen der Features per Schleife.
+- **Neuer lazy Teil `data`** je Feature (`features/<Ordner>/parts/data.ts`, im Manifest ergaenzt): baut aus Rohzeilen die Tabellenzeilen (alle Monate).
+  `overwriteUserDaten` ist dadurch `async` und laedt den Teil nur, wenn die Tabelle im DOM steht; bei Chunk-Fehler bleiben Storage und Filter gesetzt und
+  eine Snackbar bittet um Neuladen. Der Aufrufer (Snackbar-Aktion "Serverdaten uebernehmen") awaitet.
+- Tests: `test/infrastructure/data/resourceConfig.test.ts` (neu), Registry- und Manifest-Tests um Ressourcen/`data` erweitert, Chunk-Fehler-Test fuer
+  `overwriteUserDaten`; 13 Tests importieren `@/app/features`, weil `resourceConfig` die Ressourcen aus der Registry liest. Testanzahl 2189 -> 2196.
+- `lint:fsd`-Baseline 110 -> 109 (`--max-warnings 109`).
+- **Noch offen (P1c-2)**: `savePipeline`/`changeTracking`/`dataApi`/`fieldMapper`/`apiService.loadAllYearData` (API-Adapter je Ressource, `switch`),
+  `saveDaten.getButtonResources`, `setMonatJahr` -> Monat/Jahr-Store, Storage-Enum/`RESOURCE_KEYS` (typisierter Vertrag, bleibt statisch).
+
+## 2026-09-20 (165)
+
+### fix (Act-as: Entgeltausgleich-Cache wurde nicht geleert)
+
+- **`clearLoadedUserResourceCache`** (`Admin/utils/actAs.ts`) entfernt jetzt auch `dataEA`. Beim Wechsel des Act-as-Benutzers blieben
+  sonst die EA-Zeilen des vorherigen Benutzers im Storage stehen (die uebrigen Ressourcen wurden geleert).
+- Test in `test/Admin/actAs.test.ts` erweitert. Kein Jahresgate-Eingriff: `jahr >= 2025` (EA) bleibt unveraendert (keine Verhinderung, siehe Plan).
+
+## 2026-09-20 (164)
+
+### refactor (FSD-Umbau P1b: Nav, Panes, Schnellzugriff, Sichtbarkeit und Tab-Sync aus Feature-`meta`)
+
+- **Alle vier Features im Manifest** (`app/features.ts`): Bereitschaft (`ber`), EWT (`ewt`), Neben/EZ (`ez`), EA (`ea`) als `meta.ts` plus lazy `parts/ui.tsx`
+  (`ez` zusaetzlich `parts/events.ts`); die `index.tsx` der drei Features entfallen. `FeatureMeta` traegt jetzt Kurz-/Langlabel, Icon, Ressourcen,
+  `legacyDefaultOn` und die bisherigen Ids (`paneId`, `rootId`, `navId`) in `legacy`.
+- **Aus `meta` erzeugt**: Nav-Eintraege (`AppHeader`), Tab-Panes (`App.tsx`), Start-Schnellzugriff (`StartTab`), Sichtbare-Bereiche-Checkboxen
+  (`EinstellungenTab`), Sichtbarkeit (`updateTabVisibility`) und der Mount/Unmount-Sync samt Ressourcenpruefung und Warntext (`syncFeatureTabs`).
+  Die hartkodierten Tabellen `FEATURE_TAB_MAP`, `LEGACY_DEFAULT_ON_KEYS`, `FEATURE_RESOURCES`, `FEATURE_LABELS`, `TAB_MAP` entfallen; DOM-Ids und
+  Werte (`aktivierteTabs`, `#neben-tab`, `#Neben`) bleiben unveraendert.
+- **Sichtbarkeit per Store**: `updateTabVisibility` schaltet nicht mehr `d-none` per `querySelector`, sondern schreibt in den neuen
+  `featureTabsStore` (`useFeatureTabsVisible`); `AppHeader` (Nav) und `StartTab` (Schnellzugriff) rendern daraus. Der Update laeuft ueber `flushExtern`,
+  das Ergebnis im DOM ist also weiter synchron. Vor dem ersten Setzen gilt das bisherige Markup (Nav sichtbar, Schnellzugriff versteckt).
+- **Startsatz und Onboarding-Tour**: der Satz "... eintragen und speichern." in `StartTab` und die Tour-Tabs im `OnboardingGuidePanel` entstehen aus `meta`
+  (Startsatz: Features mit `legacyDefaultOn`).
+- **`lint:fsd`-Ratsche korrigiert**: die Baseline 132 aus P0 enthielt 22 "unused eslint-disable"-Meldungen der nur registrierten Plugins; diese sind
+  abgeschaltet, die echte Baseline (Schichtverstoesse) ist 110 (`--max-warnings 110`).
+- **Neu**: laesst sich ein Feature-Chunk nicht laden (offline, veraltete Version), zeigt `syncFeatureTabs` eine Fehler-Snackbar, merkt das Feature nicht als
+  gemountet und versucht es beim naechsten Aufruf erneut; die uebrige App laeuft weiter.
+- Tests: `syncFeatureTabs` auf die Registry umgestellt (+ Chunk-Fehler-Fall), `updateTabVisibility` rendert jetzt `AppHeader`/`StartTab` und prueft
+  das DOM (`test/Utilities/updateTabVisibility.test.tsx`), neu `test/app/featureShell.test.tsx` (Nav/Schnellzugriff-Ids) und Manifest-Test fuer alle vier Features.
+- Plan: `tasks/plan-fsd-feature-module.md`.
+
+## 2026-09-20 (163)
+
+### refactor (FSD-Umbau P1a: Feature-Registry mit lazy Teilen, EA als Referenz)
+
+- **`core/hooks/featureRegistry.ts`** (neu): `FeatureMeta` (eager, deklarativ) plus `parts` (`ui`, `events`) je als eigener
+  `import()`-Chunk. `define()` meldet das Feature in der bestehenden `featureLifecycleRegistry` an (Name unveraendert `EA`);
+  `load`/`loadMany`/`loadAll` laden Teile einmal (Promise-Cache, Fehler werden nicht gecacht); Wake-Events (`meta.wakeOn`) werden
+  stellvertretend abonniert und nach dem Laden des `events`-Teils in Eingangsreihenfolge zugestellt, danach synchron wie bisher.
+- **`app/features.ts`** (neu): Feature-Manifest, einzige Stelle mit Feature-Kenntnis; `main.tsx` importiert es an der Stelle des alten
+  `@/features/EA`-Imports (Registrierungsreihenfolge unveraendert).
+- **EA**: `features/EA/index.tsx` ersetzt durch `meta.ts`, `parts/ui.tsx` (Tab mounten/unmounten) und `parts/events.ts`
+  (`ewt:persisted` -> `syncEaDurationFromEwtRows`). Verhalten unveraendert.
+- Tests: `test/core/hooks/featureRegistry.test.ts` (Lazy, Cache, Chunk-Fehler, Teilmengen, Wake-Reihenfolge) und `test/app/features.test.ts`.
+- Plan: `tasks/plan-fsd-feature-module.md`.
+
+## 2026-09-20 (162)
+
+### chore (Anzeigetext "Nebenbezuege" -> "Erschwerniszulagen" / Kurzform "Zulagen")
+
+- **Kurzform "Zulagen"** (Platz knapp): Nav (`AppHeader`), Start-Schnellzugriff und Startbeschreibung, Tab-Ueberschrift (`NebenTab`),
+  Einstellungen-Checkbox "Sichtbare Bereiche", Berechnung (Zeile "Summe Zulagen", Mobile-Karte), PWA-`short_name`.
+- **Langform "Erschwerniszulagen"**: Hilfetexte (Tab- und Modal-Hilfe, Onboarding-Tour "Tab: ..."), Sync-/Konflikt-Beschreibungen,
+  Warn-Snackbar beim Tab-Abbau, Admin-Template-Tab-Optionen, PWA-Shortcut-`name` und Beschreibung.
+- **Unveraendert**: Code-Namen und persistierte Werte (`Neben`, `summeNebenbezuege`, `aktivierteTabs`-Wert `neben`, DOM-Ids `#neben-tab`/`#Neben`,
+  URL-Hash `/#Neben`, Storage-Key `dataN`); die Code-Umbenennung auf `ez` folgt im FSD-Umbau (`tasks/plan-fsd-feature-module.md`).
+- Hinweis: "Zulagen" heisst auch die Einstellungs-Sektion "Zulagen" (benoetigte Zulagen-Codes) und die Zulagen-Aufschluesselung in der Berechnung.
+- Tests: Erwartungstexte in `Berechnung.*`, `onboarding.createOnboardingGuideModal`, `syncFeatureTabs` angepasst.
+
+## 2026-09-20 (161)
+
+### chore (FSD-Umbau P0: Aliase, Schichtgrenzen als Warnung, Test-Helper-Imports)
+
+- **Aliase**: generischer Alias `@/*` -> `src/ts/*` (tsconfig + Vite, in Vite zuletzt: die spezifischen Aliase haben Vorrang)
+  und `@test/*` -> `test/*` (nur tsconfig, Bun liest `paths`). Das tote `@/features`-Mapping auf die nicht vorhandene
+  `features/index.ts` ist entfernt.
+- **Imports**: die drei relativen Ausreisser in `core/orchestration` (`'../../..'`, `'../initSequence'`, `'../../initSequence'`)
+  laufen ueber `@/core...`; 47 Testdateien importieren `reactRender`/`mockData` per `@test/...` statt relativ.
+- **`lint:fsd`** (neu, `eslint.fsd.config.js`, ohne Einfluss auf `lint`): zaehlt Verstoesse gegen die Schichtgrenzen der Legacy-Struktur
+  (`core -> infrastructure/features`, `infrastructure/components -> features`, Feature -> Feature) als Warnung. Ratsche `--max-warnings 132`
+  (Baseline), darf nur sinken; in P10 wandert der Regelsatz nach `eslint.config.js` als `error`.
+- **PWA geprueft**: der Precache (48 Eintraege) enthaelt bereits alle Lazy-Chunks (`mountAdminTab`, `actAs`, `pdf`, ...);
+  fuer die spaeteren Feature-Chunks ist keine Glob-Aenderung noetig.
+- Plan: `tasks/plan-fsd-feature-module.md`.
+
+## 2026-09-20 (160)
+
+### refactor (Nachlauf zur Kommentar-Durchsicht: Dateien geteilt, Duplikat entfernt)
+
+- **`submitBereitschaftsEinsatz.ts` (570 -> 330 Zeilen)**: Coverage-Logik (`classifyBzCoverage`,
+  `ensureCompleteBzSynced`, `resolveGap`, `resolvePartial`, ...) nach `bzCoverage.ts`, die
+  Einsatz-Pruefungen (`hasOverlap`, `hasConflictingLre1`, `hasLre12TooClose`) nach
+  `bereitschaftsEinsatzPruefungen.ts`. Verhalten unveraendert; `utils/index.ts` importiert aus den neuen Modulen.
+- **`ArbeitszeiteingabePanel.tsx` (690 -> 255 Zeilen)**: `SchichtSection`, `WeekdayChips` und
+  `ScheduleGroupRow` nach `SchichtSection.tsx`; `SchichtOverrideEditor.tsx` importiert von dort.
+- **`getMonatFromItem.ts`**: `getMonatFromN`/`getMonatFromEA` waren identisch und teilen sich jetzt
+  `monatAusTag()`; die exportierten Funktionen bleiben.
+- **`applyBereitschaftsVorgabe.ts`**: redundantes `?? null` am Default-Datum entfernt (`dayjs()` liefert nie
+  `null`). Die Pruefung `!datum` bleibt: ein explizit uebergebenes `null` wird weiter abgefangen (Test).
+- **Doku**: `frontend/CLAUDE.md` ohne den entfernten `:root`-Radius-Block und mit dem eigenen Store der
+  Admin-Unternavigation; `shared/src/formular/types.ts` verweist fuer `schluesselAufPlatz()`/`listenBelegung()`
+  auf `infrastructure/pdf/listen.ts` im Frontend.
+
+## 2026-09-20 (159)
+
+### docs (Kommentare durchgesehen, gekuerzt, JSDoc fuer jede Funktion)
+
+- **Umfang**: 339 Dateien in `frontend/src` (ts/tsx/scss/css). Nur Kommentare geaendert; Beweis per
+  Skript: Code ohne Kommentare (TypeScript-Transpile bzw. postcss-scss) und alle Direktiven
+  (`eslint-disable`, `@ts-expect-error`, `stylelint-disable`, ...) identisch zu `HEAD`. Ausnahme sind
+  die Nutzer-Aenderungen in `styles.scss`, `datenKatalog.ts` und `aggregatoren.ts` (siehe Commit).
+- **Regel**: nur behalten, was ein WARUM erklaert; Historie ("Phase K6", "ehemals", Datums-/User-
+  Vermerke), Wiederholungen des Codes und Duplikate raus; jede sachliche Aussage gegen den Code
+  geprueft.
+- **JSDoc**: jede benannte Funktion/Methode/Komponente hat Beschreibung, `@param`, `@returns` und
+  `@throws` (wo sie wirft). Ausgenommen sind anonyme Inline-Callbacks und Daten-Lambdas in
+  Konfigurationen (`beispiel: i => ...`, `inhalt: m => ...`). Geprueft per AST-Skript: 1515 Funktionen,
+  `@param`-Namen passen zu den Signaturen.
+- **Falsche/veraltete Kommentare korrigiert** (Auswahl): `trifftBedingung` "liegt in shared" (liegt im
+  Frontend), `useMediaQuery` (hoert nur auf `change`, nicht auf `resize`), `pullToRefresh`
+  (`overscroll-behavior` ist sehr wohl beteiligt), Verweise auf nicht mehr existierende Dateien
+  (`customTableRender.ts`, `autoSaveIndicator.ts`, `DBColorToggler.ts`, `customtable.css`,
+  Block `ICON-SATZ`), Tab-Panes werden von `App.tsx` statt `tabController.ts` geschaltet,
+  `saveDaten`-Tabellen-Buttons unvollstaendig (`btnSaveEA`), Spaltenkopf-Schwelle `md` -> `sm`.
+
+## 2026-09-19 (158)
+
+### fix (Spalten-Schwellen: breitere Tabellen ab 768px)
+
+- Mit `DBSection large` (Eintrag 153) haben die Tabellen mehr Platz als die `md`-Schwelle (1024px)
+  annimmt. Gemessen mit den echten Daten des Users (alle Spalten per CSS erzwungen, natuerliche
+  Tabellenbreite gegen Container): Bereitschaft, EWT, Neben und EA passen ab 1440px komplett, bei
+  768px fehlten aber Spalten, die problemlos gepasst haetten.
+- **Geaendert (`md` -> `sm`)**: Bereitschaftseinsaetze `Privat Km` (768px: alle 7 Spalten, 145px Luft),
+  Neben `Auftragsnummer` (alle 6 Spalten, 70px Luft; mit dem laengsten Katalog-Zulagentext
+  `819 Zwangsh. Bücken/Knieen × 99` noch 8px), Vorgaben-Tabelle `Standard` und `Nacht?` (6 von 8
+  Spalten, 107px Luft). EWT `Buchungstag` `xxl` -> `lg` siehe Eintrag 154.
+- **Unveraendert**: Bereitschaftszeitraum (4 von 4 Spalten immer sichtbar), EA (alle 5 ab `sm`,
+  80px Luft), Vorgaben-Tabelle `Nacht Von`/`Nacht Bis` bleiben `md` (alle 8 Spalten bei 768px
+  haetten nur 8px Luft und haengen von den Vorgaben-Namen ab).
+- Die Zulagen-Spalte in Neben wird durch mehr Zulagen HOEHER (Zeilenumbruch), nicht breiter; die
+  Breite bestimmt der laengste Einzeleintrag.
+
+## 2026-09-19 (157)
+
+### fix (Monat unter den Tab-Titeln fehlte nach dem Neuladen)
+
+- **Ursache**: `setMonatJahr` schreibt den Monat (`09 / 26`) nur EINMAL von aussen in `h4#MonatB/-E/-N`.
+  Beim Neuladen mit gespeicherter Sitzung laeuft `selectYear` (auth/index.ts, Session-Restore) VOR
+  `loadUserDaten`, und die Tabs mounten erst an dessen Ende (`syncFeatureTabs`) -- beim Schreiben
+  gab es die Ueberschriften noch nicht. Nur beim frischen Login (`initializeAll` vor `selectYear`)
+  stimmte die Reihenfolge. Seit dem bedingten Mounten der Tabs (Commit `d726084`) bestehend.
+- **Fix**: neue, nicht werfende `setMonatsUeberschriften()` in `setMonatJahr.ts`; `syncFeatureTabs`
+  ruft sie am Ende mit Jahr/Monat aus dem Storage auf -- deckt Neuladen, Login, Jahres-/Monatswechsel
+  und das Aktivieren eines Tabs in den Einstellungen ab.
+- **EA**: `#MonatEA` hatte bisher gar keinen Schreiber (der EA-Tab filtert nach Monat, zeigte ihn aber
+  nie); wird jetzt mitgeschrieben.
+- Getestet: `test/Einstellungen/setMonatJahr.test.ts` (EA, wirft nie), `test/orchestration/
+  syncFeatureTabs.test.ts` (Ueberschrift entsteht erst beim Mounten); live im echten Ablauf
+  (`selectYear`, dann `syncFeatureTabs`).
+
+## 2026-09-19 (156)
+
+### refactor (`<h1>`-`<h6>` als `DBHeadingH1`-`DBHeadingH6`)
+
+- **55 Ueberschriften** in 25 Dateien nutzen jetzt `<DBHeadingH1>` ... `<DBHeadingH6>` statt der rohen
+  Tags (Ebene, `id`, `className` und der Inhalt bleiben). `text-center` an den sechs h4 der
+  Show-Modals (EA/Neben) ist `alignment="center"`; die drei `style`-Stellen der Start-Karten
+  (`minBlockSize`) sind die Klasse `.karten-titel`, weil `DBHeading` kein `style` dokumentiert.
+- **Abstand ueber `paragraphSpacing`** (DB-Prop, genau 1lh Abstand NUR unten) an 22 Ueberschriften: die
+  Monatszeilen (`h4#Monat*`), die Tabellentitel, die Start-Karten, das Hilfe-Modal u. a.
+  Die Tab-Titel (`h1`) und die Ueberschriften mit eigener `m*-`-Klasse (`mb-*`/`mt-*`) haben es
+  bewusst nicht (Sichtpruefung durch den User: h1 mit 64px unten war zu viel). Das ist NICHT der
+  bisherige Standardabstand der rohen Tags (oben UND unten je h1 32px, h2 24, h4 12, h5 8, h6 4):
+  der obere Abstand entfaellt bei allen 55 Ueberschriften; z. B. h4 jetzt 0 oben / 32px unten
+  (Desktop, mobil 24), h5 0 / 28 (mobil 20).
+- **Ausrichtung geerbt** (`utilities.scss`, Layer `app`, `:where()` = Spezifitaet 0): `.db-heading`
+  setzt `text-align: start` statt die Ausrichtung des Elternteils zu erben -- die Tab-Titel sind aber
+  ueber `text-center` der Section zentriert. Ein `alignment`-Prop an der Stelle gewinnt weiterhin.
+- **Gemessen** (Position, Hoehe, Schriftgroesse, Abstaende, Ausrichtung; Start, Einstellungen mit allen
+  Abschnitten offen, Bereitschaft, EWT, Neben, EA, Berechnung bei 375px und 1280px): Schriftgroesse,
+  Zeilenhoehe, Gewicht und Ausrichtung identisch zu vorher, die Abstaende wie oben beschrieben anders.
+- **Fund Bereitschaft-Tab**: `aria-describedby="TitelBZ"` an der ersten Tabelle passte nicht zur
+  Id `titelBZ` (Gross-/Kleinschreibung) -- der Bezug zur Ueberschrift war wirkungslos, korrigiert.
+
+## 2026-09-19 (155)
+
+### refactor (Akkordeons als `DBAccordion`, Ersteinrichtung bleibt auf Start)
+
+- **`<DBAccordion>`/`<DBAccordionItem>` statt rohem `ul.db-accordion > li > details`**:
+  `EinstellungenTab` (7 Abschnitte, `collapseOne` ... `collapseSix`, Passkeys) und
+  `BerechnungMobileCards` (Monatskarten). Die Ids sitzen jetzt am `<li>`, das native `<details>`
+  liegt darin; `#collapseFive input[data-tab-key]` u. a. treffen unveraendert.
+- **Kein `behavior="single"`**: im Live-Test (DB UX 5.5.0) brauchte ein zuvor geoeffneter, dann nativ
+  ueber `name` geschlossener Abschnitt beim naechsten Klick ZWEI Klicks -- `DBAccordionItem`
+  behaelt seinen internen "offen"-Zustand. Stattdessen liegt der Zustand an einer Stelle
+  (`open` + `onToggle`): Einstellungen ueber den neuen `offenerAbschnittStore.ts`, die
+  Berechnungskarten im lokalen State von `BerechnungMobileCards` (folgt `offenerMonat` von aussen).
+  Live geprueft: mehrere Klickfolgen, Auf-/Zuklappen, Sprung von aussen -- jeder Klick wirkt.
+- **Onboarding**: `springeZu()` oeffnet den Abschnitt ueber den Store (`flushExtern`, danach
+  `scrollIntoView`); eine Id direkt am `<details>` (aelteres Markup) funktioniert ueber einen
+  Fallback weiter.
+- **Ersteinrichtung**: "Willkommen zur Ersteinrichtung" bleibt auf dem Start-Tab
+  (`springeZu('#brand-start-tab')`); erst der naechste Schritt (persoenliche Daten) wechselt in die
+  Einstellungen und oeffnet den Abschnitt.
+- `DBAccordionItem` uebernimmt `open` erst per Effekt (ein Tick): die zu Beginn geoeffnete
+  Monatskarte erscheint daher einen Moment nach dem ersten Zeichnen offen.
+- `<a>` in `AppHeader` (DBShell) bleiben bewusst `<a>` statt `DBLink`.
+- **`mailto:` und Telefon im Impressum als `<DBLink variant="inline" showIcon={false}>`**
+  (`ImpressumDialog.tsx`); die Voreinstellung haengt ein Pfeil-Icon an, das fuer Adresse/Nummer im
+  Fliesstext stoert. Das `tel:`-Ziel wird zur Laufzeit aus der angezeigten Nummer abgeleitet (ohne
+  "(0)", nur Ziffern und "+") -- die Nummer bleibt wie bisher aus Einzelzeichen zusammengesetzt.
+- Neu/angepasst: `test/ui.offenerAbschnittStore.test.ts`, `Berechnung.BerechnungMobileCards`
+  (Id am `<li>`, Einzel-Auswahl per Klick), Onboarding-Test (Schritt 1 bleibt auf Start).
+
+## 2026-09-19 (154)
+
+### fix (EWT: "Buchungstag"-Spalte ab 1440px sichtbar)
+
+- `Buchungstag` (`EwtTab.tsx`) stand auf `xxl` (2560px) und war dadurch praktisch nie sichtbar. Mit
+  der `DBSection large`-Breite (Eintrag 153) passen alle 14 EWT-Spalten ab 1440px in den
+  Container (gemessen mit echten Ortsnamen/Zeiten: Tabelle 1400px, Container 1408px, kein
+  horizontaler Scroll), daher jetzt `lg`. Bei 1280px bleibt die Spalte ausgeblendet (8 Spalten,
+  erreichbar ueber das "+"-Aufklappen der Zeile). Sehr lange Einsatzorte koennen die Tabelle
+  ueber den Container verbreitern (nur 8px Luft).
+- **Build-Fix `changeMonatJahr.ts`**: der EA-Monatsfilter (`#tableEA`, `getMonatFromEA`) war ohne
+  die Imports (`IDatenEA`, `getMonatFromEA`) committet worden -- `tsc` schlug seit `b42ef0f` mit zwei
+  Fehlern fehl. Imports ergaenzt.
+
+## 2026-09-19 (153)
+
+### refactor (DBSection statt `.mitte`, Switch-Grenzfaelle als Checkbox)
+
+- **Seitenbereiche als `<DBSection>`**: die `.mitte`-Huellen der Tabs sind jetzt `<DBSection
+  spacing="none">` -- `width="large"` fuer die Tabellen-Tabs (Bereitschaft, EWT, EA, Neben,
+  Berechnung: Inhalt bis 1408px, volle Breite bis 1440px Viewport), `width="medium"` fuer
+  Einstellungen und Start (Inhalt max. 992px, bessere Zeilenlaenge fuer Formulare/Akkordeon).
+  `spacing="none"`, weil `#tabContent` die Abstaende schon regelt -- die DB-Voreinstellung
+  `small` (32px mobil / 48px Desktop) schob die Ueberschrift sichtbar zu weit nach unten
+  (User-Fund). Start behaelt `spacing="small"` (vorher `py-4 py-md-5`). Das innere, verschachtelte
+  `.mitte` der Tabs ist ein schlichtes `<div>`, sonst haette sich das Padding verdoppelt.
+  Seiten-Padding mobil 12px -> 16px. `.mitte` aus `raster.scss` entfernt, `.breit` bleibt.
+- **Berechnung**: das Monatsfenster misst weiter `#Berechnung .db-table`; bei 1280px passen wie
+  zuvor alle 12 Monate, Kommentar zur Deckelung in `berechnungMonatsFenster.ts` aktualisiert.
+- **Switch-Grenzfaelle -> Checkbox**: `eigen`, `Sonderschicht`, `Nachtschicht` (Bereitschaft-
+  Modal), `Buero` (EWT-Modal; darueber stand "Berechnen" schon als Checkbox) und die
+  `toggle-*`-Haken im Arbeitszeit-Panel (Label jetzt fest "aktiv" statt wechselnd "aktiv"/
+  "inaktiv"). Switch bleibt nur bei sofortiger Wirkung: `ThemeSwitcher`, `createShowModalEWT`.
+- **Hinweis-Tooltips an berechneten Feldern (Bereitschaft-Modal)**: die deaktivierten Datums-/
+  Zeitfelder erklaeren per `DBTooltip`, warum sie nicht editierbar sind ("Wird aus der Vorgabe
+  berechnet ..." bzw. "Folgt der Arbeitszeit Spaet/Nacht ..."). Die Huelle `.feld-hinweis` ist
+  per `tabIndex` fokussierbar (deaktivierte Inputs liefern keine Hover-Events, `pointer-events:
+  none` in `styles.scss`); der "manuell"-Hinweis (`berechnet-hinweis`) verschwindet mit dem
+  "berechnet"-Badge in `toggleBereitschaftsEigeneWerte`.
+- **Offen (Spalten)**: die Spalten-Sichtbarkeit haengt an Viewport-Breakpoints
+  (`customtable.scss`: Spalte verschwindet unterhalb der Stufe). Mit `large` ist der Inhalt ab
+  1440px Viewport konstant 1408px breit -- die Stufe `xxl` (2560px) bringt keinen Platz mehr,
+  EWT-"Buchungstag" (`xxl`) ist damit praktisch nie sichtbar. Schwellen pruefen, siehe
+  `tasks/todo.md`, Schritt 9.
+
+## 2026-09-19 (152)
+
+### refactor (DBNotification/DBInfotext, DBDivider, DBCard statt Roh-Markup)
+
+- **Meldungen nach DB-Richtlinie eingeordnet** (Notification = kurzes Feedback zu Ereignis/Fehler,
+  Infotext = kurzer Hinweis direkt am betroffenen Element, kein Ankuendigungsbereich):
+  `<DBNotification>` fuer Fehler nach fehlgeschlagener Aktion (`MyFormModal`/`MyDivModal`,
+  `AdminResourceEditModal`, `AdminUserProfileEditor` 2x, `AdminLogBrowser`, `AdminResourceBrowser`,
+  `AdminDashboard`; die beiden letzten mit `DBStack space-between`, damit "×"/"Neu laden" wirklich
+  rechts stehen -- das `ms-auto` im Inline-`span` wirkte nie) und fuer die stehenden Systemhinweise
+  mit Aktion (`#actAsNotice` mit `variant="standalone"`/`icon="eye"`; `ConflictReviewBanner` bleibt
+  roh, der Knopf muss direktes Kind im `close`-Bereich des Rasters sein).
+  `<DBInfotext>` fuer den Hilfe-Tipp (`MyHelpModal`) und die Pflichtangaben-Statuszeile im
+  Onboarding. Schlichter Text statt Meldung fuer Leerzustaende ("Keine Templates/Benutzer/
+  Monatswerte", fehlende Admin-Rechte) und den Dauerstatus "Eigene Daten aktiv".
+- **`<hr>` -> `<DBDivider width="full">`** (16 Stellen; `margin="none"` fuer `my-0`, sonst DB-
+  Standardabstand). `DBDivider` rendert ein `<div>` und ist eine Spur duenner als `<hr>`;
+  `.ewt-trenner` behaelt nur noch `grid-column: 1 / -1`.
+- **`div.db-card` -> `<DBCard>`** (6 Stellen, `data-spacing` -> `spacing`); live gegen das
+  Roh-Markup gemessen: Groesse, Padding, Hintergrund, Rahmen und Schatten identisch.
+
+## 2026-09-19 (151)
+
+### refactor (Halb-Roh-Markup auf echte DB-Komponenten, Switch vs. Checkbox)
+
+- **Buttons als `<DBButton>`**: sechs Schnellzugriff-Knoepfe (`StartTab`, `icon`-Attribut statt
+  `DBIcon`-Kind, Layout unveraendert gestapelt), Monats-Pfeile (`BerechnungTab`, mit `aria-label`
+  und `DBTooltip` -- Regel `db-ux/button-no-text-requires-tooltip`), "Eigene Daten laden"
+  (`App.tsx`), Verifizierungs-Mail-Knopf und Wochentag-Schalter des `VorgabenBWeekRangeEditor`.
+  Ids, `data-*` und die externe Verkabelung (`disabled`/`textContent` von aussen) bleiben intakt.
+- **`PersoenlicheDatenPanel`**: 15 rohe `db-input`-Bloecke -> `<DBInput variant="floating">`, 2
+  `<select>` -> `<DBSelect>` (lokale Hilfen `Feld`/`Auswahl`, Standard-Fehlermeldung). Die
+  Taetigkeits-Vorschlaege laufen ueber die `dataList`-Prop: ein rohes `list`-Attribut reicht
+  `DBInput` nicht an das `<input>` weiter.
+- **Switch nur bei sofortiger Wirkung** (DB-UX: "Verwende keinen Switch in einem Formular, in dem
+  Aenderungen erst nach Klick auf 'Speichern' angewendet werden"): die vier "Sichtbare
+  Bereiche"-Schalter und "AutoSave aktivieren" sind jetzt `<DBCheckbox>`; `MyCheckbox` ist
+  standardmaessig eine Checkbox, das neue `schalter`-Prop waehlt `DBSwitch` (`ThemeSwitcher`,
+  `createShowModalEWT`). Grenzfaelle (Felder werden sofort ein-/ausgeblendet, gelten aber erst mit
+  Speichern) stehen bis zur Entscheidung unveraendert auf Switch.
+- **E-Mail-Verifizierungshinweis am Feld**: der Status sitzt jetzt als `message`/`messageIcon` direkt am
+  `EmailAnzeige`-`DBInput` statt im losen `#EmailVerificationHint`-Span. `Einstellungen/index.ts`
+  schreibt ihn ueber den neuen `emailStatusStore.ts` (`useSyncExternalStore`), das Panel liest ihn per
+  `useEmailStatus()`. Neu: `test/Einstellungen/emailStatusStore.test.tsx` (Store + Meldung im Panel).
+- `db-tag` `#PasskeyAccordionCount` -> `<DBTag>` (Zaehler wird weiter per `textContent` gesetzt).
+- **Regression aus Eintrag 147 behoben**: `.feldgruppe` war seit dem `<DBStack>`-Umbau nur noch
+  `display: block` -- fuenf rohe `<div className="feldgruppe">` (`FeldPanel`,
+  `aggregationUndRechnung` 2x, `AdminProfileTemplateContentEditor`, E-Mail-Zeile im
+  `PersoenlicheDatenPanel`) standen dadurch untereinander statt neben dem Knopf. Jetzt
+  `<DBStack direction="row" alignment="end" gap="x-small">`.
+- **Kommentar berichtigt**: `CustomTableView` behauptete natives `<button class="db-button">`,
+  rendert aber seit langem `<DBButton>`. `editText`/`deleteText`/`undoDeleteText` sind toter
+  Vertrag (nur befuellt, nie gerendert) -- nicht angefasst.
+- **`DBTable` geprueft, nicht eingefuehrt** (DB-UX 5.5.0): rendert dieselbe Struktur wie unser
+  Roh-Markup, aber sein CSS ist ein Grid-Modell; `utilities.scss` setzt es bewusst auf
+  `display: table` zurueck (`colspan`, Zeilenkoepfe, je Breakpoint ausgeblendete Spalten). Live
+  gemessen: mit `DBTable`-Markup stapeln sich die Zellen. Details in `tasks/todo.md`, Schritt 7.
+
+## 2026-09-18 (150)
+
+### refactor (ESLint: alle 54 Warnungen abgebaut — Fast Refresh ueberall wirksam)
+
+- **react-refresh/only-export-components (34 Stellen)**: Nicht-Komponenten-Exporte aus
+  Komponenten-Dateien ausgelagert, damit Vite Fast Refresh nicht mehr auf Full-Reloads
+  zurueckfaellt. Tab-Mounts (`EwtTab`/`EaTab`/`NebenTab`/`BereitschaftTab`) liegen jetzt in
+  den Feature-`index.tsx` (umbenannt von `.ts`), der Admin-Tab-Mount in `Admin/mountAdminTab.tsx`,
+  die Berechnungs-Mounts in `Berechnung/components/mountBerechnung.tsx`, Banner-/Onboarding-Mounts
+  in `conflictReviewBannerMount.tsx` bzw. `OnboardingGuidePanel.tsx`. Reine Helfer wanderten in
+  neue Dateien: `schriftartHelfer.ts`, `seitenHelfer.ts`, `feldPanelHelfer.ts`,
+  `aggregationsHelfer.ts`, `sonderZeilenOptionen.ts`, `formatUptime.ts`; Konstanten
+  (`SIMPLE_FIELD_KEYS`, `MAX_OE_LEVELS`) in `utils/bulkEditOe.ts`. `createAdminUserLinksModal.tsx`
+  und `createAdminBulkEditModal.tsx` enthalten nur noch die Mount-Funktion; die Komponenten liegen
+  in `AdminUserLinksModal.tsx` bzw. `AdminBulkEditModal.tsx`. Die Platzhalter-Hilfe des
+  FormularEditors steckt in `platzhalterHilfe.tsx` + `PlatzhalterHilfeInhalt.tsx`.
+- **react-hooks/set-state-in-effect (13 Stellen)**: synchrone setState-Aufrufe aus Effects
+  entfernt -- State-Resets bei Prop-/Dep-Wechsel laufen jetzt in der Renderphase
+  (prev-Vergleich, React-Docs-Muster: AutoSaveBadge, PdfCanvas, adminDashboardCharts,
+  AdminUserList, AdminResourceBrowser, VorgabenBWeekRangeEditor), asynchrones Laden startet
+  per `queueMicrotask` (AdminUserList, AdminResourceBrowser, AdminProfileTemplatesManager,
+  AdminVorgabenEditor, FormularUpload) bzw. per Promise-Kette (AdminDashboard).
+- **react-hooks/exhaustive-deps (7 Stellen)**: `reload`/`ladeListe`/`ladeUsers` per `useCallback`
+  stabilisiert und als Deps gelistet; drei bewusste Einmal-beim-Dateiwechsel-Effects im
+  FormularEditor mit begruendetem Inline-Disable versehen.
+
+## 2026-09-18 (149)
+
+### fix (EA-Tabelle: Tag-Spalte als `dd DD.MM.` formatiert)
+
+- **Neuer `tagParser` in `EaTab.tsx`**: die Tag-Spalte zeigt jetzt Wochentag + Datum
+  (`Mo 14.09.`) statt des Rohwerts. Weil lokale Schreibpfade (`addEaTag.ts`,
+  `createEditorModalEA.tsx`) `DD.MM.YYYY` speichern, das Backend aber ISO-Strings liefert
+  (Mongo `Date`), parst eine Kaskade erst strikt `dayjs(s, 'DD.MM.YYYY', true)` und faellt
+  bei Ungueltigkeit locker auf ISO zurueck -- jede Einzelvariante allein reichte das jeweils
+  andere Format unformatiert durch (Laufzeitprobe: beide Invalid Date). Muster wie
+  `getMonatFromEA`.
+
+## 2026-09-18 (148)
+
+### feat (Fahrzeiten-Sortierung im Karten-Layout)
+
+- **Sortieren auch am Handy**: das Fahrzeiten-Panel (Einstellungen > Fahrzeiten) bekommt
+  oberhalb der Tabelle eine Sortier-Leiste: Auswahl (Taetigkeitsstaette/Beschreibung,
+  `DbAuswahl`) plus "Sortieren"-Knopf. Grund: unter `sm` blendet das Karten-Layout den
+  Tabellenkopf aus -- die bisherigen Sortier-Knoepfe in den Spaltenkoepfen waren dort
+  unerreichbar. Die Leiste ist nur unter `sm` sichtbar; darueber sortieren weiter die
+  Kopf-Knoepfe. Wie diese dreht ein erneutes Antippen bei gleichem Kriterium die Richtung
+  um (`toggleSort` wiederverwendet, Knopf-Icon spiegelt Richtungs-Zustand).
+
+## 2026-09-18 (147)
+
+### refactor (Flex-Layouts auf `<DBStack>`, weitere DB-UX-Bausteine statt Hand-Markup)
+
+- **`<DBStack>` statt Hand-Flex**: alle 14 `.knopfgruppe`- und 6 `.knopfreihe`-Stellen
+  (Bereitschaft/EWT/EA/Neben/Einstellungen, Admin-Paginierungen, FormularEditor-Modus-Leisten,
+  `CustomTableView`s Zeilen-Aktionen) sowie diverse `d-flex`-Container nutzen jetzt
+  `<DBStack>`-Props (`direction`/`wrap`/`alignment`/`justifyContent`/`gap`) statt
+  Utility-Klassen. `styles.scss` behaelt von `.knopfgruppe`/`.knopfreihe` nur noch, was
+  `<DBStack>` nicht kann (250px-Deckel je Knopf).
+- **Zwei `<DBStack>`-Fallen, per Puppeteer belegt und dokumentiert**:
+  1. Gap ist per Default `sm` (nicht 0) -- jede Stelle setzt `gap` explizit, sonst entsteht
+     Abstand, wo vorher keiner war.
+  2. `.db-stack { inline-size: 100% }` laesst ein verschachteltes `<DBStack>` als Flex-Kind eines
+     `direction="row"`-Elternteils die ganze Zeile beanspruchen -- Geschwister werden auf eigene
+     Zeilen verdraengt. Gegenregel `inline-size: auto` in `styles.scss`; `overflow: auto` wird
+     dort ebenfalls auf `visible` zurueckgesetzt (schnitt Fokusringe/Box-Shadows ab).
+- **`td > .knopfgruppe { flex-wrap: nowrap }` entfiel** -- die drei tatsaechlich in einer
+  Tabellenzelle sitzenden Knopfgruppen (`CustomTableView`, `FormularVersionenListe`,
+  `FahrzeitenPanel`) setzen stattdessen `wrap={false}` als Prop.
+- **Echte DB-UX-Komponenten statt Roh-Markup**: `<DBButton>`/`<DBTooltip>` fuer den
+  Hilfe-Knopf in `StartTab`, `<DBInput>`+`<DBTooltip>` fuer das Jahr-Feld, `<DBCard>` fuer die
+  drei Start-Karten, `<DBButton>` fuer Ausloggen/Passwort/Biometrie.
+- **Ausloggen in die Shell-Kopfzeile** (`AppHeader.tsx`, `actions2`, Icon `log_out`, dieselbe
+  `navigationSichtbar`-Bedingung wie das Zahnrad) und **Passwort Ändern in den Sicherheits-
+  Accordion** (vormals "Biometrie & Geräte", jetzt "Sicherheit") -- Konto-Aktionen gebuendelt,
+  die obere Knopfreihe im Einstellungen-Tab entfaellt. Beide Ids bleiben unveraendert, die
+  Klick-Verkabelung in `Einstellungen/index.ts` ist id-basiert und lief ohne Anpassung weiter.
+- **`aria-label` fuer die Paginierungs-Pfeile** (`‹`/`›`) in AdminLogBrowser/-ResourceBrowser/
+  -UserProfileEditor -- vorher hatten die Icon-Knoepfe keinen zugaenglichen Namen; der Test in
+  `AdminLogBrowser.test.tsx` selektiert darueber statt ueber die entfallene `.knopfgruppe`.
+
+### fix (Layout: Karten-Ausrichtung, Accordion-Breite, Footer-Reservierung mobil)
+
+- **Start-Karten**: Fliesstext startete je nach Titel-Umbruch auf unterschiedlicher Hoehe
+  (DB-UX-Card-Richtlinie "Inhalt-Ausrichtung": Titel/Aktionen konsistent ueber alle Karten
+  ausrichten). Titelzeile reserviert jetzt zwei Zeilen Hoehe -- alle drei Absaetze beginnen
+  auf derselben Y-Position (per Puppeteer bei 820px verifiziert: 310px fuer alle drei).
+- **Einstellungen-Accordion war viel zu schmal**: `alignment="center"` am aeusseren `<DBStack>`
+  schrumpft JEDES Kind auf seine Inhaltsbreite -- auch das Accordion-Formular samt breiter
+  VorgabenB-Tabelle (257px statt 1176px, Tabelle lief seitlich aus dem Rahmen). Accordion sitzt
+  jetzt als Geschwister ausserhalb der zentrierten Knopf-Spalte.
+- **Fusszeile verdeckte auf dem Handy Inhalt**: `DBFooterMeta` stapelt Copyright und
+  Impressum-Knopf unter 47.9375em (eigene DB-UX-Bruchstelle), der Footer waechst dadurch von
+  41px auf 69px -- die feste `3.5rem`-Reservierung in `.db-shell-content` reichte nicht mehr
+  (13px Inhalt lagen hinter dem `position: fixed`-Footer). Reservierung an derselben Bruchstelle
+  auf `5rem` erhoeht, statt den Footer einzeilig zu erzwingen (auf schmalen Geraeten waeren
+  Copyright und Knopf sonst nebeneinander gequetscht).
+
+### feat (Zum-Aktualisieren-Ziehen auf dem Handy)
+
+- **Eigene Pull-to-Refresh-Geste** (`infrastructure/ui/pullToRefresh.ts`, in `main.tsx` nach dem
+  Root-Mount initialisiert -- `.db-shell-content` entsteht erst mit `App.tsx`s Baum). Grund:
+  Chromes eingebaute Geste haengt am WURZEL-Scroller, das Dokument scrollt in dieser App aber
+  nie (`DBShell` rechnet sein Raster auf `100dvh`, gescrollt wird nur in `.db-shell-content`).
+  Sobald ein Tab laenger als der Viewport ist, verschluckt dieser innere Container die Geste --
+  daher der User-Fund "geht nicht, wenn #-Tags genutzt werden". Alle Stellschrauben stehen als
+  benannte Konstanten am Dateikopf (`AUSLOESE_DISTANZ_PX` 80, `MAX_ZUG_PX` 120, `DAEMPFUNG` 0.5,
+  `MIN_VERTIKAL_VERHAELTNIS` 1.5, `ZURUECK_DAUER_MS` 200).
+- Greift nur aus der Ruhelage am oberen Rand, einfingrig und bei klar senkrechter Bewegung --
+  das Querscrollen breiter Tabellen bleibt unangetastet. Listener sind `passive`, der Inhalt
+  folgt gedaempft und schnappt unterhalb der Ausloese-Distanz zurueck.
+- **Ladeanzeige beim Ziehen**: ein Kreis faehrt hinter der oberen Kante des Inhaltsbereichs
+  hervor, Deckkraft und Drehung des `circular_arrows`-Symbols folgen dem Fortschritt (eine volle
+  Umdrehung = Ausloese-Distanz erreicht), ab der Schwelle wechselt es auf die Markenfarbe; beim
+  Loslassen dreht es bis zum Neuaufbau von selbst weiter. `position: fixed` statt Container-Kind,
+  weil `overflow-y: auto` ein oberhalb liegendes Kind abschneiden wuerde. Die Glyph-Regel teilt
+  es sich mit `.laedt`.
+- **Chromes eigenes Zum-Aktualisieren-Ziehen ausgeschaltet** (User-Fund am Geraet: die Seite lud
+  schon beim Runterziehen neu, ohne Loslassen). Der Container reichte die Geste am oberen Rand an
+  den Wurzel-Scroller weiter, dessen native Geste parallel zur eigenen lief -- Headless-Chrome
+  kennt sie nicht, daher fiel es im Puppeteer-Test nicht auf. Jetzt `overscroll-behavior-y:
+contain` an `html`/`body`/`.db-shell-content` und ein nicht-passiver `touchmove` mit
+  `preventDefault()`, solange gezogen wird (waagerechtes Wischen bleibt beim Browser). Ausgeloest
+  wird ausschliesslich im `touchend`, ab `AUSLOESE_DISTANZ_PX`.
+- Getestet in `test/ui.pullToRefresh.test.ts` (Daempfung, Zurueckschnappen, Ausloesen erst beim
+  Loslassen, Zurueckziehen unter die Schwelle, `preventDefault`, Indikator-Fortschritt,
+  waagerechtes Wischen, Ruhelage-Bedingung) und per Puppeteer mit echten Touch-Events auf
+  375px-Viewport.
+
+## 2026-09-18 (146)
+
+### chore (ESLint: eslint-plugin-react-refresh ergaenzt)
+
+- `react-refresh/only-export-components` als Warnung fuer `**/*.tsx` aktiviert (Vite-HMR-
+  Kompatibilitaet). 54 bestehende Warnings aufgedeckt (Tabs/Modals, die Komponenten und
+  Nicht-Komponenten aus derselben Datei exportieren) -- bewusst nur als Warnung belassen, keine
+  Aufraeumaktion im selben Zug.
+
+## 2026-09-18 (145)
+
+### fix (AutoSaveBadge: Icon im Badge nicht zentriert)
+
+- DB-UX-Bug: `.db-badge > span:empty` (core-components `badge.css`, fuer den reinen
+  Punkt-Badge ohne Icon) trifft ueber `:empty` versehentlich auch `.db-icon` -- das Glyph
+  kommt aus `::before`, zaehlt fuer `:empty` also nicht als Kind. Die Regel zwingt die
+  Icon-Box auf `--badge-size` statt auf die quadratische Icon-Groesse (nur `block-size`
+  ueberschrieben, `inline-size` bleibt am Inhalt) -- das Glyph wirkt dadurch in jedem Badge
+  mit reinem Icon (kein Text-Label) verschoben/gestaucht, betroffen z. B. `AutoSaveBadge.tsx`s
+  "gespeichert"-Haekchen im Save-Button. Kein Projekt-Override kollidiert hier -- reproduziert
+  auch mit unveraendertem DB-UX-Markup (raw `.db-badge`/`.db-icon`-Span, ebenso mit `DBIcon` ohne
+  sichtbare Kind-Beschriftung; nur Beispiele mit sichtbarem Label entgehen dem Bug, weil deren
+  Span dann nicht mehr `:empty` ist).
+- Anlass genutzt, `AutoSaveBadge.tsx` von handgebautem `<span data-icon>`/`<span data-semantic>`
+  auf die echten `<DBBadge>`/`<DBIcon>`-Komponenten umgestellt (`label`-Prop ergaenzt fuer
+  Corner-Badge-A11y, vorher gar nicht gesetzt). Fix selbst: `<DBIcon icon=... text={title} />`
+  statt `icon` ohne Kind-Inhalt -- `text` macht die `.db-icon`-Huelle nicht-leer (der String
+  bleibt wegen `.db-icon`s `font-size: 0` unsichtbar) und entschaerft den `:empty`-Treffer direkt
+  im Markup, ohne CSS-Gegenregel. Einziger `db-badge`-Verbraucher im Projekt -- kein anderer
+  Aufrufer, der eine zusaetzliche CSS-Absicherung noch braeuchte. Per Puppeteer verifiziert
+  (echter `#btnSaveEinstellungen`-Save-Button): Icon-Rect vorher 11x8px (asymmetrisch, Haekchen
+  sichtbar verschoben), nachher 11x11px, exakt zentriert im 16x16px-Badge.
+
+## 2026-09-18 (144)
+
+### refactor (showModal: MutationObserver-Bruecke entfernt)
+
+Abschluss der "mehr echtes React"-Initiative (Teil 4 nach CustomSnackbar, Zulagen-Checkboxen,
+Admin-Unternavigation):
+
+- `beiModalSchliessen()` hing bisher einen `MutationObserver` an `#modal`, um zu erkennen, wann
+  der aktuelle Dialog-Inhalt verschwindet (Ersatz fuer das tote `hide.bs.modal`-Bootstrap-Event).
+  Beide Stellen, an denen das tatsaechlich passiert (`schliesseModal()`, `showModal()`s
+  Ersetzen-Zweig beim direkten Neu-Oeffnen), sind bereits bekannter, synchroner Code -- eine
+  neue `aufraeumer`-`WeakMap` (Container -> registrierte Aufraeum-Funktion, analog der
+  bestehenden `schliesser`-Map) ersetzt das DOM-Beobachten durch einen direkten Aufruf an genau
+  diesen zwei Stellen.
+- `beiModalSchliessen(fn)` bleibt Signatur und Aufruf-Zeitpunkt fuer alle 6 Aufrufstellen
+  unveraendert.
+- Der globale Klick-Delegator (`data-dialog-dismiss="modal"`) bleibt bewusst unveraendert --
+  kein Vanilla-DOM-Rest, sondern weiterhin das passende Muster fuer 11 Verwendungen quer durch
+  wiederverwendete Modal-Bausteine.
+- Neuer Test `test/components/showModal.test.tsx` (4 Faelle) deckt `beiModalSchliessen`s
+  tatsaechliches Verhalten erstmals ab -- vorher wurde es in allen betroffenen Tests komplett
+  gemockt.
+
+## 2026-09-18 (143)
+
+### refactor (Admin-Unternavigation auf React-Store umgebaut, Nebenbug behoben)
+
+Fortsetzung der "mehr echtes React"-Initiative (Teil 3 nach CustomSnackbar, Zulagen-Checkboxen):
+
+- `tabController.ts`s `zeigeTab()` schrieb fuer Admins Unternavigation (`admin-pane-*`) noch
+  direkt `classList`/`aria-selected`/`tabindex`/`data-active` auf DOM-Elemente -- letzter
+  DOM-schreibender Rest, seit die Hauptnavigation auf `activeTabStore` umgestellt ist. Neuer
+  `activeAdminTabStore.ts`/`useActiveAdminTab.ts` (gleiches `useSyncExternalStore`-Muster,
+  eigener Store) macht `features/Admin/index.tsx`s Unternavigation reaktiv; der alte
+  DOM-schreibende Zweig in `zeigeTab()` ist damit vollstaendig entfallen (keine Gruppe nutzt ihn
+  mehr).
+- Dabei einen bestehenden Nebenbug gefunden und behoben: `aktiverUnterTab` war bisher eine
+  hartkodierte Konstante -- jedes Re-Render aus anderem Grund (z. B. Act-as-Wechsel) setzte den
+  gewaehlten Unter-Tab optisch auf den Default zurueck, obwohl ein anderer aktiv war. Neuer Test
+  (`AdminTab.subnav.test.tsx`) deckt genau diesen Fall ab.
+- `<nav>`/`<menu>` der Unternavigation nutzt jetzt `<DBNavigation>` (DB-UX-Baustein, reiner
+  Markup-Wrapper). `<DBNavigationItem>` fuer die einzelnen Tab-`<li>`s wurde nach Pruefung
+  verworfen: die Sub-Navigation-Erkennung der Komponente rendert im ersten Zyklus ein
+  ungueltiges `<button>` in `<button>` -- die `<li>`s bleiben roh.
+
+## 2026-09-18 (142)
+
+### refactor (Zulagen-Checkboxen auf React umgebaut)
+
+Fortsetzung der "mehr echtes React"-Initiative (Teil 2 nach CustomSnackbar):
+
+- `populateZulagenCheckboxes()` in `generateEingabeMaskeEinstellungen.ts` (~120 Zeilen
+  `document.createElement`) ersetzt durch neue `<ZulagenCheckboxList>`-Komponente
+  (`features/Einstellungen/components/`), gemountet per `mount()` -- exakt dasselbe lokale
+  Muster wie `ArbeitszeiteingabePanel`/`FahrzeitenPanel` in derselben Datei.
+- Checkbox-Karte nutzt jetzt den echten DB-UX-Baustein `<DBCheckbox>` statt handgebauter
+  `db-checkbox`-Divs; `id`/`data-zulage-code`/`data-zulage-category` unveraendert, damit
+  `saveEinstellungen.ts` (liest per DOM-Query) unangetastet bleibt.
+- Kategorie-Limit-Logik (max. Auswahl je Zulagen-Kategorie) jetzt als abgeleiteter State statt
+  manuellem Increment/Decrement-Bookkeeping.
+- `test/Einstellungen/generateEingabeMaskeEinstellungen.test.ts`: Toggle-Interaktion von
+  `checked=true`+`dispatchEvent` auf `input.click()` umgestellt (React-kontrollierte Checkbox).
+
+## 2026-09-18 (141)
+
+### refactor (CustomSnackbar auf React umgebaut)
+
+Fortsetzung der "mehr echtes React"-Initiative (per `graphify` als meistverbundener Vanilla-DOM-
+Knoten im Graph identifiziert, 152 Kanten, 124 Aufrufstellen):
+
+- **`createSnackBar(options)` bleibt die einzige oeffentliche Funktion**, Signatur/Rueckgabe-
+  Vertrag (`.Close()` funktioniert auch spaeter aufgerufen, siehe `setOffline.ts`/
+  `FetchRetry.ts`) unveraendert -- keine der 124 Aufrufstellen wurde angefasst.
+- Neu: `snackbarStore.ts` (`useSyncExternalStore`-Modul-Store, analog `autoSaveStatusStore.ts`),
+  `useSnackbars.ts`, `SnackbarHost.tsx` (einmal in `App.tsx` gemountet, gruppiert Eintraege nach
+  Position + Ziel-Container und portalt sie per `createPortal`), `SnackbarItem.tsx` (eine Karte,
+  Hoehen-Animation via `ref` -- exakt dieselbe Doppel-`requestAnimationFrame`-Sequenz wie die
+  alte `SnackBar.Open()`/`Close()`).
+- Die Karte selbst nutzt jetzt den echten DB-UX-Baustein `<DBNotification variant="overlay">`
+  statt handgebauter `db-notification`-Divs -- laut Doku explizit fuer "absolute and floating
+  notifications like snackbars etc." gedacht, Props passen 1:1 auf das bisherige Options-Mapping
+  (`semantic`/`icon`/`showIcon`/`headline`/`closeable`/`onClose`). `CustomSnackbar.css` musste
+  dafuer NICHT geaendert werden (enthielt schon nie Regeln fuer Titel/Message/Close-Button --
+  die kamen immer aus dem DB-UX-Paket).
+- `test/class/CustomSnackbar.test.ts` komplett neu geschrieben (53 Faelle, gleiche Abdeckung):
+  rendert jetzt `<SnackbarHost />` echt und prueft ueber das DOM/den Public-API-Vertrag statt
+  private Felder (`_Element`/`_Container`) des alten `SnackBar`.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test` (2141/2141 pass), `bun run build` gruen, sowie ein manueller
+  Puppeteer-Durchklick (mehrere Snackbars gleichzeitig, gleiche/verschiedene Position, Aktion
+  mit `dismiss`, spaetes `.Close()` auf gehaltene Referenz, Auto-Close nach Timeout, HTML-
+  Message) gegen den laufenden Dev-Server -- keine Konsolenfehler.
+- Vorbereitend (Commit davor): 4 redundante Snackbar-Meldungen entfernt (siehe Eintrag 140).
+
+## 2026-09-17 (140)
+
+### fix (4 redundante Snackbar-Meldungen entfernt)
+
+Vorbereitungsschritt fuer den CustomSnackbar-Umbau auf React (Grundsatz: nur zeigen, was noetig
+ist -- keine Meldung, wenn dieselbe Information bereits anderweitig sichtbar ist):
+
+- `saveDaten.ts`/`generatePDF.ts`/`selectYear.ts`: eigener "... nicht moeglich -- keine
+  Internetverbindung"-Snackbar bei Offline-Klick entfernt -- `setOffline.ts` zeigt bereits eine
+  dauerhafte, globale Banner fuer die gesamte Session, solange `navigator.onLine === false`.
+- `autoSave.ts`s `saveSettingsNow()`: Fehler-Snackbar bei AutoSave-Fehlern fuer `settings`
+  entfernt -- `AutoSaveBadge.tsx` zeigt dieselbe Fehlermeldung bereits als Tooltip, konsistent
+  mit BZ/BE/EWT/N/EA (die bei AutoSave-Fehlern ebenfalls keine zusaetzliche Snackbar zeigen).
+- Tests entsprechend angepasst (`bun run test` 2141/2141 pass); ein Test in
+  `generatePDF.test.ts`/`saveDaten.test.ts`/`SelectYear.test.ts` liess bei fehlgeschlagener
+  Assertion `navigator.onLine` global auf `false` haengen (kein `try/finally`) -- behoben, war
+  Ursache mehrerer scheinbar unabhaengiger Testfehler in denselben Dateien.
+
+## 2026-09-17 (139)
+
+### refactor (CustomTable Achse B: alle 6 Tabellen auf echten `useReducer`-Hook umgestellt)
+
+- **`useCustomTableState(elementId, options)`** (neu, `CustomTable.ts`): ersetzt `createCustomTable()`
+  in den 6 Tab-Komponenten. Konstruiert die `CustomTable`-Shim-Instanz einmalig (`useRef`) und
+  bindet sie an einen echten `useReducer(tableReducer, ...)` -- Zustandsaenderungen lösen jetzt
+  einen normalen React-Re-Render aus statt eines manuell aufgerufenen `mount()`.
+- **`CustomTable` ist dual-mode**: `createCustomTable()` (Achse A -- Tests, sonstige
+  DOM-Verwendungen ohne React-Kontext) bleibt unveraendert und rendert sich weiterhin per
+  eigenem `mount()`-Aufruf selbst. `useCustomTableState()` (Achse B) schaltet `draw()`/
+  `drawRows()`/... auf No-Op um (React rendert selbst) und routet `dispatch()` ueber
+  `flushExtern` in den echten Hook-`dispatch` -- damit sehen die 14 externen `.instance`-
+  Aufrufer (AutoSave, Bereitschaft-Submit, ...) nach einer Feld-Zuweisung (`row._state = ...`)
+  weiterhin sofort den aktualisierten State/DOM, obwohl React-`dispatch` selbst asynchron/
+  gebatcht ist.
+- **`CustomTable.$el`**: jetzt nullable, wird bei Achse B per Ref-Callback der Tab-Komponente
+  nachgetragen (`attachElement()`) -- das `<table>`-Element existiert beim ersten Hook-Aufruf
+  noch nicht (React hat es noch nicht committet).
+- **`CustomTableView.tsx`**: unveraendertes `{table}`-Props-Contract (kein Umbau auf
+  `{state, dispatch}` noetig); ein neuer `useEffect` löst die `customFunction`-Hooks
+  (aktuell nur `EwtTab.tsx`s `afterDrawRows`) fuer Achse-B-Tabellen aus, da `draw()`/`render()`
+  dort No-Ops sind.
+- **`NebenTab`/`EaTab`/`EwtTab`/`BereitschaftTab`** (BZ+BE): Tabellenkonstruktion aus dem
+  `useEffect(() => {...}, [])` in den Komponenten-Body verschoben (`useCustomTableState()` ist
+  ein Hook, kein Effekt); `bindClickHandlers()`/`setFilter()` bleiben in einem eigenen
+  `useEffect(() => {...}, [])` -- Closures (`Jahr`, `checkIfGreater202X`, ...) bleiben exakt wie
+  vorher auf den Mount-Zeitpunkt eingefroren.
+- **`tableVE`/Einstellungen**: neue Feature-Komponente `VorgabenBTable.tsx`
+  (`features/Einstellungen/components/`) konstruiert die Instanz jetzt einmalig bei Mount --
+  vorher hat `generateEingabeTabelleEinstellungenVorgabenB()` bei jedem Aufruf eine komplett
+  neue `CustomTable` angelegt (die im Login/Reload-Pfad ohnehin fast immer schon eine bestehende
+  Instanz per `rows.load()` nachlud, siehe `generateEingabeMaskeEinstellungen.ts`). Ausgelagert
+  in eine eigene Feature-Komponente statt direkt in `infrastructure/ui/EinstellungenTab.tsx`,
+  weil diese Huelle bewusst infrastructure-schichtig ist und laut Architektur nicht auf
+  `features/` zugreifen darf (analog `PersoenlicheDatenPanel`).
+  `generateEingabeTabelleEinstellungenVorgabenB()` ist dadurch auf einen reinen Daten-Nachlader
+  geschrumpft (`document.querySelector('#tableVE')?.instance` + `rows.load()`).
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test` (2141/2141 pass, 4 neu durch die `VorgabenBTable`-Tests), `bun run
+build` gruen, sowie mehrere manuelle Puppeteer-Durchklicks gegen den laufenden Dev-Server (alle
+  6 Tabellen mounten mit funktionierendem `.instance`, Sortier-Klicks, externe synchrone
+  Feld-Schreibzugriffe erscheinen sofort im DOM, `tableVE`s "Standardeinstellungen"-Knopf laedt
+  den Offline-Fallback korrekt) -- keine Konsolenfehler.
+
+## 2026-09-17 (138)
+
+### refactor (CustomTable Phase A: Reducer-Kern + `.instance`-Shim, Zielzustand "(b)")
+
+- **`Row`/`Rows`/`Column`/`Columns` sind keine Datenklassen mehr, sondern duenne Shims** ueber
+  einem reinen `TableReducerState<T>` (`RowRecord<T>[]`/`ColumnRecord<T>[]`), verwaltet per
+  neuem `tableReducer(state, action)` (`infrastructure/table/tableReducer.ts`, 15 Aktionstypen,
+  1:1 Spiegel jeder bisherigen `Row`/`Rows`/`CustomTableView`-Mutationsmethode). `CustomTable`
+  haelt den State als Instanzfeld (`getState()`/`dispatch()`/`getRowRecord()`) -- in dieser Phase
+  noch keine React-`useReducer`-Anbindung (folgt in Achse B), daher synchron ohne `flushExtern`.
+- **`.instance`-Vertrag fuer die 14 externen Aufrufer-Dateien bleibt unveraendert**: `row.cells`/
+  `row._state`/`row.val()`/`table.rows.array`/... funktionieren identisch, jetzt als
+  Getter/Setter bzw. dispatch-Aufrufe statt Feldmutation.
+- **Row-Wrapper-Cache** (`Rows.ts`, `Map<uid, Row<T>>`): garantiert `existingRow === row` ueber
+  die Zeit -- zwingende Vorbedingung fuer die 6 Editor-Modals, die eine beim Modal-Oeffnen
+  gehaltene `Row`-Referenz per `===` gegen einen spaeteren `.array`-Zugriff vergleichen.
+  `Rows.array` cached zusaetzlich anhand der Referenzidentitaet von `state.rows`, damit
+  `CustomTableView.tsx`s In-Render-Sortiermutation (`table.rows.array.sort(...)`) weiter
+  funktioniert.
+- **`Column`/`Columns`**: kein Wrapper-Cache (keine `===`-Abhaengigkeit im Code gefunden) --
+  `.array` synthetisiert bei jedem Zugriff frische, rein lesende `Column`-Instanzen.
+  `CustomTableView.tsx`s `toggleColumnSort()` dispatcht seither `TOGGLE_COLUMN_SORT` statt
+  einzelner Spalten-Feld-Mutationen.
+- `CustomTable`s Default-Fallback fuer `options.editing.deleteAllRows` (praktisch unerreicht --
+  alle 6 produktiven Tabellen liefern einen eigenen) delegiert jetzt an `rows.deleteAll()`
+  (Soft-Delete) statt eines rohen Array-Clears.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test` (2137/2137 pass), `bun run build` gruen, sowie ein manueller
+  Puppeteer-Durchklick (Sortier-Klick x2, Add/Edit/Delete/Undo, Row-Identitaet ueber zwei
+  `.array`-Zugriffe) gegen den laufenden Dev-Server -- keine Konsolenfehler.
+- **Noch nicht Teil dieser Aenderung**: Achse B (State in einen echten `useReducer`-Hook je Tab
+  verschieben, `CustomTableView.tsx`-Props auf `state`/`dispatch`) und Zielzustand "(a)"
+  (Invertierung der 14 `.instance`-Aufrufer) -- beide bewusst zurueckgestellt, siehe
+  Plan-Dokument.
+
+## 2026-09-17 (137)
+
+### refactor (CustomTable Phase 0: 5 Risikostellen von Objektidentitaet auf ID-Zugriff gehaertet)
+
+- **Vorbedingung fuer einen spaeteren `useReducer`-Umbau von `CustomTable`** (Zielzustand "(b)",
+  `.instance` bleibt Kompatibilitaets-Shim): 5 Stellen, die hart auf Objektidentitaet bzw.
+  fragile Aufrufreihenfolge ueber asynchrone Grenzen hinweg vertrauten, gehaertet -- in echten
+  Bereitschaft/EWT/Neben/EA-Speicherpfaden, nicht nur theoretisch.
+- **AutoSave-Commit-Race** (`Rows.ts`/`autoSave.ts`): neue `getRowKey(row)`
+  (`customTableTypes.ts`) liefert einen stabilen ID-Schluessel (`new:<_clientRequestId>` bzw.
+  `id:<_id>`) -- ersetzt `Set<Row>`/`.has(row)`-Objektidentitaet in `commitChanges`/
+  `commitAutoSave`/`_commitCreateAndUpdate` durch `Set<string>`.
+- **`submitBereitschaftsEinsatz.ts`**: neue `Rows.findById(id)` statt wiederholter
+  inline-`for`-Schleifen; echte Zellen-Aenderung (`Bereitschaftszeitraum`-Merge) nutzt jetzt
+  `row.val(...)` statt direkter `row.cells.X =`-Mutation.
+- **`loadUserDaten.conflict.ts`**: neue `Rows.markRowsDirtyByMatch(matcher)`/
+  `reconcileDeletedRows(serverRows, matcher)` statt direkter `rows.array`-Mutation (inkl.
+  `array.push(new Row(...))`-Bypass). Die bisher wechselnde Aufrufreihenfolge zwischen "Lokale
+  Daten behalten" und "Vergleichen & manuell speichern" war beweisbar bereits unschaedlich (beide
+  Funktionen sind gegenseitig exklusiv geschrieben) -- kein Bug, aber jetzt gekapselt.
+- **`createAddModalBereitschaftsZeit.tsx`**: `onSubmit` awaitet `submitBereitschaftsZeiten`
+  jetzt -- einzige echte Verhaltensaenderung im ganzen Umfang: bei einem geworfenen Fehler bleibt
+  das Modal offen statt sich faelschlich sofort zu schliessen.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` (2121/2121 pass,
+  identische Anzahl), `bun run build` gruen. Details/Diskussion: `tasks/todo.md`, Plan-Dokument
+  `~/.claude/plans/plane-im-frontend-mehr-floating-phoenix.md`.
+
+## 2026-09-17 (136)
+
+### refactor (CustomTable: direkte Row-Mutation hinter Rows.ts-Methoden gekapselt)
+
+- **Ansatz 1 (ID-Entkopplung) als Vorstufe fuer einen spaeteren, noch nicht beschlossenen
+  React-State-Umbau von `CustomTable`:** zwei neue Methoden auf `Rows.ts`,
+  `syncCellsSilently(transform)` (Content-Sync ohne Dirty-Flag, z.B. Server-Antwort nach einem
+  Save) und `patchCellsAsModified(transform)` (echte lokale Aenderung, markiert `unchanged` ->
+  `modified`) -- nach dem Vorbild der bestehenden `_commitCreateAndUpdate()`: Aufrufer uebergibt
+  nur Batch-Daten, keine State-Verzweigung von aussen.
+- `savePipeline.ts` (`applyServerRowsToTable`, `unlinkNebengeldRefsForDeletedEwtIds`,
+  `unlinkEaRefsForDeletedEwtIds`) und `syncFieldsFromEwtRows.ts` (Cross-Tabellen-Sync
+  EWT -> Neben/EA) mutieren `row.cells`/`row._originalCells` nicht mehr direkt in eigenen
+  Schleifen, sondern rufen die neuen `Rows.ts`-Methoden. Reiner Refactor, kein
+  Verhaltensunterschied.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` (2120/2120 pass,
+  identische Anzahl wie vorher), `bun run build` gruen. Details/Diskussion:
+  `tasks/todo.md` Abschnitt "Ansatz 1 (ID-Entkopplung)".
+
+## 2026-09-17 (135)
+
+### refactor (AutoSave-Badge und Login-Button: DOM-Huelle -> React-Store)
+
+- **AutoSave-Badge -> `useSyncExternalStore`-Store:** `autoSaveIndicator.ts` (Modul-globaler
+  Pub/Sub mit direkter `classList`/`appendChild`-Manipulation am Save-Button) durch
+  `autoSaveStatusStore.ts` + `useAutoSaveStatus.ts` + `AutoSaveBadge.tsx` ersetzt, analog dem
+  bestehenden `buttonLoadingStore.ts`/`useButtonLoading.ts`-Muster. `DBLoadingButton.tsx` bekommt
+  ein neues optionales `autoSaveResources`-Prop, das die Badge deklarativ als Kind rendert.
+  Betrifft alle 5 Speichern-Buttons (`btnSaveN`/`btnSaveE`/`btnSaveEA`/`btnSaveB`/
+  `btnSaveEinstellungen`) -- Letzterer war bisher ein rohes `<button>` ohne `DBLoadingButton`,
+  jetzt einheitlich. `autoSaveIndicator.ts` hat danach keine Aufrufer mehr und ist entfernt
+  (inkl. Aufrufstellen in `userLoginSuccess.ts`/`auth/index.ts`/`logoutUser.ts`, Test-Datei).
+  `autoSave.ts`s Kernlogik (`savePipeline`/`overlapGuard`/`changeTracking`) ist unangetastet --
+  die Badge war reine Anzeige-Kopplung, keine Business-Logik.
+- **btnLogin -> `DBLoadingButton`:** derselbe Huelle-Befund beim Nachpruefen: `AppHeader.tsx`s
+  Login-Button war ebenfalls ein rohes `<button>`, dessen Ladezustand `setLoading`/`clearLoading`
+  per direkter DOM-Manipulation (`replaceChildren`, `.disabled`) statt ueber den bereits
+  vorhandenen `buttonLoadingStore` steuerten. Auf `DBLoadingButton` umgestellt; redundante
+  manuelle `.disabled`-Zuweisungen in `loginUser.ts`/`loginWithPasskey.ts` (fuer `btnLogin` UND
+  das bereits migrierte `btnLoginModal`) entfernt, `clearLoading.ts`s toter `btnLogin`-Sonderfall
+  fuer den Fallback-Text ebenfalls.
+- Verifiziert: `bun run test` (2120 pass, inkl. neuer `autoSaveStatusStore.test.ts` und
+  `AutoSaveBadge.test.tsx`), `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run build`.
+
+## 2026-09-13 (134)
+
+### fix (Kopfzeile: doppeltes Logo, Mobile-Zentrierung, Drawer schliesst nicht)
+
+- **Falsches/doppeltes Logo:** `DBControlPanelBrand` zeigt IMMER ein Logo per `::before`/
+  `background-image: var(--db-logo-url)` (Standard: DB-UX' eigenes `logo.svg`) -- kein
+  Bild-Prop, kein bedingter Fallback. Ein eigenes Kind-`<img>` erzeugte deshalb ein ZWEITES
+  Icon neben dem generischen DB-Logo statt es zu ersetzen. Fix: `<img>` entfernt,
+  `--db-logo-url` per CSS-Override auf `icons/192x192-icon.png` gesetzt (`styles.scss`) -- das
+  ist der von DB UX vorgesehene Anpassungspunkt fuer das eigene Markenzeichen.
+- **Marke auf Mobile zentriert:** `.db-control-panel-mobile[data-position="top"]` setzt laut
+  DB-UX-Quellcode bewusst `justify-items: center` auf der `1fr`-Spalte "brand" (offizielles
+  Verhalten fuer diesen Modus, kein Bug). Per CSS-Override auf `justify-items: start`
+  korrigiert -- `actions-1`/`drawer-button` sind `min-content`-Spalten, davon unberuehrt.
+- **Drawer schliesst nicht bei Klick auf Einstellungen:** seit dem `actions2`-Umbau (Eintrag 133) sitzen Einstellungen/Admin/Theme auf Mobile im `DBDrawerFooter` -- AUSSERHALB von
+  `.db-control-panel-mobile-drawer-scroll-container`, dem einzigen Bereich, den
+  `DBControlPanelMobile`s eingebauter Auto-Close-Klick-Handler beobachtet.
+  `DBControlPanelMobile` bietet keinen `open`/`onToggle`-Prop von aussen. Neuer Helfer
+  `schliesseMobilenDrawer.ts`: schliesst den naechsten `<dialog>`-Vorfahren direkt per
+  `HTMLDialogElement.close()` (Desktop: kein Vorfahre, No-op). Wichtiger Fund dabei: `DBDrawer`
+  reicht den per `className`-Prop uebergebenen Klassennamen NICHT an sein eigenes `<dialog>`
+  durch (`<dialog class="db-drawer">` traegt nur die feste Basis-Klasse) -- der Helfer nutzt
+  deshalb einen reinen `dialog`-Tag-Selektor statt einer (nie treffenden) spezifischeren Klasse.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` (2119 pass), `bun run build`. Puppeteer: ein Icon im
+  Header, Marke linksbuendig mobil, Klick auf Einstellungen im Drawer-Footer schliesst die
+  Schublade UND wechselt den Tab.
+
+## 2026-09-13 (133)
+
+### refactor (Kopfzeile: Einstellungen/Admin/Theme in actions2)
+
+- `AppHeader.tsx`: `actions1` jetzt nur noch Anmelden + Monatsauswahl, `actions2` (neu) buendelt
+  Einstellungen/Admin/Theme-Schalter -- User-Vorgabe. Auf Desktop durch Trennlinie abgesetzt am
+  Ende der Kopfzeile, auf Mobile automatisch im Drawer-Footer (`ControlPanelProps`-Doku: "actions2
+  -- Mobile: Shown inside the drawer at the bottom").
+- Einstellungen/Admin dafuer von `DBControlPanelNavigationItem` (Teil der Hauptnav) auf
+  Icon-only-`<a class="db-button" data-variant="ghost">` umgestellt (passt zum `actions2`-Slot,
+  der keine Nav-`<menu>`-Umgebung bereitstellt) -- `data-tab-target`/`role="tab"` bleiben erhalten,
+  `tabController.ts` sieht keinen Unterschied (rein attributbasiert). `#admin`/`#admin-tab`
+  bleiben zwei getrennte Elemente (Sichtbarkeits-Toggle vs. Klick-Listener/Tab-Attribute).
+- `ThemeSwitcher.tsx`: `<li className="db-navigation-item">`-Wrapper entfernt -- sitzt nicht mehr
+  in `DBControlPanelNavigation`s `<menu>`, ein `<li>` ausserhalb jeder Liste waere ungueltiges
+  HTML gewesen.
+- Marke (`brand`) nutzt jetzt `DBControlPanelBrand` (User-Vorgabe) statt reinem Handmarkup, bleibt
+  in einem eigenen `<a>` gewrapped (Link-/`data-tab-target`-Verhalten). Bekannter Nebeneffekt:
+  `DBControlPanelBrand` zeigt ohne eigenes Bild-Kind das generische DB-Logo statt des App-eigenen
+  Icons.
+- Bekannte Einschraenkung: bei sehr schmalen Mobilgeraeten (~390px) ist die kompakte Kopfleiste
+  (Marke + Anmelden + Monatsauswahl) breiter als der Viewport, der Drawer-Button dadurch visuell
+  verdeckt (bleibt aber klickbar). Drawer-Inhalt selbst (inkl. `actions2` im Footer) unveraendert
+  funktionsfaehig.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` (2119 pass), `bun run build`. Puppeteer: Klick auf
+  Einstellungen/Admin/Theme-Schalter funktioniert (Desktop, `actions2`), Drawer-Footer zeigt
+  dieselben drei Elemente auf Mobile korrekt an.
+
+## 2026-09-13 (132)
+
+### feat (Monatswechsel-Select: kurze Monatsnamen unter 1024px)
+
+- `AppHeader.tsx`s Monat-`DBSelect` (in `actions1`) zeigt unter 1024px Breite abgekuerzte
+  Monatsnamen (Jan/Feb/Mär/...), darueber die vollen Namen -- User-Fund: die volle Namensliste
+  war auf schmalen Viewports zu breit (`actions1` teilt sich den Platz mit Anmelden-Knopf).
+- Neuer Hook `useMediaQuery.ts` (`infrastructure/ui/`): reaktiver `window.matchMedia`-Wert,
+  reagiert auf `change`-Events. Erwogen und verworfen: Wechsel auf `DBCustomSelect` fuer
+  unterschiedlichen Text in Liste vs. geschlossenem Zustand -- User-Entscheidung, bei der
+  einfacheren, bereits funktionierenden Breakpoint-Loesung zu bleiben (kein natives `<select>`
+  mehr, deutlich schwerere Komponente fuer einen rein kosmetischen Unterschied).
+- `DBSelect`s `options`-Prop-Feld heisst `label`, nicht `text` (anders als das projekteigene
+  `MySelect`) -- erst mit `text` versucht, zeigte nur die numerischen Werte an.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` (2119 pass), `bun run build`. Puppeteer: Select zeigt
+  "Jan".."Dez" bei 900px, "Januar".."Dezember" bei 1200px.
+
+## 2026-09-13 (131)
+
+### fix (Shell-Umbau: doppelte #btnLogin/#Monat/#MonatFeld nach Login nicht synchron)
+
+- Nach dem Shell-Umbau (Eintrag 130) existieren `#btnLogin`/`#Monat`/`#MonatFeld` zweimal im DOM
+  (Desktop- + Mobile-Control-Panel rendern `actions1` beide) -- mehrere Login-/Session-Restore-
+  Codepfade nutzten noch `document.querySelector` (singular), aktualisierten also nur die zuerst
+  gefundene Kopie. Symptome: "Anmelden" blieb nach Login sichtbar (nur eine Kopie ausgeblendet),
+  Monatsfeld blieb verborgen.
+- Betroffen und auf `querySelectorAll` umgestellt: `userLoginSuccess.ts` (`#btnLogin`
+  ausblenden, `#Monat`-Wert setzen, `#MonatFeld` einblenden), `auth/index.ts`s Session-Restore-
+  Pfad (dieselben drei), `Einstellungen/index.ts`s `#Monat`-`change`-Listener-Registrierung
+  (sonst reagiert nur eine Kopie auf Nutzereingaben), `setMonatJahr.ts`.
+- Zusaetzlich gehaertet: `changeMonatJahr.ts` synchronisiert bei einer Aenderung jetzt den
+  Wert auf ALLE `#Monat`/`#Jahr`-Kopien (per `event.target`) -- sonst wuerde eine Aenderung an
+  der mobilen Kopie von Code, der weiterhin `querySelector('#Monat')` (die Desktop-Kopie) liest,
+  nicht bemerkt.
+- `AppHeader.tsx`: `DBControlPanelDesktop`/`DBControlPanelMobile` brauchen `orientation`/
+  `position`-Props EXPLIZIT (kein Default in der DB-UX-Quelle, anders als `DBShell`s
+  `controlPanelDesktopPosition`) -- ohne sie griffen mehrere CSS-Regeln nicht (Symptom: Marke
+  im mobilen Header zentriert statt linksbuendig).
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test --isolate`
+  (2119 pass), `bun run build`. Puppeteer: Marke im mobilen Header linksbuendig.
+
+## 2026-09-13 (130)
+
+### refactor (Header-Umbau: DBHeader -> DB UX Shell)
+
+- `AppHeader.tsx` komplett auf DB UX' `DBShell` + `DBControlPanelDesktop`/`DBControlPanelMobile` +
+  `DBControlPanelNavigation(Item)` umgestellt (vorher `DBHeader`/`DBNavigation`). Anlass: `DBHeader`s
+  fixe CSS-Weiche bei 1024px reagiert nicht auf `data-density` (siehe Eintrag 129s
+  `useHeaderForceMobile()`-Notloesung) -- Shell hat eine eingebaute Weiche bei GENAU 48em (768px),
+  passt exakt zum gewuenschten Schwellwert. `useHeaderForceMobile.ts` daher ersatzlos entfernt.
+- `App.tsx`: `<DBShell>` umschliesst `AppHeader` + `<DBShellContent>` (CSS-Grid braucht beide als
+  direkte Geschwister), `AppFooter` bleibt bewusst ausserhalb (eigener `position:fixed`-Overlay).
+- Feature-Drilldown (urspruenglich geplant, Bereitschaft/EWT/Neben/EA in ein Untermenue buendeln)
+  erwies sich als nicht noetig: `DBControlPanelNavigation` bringt bereits eingebaute
+  Horizontal-Scroll-Buttons fuer den Fall mit, dass die flache Nav nicht in eine Zeile passt
+  (`overflow-scroll-right-button`, per `ResizeObserverListener`) -- deckt die Luecke ab, ohne
+  Sonderbehandlung.
+- `ThemeSwitcher.tsx` vereinfacht: vorher Hell/Dunkel/Auto-Flyout-Menue (brach im neuen, horizontal
+  scrollenden Nav-Container), jetzt ein einfacher Zwei-Zustands-Schalter (`DBSwitch`s eingebautes
+  `visualAid`+`iconLeading="moon"`+`iconTrailing="sun"`, offiziell dokumentiertes Muster). Label
+  nur noch per `.visually-hidden` fuer Screenreader, visuell nur Icon-Schalter.
+- `styles.scss`: `.db-header`-Regeln auf `.db-control-panel-desktop`/`-mobile` migriert (Sticky-
+  Positionierung), `#start.active`s Hoehen-Hartwert neu vermessen (114px = 7.125rem bei
+  16px-Wurzel/regular-Dichte, vorher 5.75rem fuer die alte, kleinere DBHeader-Hoehe), tote
+  `.db-header-*`/`.nav-trenner`/`.nav-rechts`-Selektoren entfernt, `.theme-umschalter-menu`-
+  Ueberlaufschutz auf 48em verschoben, `#tabContent`-Abstand zur Kopfzeile von `mt-1` auf `mt-3`
+  erhoeht.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` (2119 pass), `bun run build`. Puppeteer: Burger-Nav
+  <=768px, volle Nav ab 769px ohne Overflow (beide Dichten), Drawer oeffnet/schliesst korrekt
+  (inkl. Auto-Close bei Nav-Klick), Horizontal-Scroll-Buttons bei enger Breite funktionsfaehig,
+  Theme-Umschalter (Klick + `data-mode`-Aenderung) funktioniert Desktop und Mobile.
+
+## 2026-09-13 (129)
+
+### fix (Kopfzeile bei data-density="regular" ab 1024px abgeschnitten)
+
+- `data-density` auf `regular` umgestellt (siehe Eintrag 128 -- Ursprungsproblem waren zu kleine
+  Zeilen-Knoepfe, dort bereits gefixt). Danach gemeldet: bei `regular` ist die volle
+  Kopfzeilen-Navigation erst ab 1215px vollstaendig sichtbar, darunter (aber noch oberhalb von
+  `DBHeader`s eigener 1024px-Weiche) schneidet die Kopfzeile rechts ab (Einstellungen/Admin/
+  Theme-Switcher/Login-Knopf ausserhalb des Viewports).
+- Ursache: `DBHeader`s Mobil/Desktop-Umschaltung ist eine feste CSS-Media-Query bei
+  `min-width: 64em` -- `em` in Media Queries bezieht sich auf die Browser-Standardschriftgroesse
+  (i. d. R. 16px), nicht auf `data-density`s tatsaechliche `:root`-Schriftgroesse. Bei `regular`
+  (16px-Wurzel, groessere Abstaende/Schrift als `functional`s 14px) braucht die Navigation real
+  mehr Platz als die 1024px, ab denen `DBHeader` bereits in den Desktop-Modus schaltet -- eine
+  Luecke von 1024-1215px, in der der Inhalt nicht in eine Zeile passt.
+- Fix: `useHeaderForceMobile()` (neuer Hook, `infrastructure/ui/`) haelt `DBHeader`s
+  Burger-Navigation per offiziellem `forceMobile`-Prop bis zur tatsaechlich benoetigten Breite
+  erzwungen -- density-abhaengiger Schwellwert (`functional`: 1024px, deckt sich mit `DBHeader`s
+  eigener Weiche; `regular`: 1215px, per Puppeteer-Bisektion gemessen mit vollstaendig sichtbarer
+  Navigation: eingeloggt, alle Tabs aktiviert, Admin-Rolle).
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` (2119 pass), `bun run build`. Puppeteer:
+  `.db-header-navigation-bar`s `scrollWidth`/`clientWidth` exakt gleich (kein Overflow) bei
+  1213-1300px unter `regular`; Burger-Drawer oeffnet weiterhin korrekt und zeigt die volle
+  Navigation; `functional` bei 1024px unveraendert (Hook wirkt dort als No-op, deckungsgleich mit
+  `DBHeader`s eigener Schwelle).
+
+## 2026-09-13 (128)
+
+## 2026-09-13 (128)
+
+### fix (Tabellen-Zeilenaktionen zu klein, Von/Bis-Zelle zu breit)
+
+- Ausgangspunkt war eine Ueberlegung, `data-density="regular"` statt `functional` zu setzen
+  (Bearbeiten/Loeschen-Knoepfe in Tabellen zu klein zum Treffen) -- per Puppeteer ueber alle
+  7 Tabs x 4 Breakpoints (375/768/1024/1440px) gegen den funktionalen Stand verglichen, dabei
+  zwei Regressionen gefunden: bei 375px ueberlaeuft die Bereitschaftszeitraum-Tabelle (Pause-
+  Spalte faellt aus dem Viewport), UND der fixierte App-Footer (`body { padding-block-end:
+3.5rem }`, Hartwert kalibriert auf die 14px-Wurzel von `functional`) rutscht in den
+  Seiteninhalt statt ans Ende. Auf Rueckfrage stellte sich heraus: das eigentliche Problem war
+  gar nicht die globale Dichte, sondern schlicht `size="small"` an den Zeilen-Knoepfen.
+- Fix (chirurgisch, ohne Density-Aenderung): `CustomTableView.tsx`s `editingButton()` (Bearbeiten/
+  Loeschen/Rueckgaengig, gilt fuer ALLE Tabellen) von `size="small"` auf `size="medium"` --
+  Klickflaeche von 17.5x17.5px auf 28x28px (Puppeteer gemessen), ohne jede
+  Density-Nebenwirkung.
+- Zusatzwunsch waehrend der Pruefung: `BereitschaftTab.tsx`s Von/Bis-Spalten (Zeitraum-Tabelle)
+  zeigten "DD.MM.YYYY, HH:mm" in einer Zeile -- jetzt zwei Zeilen (Datum, Zeit) per
+  `html: true`-Parser (Praezedenzfall: `EwtTab.tsx`s `schichtParser`), schmaler und auf
+  schmalen Viewports eher ohne Tabellen-Ueberlauf lesbar.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` (2119 pass), `bun run build`. Puppeteer: Buttons in
+  Bereitschaft-/EWT-Tabellen sichtbar groesser, bestehende zweizeilige `html: true`-Zellen
+  (EWT "Bereitschaft + Nacht") unveraendert, kein Layout-Bruch bei 375px/1024px.
+
+## 2026-09-13 (127)
+
+### refactor (Phase N Slice 2 -- tabController-Pane-Toggle nach React)
+
+- `tabController.ts`s `zeigeTab()` schreibt fuer die Hauptgruppe (`#tabContent`) keine
+  `active`/`show`-DOM-Klassen mehr -- `App.tsx`s Panes berechnen sie selbst aus `activeTabStore`
+  (`useActiveTab()`, analog `AppHeader.tsx` seit Phase K6). Admin-Subnav (eigene Tab-Gruppe)
+  bleibt unveraendert am alten, DOM-schreibenden Mechanismus.
+- Risiko (laut Plan bewusst zurueckgestellt): `berechnungMonatsFenster.ts`s `tab:shown`-Handler
+  misst synchron `#Berechnung`s `clientWidth` -- ohne synchronen Flush waere das Pane beim
+  Event-Dispatch noch unsichtbar. Fix: `reactRoot.ts` bekommt `flushExtern()` (aus `mount()`s
+  bestehendem `flushSync`+Re-Entranz-Guard generalisiert), `zeigeTab()` nutzt es fuer
+  `setAktivenTab()`.
+- `aktiverTab()` (exportierter Helfer) liest seither `activeTabStore` statt DOM.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` (2119 pass), `bun run build`. Puppeteer: Pane hat
+  `display:block`/`active`/`show` synchron direkt nach `.click()` (ohne await), keine
+  `flushSync`-Konsolen-Warnung, Hash-Sync/Tastatur-Navigation/Deep-Link/`.schwelle`-Selektor
+  unveraendert funktionsfaehig. A/B per `git stash` gegen den Vor-Aenderungs-Stand: ein
+  unabhaengiges Symptom (`berechnungMonatsFenster`-Label bleibt in Backend-loser Testsession
+  leer) bestand identisch vorher -- keine Regression.
+
+## 2026-09-13 (126)
+
+### fix (Unterschrift-Canvas im Dark Mode kaum sichtbar)
+
+- `.signatur-canvas` (`styles.scss`) hatte keinen eigenen Hintergrund -- im Dark Mode zeigte die
+  Flaeche die dunkle Dialog-Huelle durch, die schwarze Unterschrift (`signaturePad.ts`s
+  Default-`penColor`) war praktisch unsichtbar.
+- Fix: `background-color: var(--db-neutral-0-default, #fff)` -- bewusst IMMER weiss, unabhaengig
+  vom App-Theme, da der Canvas Papier simuliert, auf das die schwarze Tinte spaeter im (immer
+  weissen) PDF gedruckt wird. Rein optisch: das exportierte PNG bleibt transparent
+  (`erstelleSignaturPad()`s `backgroundColor: 'rgba(0,0,0,0)'`), `toDataURL()` erfasst nur den
+  Canvas-Inhalt, nicht die CSS-Hintergrundfarbe des Elements -- keine Auswirkung auf das PDF.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler, 84 vorbestehende
+  Warnungen unveraendert), `bun run test` (2119 pass), `bun run build`. Puppeteer mit
+  `data-mode="dark"`: Canvas-Hintergrund bleibt `rgb(255, 255, 255)`.
+
+## 2026-09-13 (125)
+
+### fix (Neben-Editor-Modal: fehlende key-Prop)
+
+- `createEditorModalNeben.tsx`s `createTimeElement()` (erzeugt die Beginn-/Ende-Felder ueber
+  `['Beginn', 'Ende'].map(...)`) lieferte `<MyInput>` ohne `key` -- ergaenzt (`key={column.name}`),
+  gleiches Muster wie die Bereitschaft-Modal-Fixe vom selben Tag.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` (2119 pass),
+  `bun run build`. Puppeteer: Neben-Editor-Modal (ueber Tagesauswahl → "Manuell" erreicht) zeigt
+  Tag/Auftragsnummer/Beginn/Ende, keine `key`-Warnung mehr.
+
+## 2026-09-13 (124)
+
+### refactor (MySelect, MyCheckbox: Prop-Typ von DBSelect/DBSwitch ableiten)
+
+- Fortsetzung von `MyInput.tsx`s Refactor (voriger Eintrag) auf die beiden anderen 1:1-Wrapper:
+  `MySelect.tsx` (`DBSelect`) und `MyCheckbox.tsx` (`DBSwitch`). Gleiches Muster:
+  `Omit<ComponentProps<typeof DB*>, ...> & {eigene Felder}` statt Hand-Allowlist.
+- Kollisionen gefunden und ausgenommen: `MySelect`s eigene `options`-Prop (Text-basiert)
+  kollidiert mit `DBSelect`s nativer `options`-Prop (`DBSelectOptionType`, `value`
+  Pflichtfeld, kein `text`); `className` bleibt die Klasse der Huelle (`<div>`), nicht von
+  `DBSelect` selbst.
+- Nebeneffekt: `MySelect` bekommt dadurch automatisch `disabled` (fehlte bisher komplett --
+  kein Aufrufer konnte ein Select-Feld deaktivieren) sowie `size`/Icon-Props; `MyCheckbox`
+  behaelt sein bestehendes `checked`/`defaultChecked`-Disambiguierungsmuster unveraendert
+  (verhindert die Bug-Klasse aus dem Bereitschaft-Datumsfeld-Fund vom selben Tag).
+- Rein typseitig, keine Laufzeit-Aenderung. Verifiziert: `bunx tsc --noEmit` (0 Fehler ueber
+  alle Aufrufstellen), `bun run lint` (0 Fehler), `bun run test` (2119 pass, unveraendert),
+  `bun run build`. Puppeteer: Bereitschaft-Modal (nutzt beide Komponenten) unveraendertes
+  Verhalten.
+
+## 2026-09-13 (123)
+
+### refactor (MyInput: Prop-Typ von DBInput ableiten statt Hand-Allowlist)
+
+- `MyInput.tsx`s Prop-Typ war eine hand-gepflegte Liste einzelner Felder -- jede DBInput-Faehigkeit,
+  die dort nicht explizit aufgefuehrt war (z. B. Density, Icons, `messageSize`/`validMessageSize`/
+  `invalidMessageSize`, `dataList`, `size`), liess sich an keiner der 17 Aufrufstellen nutzen, ohne
+  diese Datei anzufassen. User-Fund: "MyInput kann nicht alles, was DBInput kann".
+- Umgestellt auf `Omit<ComponentProps<typeof DBInput>, ...>` -- jede aktuelle UND kuenftige
+  DBInput-Faehigkeit ist jetzt automatisch verfuegbar. Ausgenommen (und mit eigener Logik neu
+  typisiert) bleiben nur die Felder, die `MyInput` selbst berechnet oder anders behandelt:
+  `label` (aus `children`/`name` abgeleitet), `value`/`onChange` (controlled/uncontrolled-
+  Disambiguierung), `invalidMessage` (Default-Text-Fallback), `minLength`/`maxLength`
+  (String→Number-Koerzion), `children`/`id`/`name`/`type` (Pflichtfelder statt optional), und
+  `popover` (eigene DBTooltip-Uebersetzung -- kollidiert sonst mit DBInputs nativem
+  Popover-API-Attribut gleichen Namens).
+- Rein typseitig, keine Laufzeit-Aenderung: Verifiziert `bunx tsc --noEmit` (0 Fehler ueber alle
+  17 Aufrufstellen + Tests), `bun run lint` (0 Fehler), `bun run test` (2119 pass, unveraendert),
+  `bun run build`. Puppeteer: Reset-Passwort-Modal identisches Verhalten wie vor dem Refactor.
+
+## 2026-09-13 (122)
+
+### fix (MyInput: doppelte Invalid-Feedback-Anzeige bei Passwortfeldern)
+
+- `MyInput.tsx` rendert den manuellen Feedback-`<span>` (kritisch eingefärbt) nur noch, wenn
+  `invalidFeedbackText` NICHT gesetzt ist. Vorher zeigte er den Text dauerhaft (unabhängig vom
+  Validity-Status), während `DBInput`s eigenes `invalidMessage` (bereits über `invalidFeedbackText`
+  gespeist) denselben Text zusätzlich nativ nur bei ungültiger Eingabe anzeigte -- Duplikat.
+  Betraf die 3 Passwort-Modals (`createModalResetPassword`, `createModalNewUser`,
+  `createModalChangePassword`).
+  `createEditorModalEWT.tsx`s Zeitfehler-Validierung (übergibt nur `invalidFeedbackId`, keinen
+  Text, befüllt den leeren Span zur Laufzeit per `querySelector(...).textContent = ...` für eigene
+  Geschäftsregeln) bleibt unverändert funktionsfähig.
+- Audit aller 11 `My*`-Wrapper-Komponenten (`MyCheckbox`, `MyDivModal`, `MyEditorFooter`,
+  `MyFormModal`, `MyHelpModal`, `MyInput`, `MyModalBody`, `MyModalHeader`, `MySelect`,
+  `MyShowElement`, `MyShowFooter`) auf denselben Duplikat-Fehlertyp: kein weiterer Fund. Keine
+  Komponente ist ein direkt durch die zugrunde liegende `DB*`-Komponente ersetzbarer, wertloser
+  Wrapper -- jede fasst entweder mehrere Komponenten zusammen oder löst ein von DB-UX nicht
+  angebotenes Problem (React-19-Controlled/Uncontrolled-Disambiguierung ohne `onChange`,
+  Ref-Merging, ID-Synchronisation).
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` (2119 pass),
+  `bun run build`. Puppeteer: Reset-Passwort-Modal zeigt den Span nicht mehr, native
+  `invalidMessage` erscheint weiterhin bei ungültiger Eingabe; EWT-Editier-Modal zeigt alle 8
+  `zeitfehler-*`-Spans weiterhin (leer) vorhanden.
+
+## 2026-09-13 (121)
+
+### fix (EWT-Add-Modal: "Berechnen" als Checkbox, "Büro"-Hinweis abgesetzt)
+
+- `createAddModalEWT.tsx`: "Berechnen" von `MyCheckbox` (rendert `DBSwitch`, ein Schalter) auf
+  `DBCheckbox` (echtes Häkchen) umgestellt -- User-Wunsch. `defaultChecked` statt `checked`
+  (kein `changeHandler` vorhanden, sonst haette React 19 den Schalter auf den Ausgangswert
+  zurueckgesetzt, siehe `MyCheckbox.tsx`s Kommentar zum selben Muster).
+- "Büro"-Checkbox: Erklaerungstext `(Keine Fahrt zu einem Einsatzort)` auf eigene Zeile mit
+  Abstand. Ein einfaches `<br/>` reichte NICHT, da das Switch-Label `display: flex;
+flex-direction: row` ist -- Kinder liegen als Flex-Items nebeneinander, unabhaengig vom
+  `<br/>`. Fix: Text in einen `<span>` gebuendelt (ein Flex-Item, darin normaler Textfluss),
+  `<small className="d-block mt-1">` fuer Zeilenumbruch + Abstand. Zusaetzlich `mt-2` an der
+  Büro-Checkbox-Zeile fuer mehr Abstand zur "Berechnen"-Zeile darueber.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` (2119 pass),
+  `bun run build`. Puppeteer-Screenshot: "Berechnen" zeigt Haken statt Schalter, "Büro" zweizeilig
+  mit sichtbarem Abstand.
+
+## 2026-09-13 (120)
+
+### fix (Datumsfeld "Anfang" in "Neue Bereitschaft eingeben" nicht aenderbar)
+
+- `createAddModalBereitschaftsZeit.tsx`: `datumInput()`/`createDateInputElement()`/
+  `createSonderDateInputElement()` setzten `value={...}` (React "controlled") auf Feldern
+  (`bA`, `bE`, `nA`, `nE`, `sonderVon`, `sonderBis`), deren Folgewert tatsaechlich imperativ per
+  `input.value = ...` (`applyBereitschaftsVorgabe`/`updateBereitschaftsDatum`) gesetzt wird --
+  ohne begleitenden Re-Render sprang der Wert nach jeder Nutzer-Aenderung zurueck (die
+  abgeleitete Zeit aktualisierte sich trotzdem, da rein imperativ). Fix: alle drei Stellen auf
+  `defaultValue` umgestellt.
+- Alt-Bug (Phase J5/J8), unabhaengig vom Phase-N-Umbau; beim Verifizieren der Shell-Konsolidierung
+  aufgefallen.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` (2119 pass),
+  `bun run build`. Puppeteer: Datum auf einen vom Default abweichenden Wert geaendert, bleibt
+  nach dem Event und nach Wartezeit erhalten, Ende-Datum korrekt nachgezogen.
+
+## 2026-09-13 (119)
+
+### refactor (Phase N, Slice 1: App-Shell-Konsolidierung)
+
+- **`src/ts/App.tsx` (neu):** die gesamte Shell (Header, Tabs, Footer) ist jetzt ein einziger
+  React-Baum statt fuenf separater `mount()`-Aufrufe. `AppHeader`/`AppFooter`/`StartTab`/
+  `BerechnungTab`/`EinstellungenTab` sind echte JSX-Kinder; `#appHeaderRoot`/`#appFooterRoot`
+  entfallen (nirgends sonst referenziert). `index.html` reduziert auf `<noscript>` +
+  `<div id="app">`; `main.ts` → `main.tsx`.
+- `tabController`, `autoSave`, `featureLifecycleRegistry`/`syncFeatureTabs` und der
+  Admin-Sichtbarkeits-Toggle unveraendert -- sie finden ihre Elemente per `querySelector`,
+  unabhaengig davon ob JSX oder statisches HTML sie erzeugt hat.
+- Root-Mount laeuft ueber `mount()` (`infrastructure/ui/reactRoot.ts`), NICHT ueber ein direktes
+  `createRoot().render()`: Letzteres committet das DOM zwar synchron, plant `useEffect`-Hooks
+  aber nur asynchron ein -- ein erster Versuch damit brach den Boot-Ablauf (`EinstellungenTab`s
+  Tabellen-Effekt lief noch nicht, als der naechste Boot-Schritt schon zugriff). `mount()`s
+  `flushSync` erhaelt die bestehende Ordering-Invariante aus `main.ts` unveraendert.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler), `bun run test`
+  (2119 pass), `bun run build`. Puppeteer ohne Backend: kompletter Boot-Log identisch zum
+  Vor-Umbau-Stand, Tab-Wechsel, Hash-Sync ueber vollen Reload, `#start.active > .schwelle`
+  weiterhin erfuellt.
+
+## 2026-09-13 (118)
+
+### fix (Konsolen-Fehler: flushSync-Warnung, fehlende key-Props, PWA-Info-Log)
+
+- **`flushSync was called from inside a lifecycle method`** (in Phase M0/M1 bewusst
+  zurueckgestellt): `mount()` (`infrastructure/ui/reactRoot.ts`) rendert seit Phase M
+  verschachtelt -- `CustomTable.draw()` mountet selbst, und aus einer so gerenderten Tabelle
+  heraus oeffnet ein Klick per `showModal()` das naechste `mount()`. Fix: ein Modul-Flag, das
+  waehrend des aeusseren `flushSync` gesetzt ist -- ein `mount()`-Aufruf waehrenddessen rendert
+  ohne eigenes `flushSync`, React arbeitet die Sync-Lane beim Verlassen des aeusseren
+  `flushSync` mit ab. Ref-Vertraege der inneren Aufrufer bleiben erhalten (per Puppeteer
+  verifiziert).
+- **Fehlende `key`-Props:** `createEditorModalBereitschaftsZeit.tsx` (4 Stellen) und
+  `createEditorModalBereitschaftsEinsatz.tsx` (5 Stellen) mappten Spalten-Listen ohne `key` --
+  ergaenzt (`key={column.name}`, bei der `LRE`-Fragment-Stelle `<Fragment key={column.name}>`).
+- **`main.ts:77 undefined`-Log:** `console.log(pwaInfo)` lief ungefiltert; jetzt nur in Dev
+  (`import.meta.env.DEV`), mit Fallback-Text, wenn `pwaInfo` fehlt.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler), `bun run test`
+  (2119 pass), `bun run build`. Puppeteer (ohne Backend, `VorgabenU`-Fixture aus
+  `test/mockData.ts` uebernommen, Bereitschaft-Tab per direktem Modul-Import gemountet): Konsole
+  beim Login/Tab-Mount und beim Oeffnen des Bearbeiten-Modals sauber, keine `flushSync`- oder
+  `key`-Warnung mehr, Formularfelder korrekt befuellt.
+
+## 2026-09-12 (117)
+
+### fix (Impressum-Schliessen-Knopf, Theme-Switcher im Burger-Menue)
+
+- **Impressum-Schliessen-Knopf, zwei unabhaengige Ursachen:**
+  1. `ImpressumDialog.tsx`s Fusszeilen-Button hatte keinen `onClick` (Ueberbleibsel, das
+     faelschlich auf `data-action="close"` als DB-Drawer-eigenen Delegationsmechanismus vertraute
+     -- der greift bei `<DBButton>` durchaus, siehe Punkt 2). Fix: `onClick={onClose}`.
+  2. **Der eigentliche Blocker:** `styles.scss` hatte `footer { pointer-events: none; }` als
+     Tag-Selektor (fuer die eigene fixierte `.app-footer`-Leiste gedacht) -- das traf aber JEDES
+     `<footer>`-Element im Dokument, auch `DBDrawerFooter` (rendert selbst ein `<footer
+class="db-drawer-footer">`). Der Knopf war dadurch optisch vorhanden, aber fuer echte
+     Mausklicks unerreichbar (`elementFromPoint()` an seiner Position lieferte den
+     `.db-drawer-container` dahinter). Ein per JS ausgeloester Klick (Test, Screenreader) hatte
+     das Problem verdeckt, weil er kein Hit-Testing macht. Fix: Selektor auf `.app-footer`
+     beschraenkt.
+- `ThemeSwitcher.tsx`: Klick auf den Umschalter im mobilen Burger-Menue schloss die komplette
+  Navigations-Schublade statt nur das Design-Untermenue zu oeffnen. Ursache (im DB-UX-Quellcode
+  verifiziert, `header.js`): `DBHeader`s Drawer schliesst bei jedem Klick, dessen Ziel
+  `.closest('.db-navigation-item')` matcht; der Umschalter-Knopf steckt in genau so einem `<li>`
+  und rief nie `stopPropagation()`. Fix: `stopPropagation()` im Umschalter- und in den
+  Design-Options-Klick-Handlern. Nur die mobile Drawer-Kopie war betroffen (die Desktop-Kopie
+  der Navigation hat keinen solchen Klick-Listener).
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler), `bun run test`
+  (2119 pass), `bun run build`. Puppeteer mit ECHTEN Maus-Klicks (`page.mouse.click`, nicht
+  `.click()` -- Lehre aus diesem Fund): Impressum oeffnet/schliesst korrekt per Mausklick auf den
+  Fusszeilen-Knopf; Theme-Umschalter im Drawer expandiert das Untermenue, Drawer bleibt offen,
+  Themenwahl greift, Drawer bleibt weiterhin offen.
+
+## 2026-09-12 (116)
+
+### refactor (Phase M0/M1: CustomTable-Rendering nach React)
+
+- `customTableRender.ts` (333 Zeilen, Vanilla-DOM) geloescht → `CustomTableView.tsx`
+  (`infrastructure/table/`, React). `CustomTable.ts`s `draw()`/`drawHeader()`/`drawFooter()`/
+  `drawRows()` rendern jetzt einheitlich per `mount(this.$el, <CustomTableView table={this} />)`
+  (synchron via `flushSync`, exakt der bisherige Render-Vertrag). Betrifft alle 6
+  `createCustomTable()`-Instanzen gleichzeitig (`tableBZ`/`tableBE`/`tableE`/`tableN`/`tableEA`/
+  `tableVE`) — `Row.ts`/`Rows.ts`/`Column.ts` (reine Datenklassen) unveraendert, `el.instance`-
+  Vertrag fuer `savePipeline.ts`/`overlapGuard.ts`/`changeTracking.ts` unangetastet.
+- `tr.data = row`-Verknuepfung (von `attachBerechnenToggleListeners.ts`, EWT, extern gelesen)
+  per `ref`-Callback nachgebildet; mobiler Zeilen-Klick-Handler korrekt auf `event.view?.
+innerWidth` umgestellt (statt globalem `window.innerWidth`).
+- `column.html`-Spalten (EWT: `Schicht`/`berechnen`) liefern jetzt JSX direkt statt HTML-Strings
+  fuer `dangerouslySetInnerHTML` — sauberer fuer die interaktive `berechnen`-Checkbox.
+- Zeilen-Aktions- und Fusszeilen-Knoepfe sind jetzt echte `<DBButton>` statt der
+  Handmarkup-Bruecke `erzeugeDbButton`/`erzeugeDbButtonAusLook`; `infrastructure/ui/dbButton.ts`
+  auf den weiterhin benoetigten `DbButtonLook`-Typ eingedampft.
+- Bekannte, dokumentierte Nebenwirkung: React-Dev-Warnung „flushSync was called from inside a
+  lifecycle method" beim Klick auf Zeilen-Aktionsknoepfe (alle 6 Tabellen instanziieren
+  `createCustomTable()` in ihrem `useEffect()`) — nicht fatal, keine Testfehlschlaege, keine
+  beobachtbare Fehlfunktion, bewusst nicht behoben (siehe `plan-react-umbau.md`).
+- Verifiziert: volle Suite (2119 Tests) + Puppeteer fuer alle 6 Instanzen (`tableEA`, `tableE`/
+  EWT, `tableN`/Neben, `tableBZ`+`tableBE`/Bereitschaft, `tableVE`/Einstellungen), Hell+Dunkel.
+
+## 2026-09-12 (115)
+
+### feat (Fahrzeiten: Sortieroptionen)
+
+- `FahrzeitenPanel.tsx`: Spaltenkoepfe "Tätigkeitsstätte"/"Beschreibung" sind jetzt klickbare
+  Sortier-Knoepfe (Icon-Konvention aus `CustomTable` uebernommen: `arrows_vertical` neutral,
+  `arrow_up`/`arrow_down` aktiv; erneuter Klick auf dieselbe Spalte dreht die Richtung um).
+  Sortiert den bestehenden State einmalig per Klick um (kein Live-Sort waehrend der Eingabe),
+  ueber dieselbe `fahrzeitPanelState`-Bridge persistiert wie die manuellen Auf/Ab-Knoepfe.
+- Test ergaenzt (`FahrzeitenPanel.test.tsx`): auf-/absteigende Sortierung je Spalte.
+
+## 2026-09-12 (114)
+
+### refactor (Phase L3: Einstellungen-Tab nach React, Phase L abgeschlossen)
+
+- Toolbar, Jahr-Formular und alle 7 Accordion-Items (Persönliche Daten, Biometrie & Geräte,
+  Arbeitszeit, Bereitschaft, Fahrzeiten, Einstellungen & Bereiche, Zulagen) → `EinstellungenTab.tsx`
+  (`infrastructure/ui/`) + `PersoenlicheDatenPanel.tsx` (`Einstellungen/components/`, ausgelagert
+  wegen 500-Zeilen-Regel), direkt in die `#Einstellungen`-Tab-Pane gemountet (kein Wrapper-Div,
+  analog L1/L2).
+- **Kernerkenntnis:** anders als der urspruengliche Plan vermutete, liegt der Aufwand NICHT in
+  einer Entkopplung von `document.querySelector`-Reads — `saveEinstellungen.ts`,
+  `generateEingabeMaskeEinstellungen.ts`, `Einstellungen/index.ts`, `selectYear.ts` u. a. lesen/
+  schreiben ausschliesslich per `#Id`-Selektor, unabhaengig von React oder statischem HTML. Ein
+  reiner 1:1-Markup-Port genuegte; keine einzige dieser Dateien musste angefasst werden.
+- Einzige echte Korrektur: `<select>` (`Bundesland`/`TB`) nutzten `<option selected>` (in React
+  wirkungslos) → auf `defaultValue` am `<select>` umgestellt; `<input type="range" value="9">`
+  analog auf `defaultValue` (vermeidet React-"unkontrolliert→kontrolliert"-Warnung).
+- Puppeteer-verifiziert (Hell/Dunkel-Screenshot je Accordion-Panel, Mobile-Viewport): alle Panels
+  funktionsfaehig, keine bestehende Test-Datei musste angepasst werden.
+- **Phase L (L1–L3) damit vollstaendig abgeschlossen.**
+
+## 2026-09-12 (113)
+
+### refactor (Phase L2: Berechnung-Tab-Huelle nach React)
+
+- Titel, Monats-Navigation und `db-table`-Geruest (`index.html`) → `BerechnungTab.tsx`
+  (`infrastructure/ui/`), direkt in die `#Berechnung`-Tab-Pane gemountet (kein Wrapper-Div,
+  analog L1/`StartTab`).
+- `#tbodyBerechnung` (bisher `generateTableBerechnung.ts` per `innerHTML`-Strings befuellt) →
+  `BerechnungTableRows.tsx` (`Berechnung/components/`), eigener React-Root direkt auf dem
+  `<tbody>`-Element (analog `BerechnungMobileCards`/`#berechnungMobileCards` — `BerechnungTab.tsx`
+  rendert beide Container nur als leere Blaetter, ruehrt ihre Kinder nie an).
+  `generateTableBerechnung.ts` dadurch von ~90 auf ~25 Zeilen geschrumpft: nur noch Daten
+  berechnen und beide React-Roots mounten. Toter `nullParser`-Helper (`'&nbsp;'`-Sentinel fuers
+  alte `innerHTML`-Bauen) mit entfernt.
+- `berechnungMonatsFenster.ts` (Spalten-Fenster, Prev/Next-Navigation) unveraendert: liest
+  `td[data-monat]`-Zellen generisch per `querySelectorAll`, unabhaengig von React oder
+  `innerHTML`; bleibt nach dem `mount()`-Aufruf synchron gueltig (`flushSync`, wie bei
+  Header/Footer).
+- Bestehende Tests (`Berechnung.test.ts` inkl. `innerHTML`-Serialisierungs-Assertions,
+  `Berechnung.monatsFenster.test.ts`) liefen ohne Anpassung durch — die React-gerenderten
+  Zellen serialisieren identisch zu den alten `innerHTML`-Strings.
+- Puppeteer-verifiziert (Hell/Dunkel-Screenshot, Mobile-Karten-Ansicht): 13 Zeilen,
+  Gruppen-Trennlinien, Waehrungsformat, `Summe Gesamt` exakt wie im Unit-Test.
+
+## 2026-09-12 (112)
+
+### refactor (Phase L1: Start-Tab nach React)
+
+- Start-Tab-Markup (`index.html`: Willkommen-Ueberschrift + Hilfe-Knopf, 3 Info-Karten,
+  Schnellzugriff-Block, Ladeanzeige, DB-Schwelle) → `StartTab.tsx` (`infrastructure/ui/`), rein
+  praesentational. Verkabelung bleibt bewusst extern (`auth/index.ts`,
+  `updateTabVisibility.ts`, `setLoading.ts`/`clearLoading.ts`) — alle IDs/Klassen 1:1
+  uebernommen, kein externer Aufrufer musste angefasst werden. Toter auskommentierter
+  „Neuerungen"-Block beim Portieren entfernt.
+- React mountet direkt in die `#start`-Tab-Pane hinein (kein separates Root-Div): `styles.scss`s
+  `#start.active > .schwelle`-Kindselektor (Fusszeilen-buendige Platzierung per
+  `margin-block-start: auto`) verlangt die Schwelle als direktes Kind — ein Zwischen-Div hätte
+  den Selektor gebrochen (beim ersten Versuch live beobachtet: Schwelle riesig und falsch
+  positioniert). `class="tab-pane fade show active"` bleibt unveraendert Sache von
+  `tabController.ts`.
+- Puppeteer-verifiziert (Hell/Dunkel-Screenshot, Desktop + Mobile-Viewport): Start-Tab rendert
+  fehlerfrei, Schwelle korrekt an der Fusszeile, Deep-Link `#EWT` weiterhin funktionsfaehig.
+
+## 2026-09-12 (111)
+
+### docs (Phase K7: Cleanup + Doku, Phase K abgeschlossen)
+
+- Grep-Gate `data-dialog-target|prepend\(navigation\)` liefert 0 echte Treffer (nur zwei
+  historische Doku-Kommentare) — tote Dateien (`navDrawer.ts`, `NavDrawerShell.tsx`,
+  `DBColorToggler.ts`) bereits in K2/K5 gelöscht, `dbDialog.ts` bleibt (weiter live für
+  `confirmDialog`/`signaturDialog`/`errorHandling`).
+- `frontend/CLAUDE.md`: Tab-basierte-SPA- und Hybrid-Rendering-Absätze aktualisiert — App-Shell
+  (Header/Footer) ist jetzt React, nicht mehr Teil der statischen Hauptseite.
+- `.claude/skills/architektur/SKILL.md`: App-Einstiegspunkte, State-Management (
+  `useSyncExternalStore`-Modul-Stores dokumentiert statt „kein reaktives State Management") und
+  Navigation-Absatz (DBHeader-Doppel-Rendering, `activeTabStore`) aktualisiert.
+- `tasks/plan-react-umbau.md`: Phase-K-Abschnitt auf „abgeschlossen" markiert mit
+  Ergebnis-Zusammenfassung.
+
+## 2026-09-12 (110)
+
+### refactor (Phase K6: `tabController` -> React-State)
+
+- Aktiver Tab der Hauptnavigation (`#tabContent`-Gruppe) als `useSyncExternalStore`-Modul-Store
+  (`activeTabStore.ts` + `useActiveTab.ts`, analog `navigationVisibleStore`/
+  `useNavigationVisible`). `AppHeader.tsx` berechnet `aria-selected`/`tabIndex`/
+  `className="active"`/`DBNavigationItem`s `active`-Prop (→ `data-active` am `<li>`) reaktiv
+  daraus statt aus `tabController.ts`s DOM-Handschrieb — der entfällt in `zeigeTab()` für die
+  Hauptgruppe entsprechend.
+- Bewusst NUR die Hauptgruppe: Admins Unternavigation (`admin-pane-*`) ist eine eigene,
+  unabhängige Tab-Gruppe (kann parallel einen anderen aktiven Tab haben) und bleibt am alten,
+  DOM-schreibenden Mechanismus im `else`-Zweig von `zeigeTab()`.
+- Pflicht-Kompatbrücke unangetastet: `data-tab-target`, `tab:shown`-`CustomEvent` (`document` +
+  bubblend), `zeigeTab`/`zeigeTabAusHash`/`setzeTabSichtbar`/`aktiverTab`-Exporte unverändert.
+  `.tab-pane`-Panels bleiben statisches HTML (Phase L), ihr `.active`/`.show`-Wechsel läuft
+  weiter imperativ.
+- A11y: roving `tabindex` bleibt korrekt — "Berechnung" (Default-Fokusziel bei `aktiverTab ===
+null`) fällt jetzt auf `tabIndex={aktiverTab === null || aktiverTab === 'Berechnung' ? 0 : -1}`
+  zurück statt fest auf `0`.
+- `ui.tabController.test.ts`: Assertions auf `aria-selected`/`data-active` per
+  `document.querySelector` durch `getAktivenTab()`-Prüfung ersetzt; `beforeEach` resettet den
+  Modul-Singleton-Store.
+- Puppeteer-verifiziert: Deep-Link `#EWT` setzt Attribute korrekt auf BEIDEN DOM-Kopien
+  (Desktop + Drawer) gleichzeitig; Klick auf `#berechnung-tab` schaltet reaktiv auf beiden
+  Kopien um; initial ohne Login/Hash zeigt `#berechnung-tab` den Fallback-Fokus-Zustand.
+
+## 2026-09-12 (109)
+
+### refactor (Phase K5: Header/Brand/Navigation nach React)
+
+- `AppHeader.tsx` ersetzt das handgeschriebene `db-header`-Markup vollständig mit `DBHeader` +
+  `DBNavigation` + `DBNavigationItem` (Marke bewusst handgeschrieben, kein `DBBrand` — das
+  rendert ein `<div>`, kein `<a>`). `navDrawer.ts`/`NavDrawerShell.tsx` (Phase K4) vollständig
+  gelöscht — `DBHeader` bringt den Drawer eingebaut mit.
+- **Kernfund:** `DBHeader` rendert seine `children` zweimal gleichzeitig im DOM (Desktop-Kopfzeile
+  - Drawer-Kopie), kein Umzugs-Kniff wie zuvor. Bricht jeden `querySelector('#id')`-Aufrufer, der
+    genau ein Element erwartet:
+  * `auth/index.ts`: `#admin-tab`-Click-Listener + `#admin`-Toggle auf `querySelectorAll`
+    umgestellt.
+  * `#navmenu`/`#btn-navmenu` (Sichtbarkeits-Toggle bei Login/Logout/Session-Restore) gibt es
+    unter `DBHeader` nicht mehr — ersetzt durch `navigationVisibleStore.ts`/
+    `useNavigationVisible.ts`. Burger-Knopf bleibt immer sichtbar (keine Versteck-Option in
+    `DBHeader`).
+  * `tabController.ts`: Fokus-Lookup in `zeigeTab()` bevorzugt jetzt die sichtbare Kopie.
+  * `ThemeSwitcher` (Phase K2) ist jetzt direkt eingebettet statt separat gemountet, dadurch
+    ebenfalls dupliziert — `useColorMode` von lokalem `useState` auf modul-globalen Store
+    umgebaut (sonst unsynchronisierte Theme-Anzeige zwischen den Kopien), feste Ids auf `useId()`
+    umgestellt.
+- **Zweiter Fund:** ES-Modul-Importe werten vor dem Top-Level-Code des importierenden Moduls aus
+  — `auth/index.ts`s `registerAppStartTask`-Aufruf landete dadurch vor dem Header/Footer-Mount in
+  der Warteschlange, obwohl er im Quelltext später steht. `auth`s Task griff auf `#Monat` zu
+  (jetzt Teil von `AppHeader`), bevor gemountet wurde, warf und stoppte die Restwarteschlange.
+  Fix: Header/Footer-Mount + `initTabController()` laufen jetzt synchron beim Modul-Import statt
+  als Queue-Eintrag.
+- **Drei weitere Bugs beim Live-Test gefunden:**
+  1. `{sichtbar && <DBNavigation>}` (bedingtes Rendern) war der falsche Ansatz — die Navigation
+     existierte bis zum Login gar nicht im DOM, `updateTabVisibility()`/Admin-Toggle/Klick-Listener
+     liefen davor ins Leere und nie wieder. Fix: `<DBNavigation className={sichtbar ? undefined :
+'d-none'}>`, immer gerendert.
+  2. `updateTabVisibility.ts` nutzte `querySelector` (nur eine Kopie) — Bereitschaft/EWT/Neben/EA
+     blieben in der Drawer-Kopie versteckt. Auf `querySelectorAll` umgestellt.
+  3. `d-lg-none`/`d-lg-inline` an drei Stellen (`#startSchnellzugriff`, `AppHeader.tsx`s
+     Einstellungen-/Admin-Icon-Swap, `ThemeSwitcher.tsx`) zeigten auf den falschen Breakpoint —
+     `DBHeader` wechselt bei `64em`/1024px (`md`), nicht `lg` (1440px seit der
+     Breakpoint-Vereinheitlichung in J0). Auf `d-md-*` umgestellt.
+  4. Monatswechsel-`<select id="Monat" required>` bekam durch DB-UXs automatische
+     `:user-valid`-Erfolgsfaerbung einen grünen Rahmen — `data-custom-validity="neutral"`
+     ergänzt (DB-UXs Escape-Hatch dafür); vorbestehend, durch die anderen K5-Fixes erst
+     zuverlässig sichtbar geworden.
+
+## 2026-09-12 (108)
+
+### refactor (Phase K4: NavDrawer-Hülle nach React)
+
+- `<dialog id="navdrawer">` als `NavDrawerShell.tsx` neu gebaut — bewusst uncontrolled (kein
+  `open`-Prop/State), `navDrawer.ts` steuert den resultierenden `<dialog>` weiterhin direkt per
+  `showModal()`/`close()`; der Navigationsinhalt-Umzug bleibt unverändert (Phase K5).
+- `onClose={schliesseNavSchublade}` fängt zwei `DBDrawer`-Eigenheiten ab, die sonst Escape und
+  den Schließen-Knopf lahmgelegt hätten (`preventDefault()` bzw. `stopPropagation()` in
+  `DBDrawer`s eigenem Handler).
+- `DBDrawerHeader` ersetzt das manuelle `aria-label="Menü"` durch automatisches
+  `aria-labelledby` (verlinkt auf den Titel "Nebengeld").
+
+## 2026-09-12 (107)
+
+### refactor (Phase K3: Impressum-Dialog nach React)
+
+- `<dialog id="impressum">` als `ImpressumDialog.tsx` neu gebaut, gerendert neben `DBFooter` in
+  `AppFooter.tsx` (teilt den React-State mit dem auslösenden Knopf). `data-dialog-target`/
+  `dbDialog.ts`-Mechanismus dadurch für diesen Dialog abgelöst.
+- `initStatischeDialoge()` (`dbDialog.ts`) war danach ohne verbleibenden Aufrufer — entfernt,
+  ebenso der zugehörige `main.ts`-Code (inkl. der alten Telefon/Mail-DOM-Verschleierung, jetzt
+  Teil der Komponente).
+- Nutzt die echten `DBDrawerHeader`/`DBDrawerFooter`-Slots (neuer Dialog, keine Altlast) statt
+  der `MyModalHeader`/`dialog-koerper`/`dialog-fuss`-Konvention der bestehenden Dialoge.
+
+## 2026-09-12 (106)
+
+### fix (Berechnung-Tabelle: komplette Ansicht seit J0 nie mehr erreichbar)
+
+- `berechnungMonatsFenster.ts`: Viewport-Breakpoint-Override (`d-xl-table-cell`/`d-xl-none`,
+  Bootstrap-Relikt bei "xl" = 1200px) entfernt. Nach der Breakpoint-Vereinheitlichung (J0) auf
+  die DB-UX-Skala verschob sich "xl" auf 1920px — der Container (`.mitte`) deckelt aber
+  unabhängig vom Viewport auf ~1029px Inhaltsbreite, weshalb die komplette 12-Monats-Ansicht
+  zwischen 1200px und 1920px Viewport (praktisch jeder Desktop/Laptop) nicht mehr erreichbar war.
+- Sichtbarkeit läuft jetzt rein über die vorhandene breitenbasierte JS-Berechnung
+  (`ermittleFensterGroesse`), kein Viewport-Container-Mismatch mehr möglich.
+- `MONAT_MIN_PX` von `80` auf `70` (`--db-sizing-xl`, Functional-Density) — DB-UX-Token statt
+  Handwert, einzige Stufe, die 12 Spalten noch in den gedeckelten Container passen lässt.
+
+## 2026-09-12 (105)
+
+### refactor (Phase K2: Theme-Umschalter nach React)
+
+- `#bd-theme`/`#bd-theme-menu` als `ThemeSwitcher.tsx` neu gebaut, `DBColorToggler.ts` gelöscht.
+  Neuer Hook `useColorMode.ts` kapselt Storage-Key `theme` und die `data-mode`/`color-scheme`-
+  Logik.
+- **Bugfix beim Umbau:** das Anfangstheme wurde bisher durch eine Operator-Präzedenz-Falle
+  (`getStoredTheme() || matches ? 'dark' : 'light'`) bei JEDEM Laden auf `'dark'` gesetzt,
+  unabhängig von gespeichertem Theme oder OS-Präferenz — nur der explizite Button-Klick war
+  korrekt. Betraf jeden Erstbesuch der App.
+
+## 2026-09-12 (104)
+
+### chore (DB-UX-Pakete auf 5.4.0)
+
+- `@db-ux/core-components`, `@db-ux/core-foundations`, `@db-ux/react-core-components`,
+  `@db-ux/agent-cli`, `@db-ux/core-eslint-plugin`, `@db-ux/core-stylelint` von 5.3.0 auf 5.4.0.
+  `@db-ux/db-theme` unverändert (6.2.0, kein Update verfügbar).
+- `AppFooter.tsx` (Phase K1) auf die damit neu hinzugekommenen `DBFooter`/`DBFooterMeta`
+  umgestellt statt Hand-Markup; `styles.scss`: `footer > .impressum` zu `footer .impressum`
+  (Nachfahre statt Kind, wegen der neuen Verschachtelung durch `DBFooterMeta`).
+
+## 2026-09-11 (103)
+
+### refactor (Phase K1: Fusszeile nach React)
+
+- `<footer class="app-footer">` (Copyright-Zeile + Impressum-Button) als `AppFooter`-Komponente
+  (`infrastructure/ui/AppFooter.tsx`) neu gebaut, gemountet über `reactRoot.mount()` in
+  `main.ts`. Erster React-Slice der App-Shell-Migration (Phase K).
+- Copyright-Jahr/-Version-Berechnung (`main.ts:setImpressumAndCopyright`) in den
+  Komponenten-Render verlagert; die Funktion heißt jetzt `setImpressum` und kümmert sich nur
+  noch um Telefon-/Mail-Verschleierung im Impressum-Dialog.
+- Impressum-Button bleibt bewusst natives `data-dialog-target="impressum"` (jetzt als
+  `DBButton`) — der Dialog selbst hängt bis Phase K3 am bestehenden `dbDialog.ts`-Mechanismus.
+
+## 2026-09-11 (102)
+
+### docs (Phase J9: Cleanup + Doku -- Phase J abgeschlossen)
+
+- `npx @db-ux/agent-cli .` neu generiert -> `.github/copilot-instructions.md` unverändert
+  (bereits aktuell für 5.3.0).
+- Tote `db-*`-Regeln in `styles.scss`/`utilities.scss` geprüft: keine Bootstrap-Ära-Leichen
+  gefunden.
+- `.claude/skills/{architektur,coding-konventionen}/SKILL.md`: veraltete `MyButton`-Beispiele
+  (gelöscht in J6b) und ein Preact-Relikt (`FunctionalComponent<Props>` statt `FC<Props>`)
+  korrigiert; Class-Component-Beispiel zeigte fälschlich `MyInput` (längst `FC`) — durch den
+  tatsächlich einzigen verbliebenen Class-Component (`PasswordStrengthMeter.tsx`) ersetzt.
+  Neuer Abschnitt „DB-UX-Komponenten zuerst" in `coding-konventionen` dokumentiert die
+  J1-J8-Konventionen.
+- `graphify update .` gelaufen (3166 Nodes, 8829 Edges, 242 Communities).
+- Abschließendes Grep-Gate über den ganzen `src/ts/`-Baum: keine unerwarteten rohen
+  `db-button`/Checkbox/Radio-Instanzen — nur bereits dokumentierte Ausnahmen
+  (`VorgabenBWeekRangeEditor.tsx`, `EwtTab.tsx`s CustomTable-Zellparser,
+  `createEditorModalVE.tsx`s versteckte Nwoche-Datenträger, `AdminProfileTemplateContentEditor.tsx`s
+  DBTag-Checkbox-Muster) sowie `<button role="tab">` in `db-navigation`-Kontexten (anderes
+  DB-UX-Muster, nie im Umfang).
+
+**Phase J (J0-J9) damit vollständig abgeschlossen.**
+
+## 2026-09-11 (101)
+
+### refactor (Phase J8: `DbFeld`/`DbAuswahl` auf `DBInput`/`DBSelect` umgestellt)
+
+- Innenleben von handgeschriebenem `<div class="db-input">`+`<label>`+`<input>` auf echtes
+  `DBInput`/`DBSelect` umgestellt. Aufrufstellen-API unverändert — alle 36/28 Aufrufstellen
+  bleiben unangetastet.
+- Drei API-Lücken von `DBInput`/`DBSelect` per neuen Helfern in `dbFeldHelfer.ts` geschlossen
+  (`useLayoutEffect`, wie schon `useSofortigeId` aus J1): `useSofortigeKlasse` (`feldKlasse`
+  hat keine Entsprechung — `className` landet nur an der Hülle), `useSofortigeHuelleStyle`
+  (`huelleStyle` über Props nicht erreichbar — `style` landet am inneren Feld; ein zusätzlicher
+  Wrapper hätte `.feldgruppe > .db-input`/`.db-select`, styles.scss:61-73, gebrochen, weil die
+  Hülle dann kein direktes Kind mehr wäre — stattdessen `ref.current.parentElement` direkt
+  gestylt).
+- `db-ux/input-type-required`/`select-requires-options`: erwartete False-Positives (Props/
+  Children kommen von der Aufrufstelle) — per `eslint-disable-next-line` entschärft, exakt das
+  etablierte Muster aus `MyInput.tsx`/`MySelect.tsx`.
+- Verifikation: `typecheck`/`lint` 0/21 · `lint:css` 0/84 · `TZ=Europe/Berlin test` 2125/0
+  (alle Aufrufstellen unverändert grün, keine Testanpassung nötig) · `build` grün. Puppeteer:
+  `.feldgruppe`-Direct-Child-Selektor trifft weiterhin zu, huelleStyle/feldKlasse/dicht/id/
+  Label-Verknüpfung/ungueltig-Validierung/DbAuswahl-Optionen alle korrekt.
+
+## 2026-09-11 (100)
+
+### refactor (Phase J7: restliches `My*`/`core/`-Markup auf `DBButton`)
+
+- `MyModalHeader.tsx` (Hilfe-/Schließen-Icon-Buttons, `noText`+`DBTooltip`), `MyHelpModal.tsx`
+  (Schließen-Button, „Ersteinrichtung erneut öffnen"-Button), `createOnboardingGuideModal.tsx`
+  (Minimieren-Toggle `noText`+`DBTooltip`, Zurück/Überspringen/Fertig/Weiter),
+  `ConflictReviewBanner.tsx` (Übernehmen-Button, bestehendes lokales `isSaving`-Spinner-Muster
+  wie `AdminUserTable.tsx` übernommen). `openHelpModal.tsx` enthielt keine eigenen Buttons.
+- Keiner der Buttons hat einen `setLoading`-Bezug (kein `id`-Attribut, das an
+  `setLoading`/`clearLoading` hängt) — einfacher `DBButton` reicht überall.
+- Verifikation: `typecheck`/`lint` 0/21 · `lint:css` 0/84 · `TZ=Europe/Berlin test` 2125/0 ·
+  `build` grün. Grep-Gate: 0 rohe `db-button` in allen 5 J7-Dateien.
+
+## 2026-09-11 (99)
+
+### refactor (Phase J6b: `MyButton` aufgelöst -> `DBButton`)
+
+- `MyButton.tsx` gelöscht, alle 7 Aufrufstellen + `MyEditorFooter`/`MyShowFooter` direkt auf
+  `DBButton` umgestellt: `MyEditorFooter`, `MyShowFooter`, `createModalLogin` (5 Buttons),
+  `createEditorModalEWT` (1), `createAddModalEWT` (1), `createAddModalNeben` (1).
+- `btnLoginModal` (`createModalLogin`) geht über `loginUser.ts` → `setLoading`/`clearLoading`
+  (gleiches Muster wie J5/J6) → `DBLoadingButton` statt einfachem `DBButton`.
+- `dbButton.ts` (`buttonLook`/`erzeugeDbButton`) bleibt unangetastet — wird von
+  `customTableRender` (Vanilla-DOM, Phase M) weiterhin gebraucht.
+- Tests: `MyButton.test.tsx` gelöscht; die `buttonLook`-Fälle (weiterhin relevant) nach
+  `test/Utilities/dbButton.test.ts` verschoben.
+- Verifikation: `typecheck`/`lint` 0/21 · `lint:css` 0/84 · `TZ=Europe/Berlin test` 2125/0 ·
+  `build` grün. Puppeteer: Login-Modal komplett geprüft, `btnLoginModal`-Lade-/Disable-Zyklus
+  funktioniert.
+
+## 2026-09-11 (98)
+
+### fix (Phase J6: `buttonDisable.ts` gegen `DBLoadingButton` abgesichert)
+
+- Puppeteer-Test aufgedeckt: `clearLoading(id)` setzt den `disabled`-Prop des jeweiligen
+  Buttons per Re-Render auf `false` zurück, auch wenn ein globales `buttonDisable(true)`
+  (z.B. während ein anderer Button speichert) noch aktiv sein sollte — `DBLoadingButton`
+  kannte nur seinen eigenen Ladezustand, nicht den globalen Disable-Sweep aus
+  `buttonDisable.ts` (setzt `[data-disabler]` direkt am DOM, an React vorbei).
+- Neuer `globalDisableStore` + `useGlobalDisabled`-Hook, analog zum `buttonLoadingStore`
+  aus J5. `buttonDisable.ts` behält den DOM-Sweep (für noch-native Buttons) und schreibt
+  zusätzlich in den Store; `DBLoadingButton` verrechnet
+  `disabled || loading || globalDisabled`.
+- Verifikation: `typecheck`/`lint` 0/21 · `lint:css` 0/84 · `TZ=Europe/Berlin test` 2128/0 ·
+  `build` grün; Puppeteer-Szenario (globales Disable während eines Sibling-Ladezyklus)
+  zeigt jetzt korrektes Verhalten.
+
+## 2026-09-11 (97)
+
+### refactor (Phase J5: Bereitschaft/EWT/Neben/EA-Tab-Buttons auf `@db-ux/react-core-components`)
+
+- 6 Dateien: `BereitschaftTab` (5 Buttons), `BereitschaftOverridePanel` (1 Checkbox, 1
+  Button), `createAddModalBereitschaftsZeit` (1 Tag), `EwtTab`/`NebenTab`/`EaTab` (je
+  Hilfe-/Hinzufügen-/Speichern-/PDF-Button, 4-5 pro Datei).
+- **Neuer Architektur-Baustein: `buttonLoadingStore` + `useButtonLoading` + `DBLoadingButton`.**
+  `setLoading(id)`/`clearLoading(id)` (aufgerufen aus reinem TS-Code wie `saveDaten.ts`,
+  `submitBereitschaftsZeiten.ts`, außerhalb von React) manipulierten Button-Kinder bisher
+  per `btnElement.replaceChildren(...)` direkt im DOM — für `DBButton`-Instanzen unterläuft
+  das den React-Tree (ein späteres Reconcile kann mit `NotFoundError: removeChild`
+  crashen). Betraf nicht nur Bereitschaft: `btnLoginModal` läuft bereits über `MyButton`
+  und trägt denselben latenten Fehler in sich. Fix: neuer `buttonLoadingStore` macht den
+  Ladezustand deklarativ abonnierbar; `setLoading`/`clearLoading` prüfen
+  `data-react-loading="true"` (von `DBLoadingButton` gesetzt) und schalten für solche
+  Buttons auf den Store um, alle anderen (noch native) Buttons laufen unverändert über
+  den alten `replaceChildren`-Pfad — kein Flag-Day, jede Phase migriert nur die Buttons,
+  die sie gerade anfasst. Puppeteer-Verifikation: 7 aufeinanderfolgende Lade-Zyklen ohne
+  Konsolenfehler; der AutoSave-Badge (`autoSaveIndicator.ts`, `appendChild` statt
+  `replaceChildren`) übersteht dieselben Zyklen unverändert und blieb deshalb unangetastet.
+- `EwtTab.tsx`: `berechnenParser`/`schichtParser` (rohe HTML-Strings für `CustomTable`s
+  Vanilla-DOM-Zellen) bewusst nicht angefasst — kein JSX, Phase M.
+- Flakiness in `Bereitschaft.BereitschaftOverridePanel.test.tsx` gefunden und behoben
+  (trat bei wiederholtem vollem Suite-Lauf ~1-in-8 auf, vorher nie beobachtet, weil ein
+  solcher Lauf zuvor nicht nötig war): `DBCheckbox` vergibt seine `id` per `useEffect`
+  (nicht im ersten `flushSync`-Render) und setzt `_ref.current.checked` in einem weiteren
+  Mount-Effekt direkt am DOM, an Reacts Value-Tracker vorbei — dieselbe Bugklasse wie der
+  „hängende Schalter" bei `DBSwitch` (`MyCheckbox.tsx`). Fix: genereller `warteAufElement`-
+  Poll-Helfer statt fixer Tick-Zahl, mit Settle-Ticks nach Fund; betraf auch
+  `#override-frueh` (`SchichtOverrideEditor`, bereits aus J4).
+- Verifikation: `typecheck`/`lint` 0/21 · `lint:css` 0/84 · `TZ=Europe/Berlin test`
+  2128/0 (Suite 25× wiederholt, 0 Fehlschläge, gegen die gefundene Flakiness) · `build`
+  grün.
+
+## 2026-09-11 (96)
+
+### refactor (Phase J4: Einstellungen-Komponenten auf `@db-ux/react-core-components`)
+
+- 4 Dateien, 24 Controls: `ArbeitszeiteingabePanel` (9 Buttons, 2 Switches, 3 Tags),
+  `FahrzeitenPanel` (4 Buttons), `createEditorModalVE` (1 Button, 2 Checkboxen),
+  `SchichtOverrideEditor` (1 Checkbox).
+- **`type="checkbox" role="switch"` → `MyCheckbox`, nicht `DBCheckbox`.** Die zwei
+  Umschalter „Schicht aktiv/inaktiv" meinen Schalter, nicht Haken — `MyCheckbox` kapselt
+  bereits `DBSwitch` inklusive der React-19-Glue gegen den „hängenden Schalter"
+  (`lessons.md`) und ist laut Plan bewusst behalten. `MyCheckbox`s Prop-Typ kannte `size`
+  nicht, obwohl es zur Laufzeit längst durchgereicht wurde — additive Typ-Erweiterung
+  (`size?: SizeType`) statt die Prop wegzulassen und die Größe der Umschalter zu verlieren.
+- Zwei native `<input type="checkbox" hidden readOnly>` in `createEditorModalVE.tsx`
+  bewusst unangetastet — reine Datenträger für den `Nwoche`-Zustand (per
+  `document.querySelector` gelesen), keine echten UI-Controls; `DBCheckbox` hätte hier
+  sichtbares Label-Markup erzwungen.
+- `aria-label` an Icon-Buttons bleibt Passthrough (Tests in `FahrzeitenPanel.test.tsx`
+  selektieren darüber), zusätzlich `DBTooltip` für die `noText`-Pflicht.
+- Grep-Gate: 0 rohe `db-button`/`db-tag`/`db-switch`/interaktive `checkbox` im Ordner
+  (die zwei versteckten Nwoche-Träger ausgenommen). `lint` 0/21 · `lint:css` 0/84 ·
+  `test` 2128/0 · `build` grün.
+
+## 2026-09-11 (95)
+
+### refactor (Phase J3: übrige Admin-Komponenten auf `@db-ux/react-core-components`)
+
+- 23 Dateien, ~120 Controls, 13 Commits: `AdminUserList`, `AdminVorgabenEditor`,
+  `AdminUserProfileEditor`, `AdminLogBrowser`, `AdminDashboard`/`adminDashboardCharts`,
+  `OeLevelInputs`, `OeTagInput`, `AdminUserTable`, `FormularUpload`,
+  `FormularVersionenListe`, `JsonEditor`, `createAdminBulkEditModal`,
+  `AdminResourceEditModal`, `AdminUserCard`, `AdminProfileTemplatesManager`,
+  `AdminResourceBrowser` sowie die `BulkEdit*`-Bausteine — `db-button`/`db-tag`/
+  `db-checkbox` → `DBButton`/`DBTag`/`DBCheckbox`.
+- **Erste zwei `DBRadio`-Fälle im Projekt** (`BulkEditAdminOesBlock`,
+  `BulkEditApplySourceBlock`): beide Radios trugen bisher fälschlich die
+  `db-checkbox`-Wrapperklasse (runde statt der DB-Radio-Optik) — `DBRadio` korrigiert das
+  automatisch mit.
+- **`OeTagInput` nutzt jetzt DBs eingebautes `behavior="removable"` + `onRemove`** statt den
+  Entfernen-Knopf von Hand nachzubauen — DBTag rendert dabei exakt dieselbe Struktur
+  (`.db-button[data-icon=cross]` mit `DBTooltip`), Tests blieben ohne Anpassung grün.
+- **Lint-Fund `db-ux/form-label-required`:** `DBCheckbox` akzeptiert reines `aria-label`
+  nicht als Ersatz für `label` — braucht `label` + `showLabel={false}` (DBs
+  Standard-visually-hidden-Technik, `clip:rect`). Deckte eine echte Verhaltensänderung auf:
+  ein `aria-label`-Attribut taucht nie in `textContent` auf, ein (auch visuell verstecktes)
+  `<label>`-Element schon — ein Test in `AdminUserList.selection.test.tsx` wäre sonst bei
+  jedem Render fehlgeschlagen (Assertion auf den tatsächlichen Knopf statt rohen Text
+  umgestellt).
+- **`showIcon`-Technik für Buttons mit dynamisch wechselndem Icon** (Snapshot-Spinner in
+  `adminDashboardCharts.tsx`): `icon` bleibt statisch gesetzt (Lint verlangt das bei
+  `noText`), `showIcon={boolean}` blendet das Glyph per DBs eigener CSS-Regel
+  (`content:none`) aus, sobald ein eigener Spinner als Kind gerendert wird. Per Browser-Probe
+  verifiziert (`data-show-icon` + `::before`-Content in beiden Zuständen).
+- **`ROLE_LABELS.semantic`** (geteilt zwischen `AdminUserTable`/`AdminUserCard` über
+  `adminUserListTypen.ts`) war als `string` typisiert — an der Quelle auf die echte
+  `SemanticType`-Union korrigiert statt lokal weggecastet.
+- Grep-Gate über den gesamten `Admin/components`-Ordner: 0 rohe Controls bis auf zwei
+  erwartete Ausnahmen (J1-Interaktiv-Tag-Checkbox in
+  `AdminProfileTemplateContentEditor.tsx`; `VorgabenBWeekRangeEditor.tsx` lag von Anfang an
+  außerhalb des J3-Umfangs). `lint` 0/21 · `lint:css` 0/84 · `test` 2128/0 · `build` grün.
+
+## 2026-09-11 (93)
+
+### refactor (Phase J1: Referenz-Slice auf `@db-ux/react-core-components`)
+
+- `AdminProfileTemplateContentEditor.tsx` ist der Referenz-Slice für J2–J7: 14 native Controls
+  auf DB-React-Komponenten. 10 `<button class="db-button">` → `DBButton`, 2
+  `<span class="db-tag">` → `DBTag`, 3 `db-checkbox`-Blöcke → `DBCheckbox`.
+- **Abschnitts-Umschalter:** `DBTag` rendert immer ein `<div>` und kann selbst kein Button
+  sein. DB sieht für interaktive Tags ein Kontrollelement als Kind vor (Beispiel „Checked") —
+  umgesetzt als Checkbox im `<label>`. Eine Checkbox statt Radio, weil ein erneuter Klick den
+  Abschnitt zuklappt; `role="tablist"` wäre falsch (dort ist immer genau einer gewählt).
+  **Sichtbare Änderung:** die Tags tragen jetzt DBs Prüfzustands-Symbol (`showCheckState`,
+  Standard an) — vorher war der Schaltzustand rein farblich codiert.
+- **Altfehler mitgefixt:** die rohen `<button>` hatten größtenteils kein `type`. Innerhalb
+  eines `<form>` ist der Default `submit` — ein Klick auf „Zeile hinzufügen" hätte das
+  Formular abgeschickt. `db-ux/button-type-required` hat es aufgedeckt, alle 10 Knöpfe haben
+  jetzt `type="button"`.
+- Neuer Render-Test `test/features/Admin/AdminProfileTemplateContentEditor.test.tsx` (6 Fälle:
+  Abschnitt auf/zu, Wechsel statt Doppelöffnung, beide Checkbox-Callbacks, `disabled` bei
+  `isSaving`, expliziter `type` an jedem Knopf). Die Komponente hatte bisher keinen Test.
+- Browser-verifiziert: Umschalten per Maus **und** Leertaste, Semantik folgt dem Zustand,
+  0 Konsolenfehler.
+
+## 2026-09-11 (94)
+
+### refactor (Phase J2: FormularEditor-Cluster auf `@db-ux/react-core-components`)
+
+- 13 Dateien, 74 native Controls: `SpalteZeile`, `ListenGruppen`, `FeldPanel`, `SchriftartDialog`,
+  `datenpfadUndFormeln`, `feldPanelGemeinsam`, `FeldZeile`, `aggregationUndRechnung`,
+  `bedingungEditor`, `SkalierLeiste`, `SonderZeilen`, `TabellenBlock`, `PdfCanvas`,
+  `FormularEditor` — `db-button` → `DBButton`, `db-checkbox` → `DBCheckbox`, statische `db-tag` →
+  `DBTag`, das eine `db-textarea` → `DBTextarea`.
+- **Zwei native Buttons in `FormularEditor.tsx` bleiben bewusst unangetastet:** die Seiten-Tabs der
+  Admin-Unternavigation (`.db-navigation-item > button`) sind laut `todo.md` I.13 kein
+  `db-button`-Fall, sondern das korrekte ARIA-APG-Muster für Nicht-URL-Sub-Tabs — DB hat dafür
+  keine Komponente.
+- **`DBTextarea` hätte fast eine generische Meldung gezeigt.** Ohne `invalidMessage` rendert DB
+  bei `validation="invalid"` den Platzhaltertext „TODO: Add an invalidMessage" (derselbe Fehler,
+  den CHANGELOG (91)/`fix(db-ux): Formularfelder zeigten "TODO: Add an invalidMessage"` schon bei
+  `DbFeld` behoben hatte). Browser-Probe bestätigt: mit gesetzter `invalidMessage` erscheint der
+  eigene Fehlertext, `aria-invalid="true"`, korrekt verdrahtet — eine A11y-Verbesserung gegenüber
+  der vorherigen separaten `<div>`. Die alte manuelle Fehleranzeige ist damit entfallen.
+  Ohne Validierungsfehler bleibt die Meldung `display:none`, wie zuvor.
+- Neue Render-Tests für die vier laut Plan noch ungetesteten Dateien (`FeldZeile`, `TabellenBlock`,
+  `feldPanelGemeinsam`, `SchriftartDialog`) in `test/features/Admin/FormularEditor/dbUxJ2.test.tsx`
+  — Fokus auf den DB-UX-Umstellungen (Icon-Knopf+Tooltip statt `title`, Modus-Knopfgruppen,
+  Checkbox-Callbacks), nicht auf der fachlichen Logik.
+- Grep-Gate: 0 `className="db-button"` / `db-tag` / `db-textarea` / `type="checkbox"` im Cluster
+  (die zwei Navigation-Buttons ausgenommen). `lint` 0/21 · `lint:css` 0/84 · `test` 2128/0 ·
+  `build` grün.
+
+## 2026-09-11 (92)
+
+### fix (Phase J0/J-Q1: `hidden` schlägt die `d-*`-Utilities)
+
+- Die `d-*`-Klassen setzen `display` mit `!important` und schlugen damit die UA-Regel
+  `[hidden] { display: none }` — ein `el.hidden = true` im TypeScript blieb auf jedem Element
+  mit einer solchen Klasse wirkungslos. Kein aktiver Fehler im Bestand (die vier per `.hidden`
+  geschalteten Elemente tragen zufällig keine `d-*`-Klasse), aber eine stille Falle.
+- Übernommen ist das Muster aus `helpers/_display.scss` (`&:not([hidden])`); DBs Mixin selbst
+  arbeitet ohne `!important` und ist für eine Bootstrap-kompatible Utility-API nicht nutzbar.
+  Browser-verifiziert über 7 Fälle, inklusive der Reihenfolge-Regel `d-none` gewinnt.
+
+### chore (Phase J0/J-Q3: Abgleich mit foundations — Ergebnis dokumentiert)
+
+- `@db-ux/core-foundations` liefert **kein** Utility-System, nur Tokens plus neun Hilfsklassen
+  (`db-divider-*`, `db-focus-default`) — an `utilities.scss`/`raster.scss` ist nichts 1:1 zu
+  ersetzen. Die übrigen helpers-Mixins passen fachlich nicht (Begründung je Mixin in
+  `tasks/todo.md`): DBs `visually-hidden` nutzt das abgekündigte `clip: rect()`, die
+  Projektfassung mit `clip-path` ist moderner.
+- Skript-Inventar aus dem **gebauten** CSS (nicht per grep, siehe `lessons.md`): 697 von 901
+  Utility-Klassen sind ungenutzt, Kosten 3,6 KB gzip = 3,8 % des CSS. Bewusste Entscheidung,
+  sie stehen zu lassen — ein vollständiges Raster ist gewollt. Der Dateikopf behauptete bisher
+  das Gegenteil („nicht enthalten ist, was der Bestand nicht nutzt") und wurde korrigiert.
+
+## 2026-09-11 (91)
+
+### refactor (Phase J0: Breakpoints aus `@db-ux/core-foundations`)
+
+- Die Umbruchschwellen standen an vier Stellen mit je eigenen Werten: `raster.scss`,
+  `utilities.scss`, `customtable.css` und `CustomTable.ts:30`. Alle vier beziehen sie jetzt aus
+  `@db-ux/core-foundations/build/styles/_screen-sizes.scss` (dafür `loadPaths: ['node_modules']`
+  in `vite.base-config.ts`); `customtable.css` wurde dazu zu `customtable.scss`, und
+  `infrastructure/ui/breakpoints.ts` spiegelt die Werte für die TS-Seite.
+- **Die Skala ändert sich damit bewusst:** 480/576/768/992/1200/1400 → 320/768/1024/1440/1920.
+  Nur 768 ist in beiden Systemen gleich.
+- `xxl` **bleibt erhalten**, obwohl DB bei `xl` endet: gemeinsame Quelle ist jetzt
+  `src/scss/_breakpoints.scss`, das `xs`–`xl` aus den Foundations bezieht und `xxl` als klar
+  markierte Projekt-Erweiterung auf 2560 px (QHD, nächste reale Geräteklasse) ergänzt.
+  Die EWT-Tabelle nutzt die Stufe für `Buchungstag` — sie ist dort wie vorher die zuletzt
+  erscheinende Spalte, jetzt ab 2560 statt ab 1400.
+- Betroffen waren 68 `sp-{sm,md,lg,xl}-*`- und 117 Utility-Verwendungen. Die
+  `.custom-text-truncate`-Leiter in `styles.scss` (6 Bootstrap-Stufen) wurde auf dieselben
+  DB-Schwellen gezogen, sonst hätte der Text an anderen Breiten gestuft als die Spalten daneben.
+- **Spaltenstufen aller Tabellen neu beurteilt**, weil ein reiner Skalentausch Kernspalten zu
+  weit nach oben geschoben hätte (EWT zeigte bei 1000 px nur noch 4 von 14 Spalten). Leitlinie:
+  die alte `md`-Schwelle (768) ist wertgleich mit der neuen `sm` — dort liegt die
+  Handy/Tablet-Grenze. EWT `beginE`/`endeE` md→sm, `abWE`/`anWE` xl→md, `berechnen` xl→lg;
+  Neben `Zulagen` md→sm; EA `Tätigkeit`/`Entgeltgruppe` md→sm; VorgabenB `standard`/`nacht`
+  lg→md und `beginnN`/`endeN` lg→md.
+- Vier bespoke Media Queries in `styles.scss` (1200/1199.98/992/576 px) bleiben bewusst auf
+  ihren Werten -- sie gehören zu einzelnen Komponenten, nicht zur Stufenleiter.
+- Verifiziert (Chrome headless): Umschaltpunkte exakt bei 320/768/1024/1440/1920/2560;
+  Spaltenleitern EWT 4→6→8→13→13→14, Neben 4→5→6, EA 3→5, Bereitschaft 8→10→11; kein
+  waagerechter Seitenüberlauf auf 7 Tabs × 8 Breiten; Konsolenfehler nur backend-bedingt.
+  `lint:css` 90 → 84 Warnungen.
+
+## 2026-09-10 (90)
+
+### chore (Rasterabstände auf DB-UX-Spacing-Tokens)
+
+- Die `$abstaende`-Map in `src/scss/raster.scss` (Stufen `.abstand-0..5`, Ersatz für Bootstraps
+  `g-0..g-5`) hielt eigene rem-Werte. Jetzt auf `--db-spacing-fixed-*` gelegt
+  (`2xs`/`xs`/`md`/`lg`/`2xl`), damit der Rasterabstand automatisch der Density folgt.
+- Bei `functional`/`regular` sind die rem-Werte identisch zu vorher (0.25 / 0.5 / 1 / 1.5 / 3 rem),
+  also kein visueller Diff im aktuellen Theme. `.abstand-0` bleibt hart `0`.
+- DB UX hat kein 12-Spalten-Raster; `raster.scss` (`.raster`/`.sp-*`/`.raster-auto`) bleibt der
+  App-eigene Bootstrap-Grid-Ersatz.
+
+## 2026-09-10 (89)
+
+### chore (tote Bootstrap-Reste in Klassen entfernt)
+
+- `class="rounded"` / `rounded-1..3` lösten zu `border-radius: var(--db-border-radius-*)` = `0`
+  auf (DB „neues Design", eckig) → wirkungslos. **57 Vorkommen in 38 Dateien** aus dem Markup
+  entfernt; die zugehörigen Definitionen in `utilities.scss` gelöscht. `rounded-circle` bleibt
+  (echte 50 %-Rundung). Zwei Tests (`.border.rounded`-Selektoren) mitgezogen.
+- `admin-tab-bg` (`Admin/index.tsx`): keine Regel, kein JS-Hook → entfernt.
+- `footer`-Klasse am `<footer>` (`index.html`): keine `.footer`-Regel, `.app-footer` macht die
+  Arbeit → entfernt.
+- `.border-2` hatte keine Regel (nur `.border-1`) → die 2px-Betonung (OeLevelInputs,
+  Formel-Verschachtelung, Signatur-Griff) wirkte nicht. `.border-2 { border-width:
+var(--db-border-width-xs) }` in `utilities.scss` ergänzt, damit die 3 Aufrufstellen greifen.
+
+## 2026-09-10 (88)
+
+### change (Navigation: Trenner vor „Berechnung")
+
+- `<li>` von „Berechnung" bekommt die Klasse `nav-trenner` (`src/index.html`). `styles.scss`
+  zeichnet je nach Navigationsrichtung eine Linie über ein `::before` im Außenabstand (NICHT
+  `border`/`padding` am `.db-navigation-item` selbst -- das verbreitert die Item-Box und schiebt
+  den roten Aktiv-Indikator `::after` über den Text): in der Kopfzeile senkrecht links
+  (`.db-header-navigation-container .nav-trenner`), in der mobilen Schublade waagerecht oben
+  (`.db-header-drawer-navigation .nav-trenner`) -- `navDrawer.ts` schiebt dieselbe `#navmenu`
+  zwischen beiden Plätzen. Grenzt die Fachbereiche (Bereitschaft/EWT/Nebenbezüge/
+  Entgeltausgleich) von den übergreifenden Bereichen (Berechnung, Einstellungen) ab.
+- Grenzfall: sind alle Fachbereiche ausgeblendet (`d-none`), steht die Linie als führender
+  Akzent vor „Berechnung" -- optisch unauffällig, kein Fehler.
+
+## 2026-09-10 (87)
+
+### change (FormularEditor: alles ausklappbar -- Abschnitte UND einzelne Felder/Spalten)
+
+- Die lange, flache Editor-Spalte ist jetzt in native `<details>` gegliedert:
+  - **Abschnitte** (`Abschnitt` in `feldPanelGemeinsam.tsx`): „Felder", „Datentabellen", je
+    Tabelle „Spalten" und „Sonderzeilen"; Felder/Datentabellen/Spalten anfangs offen,
+    Sonderzeilen zu. Titel trägt die Anzahl.
+  - **Einzel-Einträge** (`KlappZeile`): jedes Feld (`FeldZeile`) und jede Spalte (`SpalteZeile`)
+    ist zugeklappt nur Name + Scharf-/Löschen-Knopf, aufgeklappt der volle Editor. Ein gerade
+    scharf geschalteter Eintrag klappt automatisch auf (`offen={aktiv}`). Aktions-Knöpfe in der
+    `<summary>` klappen nicht um (`preventDefault` am Wrapper); die Koordinaten-Felder sind
+    dafür aus der Kopfzeile in den aufgeklappten Bereich gewandert.
+  - Pfeil `.klapp-pfeil` dreht sich beim Aufklappen (`styles.scss`).
+
+### fix (FormularEditor: Sonderzeilen -- doppelter Zeilenbezug-Selektor, Umbenennen unvollständig)
+
+- Es gab zwei „Zeilenbezug"-Selektoren (Inhalt in `SonderZeilen.tsx` + Platzierung in
+  `TabellenBlock.tsx`) -- unklar, welcher gilt. Der Inhalt-Selektor ist raus; der Zeilenbezug
+  ($alle/$seite/$bisher/$laufend) wird nur noch **je Platzierung/Seite** gesetzt
+  (`TabellenBereich.sonderzeilen[].ueber`, Eintrag 84), mit Wert-Vorschau der aktuellen Seite.
+  `SonderZeilen.tsx` legt nur noch fest, WAS die Sonderzeile zeigt.
+- Umbenennen einer Sonderzeile zog bisher nur den Key in `TabellenDef.sonderzeilen` mit, nicht
+  die Platzierungen (`TabellenBereich.sonderzeilen[].name`) -- die zeigten danach ins Leere.
+  Neu: `benenneSonderzeileUm()` (`skaliereKonfig.ts`) benennt Inhalt UND jede Platzierung auf
+  JEDER Seite in einem Zug um; verdrahtet über `onSonderzeileUmbenannt` bis `FormularEditor`.
+- Reine Editor-Änderung, kein Datenmodell-/Renderer-Diff.
+
+## 2026-09-09 (85)
+
+### change (Bereitschafts-PDF: `beAbgeleiteteWerte` ohne Beamter-Verzweigung, Pause 0 als leere Spalte)
+
+- `beAbgeleiteteWerte()` (`infrastructure/pdf/abgeleiteteWerte.ts`) verzweigt nicht mehr über
+  `beamter`: `PrivatKmBetrag` wird immer aus `km * privatKmSatz` berechnet (`undefined` nur bei
+  0 km), die rohe `PrivatKm` bleibt aus dem Zeilenobjekt selbst auf der Zeile. Welche der beiden
+  Spalten (rohe km / Euro) gedruckt wird, entscheidet die Vorlage. `BeAbgeleiteteWerte.PrivatKm`
+  entfällt, der dritte Parameter (`beamter`) entfällt.
+- `generatePDF` (`modus 'B'`): 0-Pause eines Bereitschaftszeitraums geht als `undefined` ins
+  Zeilenobjekt (`bz.Pause || undefined`) — die Pause-Spalte bleibt leer statt „0" zu drucken;
+  `bzAbgeleiteteWerte()` deckelt intern mit `?? 0`, die `Dauer` bleibt unverändert.
+- Typsystem-Spiegel (frontend-lokal): `IPdfBereitschaftszeitraum.Pause` und
+  `IPdfBereitschaftseinsatz.Pause` jetzt optional (`pdfDaten.ts`). Kein `shared`/Backend-Diff.
+- Tests: `abgeleiteteWerte.test.ts` + `generatePDF.test.ts` (`modus 'B'`) auf die neue Signatur
+  und die beiden immer gesetzten Werte gezogen.
+
+## 2026-09-09 (84)
+
+### feat (FormularEditor: Sonderzeilen-Zeilenbezug pro Seite überschreibbar)
+
+- `SonderZeile.ueber` (`$alle`/`$seite`/`$bisher`/`$laufend`) hing bisher nur am Inhalt der
+  Sonderzeile und galt damit auf jeder Seite gleich. Neu: optionaler Seiten-Override `ueber` am
+  Platzierungs-Eintrag (`TabellenBereich.sonderzeilen[]`). Dieselbe benannte Summenzeile trägt so
+  auf der ersten Seite die Gesamtsumme (`$alle`) und auf den Folgeseiten die Seitensumme
+  (`$seite`), ohne den Inhalt zu duplizieren.
+- `build.ts`: `zeilenFuerUeber(platz.ueber ?? sonderzeile.ueber ?? '$alle', …)` — greift auch in
+  der PDF-Vorschau des Editors.
+- `TabellenBlock.tsx`: je Platzierung eine Auswahl „Zeilenbezug (diese Seite)“ mit Default
+  „wie Sonderzeile“. `UEBER_OPTIONEN` aus `SonderZeilen.tsx` exportiert.
+- Typsystem-Spiegel: `shared/src/formular/types.ts`, `infrastructure/pdf/configSchema.ts` und
+  `backend/src/validation/formular.schemas.ts` (`ueber: z.string().optional()`) mitgezogen.
+
+## 2026-09-09 (83)
+
+### fix (FormularEditor: zweiter Vorlagen-Wechsel bot keinen Skalier-Vorschlag mehr)
+
+- Die Swap-Erkennung (`FormularEditor.tsx`) nahm als alte Seitengröße die in der Konfiguration
+  gespeicherte `groesse`. Nach dem Ablauf „ausgefülltes Muster laden → Felder setzen →
+  Skalier-Vorschlag abbrechen" gehört diese `groesse` aber noch zum ursprünglichen Template, nicht
+  zum zwischenzeitlich gezeigten Muster. Beim nächsten Wechsel auf die leere Vorlage (gleiche
+  Papiergröße wie das Original) kam so fälschlich „gleich groß, nichts zu tun" heraus — die an der
+  Muster-PDF gesetzten Koordinaten wurden ungeprüft übernommen und lagen verschoben.
+- Jetzt wird immer die zuletzt gezeigte PDF (`prev`) frisch vermessen; `groesse` dient nur noch als
+  Rückfall, falls `prev` nicht lesbar ist. `oeffneSkalierenManuell()` misst analog die aktuell
+  gezeigte `datei` statt `aktiveSeite.groesse`.
+- Kein Typsystem-Spiegel betroffen.
+
+## 2026-09-09 (82)
+
+### fix (FormularEditor: fehlendes Icon an den Spalten-Verschiebe-Knöpfen)
+
+- `SpalteZeile` (`features/Admin/components/FormularEditor/SpalteZeile.tsx`) nutzte die
+  Unicode-Pfeile `↑` / `↓` als Button-Inhalt. Im DB-„neuen Design“ (DB Icon Font) rendert
+  `↑` nicht und zeigte ein Tofu-Kästchen. Ersetzt durch `db-icon`-Spans
+  (`data-icon="arrow_up"` / `"arrow_down"`), analog zum Löschen-Knopf (`data-icon="bin"`).
+
+## 2026-09-09 (81)
+
+### change (EWT-PDF: Einsatzort mit Beschreibung)
+
+- `generatePDF` (`infrastructure/data/generatePDF.ts`, `modus 'E'`) druckt beim Einsatzort jetzt
+  Tätigkeitsstätte **und** Beschreibung (`VorgabenU.Fahrzeit[].key` + `.text`), getrennt mit
+  `|`, statt nur der Tätigkeitsstätte. Auflösung über eine einmalig gebaute `Map` (key -> text);
+  fehlt eine Beschreibung, bleibt es beim reinen Ort (`filter(Boolean)`).
+- Kein Datenmodell-/Typsystem-Spiegel betroffen: `Einsatzort` bleibt ein String-Feld, die
+  EWT-Zeile speichert weiterhin nur den `key`.
+- Test: `generatePDF.test.ts` (`mode 'E'`) erwartet jetzt `'Fulda | Materialtransport'`.
+
+## 2026-09-09 (80)
+
+### change (Unterschrift-Pad: Strichstärke erhöht)
+
+- `erstelleSignaturPad` (`infrastructure/pdf/signaturePad.ts`) setzt jetzt `minWidth: 1` und
+  `maxWidth: 3.5` statt der `signature_pad`-Defaults (`0.5` / `2.5`). Die im PDF eingebettete
+  Unterschrift steht dadurch kräftiger.
+- Tests: `signaturePad.test.ts` + `signaturDialog.test.ts` unverändert grün (23/23).
+
+## 2026-09-09 (79)
+
+### refactor (Drawer-Kopfzeilen: `eslint-disable db-ux/drawer-header-required` abbauen + `aria-labelledby`)
+
+- `db-ux/drawer-header-required` sichert, dass ein `DBDrawer` einen Schliessen-Knopf UND einen
+  `aria-labelledby`-Bezug am `<dialog>` hat. An vier Stellen war die Regel per
+  `eslint-disable` stummgeschaltet -- die Dialoge hatten dadurch keinen zugaenglichen Namen.
+- `SchriftartDialog`, `AdminResourceEditModal`, `AdminUserProfileEditor`: handgebaute
+  `<div className="db-drawer-header">`-Kopfzeile durch `header={<DBDrawerHeader …>}` ersetzt
+  (die von `DBDrawer` vorgesehene Slot-Prop). Disable entfaellt, `DBDrawerHeader` setzt
+  `aria-labelledby` selbst. `data-breite` bleibt an `.dialog-rumpf`, Breite unveraendert.
+- `showModal.tsx` (`oeffneDrawer`): Disable bleibt -- die Huelle ist generisch, den Titel
+  bringt erst `children` (`MyModalHeader`) mit; die `header`-Prop-Umstellung braucht den
+  Modal-Baustein-Umbau (Phase H). Der irrefuehrende Kommentar ("inklusive
+  `aria-labelledby`-Bezug") ist korrigiert, und `MyModalHeader` verknuepft den umschliessenden
+  `<dialog>` jetzt tatsaechlich per `aria-labelledby` mit seiner `<h2>` (Effekt + `useId`,
+  Cleanup beim Unmount) -- damit haben auch alle `showModal`/`MyFormModal`/`MyDivModal`-Dialoge
+  einen zugaenglichen Namen.
+- Verbleibende `eslint-disable` in `src/` geprueft und als berechtigt bestaetigt:
+  `db-ux/input-type-required` (MyInput -- `type` ist dynamische Pflicht-Prop),
+  `db-ux/select-requires-options` (MySelect -- `<option>` aus `options.map()`),
+  `react-hooks/refs` (PdfCanvas -- Ref-Lesen im Render, global nur `warn`, per Kommentar
+  begruendet).
+- Tests: `MyModalHeader.test.tsx` um den `aria-labelledby`-Fall erweitert.
+  `typecheck`/`lint` 0 Fehler (21 unveraenderte Warnungen), `test --isolate` 0 fail, `build`
+  gruen, DOM-Struktur + Schliessen + `aria-labelledby` im Headless-Chrome geprueft.
+
+## 2026-09-09 (78)
+
+### fix (PDF-Summenzeilen: leere Zelle statt 0 bei fehlender Zulagenart)
+
+- Trägt eine Spalte keine Zulage (kein Eintrag mit Code / `Zulagenart`), zeigen die
+  Summenzeilen jetzt eine leere Zelle statt einer `0`, die eine echte Nullsumme vortäuscht.
+- `summeGeldwertGruppe()` / `summeBereinigtGruppe()` (`infrastructure/pdf/abgeleiteteWerte.ts`)
+  geben `number | undefined` zurück: `undefined`, wenn über alle Zeilen kein einziger Eintrag
+  einen String-Code führt. Gemeinsame Hilfsfunktion `zulagenEintraegeGruppe()`. Ein vorhandener,
+  aber unbekannter Code trägt weiterhin `0` bei (die Spalte trägt ja eine Zulagenart).
+- `wert.ts`: dynamischer Spaltenplatz ohne aufgelösten Code (`code === undefined`) → leere Zelle
+  statt `formatiere(0)` -- in `sonderZeileZelleWert()` und `berechneAggregation()`. Fehlt die
+  Zulagen-Gruppe ganz (`!gruppe`, kaputte Konfiguration), bleibt es bei `0`.
+- Tests: `abgeleiteteWerte.test.ts` / `wert.test.ts` angepasst und erweitert
+  (leere-Zelle-Fälle vs. `0`-Fälle getrennt abgesichert). `test/infrastructure/pdf/` 395/395,
+  `tsc`/`lint`/`build` grün.
+
+## 2026-09-09 (77)
+
+### chore (Icon-Satz austauschbar vorbereitet -- KEIN Austausch)
+
+- Grund: `@db-ux/db-theme*` (Schriften + Icons) steht unter der DB-Font-Lizenz und darf nicht
+  oeffentlich ausgeliefert werden. Damit ein spaeterer Wechsel auf einen freien Icon-Satz
+  (z. B. Material Symbols) nicht die ~160 `data-icon`-Aufrufstellen anfasst, ist jetzt die
+  Umschalt-Mechanik da; Laufzeitverhalten unveraendert (DB-Icons weiter aktiv).
+- Ansatz: CSS-Remap-Layer ueber den vom Design-System vorgesehenen Override
+  `[data-icon]::before { content: var(--db-icon, attr(data-icon)) }`. Neu:
+  - `src/ts/components/iconRegistry.ts` -- Single Source of Truth: jeder genutzte DB-Icon-Name
+    -> Material-Name (+ `hinweis` bei ungenauer Entsprechung). Kopf-Kommentar = Swap-Runbook.
+  - `scripts/gen-iconset.mts` + Script `bun run icons:gen` -- erzeugt `src/scss/iconset.material.css`
+    (`[data-icon="<db>"]{--db-icon:"<material>"}`), eingecheckt aber **nicht importiert**.
+  - `src/scss/db-ux.css` -- auskommentierter `@import` + Runbook. `src/scss/styles.scss` --
+    auskommentierter Block `ICON-SATZ` (`@font-face` Material Symbols lokal, `--db-icon-font-family`).
+  - `test/iconRegistry.test.ts` -- prueft Abdeckung aller Aufrufstellen und Deckungsgleichheit
+    der generierten CSS (Drift-Schutz).
+- core-components rendert intern ~15 eigene Icon-Namen (Checkbox-Haken, Select-Chevron,
+  Notification-Icons) -- laut Abstimmung nur im Runbook dokumentiert, kein Code jetzt.
+- `typecheck`/`lint`/`lint:css` 0 Fehler, `test --isolate` 2100 pass / 0 fail, `build` gruen;
+  `dist/` unveraendert (neue CSS nicht gebundelt).
+
+## 2026-09-09 (76)
+
+### fix (Formularfelder zeigten `TODO: Add an invalidMessage`)
+
+- Ungueltige Pflichtfelder (`required` + leer nach Interaktion) zeigten unter der Eingabe den
+  Text `TODO: Add an invalidMessage` -- die eingebaute Entwickler-Notiz
+  (`DEFAULT_INVALID_MESSAGE`) von `@db-ux/react-core-components`, die `DBInput`/`DBSelect`/
+  `DBSwitch` ohne `invalidMessage`-Prop rendern und per CSS bei `:user-invalid` /
+  `data-custom-validity="invalid"` einblenden. Betroffen waren alle `MyInput`/`MySelect`-
+  Aufrufstellen ohne eigene Meldung (z. B. "SAP-Nr / Einsatzbeschreibung", "LRE" im
+  Bereitschafts-Dialog, EWT-Zeitfelder).
+- Fix zentral in den drei Wrappern: `MyInput`, `MySelect`, `MyCheckbox` (`DBSwitch`) setzen jetzt
+  `invalidMessage`. Fallback `STANDARD_UNGUELTIG_MELDUNG` ("Bitte überprüfe diese Eingabe.",
+  in `dbFeldHelfer.ts`); Aufrufstellen mit feldspezifischer Meldung reichen sie ueber die neue
+  Prop `invalidMessage` (bzw. das bestehende `invalidFeedbackText` bei `MyInput`) durch.
+- `db-ux/form-validation-message-required` in `MyInput` ist damit erfuellt -- die
+  `eslint-disable`-Zeile nennt nur noch `db-ux/input-type-required`.
+- `DbFeld`/`DbAuswahl` (handgebaute `db-input`/`db-select`-Huelle ohne Infotext-Kind) und die
+  statischen `db-input`-Bloecke in `index.html` waren nie betroffen.
+- Tests: `test/components/MyInput.test.tsx` um zwei Faelle erweitert (Fallback-Meldung statt
+  TODO-Notiz, Durchreichen einer feldspezifischen Meldung). `typecheck`/`lint` 0 Fehler,
+  `test --isolate` 2096 pass / 0 fail, `build` gruen, im Headless-Chrome verifiziert
+  (Infotext = "Bitte überprüfe diese Eingabe.", kein `TODO:` mehr im DOM).
+
+## 2026-09-09 (75)
+
+### fix (DB-Neo-Schrift im PDF: Vorschau brach mit `reading 'pos'` ab)
+
+- Der Formular-Editor meldete bei "Beispieldaten"/"Platzhalter"-Vorschau
+  `Vorschau fehlgeschlagen: Cannot read properties of undefined (reading 'pos')`,
+  sobald `db-sans`/`db-head` als Schriftfamilie gewaehlt war.
+- Ursache: `@pdf-lib/fontkit` 1.1.1 (die einzige mit `@cantoo/pdf-lib` 2.9.1 kompatible Version)
+  kann die DB-Neo-Screen-Schriften **nicht subsetten** -- der TTF-Subset-Encoder bricht in
+  `pdf.save()` mit `reading 'pos'` bzw. `Index out of range` ab, aus woff2 **und** aus
+  entpacktem TrueType, in jedem Schnitt. Der `try/catch` um `embedFont(bytes, { subset: true })`
+  in `build.ts` griff nicht, weil die Subset-Serialisierung erst beim spaeteren `pdf.save()`
+  laeuft. Das gestrige Feature (74/69) war damit nie funktionsfaehig -- die Tests fielen mangels
+  Asset auf Helvetica zurueck.
+- Fix: DB-Schriften werden jetzt **vollstaendig** (ohne Subset) eingebettet. Das verlangt echtes
+  SFNT -- rohe woff2-Bytes in einem `FontFile2` ergeben eine kaputte PDF --, deshalb entpackt
+  `dbFonts.ts` die woff2 vorher per neuer Dependency `woff2-encoder` (nur der
+  `woff2-encoder/decompress`-Einstieg, ~107 KB br, laedt lazy und nur wenn eine DB-Schrift
+  wirklich gebraucht wird -- eigener Chunk `decompress-*.js`). Fehlt das Asset oder scheitert
+  das Entpacken, gilt weiterhin Helvetica im passenden Schnitt.
+- Kosten: die generierte PDF traegt die DB-Schrift jetzt komplett (~50-60 KB pro genutztem
+  Schnitt), statt nur der genutzten Glyphen -- nur wenn `db-sans`/`db-head` gewaehlt ist.
+- Lizenz: `woff2-encoder/decompress` liefert bitgleich das Hersteller-TrueType zurueck (WOFF2 =
+  reiner Kompressions-Container), kein Subset, keine Glyph-/Tabellen-Aenderung -- Einbettung des
+  unveraenderten Zeichensatzes in DB-intern erzeugte PDFs ist von der DB-Font-Lizenz gedeckt
+  (mit User geklaert).
+- Tests: neu `test/infrastructure/pdf/dbFonts.test.ts` (faehrt woff2 -> TrueType -> Einbettung
+  ohne Subset -> `pdf.save()` fuer alle vier `db-sans`-Schnitte ab, `skipIf` ohne Asset).
+  `typecheck`/`lint` 0 Fehler, `test --isolate` 2094 pass / 0 fail, `build` gruen, im echten
+  Headless-Chrome verifiziert (wasm entpackt, `pdf.save()` liefert gueltige PDF).
+
+## 2026-09-09 (74)
+
+### feat (PDF-Vorlagen-Cache im Hintergrund vorwaermen)
+
+- `formularVersionCache`/`vorlagenPdfCache` fuellten sich bisher erst _nach_ dem ersten
+  erfolgreichen PDF-Export. Bricht die Verbindung waehrend des ersten Exports eines Monats weg,
+  war der Cache leer und der Export schlug fehl.
+- Neu: `warmeFormularCaches()` (`infrastructure/pdf/warmeFormularCaches.ts`) loest die zum
+  gewaehlten Monat gueltige ("neueste") Version fuer jedes aktivierte Feature-Formular
+  (`bereitschaft`/`ewt`/`neben`->`ez`/`ea`) auf und legt sie samt Vorlagen-PDF ab. Aufruf aus
+  `loadUserDaten.ts` nach `syncFeatureTabs()` -- also bei Login und jedem Jahr-/Monatswechsel.
+- Laeuft komplett im Hintergrund und blockiert nichts: der Aufrufer startet ohne `await`, die
+  Arbeit selbst haengt in `requestIdleCallback` (Fallback `setTimeout`), die Formulare werden
+  sequentiell abgearbeitet. `warmeVorlagenCache()` ist best-effort und still -- nur online
+  (`navigator.onLine`), kein "Offline"-Snackbar, schluckt jeden Fehler, zieht die Binaer-PDF
+  nur wenn noch nicht im Cache. Die Version wird bei jedem Lauf neu aufgeloest und
+  ueberschrieben, damit eine veroeffentlichte neue Version nicht an einer alten Cache-Zeile
+  haengenbleibt.
+- `loeseVersionAuf()`/`holeVorlageAlsDatei()` haben dafuer einen optionalen `still`-Schalter
+  (unterdrueckt `zeigeOfflineHinweis()`); der normale Export-Pfad ist unveraendert.
+- Service Worker (`vite.config.ts`): eigener Runtime-Cache `formular-vorlagen-cache` fuer
+  `/api/v2/(formulare|vorlagen)/` (NetworkFirst, 30 Tage), VOR der generischen
+  `/api/v2/`-Regel -- sonst verdraengen die groesseren Vorlagen-PDFs die 50 Eintraege der
+  `api-cache` und verfallen mit ihr nach 1 h.
+- Tests: `test/pdf.warmeFormularCaches.test.ts` (Mapping, Legacy-Default, Dedupe, Noop,
+  wirft-nie). `typecheck`/`lint` 0 Fehler, `test` 2089 pass / 0 fail, `build` gruen,
+  `dist/sw.js` enthaelt den neuen Cache.
+
+## 2026-09-09 (73)
+
+### fix (DB-UX: Berechnungstabelle -- verschachtelte Auslege-Tabellen kippen uebereinander)
+
+- Die Auslege-Tabellen im Zeilenkopf (`.berechnung-label-tabelle`: EWT-Schwellen, Zulagen-Codes)
+  rutschten mit Label- und Einheit-Spalte uebereinander -- Text lag doppelt ("040 Fahrentsch."
+  ueber "Stk.").
+- Ursache: Der DB-Layer rechnet `.db-table table` (Nachfahren-Selektor) als CSS-Grid
+  (`display: grid` + `:has()`-Spaltenzaehlung). Die App-Gegenregel in `utilities.scss` faengt
+  nur `.db-table > table` (Kind-Selektor) ab, nicht die im `<th>` verschachtelte Tabelle. Ohne
+  `display: table` dort kollabieren `tbody`/`tr`/`td` in eine einzige Grid-Zelle.
+- Fix in `styles.scss` (unlayered): `.berechnung-label-tabelle` und ihre `tbody`/`tr`/`td`/`th`
+  bekommen explizit die nativen `display: table*`-Werte zurueck.
+- Zusatz (Wunsch): dieselbe Tabelle sitzt jetzt randlos und transparent in der
+  Beschriftungsspalte -- `border: 0` am Tabellen-Element (die Zebra-Variante zieht sonst ein
+  `border-inline` durch) sowie `background-color: transparent` an `tr`/`td`/`th` (killt den
+  durchgereichten Zebra-Hintergrund der ungeraden Zeile).
+- Browser-verifiziert an der gebauten CSS mit echtem DOM (`.db-table[data-variant=zebra]` >
+  `table.table-Berechnung` > `th` > `table.berechnung-label-tabelle`): Spalten getrennt
+  (x=25/142, kein Ueberlapp), alle Zellraender 0, alle Hintergruende transparent.
+- `lint:css` 90/93 (unveraendert), `build` erfolgreich.
+
+## 2026-09-09 (72)
+
+### fix (Speichern-Knopf schrumpft und "springt" waehrend des Ladens)
+
+- Die DB-Knoepfe sind `inline-size: fit-content`. Waehrend `setLoading()` den Inhalt durch den
+  reinen Spinner ersetzt, schrumpfte der Knopf von ~106px auf ~37px und sass linksbuendig als
+  kleiner leerer Kasten in seiner Rasterspalte -- besonders auffaellig beim ersten (langsamen)
+  Speichern nach dem Laden, bei dem die Server-URL noch nicht ermittelt ist. `setLoading()`
+  friert jetzt `min-inline-size` auf die Ausgangsbreite ein, `clearLoading()` loest sie wieder.
+  Der Spinner wird ueber `justify-content: center` (db-button) mittig gehalten. Gilt fuer alle
+  Lade-Knoepfe (Login, PDF, Modal-Submits). Browser-verifiziert: Knopf bleibt 106px, kein
+  Versatz. Test `#setLoading + #clearLoading` unveraendert gruen.
+- Hinweis (nicht behoben): der erste Speichervorgang dauert laenger, weil `FetchRetry` erst die
+  erreichbare Server-URL ermittelt (mehrere Endpunkte mit Timeout). Ab dem zweiten Aufruf ist
+  die URL gecacht.
+
+## 2026-09-09 (71)
+
+### fix (DB-UX: AutoSave-Zustandspunkt -- Symbol angeschnitten)
+
+- Der Punkt (`db-badge` ohne `data-size`) ist als reiner Zustandspunkt gedacht. Das Glyph
+  (`.db-icon::before`) bekam aus `.db-badge .db-icon` trotzdem die 2xs-Body-Groesse
+  (~12px = `0.875rem` bei `data-density="functional"`, 14px-Basis) und wurde von
+  `overflow: clip` am `::before` beschnitten -- das Symbol sah abgeschnitten/kaputt aus.
+- Die Ursache lag daran, dass `--db-icon-font-size` am Badge (Elternknoten) gesetzt war;
+  die DB-Regel setzt die Variable direkt am `.db-icon` und schlaegt damit die Vererbung.
+  Fix: `--db-icon-font-size: 0.6875rem` jetzt am `.autosave-badge > .db-icon` selbst,
+  plus `overflow: visible` am `::before`. Das Symbol (~9,6px) passt jetzt mit Rand in den
+  12px-Punkt. Browser-verifiziert: `cloud`, `cloud_upload`, `check_circle`,
+  `exclamation_mark_circle`, `exclamation_mark_triangle`, `wifi_disabled` -- alle vollstaendig
+  sichtbar. `lint:css` 90/93.
+
+## 2026-09-09 (70)
+
+### fix (DB-UX: Drawer schneidet linksbuendigen Text ab bei ~500px Bildschirmbreite)
+
+- Der Dialog-Drawer ist rechtsbuendig verankert; `--db-drawer-max-width` sind `36rem`, was
+  mit `data-density="functional"` (14px-Basis) **504px** ergibt -- nicht 576px. War der
+  sichtbare Viewport schmaler (kleiner Bildschirm, oder ~508px mit klassischem Scrollbalken),
+  lief die linke Kante des Drawers ins Negative und schnitt linksbuendigen Text ab
+  ("Von"/"Bis"/"Pause" -> "on"/"is"/"ause"). Fix: `.db-drawer-container` bekommt
+  `max-inline-size: min(var(--db-drawer-max-width), 100%)` -- der Drawer bleibt immer
+  vollstaendig im Bild. Browser-verifiziert 400-1200px: kein Abschnitt, Seitenpanel-Verhalten
+  ab Desktop unveraendert.
+
+## 2026-09-08 (69)
+
+### refactor (DB-UX-Migration Phase I: Cleanup, Token-Finalisierung, DB-"neues-Design"-Feinschliff)
+
+Laufender Stand von Phase I. Details und Verifikation in `tasks/todo.md`.
+
+- **Formensprache "von rund zu eckig":** alle `--db-border-radius-*`-Tokens am `:root` auf `0`
+  (`--db-border-radius-full` bleibt fuer Radio/Switch/Meter). Karten, Knoepfe, Felder, Tags,
+  Akkordeon, Drawer, Notifications haben jetzt 90-Grad-Ecken -- wie deutschebahn.com.
+- **DB-Schwelle** am UNTEREN Rand des Startbereichs (`#start.active`): offizielle
+  Standard-Geometrie (`src/icons/DB_Schwelle/Screen/…`, 15 Balken, Raster 120, Breite 8 -> 120)
+  als Inline-SVG-Maske ueber Dynamic Red (`#ff002b`, exakt der Asset-Farbwert), rechtsbuendig
+  ~2/3 der Breite, laeuft in die untere rechte Ecke -- diagonal gegenueber der Wortmarke,
+  genau einmal im Viewport, buendig an der fixierten Fusszeile ohne senkrechten Scrollbalken.
+  `--schwelle-motiv` + `.schwelle` + `#start.active`-Layout in `styles.scss`. Offizielle
+  SVG/PNG-Assets (alle Farbvarianten, Standard + S) liegen als Referenz unter `src/icons/`.
+- **DB-Neo-Schriften in der PDF-Ausgabe.** Der Formular-Vorlagen-Editor bietet neben
+  Helvetica/Times/Courier jetzt `DB Neo Screen Sans` (`db-sans`) und `DB Neo Screen Head`
+  (`db-head`); `build.ts` bettet den passenden Schnitt aus `@db-ux/db-theme-fonts` per fontkit
+  (subset) ins PDF ein -- fehlt das Asset (Build ohne ASSET-Secrets), gilt Helvetica.
+  Neu: `infrastructure/pdf/dbFonts.ts`. Keine Aenderung an `shared`/`backend` noetig
+  (`Schriftfamilie` ist bereits `string`). Editor-Vorschau nutzt dieselbe Schrift (Theme-CSS).
+- **`data-density="functional"`** am `<html>` (vorher `regular`) -- kompakter, passt zur
+  formular-/tabellenlastigen App und zur DB-"funktionalen Anwendung". Kein globales
+  `data-color` (Rot bleibt Akzent ueber `--db-brand-*`).
+- **PWA-Farben:** `theme_color` / `background_color` = `#ffffff`; `<meta name="theme-color">`
+  mediengescoped (light `#ffffff` / dark `#16181b`). DB erlaubt kein rotes Fill.
+- **Marken-Sub-Logos aus dem Build:** PostCSS-Plugin entfernt die `[data-logo=db-*]`-Regeln
+  aus `@db-ux/db-theme` -> 12 ungenutzte Logo-SVGs / ~90 KiB weniger im Precache (59 -> 47).
+- **Bundle-Budget** (gegen die Phase-0-Spike-Zahlen): React-Runtime **59 KB gz** (Spike: 59,6),
+  DB-UX-CSS + App-SCSS **92 KB gz** (Spike: 84 -- die Differenz sind die App-eigenen Styles
+  inkl. eckig/Schwelle), 32 woff2 / 1,82 MB (Spike: 1,78 MB). Bootstrap (~35 KB gz CSS + JS)
+  ist dafuer weg. Precache 47 Eintraege / 4,3 MB. Die ungenutzten Font-Schnitte
+  (`dbneoscreenhead-*italic*`, `dbneoscreensans-*digital*`, Black-Schnitte) bleiben bewusst
+  im Build: der Browser laedt eine `@font-face`-`src` erst, wenn wirklich ein passendes Glyph
+  gerendert wird -- fuer echte Nutzer kosten sie 0 Byte. Der Precache ist ueber `globIgnores`
+  bereits eng gefasst (nur die 4 Fliesstext-Schnitte). Build-seitiges Strippen brächte nur
+  ein kleineres Deploy-Artefakt, riskiert aber synthetisierten Fallback-Satz.
+- **Button-Farbkonvention:** destruktiv (`filled`+`critical`) -> `outlined`+`critical` bei
+  "Alle Zeilen loeschen" und Modal-"Loeschen"; Primaeraktion bleibt `brand`. `customButton`
+  der CustomTable spricht `look: DbButtonLook` statt Bootstrap-Klassen.
+- **Navigation:** "Start" ist kein eigener Eintrag mehr (die Wortmarke ist der Start-Schalter);
+  der Design-Auswahl-Flyout ist rechtsbuendig verankert -- behebt einen waagerechten
+  Scrollbalken ab 1024 px. "Alle Zeilen loeschen" wird bei leerer Tabelle wieder ausgeblendet.
+- **EWT-Anzeige-Modal:** `ab/an` bzw. `von/bis` stehen mit Pfeilen und Zeitwerten auf je einer
+  senkrechten Linie (gemeinsames Raster). Tabellen-Fussknoepfe haben wieder Abstand.
+  Der "Berechnen?"-Schalter aendert jetzt auch den Zustand: der Handler holte die Zeile
+  ueber `e.target.closest('.modal').row` -- `#modal` ist eine Id, keine Klasse -> `null`.
+  Jetzt `row.val({ ...row.cells, berechnen })` (setzt den Row-State auf `modified` und
+  meldet an AutoSave) aus dem Aufruf-Closure. `MyCheckbox` bekommt ein explizites
+  `defaultChecked` -> ein `changeHandler` ohne Wert-Sync haengt den Schalter nicht mehr.
+  "Tag:" hat Abstand zum Wert (`raster` + `sp-*` statt Bootstrap-Rest `row`); die
+  Trennlinie rendert als Linie statt als Punkt -- die UA-Regel `hr { margin-inline: auto }`
+  schlug als Auto-Margin im Grid das `justify-self: stretch`, `.ewt-trenner` bekommt jetzt
+  `margin-inline: 0` + `inline-size: 100%` + `grid-column: 1 / -1`.
+  Browser-verifiziert (Mobil 420px): Schalter kippt Row-State + `localStorage.dataE`,
+  Trenner 406px breit / 1px hoch.
+- **Dialog-Sync-Hinweise (EA / Neben / Bereitschaftseinsatz): Listener-Leak behoben.** Die
+  Add-/Editor-Dialoge registrieren einen `onEvent('data:changed')`-Listener, der den Hinweis
+  "noch nicht gespeicherter Zeitraum/EWT-Eintrag" bei Sync ausblendet. Aufgeraeumt wurde er
+  ueber `modal.addEventListener('hide.bs.modal', ...)` -- ein Bootstrap-Event, das seit Phase H
+  nie mehr feuert, also lief pro Dialog-Oeffnung ein Listener auf und blieb. Neu:
+  `beiModalSchliessen(cleanup)` (`components/showModal.tsx`) beobachtet `#modal` per
+  `MutationObserver` und ruft `cleanup` genau einmal, wenn der Dialog-Inhalt entfernt wird
+  (Schliessen oder direktes Neu-Oeffnen). 6 Dialoge umgestellt. Browser-verifiziert: Hinweis
+  blendet nach BZ-Sync aus, kein Listener-Aufbau ueber Oeffnen/Schliessen/Neu-Oeffnen.
+- **EWT-Anzeige-Modal: "Berechnen?"-Schalter nach oben rechts.** Schalter + Tag-Zeile teilen
+  jetzt eine Flex-Zeile (`.ewt-kopf`) -- der Schalter sitzt buendig oben rechts, statt eine
+  eigene Rasterzeile zwischen Tag und Einsatzort zu belegen. Browser-verifiziert Desktop +
+  Mobil (420px): Schalter rechtsbuendig, Einsatzort/Schicht nicht verschoben.
+- **AutoSave-Zustandspunkt auf den Speichern-Knoepfen -- sichtbar statt "fehlerhaft".** Zwei
+  Fehler: (1) `initAutoSaveIndicator()` sprang bei `badgeElements.size > 0` raus -- aber die
+  Feature-Tabs rufen `registerAutoSaveButton()` in `LOGIN_INIT_SEQUENCE` VOR
+  `ui:autoSaveIndicator` und fuellen die Map, ohne den Status-Listener zu registrieren ->
+  die Badges wurden nie aktualisiert. Jetzt Guard auf `if (unsubscribe)`. (2) Das Symbol war
+  im Punkt zu gross und angeschnitten -> siehe Eintrag (71).
+- **Admin-Benutzerliste-Filter: Beschriftungen einheitlich ueber dem Feld.** "Name" und "OE"
+  hatten die `DbFeld`-Beschriftung versteckt und ein zweites `<label>` NACH dem Feld gerendert
+  (Beschriftung unter dem Feld, dazu ein doppeltes `for`-Label). "Rolle" nutzte die eigene
+  `DbAuswahl`-Beschriftung ueber dem Feld. Jetzt alle drei mit `beschriftungZeigen` und ohne
+  Zusatz-`<label>` -> Beschriftung einheitlich oben, Hilfetext (`DBInfotext`) darunter.
+  Browser-verifiziert: alle drei Labels ueber dem Feld, kein doppeltes `for`-Label mehr.
+- **`border-radius: 0`-Sweep (Nebenwirkungen der eckigen Formensprache).** Systematisch
+  durchgegangen: kritisch war nur das `<hr>`. Ein `<hr>` als Flex-/Grid-Kind kollabiert auf
+  Breite 0 -- die UA-Regel `hr { margin-inline: auto }` ist ein Auto-Margin und schlaegt
+  `stretch`. Global neutralisiert (`hr { margin-inline: 0 }` in `styles.scss`); betraf die
+  Trenner in den Einstellungen ("Sichtbare Bereiche"/AutoSave, `d-flex`-Spalte) und die
+  VE-Anzeige-/Editor-Modale (`.raster`-Koerper). Browser-verifiziert (Einstellungen: 5x `<hr>`
+  jetzt 457-958px statt 0). Unkritisch: Passwort-Staerke-Balken (nutzen `--db-border-radius-full`
+  -> weiter pill), AutoSave-Punkt (`db-badge` -> `-full`, rund), der native `type="range"`-Slider
+  (UA-Styling). Keine `db-progress`/`db-slider`/Avatar-Komponenten im Einsatz.
+
+## 2026-09-08 (68)
+
+### fix (DB-UX-Migration Phase H: Sichtkorrekturen aus dem Test)
+
+- **Berechnungstabelle:** die verschachtelten Auslege-Tabellen im Zeilenkopf (EWT-Schwellen,
+  Zulagen-Codes) hatten um jede Beschriftungszeile ein eigenes Kaestchen. Die `db-table`-Huelle
+  setzt ihre Linien an `tr` (`border-block-end`) und an `td, th:not(:last-child)`
+  (`border-inline-end`) -- beide Selektoren greifen auch auf die innere Tabelle durch. Die
+  Gegenregel setzte bisher nur `td` zurueck; `tr` war der entscheidende Teil.
+- **Semantik-Knoepfe:** "Speichern" stand als dunkelgruener Kasten mit gruener Schrift da.
+  Grund: DBs `data-variant="filled"` ist keine Vollfarbe, sondern eine 16-%-Lasur
+  (`bg-basic-transparent-semi`), und `data-color` stellt nur die Palette des Teilbaums um --
+  gemessen `rgb(114 191 26 / 0.16)` auf `rgb(195 255 157)`. Semantik-Knoepfe nehmen jetzt die
+  Vollfarbe ihrer Palette (`--db-<semantik>-origin-default` mit `-on-origin-default` als
+  Schrift), mit demselben Gewicht wie `data-variant="brand"` die Markenfarbe nimmt. Gemessen:
+  Kontrast 6,71 statt eines unlesbaren Schleiers. `outlined` zeigt die Semantik jetzt in Rahmen
+  und Schrift, statt sie auf Weiss zu verlieren.
+- **Biometrie:** "Weitere Biometrie einrichten" war seit Phase H optisch identisch zum
+  Zweit-Knopf darunter (`btn-outline-primary` und `btn-outline-secondary` liefen beide auf
+  `outlined`). Der Haupt-Knopf traegt jetzt `data-color="brand"`.
+- **Sass:** `if()` in `utilities.scss` durch eine Map ersetzt -- die verschachtelte Form ist in
+  Dart Sass abgekuendigt und meldete sich bei jedem Build.
+- `scss/comment-no-empty` in der Stylelint-Config abgeschaltet: mehrzeilige `//`-Erklaerungen
+  trennen ihre Absaetze mit einer leeren `//`-Zeile.
+
+**Nicht geaendert:** Die Farbsaeume am Wort "Impressum" sind Subpixel-Glaettung des Browsers,
+kein CSS -- gemessen steht dort reines `rgb(237, 238, 240)` ohne `text-shadow` und ohne Verlauf.
+
+## 2026-09-08 (67)
+
+### refactor (DB-UX-Migration Phase H: Bootstrap vollstaendig entfernt)
+
+Abschluss von Phase H. `bootstrap`, `@types/bootstrap` und `@popperjs/core` sind deinstalliert,
+der `~bootstrap`-Alias ist aus `vite.base-config.ts` raus, `bridge.css` ist geloescht und das
+Layer-Modell auf `@layer db-ux, app` geschrumpft. Kein `data-bs-*` und kein `--bs-*` mehr in
+`src/` oder `test/`.
+
+- **Karten** (`card`/`card-body`/`card-title`/`card-text`/`card-header`/`card-footer`) auf
+  `db-card`. Wo eine Kopf- oder Fusszeile die volle Breite braucht, steht `data-spacing="none"`
+  an der Karte und der Abstand an den Abschnitten -- DBs Karte polstert sonst aussen herum.
+- **Navigation** (`nav-pills`/`nav-tabs`/`nav-item`/`nav-link`) auf `db-navigation` mit
+  `db-navigation-item` und `data-active`, wie schon in der Kopfzeile. Die Admin-Unternavigation
+  ist damit datengetrieben (eine Liste statt achtmal desselben Blocks).
+- **Tabellen:** die restlichen sieben `table table-sm …` im Admin-Panel und in den Einstellungen
+  liegen jetzt in einer `db-table`-Huelle; `table-responsive` entfaellt, weil `db-table` selbst
+  scrollt. `table-hover` hat kein Gegenstueck an der Huelle -- dafuer gibt es
+  `.db-table[data-interactive='true']`.
+- **Restliche Bootstrap-Muster:** `list-group`/`list-group-flush` -> `trennliste`,
+  `spinner-grow` -> `.laedt`, die letzten sechs `badge`/`text-bg-*` -> `db-tag` mit
+  `data-semantic`. Der AutoSave-Punkt am Speichern-Knopf traegt seinen Zustand jetzt als
+  `data-semantic` statt als `bg-*`-Klasse.
+- **`src/scss/utilities.scss` (neu):** rund 200 Hilfsklassen mit denselben Namen wie bei
+  Bootstrap (`d-flex`, `mb-3`, `text-body-secondary`, `border`, …), aber auf DB-Tokens
+  gerechnet. Damit blieben die rund 5.000 Klassen-Vorkommen im Bestand unveraendert. Ebenfalls
+  darin: `tab-pane`/`fade`, die vorher aus Bootstraps Tab-CSS kamen, und die zwei Gegenregeln
+  zum DB-Layer (Listen-Bullets, Table-Layout), die bisher in `bridge.css` standen.
+- **Umbenannt:** `data-bs-dismiss` -> `data-dialog-dismiss`, `data-bs-target` ->
+  `data-dialog-target-modal`, `data-bs-theme` -> `data-mode` (DBs eigenes Attribut),
+  `data-bs-theme-value` -> `data-theme-value`, `BSColorToggler` -> `DBColorToggler`.
+- **Verifikation:** `typecheck`/`lint` (0 Fehler, 28 Alt-Warnungen)/`test` (2084/0)/`build`
+  gruen. Browser (Chrome headless, Dev-Server): Layer-Reihenfolge `db-ux, app`, 0 Bootstrap-
+  Klassen und 0 `data-bs-*` im DOM, 20 Hilfsklassen-Stichproben mit erwarteten Werten,
+  Tabwechsel setzt Panel + `data-active` + Hash, Admin-Unternavigation waagerecht mit
+  Aktiv-Markierung, Hell/Dunkel wechseln Grund und Text, 0 Konsolenfehler.
+
+### build (Stylelint als Gate)
+
+`stylelint.config.mjs` war angelegt, aber weder lauffaehig noch verdrahtet. Jetzt:
+`bun run lint:css` (neu, dazu `lint:css:fix`), eingehaengt in `release:check`, in `lint-staged`
+und als eigener Schritt in `deploy.yml`.
+
+- **Lauffaehig gemacht:** SCSS wurde bisher gar nicht geparst (`//` war ein Syntaxfehler) --
+  jetzt `stylelint-config-standard-scss` als Override fuer `**/*.scss`. Die beiden Paket-Importe
+  in `db-ux.css` sind von `import-notation` ausgenommen, weil Vite Bare-Specifier nur in der
+  String-Form aufloest.
+- **Ratsche:** die fuenf `db-ux/*`-Token-Regeln melden als `warning`; `lint:css` laeuft mit
+  `--max-warnings 93` (Stand heute). Neue Hartcodierungen brechen den Lauf, beseitigte duerfen
+  die Grenze senken. Der Rest der Regeln ist `error` und steht auf 0.
+- **Behoben statt weggedrueckt:** doppelte `max-inline-size`/`position`, `min-height: 85vh`
+  neben `min-block-size: 85%`, `word-break: break-word` (abgekuendigt), `-webkit-sticky`,
+  physische Eigenschaften in `styles.scss`/`customtable.css`.
+- **Autofix-Falle:** `stylelint-use-logical` fasst mehrere `top`/`right`/`bottom`/`left` zu
+  `inset: logical …` zusammen -- diese Kurzform unterstuetzt kein Browser, die Snackbar-
+  Positionierung waere still kaputt gewesen. Die fuenf Eigenschaften sind jetzt per `except`
+  vom Autofix ausgenommen.
+- `selector-class-pattern`/`selector-id-pattern` lassen den Bestand zu (`customtableIcon`,
+  `#Berechnung`, `#collapseFour`, BEM `__element`/`--modifikator`), verlangen fuer Neues aber
+  kebab-case. `no-descending-specificity` und `media-feature-range-notation` sind mit Begruendung
+  aus.
+
+## 2026-09-07 (66)
+
+### refactor (DB-UX-Migration Phase H: Formulare im Admin-Panel, Sichtkorrekturen)
+
+Der zweite Teil des Formular-Umbaus: Admin-Panel und Formular-Editor. Damit kommen
+`form-control`, `form-select`, `form-check`, `form-label`, `form-text`, `input-group`,
+`invalid-feedback` und `is-invalid` in `src/` nicht mehr vor.
+
+- **110 Felder** in rund 30 Dateien auf `DbFeld`/`DbAuswahl` bzw. `db-checkbox`/`db-textarea`
+  umgestellt. Wo die Beschriftung bisher als `input-group-text`-Vorsatzbox oder als eigenes
+  `form-label` daneben stand, ist sie jetzt das `<label>` der Feldhuelle; wo es gar keine gab
+  (kompakte Felder im Formular-Editor), tragen die Felder erstmals einen Namen.
+- **Doppelte Beschriftungen entzerrt:** In der Massenbearbeitung hiess der Haken wie das
+  Feld darunter -- das Feld heisst jetzt „Neuer Wert für …", die Quellen-Auswahl
+  „Vorlage wählen"/„Muster-Benutzer wählen".
+- **Sichtkorrekturen** (aus der Durchsicht am echten Dev-Server):
+  - Fahrzeiten-Tabelle: ab md haelt DB die Zeile ueber dem Feld nicht mehr frei
+    (`--db-label-visible-above: 0`) -- jede Zeile war sonst eine Leerzeile hoeher, und das
+    Uhr-Symbol des Zeitfelds sass zu tief.
+  - Bearbeiten/Loeschen in Tabellenzellen bleiben nebeneinander (`td > .knopfgruppe` ohne
+    Umbruch) statt sich in der schmalen Aktionsspalte zu stapeln.
+  - Beschriftungen richten sich am Feld aus, nicht an der Textausrichtung des Abschnitts
+    (`text-center` in den Einstellungen zog sie in die Mitte).
+  - In der `.feldgruppe` behalten Knoepfe ihre Inhaltsbreite -- „Auswählen" schrumpfte sonst
+    mit dem Feld und verlor seinen Text.
+  - Monatsnavigation der Berechnung nutzt `chevron_left`/`chevron_right` statt der Zeichen
+    `‹`/`›`, die als schmale, ueberhohe Knoepfe standen.
+- **Bereitschafts-Voreinstellungen:** Die Tabelle zeigte `Do W1<br/>15:45` woertlich --
+  `CustomTable` setzt Zellen als Text. Der Parser liefert jetzt einen echten Zeilenumbruch,
+  die vier Spalten tragen `cell-multiline` (dasselbe Muster wie die Zulagen-Spalte).
+- **Testhilfe:** `feldMitBeschriftung`/`felderMitBeschriftung` in `test/reactRender.ts` finden
+  ein Feld ueber den Text seiner Beschriftung -- Ersatz fuer die `input[aria-label=…]`-Selektoren.
+
+## 2026-09-07 (65)
+
+### refactor (DB-UX-Migration Phase H: Formulare auf DB UX, Bootstrap-JS raus)
+
+Felder, Auswahllisten und Schalter ausserhalb des Admin-Panels laufen auf den DB-Bausteinen.
+Damit ist auch das letzte Bootstrap-JS-Plugin (`Popover`) raus -- `bootstrap/js` kommt in
+`src/` nicht mehr vor.
+
+- **Zuordnung:** `form-floating` + `form-control` -> `.db-input[data-variant="floating"]`
+  (Label vor dem Feld), `form-select` -> `.db-select`, `form-check` -> `.db-checkbox`,
+  `form-check form-switch` -> `.db-switch` (Feld jeweils **im** Label), `form-control-sm`/
+  `form-select-sm` -> `data-density="functional"`, `form-text`/`invalid-feedback` ->
+  `.db-infotext`. `form-label` entfaellt, die Beschriftung steht in der Feldhuelle.
+- **`input-group` + Icon-Vorsatz** (13 Felder in den persoenlichen Daten) -> `data-icon` an
+  der Huelle; DB rendert das Icon per CSS (`content: attr(data-icon)`), die Vorsatzbox
+  entfaellt. Fuer die zwei Gruppen aus Feld **und Knopf** (E-Mail, Jahresauswahl) gibt es
+  `.feldgruppe` -- DB hat dafuer keine Entsprechung.
+- **`Popover` entfernt**: einziger Aufrufer war der Hinweis am Jahr-Feld, der jetzt ein
+  `db-tooltip` ist (wie die Tabellenzellen seit Phase F). Eine App-Regel zeigt ihn zusaetzlich
+  bei `:focus-within`, weil DB nur `:hover`/`:focus-visible` am Elternknoten kennt und der
+  Fokus im `<input>` sitzt.
+- **`DbFeld`/`DbAuswahl` (`components/DbFeld.tsx`, neu)** kapseln die Huelle fuer die vielen
+  kompakten Felder in Panels und Zeilen-Editoren. Sie vergeben per `useId()` die Verknuepfung
+  Label <-> Feld -- die Felder haben damit erstmals durchgaengig einen zugaenglichen Namen.
+- **Validierung ohne Bootstrap-Klassen:** `addressValidation` schreibt den Fehlertext als
+  `db-infotext[data-semantic="critical"]` in die Feldhuelle und markiert das Feld nur noch
+  ueber `data-custom-validity`; `is-invalid`/`is-valid`/`has-validation` sind weg. Die vier
+  `was-validated`-Marker in den Passwort-/Registrier-Dialogen entfallen ersatzlos -- DB faerbt
+  ueber `:user-invalid`.
+- **Monatswechsel** in der Kopfzeile liegt jetzt in einer `db-select`-Huelle; das Ein- und
+  Ausblenden haengt an ihr (`#MonatFeld`), sonst bliebe DBs Aufklapp-Pfeil allein stehen.
+
+## 2026-09-06 (64)
+
+### refactor (DB-UX-Migration Phase H: Buttons auf DB UX)
+
+Alle Schaltflaechen sind `db-button`; Bootstraps `btn`-Klassen kommen in `src/` nicht mehr vor
+(257 Stellen in 59 Dateien).
+
+- **Zuordnung** wie in `infrastructure/ui/dbButton.ts` schon angelegt: `btn-primary` ->
+  `data-variant="brand"`, `btn-secondary` -> `filled`, `btn-outline-*` -> `outlined`,
+  `btn-link` -> `ghost`, `btn-sm` -> `data-size="small"`, `w-100` -> `data-width="full"`.
+  Die Semantikfarben kommen ueber `data-color` (`critical`, `successful`, `warning`,
+  `informational`) -- DB faerbt darueber die adaptiven Tokens von `filled`/`outlined`/`ghost`
+  um, `brand` bleibt immer DB-Rot. `btn-outline-success` und `btn-outline-warning` in der
+  Zuordnung ergaenzt.
+- **`btn-close`** ist ein DB-Ghost-Icon-Button (`data-icon="cross"`, `data-no-text`) und
+  traegt jetzt einen Text -- vorher waren die Knoepfe leer und damit ohne Namen fuer
+  Screenreader.
+- **`btn-group`** -> `.knopfgruppe`: eine Reihe mit kleinem Abstand statt zusammengeschobener
+  Knoepfe mit geteilten Rahmen.
+- **`MyButton`** nimmt die DB-Attribute direkt entgegen (`data-variant`, `data-color`,
+  `data-size`, `data-width`) statt eine Bootstrap-Klassenliste zu zerlegen. `buttonLook()`
+  bleibt fuer die `classes`-Option von `CustomTable`.
+- **`confirmDialog`** kennt statt `confirmClass` jetzt `confirmVariant` und `confirmColor`.
+- **Dark-Theme-Korrekturen** fuer `.btn-outline-*` sind entfallen -- sie stellten
+  `--bs-btn-*`-Variablen gerade, die kein Knopf mehr liest.
+- **`setNaechsterEwtTag`** sucht den Speichern-Knopf jetzt ueber
+  `button[data-variant="brand"]`.
+
+## 2026-09-06 (63)
+
+### refactor (DB-UX-Migration Phase H: Raster und Akkordeon ohne Bootstrap)
+
+- **Rasterhilfen (`scss/raster.scss`, neu)** ersetzen `.row`/`.col-*`/`.container`:
+  `.raster` (12 Spalten, Kinder standardmaessig volle Breite, `.sp-*` verschmaelert einzelne),
+  `.raster-auto` (so viele gleich breite Spalten, wie bei `--spalte-min` hineinpassen),
+  `.abstand-0..5` (Bootstraps Rinnenbreiten), `.mitte`/`.breit` fuer die Container. 383
+  Klassenvorkommen in 45 Dateien umgestellt. Anders als bei Bootstrap gibt es keine negativen
+  Aussenabstaende und kein Innenpolster an den Kindern -- der Abstand kommt aus `gap`.
+- **`.w200` -> `.knopfreihe`:** die Knopfreihen der Tabs bekommen eigene Spaltenregeln
+  (gleich breit bis 250 px, Gruppe zentriert). Mit gestreckten Rasterspalten standen die
+  Knoepfe sonst weit auseinander statt mittig beieinander.
+- **Jahresauswahl** in den Einstellungen kommt ohne Rasterverschachtelung aus
+  (`.jahr-auswahl`, 30 rem, mittig) -- vorher drei Ebenen fuer eine Eingabezeile.
+- **Akkordeon auf DB UX:** Einstellungen (7 Abschnitte) und die Berechnungs-Monatskarten
+  laufen als `db-accordion` mit nativem `<details>`/`<summary>`. Exklusives Aufklappen macht
+  jetzt das `name`-Attribut statt `data-bs-parent`. Damit faellt Bootstraps
+  `Collapse`-Plugin ersatzlos weg (`main.ts`, `onboardingValidation.ts`).
+- **Floating-Labels:** Bootstrap blendet den Platzhalter aus, wenn ein Floating-Label das
+  Feld beschriftet -- weil Bootstrap im untersten Layer liegt, faerbten die DB-Regeln ihn
+  wieder ein und Label und Platzhalter standen uebereinander (sichtbar, sobald ein
+  Einstellungen-Abschnitt offen war). Eine App-Regel setzt ihn wieder auf `transparent`.
+
+## 2026-09-06 (62)
+
+### refactor (DB-UX-Migration Phase H: Bootstraps Modal-Huellen raus)
+
+Die Dialoge lagen seit Phase E im `DBDrawer`, trugen innen aber weiter Bootstraps
+Modal-Geruest. Das war doppelt: `.modal-dialog`/`.modal-content` waren reine Huellen, deren
+Optik `styles.scss` gleich wieder abraeumte (Rahmen weg, Hintergrund weg, Breite
+ueberschrieben) -- und dadurch war auch die Groessen-Prop wirkungslos, jeder Dialog rendete
+36 rem.
+
+- **Neue Klassen** statt der Bootstrap-Huellen: `.dialog-rumpf` (Flex-Spalte, beim Formular
+  das `<form>` selbst), `.dialog-koerper`, `.dialog-fuss`. Die Kopfzeile traegt nur noch
+  `.db-drawer-header`, der Titel gar keine Klasse mehr. `.modal-dialog`/`.modal-content`
+  sind ersatzlos entfallen.
+- **Breite** kommt ueber `--db-drawer-max-width` am `<dialog>`; `:has([data-breite])` hebt die
+  Angabe aus dem Rumpf hoch. `TMyModal.size` kennt nur noch `lg` (48 rem) und `xl` (64 rem) --
+  `sm` und die `fullscreen-*-down`-Stufen waren im Drawer ohne Wirkung und sind raus. Vier
+  Admin-/Editor-Dialoge werden dadurch breiter, alle uebrigen bleiben bei 36 rem.
+- **Drei Admin-Dialoge** (Ressource bearbeiten, Schriftart, UserProfile) hingen als
+  handgebaute `.modal.show` samt `.modal-backdrop` und z-index 1054/1055 am `document.body`.
+  Sie laufen jetzt ueber `DBDrawer` -- der native `<dialog>` stapelt selbst im Top-Layer,
+  Backdrop und Escape kommen vom Browser. Die `maxHeight: 65vh|70vh`-Inline-Stile sind weg,
+  der Drawer-Inhalt scrollt ohnehin.
+- **`setNaechsterEwtTag`** suchte den Speichern-Knopf ueber
+  `#modal > div > form > div.modal-footer` -- dieser Pfad passte seit Phase E nicht mehr auf
+  den echten DOM (der Drawer schiebt drei Ebenen dazwischen), der Knopf wurde also nie mehr
+  deaktiviert. Jetzt `#modal .dialog-fuss > button.btn.btn-primary`.
+- **Trennlinien** an Kopf- und Fusszeile nutzten `--db-divider-bg-color`; DB definiert die
+  Variable nur in einzelnen Komponenten (Accordion, Control-Panel), im Drawer war sie leer
+  und die ganze Border-Regel damit ungueltig. Jetzt
+  `--db-adaptive-on-bg-basic-emphasis-60-default`.
+- **Unterschriftenfeld:** der Drawer-Innenabstand ging von der Schreibflaeche ab, ohne dass
+  `berechneCanvasGroesse()` ihn sah -- das Feld lief rechts aus dem Bild. Mit
+  `--db-drawer-content-padding: 0` passt es wieder: Querformat 836x334 (vorher 828x331, davon
+  16 px ueber den Rand), Hochformat 374x150 buendig.
+
+## 2026-09-06 (61)
+
+### feat (DB-UX-Migration Phase E: Snackbar als DB-Notification)
+
+Die Snackbar rendert jetzt `db-notification` statt der dunklen Pille mit farbigem Streifen.
+Die `createSnackBar`-Schnittstelle bleibt -- `status`, `icon`, `actions`, `dismissible`,
+`position`, `timeout`, `width`, `speed` verhalten sich unveraendert.
+
+- **Farbe und Symbol** kommen aus `data-semantic` und `data-icon`: `success|green` ->
+  `successful`, `warning|alert|orange` -> `warning`, `danger|error|red` -> `critical`,
+  `info` -> `informational`. Ohne Status bleibt die Meldung `adaptive` und ohne Symbol.
+- **`titel` (neu, optional)** rendert einen Kopfbereich (`<header data-area="head">`). Ohne
+  Titel bleibt es bei der einzeiligen Nachricht. Genutzt beim EWT-Ruecklauf "Alle Zeiten
+  entfernen?" -- die Frage steht jetzt im Kopf, der Hinweis im Text statt als `<small>`.
+- **Aktionen** sind DB-Buttons (erste `brand`, weitere `outlined`) im Inhaltsbereich; die
+  Bootstrap-Klassen `text-danger`/`text-primary`/`text-secondary`/`text-info` an den
+  Aktionen sind entfallen, die Farbe kommt aus der Variante.
+- **Schliessen** ist ein DB-Ghost-Button mit `cross`-Symbol statt eines `×`-Spans.
+- **Fusszeile:** unten verankerte Meldungen halten 4 rem Abstand, damit sie nicht auf der
+  festen App-Fusszeile liegen. Der Halter ist `pointer-events: none`, nur die Meldungen
+  selbst nehmen Klicks -- sonst haette der Freiraum die Fusszeile blockiert.
+
+## 2026-09-06 (60)
+
+### feat (DB-UX-Migration Phase E: Modal-Infrastruktur auf DB-Drawer)
+
+Bootstraps `Modal`-Plugin ist raus. Dialoge laufen ueber `DBDrawer` bzw. den nativen
+`<dialog>` -- Escape, Backdrop-Klick, Fokus-Falle und Scroll-Sperre kommen damit vom Browser.
+
+- **`components/showModal.tsx`** mountet einen `DBDrawer` in `#modal`. Der Vertrag bleibt:
+  synchron zurueckgegebenes `#modal`, `.row`/`.role` beschreibbar, Feld-Ids sofort per
+  `querySelector` erreichbar. Schaltflaechen mit `data-bs-dismiss="modal"` schliessen weiter
+  -- ueber Delegation, damit kein Dialog-Baustein angefasst werden musste.
+- **`infrastructure/ui/dbDialog.ts` (neu)** ist das Vanilla-Gegenstueck fuer `confirmDialog`,
+  den AutoSave-Fehlerdialog und den Unterschriften-Dialog. `escapeSchliesst: false` fuer die
+  Entscheidungen, die nicht versehentlich weggeklickt werden duerfen.
+- **Impressum** haengt nicht mehr an `data-bs-toggle="modal"` (das ohne Plugin wirkungslos
+  war), sondern an `data-dialog-target` -- der Knopf in der Fusszeile funktioniert wieder.
+- **Admin-Unternavigation:** acht Reiter hingen noch an `data-bs-toggle="pill"` und waren
+  seit Phase D tot. Der `tabController` kennt jetzt Tab-Gruppen -- er schaltet nur die
+  Geschwister-Panels der jeweiligen `.tab-content` und schreibt den Hash ausschliesslich
+  fuer die Hauptnavigation.
+- **Unterschriftenfeld:** Der Drawer war auf 36 rem gedeckelt, im Querformat blieb kaum
+  Platz. Er nimmt jetzt die volle Breite, die Kopfzeile ist ganz entfallen und die Fusszeile
+  traegt Merken-Haken, Abbrechen, Loeschen und Fertig als kleine Schaltflaechen in einer
+  schmalen Reihe. Feld im Querformat 603x241 -> 828x331 px bei 844x390, im Hochformat mittig
+  statt oben angeklebt. Das Pad entsteht im naechsten Frame statt auf `shown.bs.modal`;
+  Resize-Handler und Frame-Rueckruf pruefen `canvas.isConnected`, damit ein geschlossener
+  Dialog keine Arbeit mehr ausloest.
+- **Kopfzeilen** der Dialoge im DB-Aufbau (Titel links, Hilfe und Schliessen als Icon-Buttons
+  rechts) -- vorher ueberlappten Titel, `?` und `x`.
+- Tooltip in der Admin-Benutzerkarte auf `title` umgestellt; das Bootstrap-Tooltip-Plugin ist
+  seit Phase F nicht mehr geladen.
+
+Uebrig aus Phase E: `CustomSnackbar` auf DB-Notification-Optik (rein kosmetisch) und das
+Entfernen der `.modal-*`-Huellen -- Letzteres gehoert zum Utility-Sweep in Phase H.
+
+## 2026-09-06 (59)
+
+### feat (DB-UX-Migration Phase D: App-Shell, Navigation, index.html)
+
+Die Kopfzeile ist jetzt ein DB-Header; Bootstraps `Tab`-, `Offcanvas`- und `Dropdown`-Plugins
+sind aus der Navigation raus.
+
+- **`infrastructure/ui/tabController.ts` (neu)** ersetzt Bootstraps `Tab`. Schalter tragen
+  `data-tab-target="<Panel-Id>"` und werden per Delegation an `document` bedient; der
+  Controller schaltet `.tab-pane`, pflegt `aria-selected`/`data-active`, schreibt
+  `location.hash` (Deep-Link und Browser-Zurueck ueber `hashchange`) und meldet den Wechsel
+  als `tab:shown`-CustomEvent. Pfeiltasten/Pos1/Ende wandern durch die Tabliste.
+- **`infrastructure/ui/navDrawer.ts` (neu)** oeffnet die mobile Navigation in einem
+  `<dialog class="db-drawer">`. `DBHeader` rendert die Navigation dafuer zweimal -- das ginge
+  hier nicht, weil die App ihre Tabs ueber feste Ids anspricht. Die Navigation existiert
+  deshalb genau einmal und zieht beim Oeffnen in die Schublade und danach zurueck.
+- **`index.html`:** `<header class="navbar">` + `.offcanvas#navmenu` + `.nav-pills` -->
+  `.db-header` mit `.db-navigation`. Tab-Eintraege sind jetzt `<a href="#Ziel">` statt
+  `<button>` -- DB stylt in Navigationseintraegen nur Links. Alle bisherigen Ids
+  (`#navmenu`, `#btn-navmenu`, `#admin`, `#Monat`, `#btnLogin`, `*-tab`) bleiben, damit das
+  `d-none`-Schalten aus `auth/`, `logoutUser` und `updateTabVisibility` unveraendert greift.
+- **Monatswechsel und Anmelde-Knopf** sitzen in `.db-header-primary-action` -- dort zeigt DB
+  sie auch auf dem Handy neben der Marke (in `.db-header-secondary-action` waeren sie in die
+  Schubladen-Fusszeile gewandert).
+- **Design-Umschalter:** Bootstrap-Dropdown --> DB-Sub-Navigation (Desktop rein per CSS,
+  mobil ueber `aria-expanded`). `BSColorToggler` uebernimmt jetzt die Symbol-Beschreibung
+  (`data-icon` bzw. `app-icon`-Klasse) des gewaehlten Eintrags; das alte `innerText`-Kopieren
+  stammte noch von den Material-Ligaturen und war seit Phase G wirkungslos.
+- **Dev-Service-Worker aus:** `devOptions.enabled` haengt an `PWA_DEV=true`. Der SW lieferte im
+  Dev-Modus alte Stylesheets aus, sodass Fehlerbilder Reload und Server-Neustart ueberlebten.
+
+## 2026-09-06 (58)
+
+### feat (DB-UX-Migration Phase F: CustomTable auf DB-Table-CSS)
+
+Die Tabellen tragen jetzt DB-Optik; die eigene Sortier-, Inline-Edit- und Soft-Delete-Logik
+der `CustomTable` bleibt unveraendert.
+
+- **Huelle:** `<div class="db-table" data-width="full">` statt der Bootstrap-Tabellenklassen
+  (`table table-bordered table-striped table-hover`) -- 5 Tabellen in den Feature-Tabs und
+  2 in `index.html`. Ueberschriften stehen jetzt vor der Huelle statt darin.
+- **Kopfzeilen** nutzen `data-sub-header-emphasis="weak"` statt `table-primary`; das faerbt in
+  Hell und Dunkel korrekt (`table-primary` setzte schwarzen Text auf dunklem Grund).
+- **Buttons:** `infrastructure/ui/dbButton.ts` (neu) haelt die Zuordnung
+  Bootstrap-Klasse -> DB-Prop; `MyButton` (React) und `customTableRender` (Vanilla-DOM) nutzen
+  sie gemeinsam. Fuss- und Zeilen-Buttons sind damit DB-Buttons, die `customButton.classes`-
+  Konvention der Aufrufstellen bleibt.
+- **Tooltips:** `bootstrap/js/dist/tooltip` ist raus. Die Fehlerzeile bekommt ein
+  `db-tooltip`-Element (reines CSS, kein JS-Lebenszyklus mehr), die Filter in `AdminUserList`
+  einen `DBInfotext` -- ein Tooltip an einem `div` waere per Tastatur nicht erreichbar
+  (`db-ux/tooltip-requires-interactive-parent`).
+- **`customtable.css`** ohne `--bs-*`: Soft-Delete, Fehlerzeile und Fehler-Icon lesen jetzt
+  DB-Tokens.
+- **Schalter in der EWT-Tabelle** (`berechnenParser`, DOM-String mit `html: true`) nutzen
+  DB-Switch-Markup statt `form-check form-switch`.
+- **Zebra-Streifen** ueber `data-variant="zebra"` -- das Gegenstueck zu `table-striped`, das
+  mit den Bootstrap-Klassen weggefallen war. Mit Zebra faerbt DB die Kopfzeile zusaetzlich
+  als Vibrant-Band.
+- **Aktionsspalte:** Zeilen-Buttons in `small`, Marker fuer eingeklappte Spalten und
+  Button-Gruppe per `white-space: nowrap` in einer Zeile -- die DB-Buttons sind selbst
+  Flex-Container und haben den Marker sonst in die Zeile darueber gedraengt.
+- **Trennlinien** ueber `data-divider="both"` (Ersatz fuer `table-bordered`) -- ohne sie liess
+  sich das Sortier-Icon keiner Spalte zuordnen.
+- **Sortier-Icons** sind schlichte Pfeile (`arrow_up`/`arrow_down`); `sort_up`/`sort_down`
+  tragen zusaetzliche Balken und waren in der dichten Kopfzeile nicht lesbar. Neutral
+  (beim Ueberfahren) bleibt `arrows_vertical`.
+- **Zeilenhoehe:** `data-size="small"` (DB-Standard ist deutlich luftiger als Bootstrap) und
+  `white-space: nowrap` fuer Datenzellen -- "Mi 01.03." brach sonst auf zwei Zeilen um und
+  verdoppelte die Zeilenhoehe. Ausgenommen sind Zellen mit mehrzeiligem Inhalt
+  (`.cell-multiline`, z.B. die Zulagen-Liste); Freitext-Spalten kuerzt `.custom-text-truncate`.
+
+**Bewusst nicht uebernommen:** DB rechnet `.db-table table` als CSS-Grid (`display: grid` plus
+`:has()`-Spaltenzaehlung). Die Tabellen im Bestand arbeiten mit `colspan` (Fusszeile,
+Leer-Meldung, Inline-Editor), mit Zeilenkoepfen und mit je Breakpoint ausgeblendeten Spalten --
+im Grid-Modell rutschen diese Zellen in eine einzige Spalte; bei der Berechnungstabelle liefen
+Kopf und Rumpf komplett auseinander. Die Regel steht deshalb in `bridge.css` und gilt fuer
+**alle** Tabellen in einer `db-table`-Huelle, nicht nur fuer die `CustomTable`: natives
+Table-Layout, Farben und Abstaende aus dem DB-Layer. Faellt mit der Umstellung auf
+DB-konformes Tabellen-Markup (Phase H/I).
+
+**Nebenbei:** `@vitejs/plugin-react-swc` -> `@vitejs/plugin-react`. Vite 8 empfiehlt das, sobald
+keine SWC-Plugins genutzt werden (Rolldown bringt Oxc mit); damit faellt auch `@swc/core` aus
+den `trustedDependencies` und ein Postinstall weniger laeuft.
+
+Verifikation: `typecheck`, `lint`, `test` (2077/0) und `build` gruen. Browser mit echten Daten:
+11 Zeilen, 25 DB-Buttons, 0 Bootstrap-Buttons, Sortier-Icon als Glyph, Schalter rendert als
+DB-Toggle, Kopfzeile lesbar, 0 Konsolenfehler.
+
+## 2026-09-06 (57)
+
+### feat (DB-UX-Migration Phase G: Material Icons raus, DB-Icons rein)
+
+Alle 138 Icon-Stellen in 39 Dateien nutzen jetzt den DB-Icon-Satz. Die Zuordnung der
+59 Material-Namen wurde vorab an einer Vergleichsseite (alt/neu, mit Alternativen) freigegeben.
+
+- **`components/dbIcons.ts`** (neu): Mapping Material-Name -> DB-Name plus die
+  Groessenklassen des Design-Systems (`db-font-size-2xs|xs|sm|md|lg` setzen
+  `--db-icon-font-size`).
+- **Markup:** `<span class="material-icons-round">name</span>` ist ueberall
+  `<span class="db-icon" data-icon="db_name">` -- in TSX, in den DOM-String-Templates von
+  `CustomTable` und in `index.html`. Die Groesse kommt nicht mehr aus Inline-`fontSize`,
+  sondern aus der passenden `db-font-size-*`-Klasse (`.db-icon` selbst hat
+  `font-size: 0 !important`, das Glyph sitzt im `::before`).
+- **Zwei Eigenbau-Motive**, die es im DB-Satz nicht gibt, nach DB-Regelwerk aus je zwei
+  offiziellen 24-dp-Icons zusammengesetzt (`scripts/icon-varianten.py` -> `src/icons/`):
+  `theme-auto` (Sonne + Mond) fuer die Theme-Automatik und `filter-off` (Trichter mit
+  2-dp-Durchstreichung und Verschnitt) fuer "Filter zuruecksetzen". Eingebunden als
+  CSS-Maske (`.app-icon`), die `currentColor` und dieselbe Groessenvariable nutzt.
+- **AutoSave-Badge und Tabellen-Fehlerzeile** setzen jetzt `dataset.icon` statt Text:
+  `cloud`/`cloud_upload`/`check_circle`/`exclamation_mark_circle`/`exclamation_mark_triangle`,
+  offline `wifi_disabled`.
+- **Raus:** `material-icons`-Dependency, der SCSS-Import, der Font-Preload in
+  `vite.config.ts` und der `~material-icons`-Alias.
+
+**Nachtrag nach dem ersten Sichttest** (drei Klassen von Fehlern, die der Codemod nicht sehen
+konnte):
+
+- **Dynamische Icon-Namen** blieben Material-Namen, weil sie als JSX-Ausdruck im Attribut
+  stehen (`data-icon={open ? 'expand_less' : 'expand_more'}`, Dashboard-Kacheln, Ereignisliste).
+  Ohne passendes Glyph rendert die Icon-Schrift nichts -- daher die leeren Kacheln.
+  Alle 13 Stellen auf DB-Namen umgestellt (`chevron_up`/`chevron_down`, `house`/`eye`,
+  `persons`, `counter_clockwise_clock`, `clock`, `start`/`stop`, ...).
+- **Sortier-Pfeile der Tabelle** standen als Text (`sort`, `arrow_drop_up`) in der Ansicht:
+  `customtable.css` setzte die Motive ueber `content:` als Material-Ligaturen und erzwang
+  `font-family: 'Material Icons Round'`. Jetzt `data-icon` am Element
+  (`arrows_vertical`/`sort_up`/`sort_down`), Schrift und Groesse kommen aus der DB-Regel.
+- **Rote Punkte vor jedem Navigations- und Listeneintrag:** DB setzt
+  `list-style-type: var(--db-list-bullet)` auf Listen und schlaegt damit Bootstraps
+  `list-style: none` aus dem unteren Layer. Bridge-Regel fuer `.nav`, `.navbar-nav`,
+  `.dropdown-menu`, `.list-unstyled`, `.list-group`, `.pagination`, `.breadcrumb`.
+- Dazu: DB stylt `input[type=checkbox]` global auf 32 px -- die verbliebenen
+  Bootstrap-Haken im Formular-Editor waren dadurch riesige leere Kaesten; Bridge holt die
+  Bootstrap-Groesse zurueck.
+- **Icons in Buttons** waren zu gross und sassen zu tief: `.db-icon` hat selbst `font-size: 0`,
+  das Glyph im `::before` richtet sich an der Grundlinie aus. Buttons mit Icon sind jetzt eine
+  Flex-Zeile (`align-items: center`, `gap`), die Icongroesse haengt an der Button-Groesse
+  (1,25 rem regulaer, 1 rem bei `btn-sm`, 1,5 rem bei `btn-lg`).
+- **Neuer Test `test/icons.dbSet.test.ts`:** liest den installierten Icon-Satz und prueft
+  jeden im Quellcode verwendeten Namen dagegen -- inklusive der ternaeren Ausdruecke.
+
+Verifikation: `typecheck`, `lint`, `test` (2077/0) und `build` gruen. Browser: kein Icon ohne
+Glyph, keine `material-icons-round`-Reste, Sortier-Icons als Glyph statt Text, keine
+Listen-Punkte mehr, Bootstrap-Haken wieder in normaler Groesse, 0 Konsolenfehler.
+
+## 2026-09-06 (56)
+
+### feat (DB-UX-Migration Phase C: Basiskomponenten auf DB React Components)
+
+`MyButton`, `MyCheckbox`, `MySelect`, `MyInput` und `PasswordStrengthMeter` sind jetzt duenne
+Adapter ueber `@db-ux/react-core-components@5.3.0`. Die Props der Aufrufstellen bleiben
+unveraendert -- kein Feature-Modul musste angefasst werden.
+
+- `MyButton` -> `DBButton`: `buttonLook()` uebersetzt die Bootstrap-Klassen der Aufrufstellen
+  (`btn-primary`, `btn-outline-info`, `btn-lg`, `w-100` ...) in `variant`/`data-color`/`size`/
+  `width`; unbekannte Layout-Klassen gehen weiter als `className` durch.
+- `MyCheckbox` -> `DBSwitch` (alle Aufrufstellen nutzten `form-check form-switch`, also
+  durchgehend Schalter).
+- `MySelect` -> `DBSelect`, `MyInput` -> `DBInput` (Klassen- wird Funktionskomponente).
+  Der Bootstrap-`Popover` in `MyInput` weicht einem `DBTooltip`; `hinweisZeilen()` macht aus
+  den bisherigen HTML-Schnipseln (`'... <br/>'`) echte Zeilen.
+- `PasswordStrengthMeter` nutzt DB-Farb-Tokens und `DBInfotext` statt `bg-*`/`text-*`.
+- **Neu `components/dbFeldHelfer.ts`:** `useSofortigeId` setzt die `id` im `useLayoutEffect`
+  auf das Feld. Die DB-Komponenten vergeben ihre `id` erst in einem `useEffect` -- direkt nach
+  `showModal()` stand sie noch nicht im DOM, und Code wie
+  `document.querySelector('#Tag')?.addEventListener(...)` (EWT-Buchungstag) waere still
+  ins Leere gelaufen. `refZusammenfuehren` verbindet dabei die Ref des Aufrufers mit der
+  internen.
+- Ungueltig-Zustand: `createEditorModalEWT` und `addressValidation` setzen zusaetzlich zu
+  `is-invalid` jetzt `data-custom-validity` (darueber faerbt DB UX), und
+  `.db-input .invalid-feedback` wird sichtbar geschaltet -- Bootstraps Geschwister-Selektor
+  greift im DB-Markup nicht mehr.
+- ESLint: `@db-ux/core-eslint-plugin` (recommended) aktiv.
+
+Verifikation: `typecheck`, `lint`, `test` (2074/0, davon 4 neue fuer `buttonLook`/`MyButton`)
+und `build` gruen. Browser-Smoke: ids stehen sofort nach `showModal`, vorbelegtes Feld bleibt
+tippbar (`vorbelegt` -> `vorbelegtX`), Schalter und Select reagieren, DB-Markup
+(`.db-input`/`.db-switch`/`.db-select`/`.db-button` + Tooltip) vorhanden, Feature-Tabs
+mounten/unmounten unveraendert, 0 Konsolenfehler ausser den erwarteten Auth-401.
+
+## 2026-09-06 (55)
+
+### feat (DB-UX-Migration Phase B: DB-UX-CSS-Layer, db-theme und Token-Bridge)
+
+DB UX liegt jetzt neben Bootstrap im Build. Es wurde noch keine Komponente ausgetauscht
+(das ist Phase C) -- sichtbar ist der Markenauftritt: DB-Rot, DB Neo Screen Sans, DB-Farbwerte
+fuer Hintergrund/Text in Hell und Dunkel.
+
+- **Deps:** `@db-ux/core-foundations`, `@db-ux/core-components` (5.3.0), `@db-ux/db-theme`
+  (6.2.0). `trustedDependencies` um `db-theme` und die drei Asset-Pakete (`-fonts`, `-icons`,
+  `-illustrative-icons`) ergaenzt -- ohne sie blockiert Bun deren Postinstall und die
+  Markenassets fehlen.
+- **`scripts/install.sh`** (neu): `bun install` mit `ASSET_PASSWORD`/`ASSET_INIT_VECTOR` aus
+  `.env` als echte Prozess-Env (kein `VITE_`-Praefix, Vite sieht sie nie).
+- **Cascade Layers** `bootstrap < db-ux < bridge < app` (`src/scss/layers.scss`); der
+  Bootstrap-Import in `styles.scss` liegt in `@layer bootstrap`, `src/scss/db-ux.css` holt
+  `db-theme/rollup.css` und `core-components/bundle.css` in `@layer db-ux`.
+- **Token-Bridge `src/scss/bridge.css`:** die vom App-Code real gelesenen `--bs-*` zeigen auf
+  DB-Tokens (Body-Hintergrund/-Text, Border, Primary/Secondary, Success/Danger/Warning inkl.
+  Subtle-Varianten), jeweils mit dem bisherigen Bootstrap-Wert als Fallback. `--bs-btn-*`,
+  `--bs-body-color-rgb` und die Radius-Variablen bleiben bewusst unangetastet.
+- **`$primary: #ec0016`** vor dem Bootstrap-Import: Bootstrap backt Komponentenfarben beim
+  Kompilieren ein, ein Laufzeit-`var()` erreicht `--bs-btn-bg` nicht. Der Wert ist
+  `--db-brand-origin-default` und in beiden Modi identisch.
+- **`BSColorToggler`** setzt zusaetzlich `color-scheme` am `<html>` (`light dark` im
+  Auto-Modus), sonst loest `light-dark()` im DB-CSS nicht auf; `<html>` traegt
+  `data-density="regular"`.
+- **CI (`deploy.yml`):** `ASSET_*` als `env:` am Install-Step, neuer `typecheck`-Step vor dem
+  Build. **Die Repo-Secrets muessen noch angelegt werden**, sonst baut CI ohne Markenassets.
+- **PWA:** DB-Screen-Sans-Regular wird vorgeladen; kursive, Black-, Digital- und Head-Schnitte
+  sowie die DB-Icon-Fonts sind aus dem Precache ausgenommen (59 statt 87 Eintraege,
+  4,9 statt 6,5 MB) und kommen ueber das bestehende CacheFirst-Runtime-Caching.
+
+Verifikation: `typecheck`, `lint`, `test` (2070/0) und `build` gruen; `light-dark()` bleibt mit
+870 Vorkommen erhalten (LightningCSS haette auf 3 reduziert); Browser-Smoke: Layer-Reihenfolge
+korrekt, `--db-*` am `:root`, Body-Farben und Buttons in DB-Rot, Schrift DB Neo Screen Sans,
+Hell/Dunkel/Auto sauber, 0 Konsolenfehler.
+
+## 2026-09-06 (54)
+
+### feat (DB-UX-Migration Phase A1+A2: Preact 10 -> React 19)
+
+Framework-Wechsel ohne DB-UX-Code, damit React-Umstellung und Design-System-Umstellung
+getrennt verifizierbar bleiben. `preact` und `@preact/preset-vite` raus, `react`/`react-dom`
+19.2.8 plus `@vitejs/plugin-react-swc` und `esbuild` rein.
+
+- **Rendern:** neues `infrastructure/ui/reactRoot.ts` mit `mount`/`unmount` (ein
+  `WeakMap`-Root-Cache je Container, Rendern per `flushSync`). Preacts `render` war synchron,
+  `root.render` ist es nicht -- Bootstrap-Modals, CustomTable und der Signatur-Dialog lesen
+  direkt nach dem Rendern aus dem DOM.
+- **Codemods:** 74 Quelldateien auf React-Importe, 1301x `class=` -> `className=`, 25x `for=`
+  -> `htmlFor=`, 128 String-`style`-Attribute zu Objekten, 12 Dateien von `render()` auf
+  `mount`/`unmount`.
+- **Formularfelder:** `MyInput`, `MyCheckbox` und `MySelect` schalten ohne Handler auf
+  `defaultValue`/`defaultChecked` um. Die Modals nutzen die Felder als Vorbelegung und lesen
+  den Endwert per Ref aus dem DOM -- als "controlled" waeren sie in React nicht mehr
+  editierbar gewesen. Alle 79 JSX-`onInput=` sind jetzt `onChange=`.
+- **Lint:** `eslint-plugin-react` + `eslint-plugin-react-hooks` ergaenzt (Rules of Hooks
+  fehlten unter Preact komplett). Die neuen Compiler-Regeln `set-state-in-effect` und `refs`
+  stehen vorerst auf `warn`.
+- **Bundle:** eigener `react`-Vendor-Chunk (189,6 KB / 59,6 KB gz), `cssMinify: 'esbuild'`.
+- **Tests:** `test/reactRender.ts` als Render-/Event-Helfer; Checkbox-Klicks, Wert-Setzen ueber
+  den nativen Setter und `pointerover` statt `pointerenter`, weil React Events anders
+  aufhaengt. 2070 Tests gruen, 0 React-Warnungen (vorher 115).
+
+Verifikation: `typecheck`, `lint`, `test` (2070/0) und `build` gruen; Browser-Smoke via
+Chrome headless (Feature-Tabs mounten/unmounten/remounten, Modal-Pfad synchron, vorbelegte
+Felder bleiben tippbar, Theme-Wechsel, keine React-Fehler in der Konsole).
+
+## 2026-09-05 (53)
+
+### chore (DB-UX-Migration: Wegwerf-Spike-Ergebnisse in den Plan eingearbeitet)
+
+Letzter offener Phase-0-Punkt. Minimales Vite-8-Projekt **ausserhalb des Repos** (nicht
+gemergt, keine Dependency-Aenderung hier): React 19.2.8 + `@db-ux/*` 5.3.0 +
+`@db-ux/db-theme` 6.2.0 mit den echten `ASSET_*`-Credentials, Bundle gemessen.
+Vier Plan-Annahmen korrigiert, eine bestaetigt:
+
+- **`trustedDependencies` (Bun):** `@db-ux/db-theme` allein reicht nicht -- Fonts und Icons
+  sind drei eigene transitive Pakete mit je eigenem `postinstall`
+  (`db-theme-fonts`, `db-theme-icons`, `db-theme-illustrative-icons`), dazu `@swc/core`.
+  Ohne Eintrag meldet Bun nur "Blocked N postinstalls" und baut ohne Markenassets.
+- **Vite 8 = Rolldown:** `manualChunks` wird **nur als Funktion** akzeptiert; die
+  Rollup-Objektform bricht den Build (`TypeError: manualChunks is not a function`).
+- **`cssMinify: 'esbuild'`** braucht `esbuild` als explizite devDependency -- Vite 8
+  bringt es nicht mehr mit.
+- **`light-dark()`-Falle bestaetigt:** der Default-Minifier reduziert 867 Vorkommen auf 3
+  und definiert die Ersatzvariablen nur unter `[data-mode=light|dark]`, womit der
+  OS-Automatik-Modus bricht. Mit `cssMinify: 'esbuild'` bleiben 870 erhalten.
+- **Bundle:** React-Runtime real **59,6 KB gz** (Plan schaetzte +40 KB), DB-UX-CSS
+  **84 KB gz** (heutige App-CSS 35 KB gz), Fonts 32 woff2 / ~1,8 MB, dazu 12 ungewollte
+  Marken-Logo-SVG (~91 KB). PWA-`globPatterns` in Phase B/I entsprechend eingrenzen.
+- **`DBDrawer`** baut auf nativem `<dialog>`: `header`/`footer` sind Props-Slots,
+  `position: 'fixed'` (Default) nutzt `showModal()` inkl. echtem Fokus-Trap. Die
+  Phase-E-Verifikationspunkte (Escape/Backdrop/Fokus-Trap/Scroll-Lock) sind damit
+  grossteils nativ abgedeckt.
+
+Entschluesselung verifiziert (18 woff2, 3345 Icon-SVG, 247 illustrative SVG, 49 Bilder);
+`tsc --noEmit` mit dem projekt-gepinnten TS 6.0.3 sauber, also kein TS-7-Zwang durch DB UX.
+
+Nur Dokumentation geaendert (`tasks/plan-db-ux-migration.md`, `tasks/todo.md`) -- kein
+Produktionscode, keine Dependencies.
+
+## 2026-09-05 (52)
+
+### chore (DB-UX-Migration Phase 0: typecheck-Gate + Testreihenfolge-Flake behoben)
+
+Vorarbeit fuer die UI/UX-Migration auf das DB UX Design System (`tasks/plan-db-ux-migration.md`),
+Branch `feat/db-ux` von `origin/dev`:
+
+- **`typecheck`-Script** (`bunx --bun tsc --noEmit`) in `package.json`, `release:check` davor
+  gehaengt (`typecheck && lint && test && build`) -- Husky `pre-push` und `scripts/deploy.sh`
+  ziehen es damit automatisch mit. CI (`deploy.yml`) bleibt vorerst unveraendert (nur `build`).
+- **`test/core/bootstrap.test.ts`:** `document.readyState` explizit auf `'complete'` gepinnt.
+  `bun test --isolate` teilt das happy-dom-`document` zwischen Dateien; `bootstrap.notReady`/
+  `-loadEvent` setzen es zwischenzeitlich auf `'loading'`, wodurch der Test reihenfolgeabhaengig
+  fehlschlug (`registerAppStartTask` 0 statt 1 Aufruf, sobald eine `@/core`-importierende Datei
+  wie `typedEvents.test.ts` davor lief). Gleiche Technik wie in den beiden Schwester-Dateien.
+- **Plan-Doku korrigiert:** `Status`-Block auf Realitaet gesetzt; Scope-Zahlen in Phase A/F/H
+  (render-Stellen 12 statt 6 Dateien, `class=`-Codemod ~1330, Testdateien 183 gesamt / ~33 mit
+  Preact-Render, `preact/compat` 3 Dateien, kein `manualChunks` vorhanden, Bootstrap-`Tooltip`
+  als 7. JS-Komponente, `DBGrid` existiert nicht, `background_color` `#000000`); DB-UX-Doku-URLs
+  (v5.3.0) ergaenzt.
+
+Verifiziert: `bun run release:check` gruen -- `typecheck` exit 0, `lint` exit 0, `bun test`
+**2069 pass / 0 fail** (183 Dateien), `bun run build` gruen. Voller Testlauf jetzt
+reihenfolge-unabhaengig gruen (vorher 2068/1 auf `origin/dev`).
+
+## 2026-08-29 (51)
+
+### feat (FormularEditor: Schriftwahl im Modal mit Live-Vorschau)
+
+Die Schriftauswahl (Grundschrift + Abweichung je Schnitt aus 49) lag als breiter Block unter der
+Editor-Toolbar. Sie sitzt jetzt hinter einem Toolbar-Button **„Schrift: <aktuelle Familie>"**, der
+ein eigenstaendiges Portal-Modal (`SchriftartDialog.tsx`, nicht das geteilte `#modal`) oeffnet:
+
+- `SchriftartWahl` unveraendert, dazu die Info-Zeile „Eingebettet: …" (unbrauchbare Fonts weiter
+  durchgestrichen + rot) und der Vorschau-only-Hinweis -- alles aus `FormularEditor.tsx` ins Modal
+  verschoben.
+- **Live-Vorschau je Schnitt** (Normal/Fett/Kursiv/Fett+Kursiv): ein Probetext in der Familie, die
+  der Renderer fuer diesen Schnitt nehmen wuerde. Standard-14 ueber CSS-Familien; eingebettete
+  `vorlage:`-Schnitte werden aus den bereits vorliegenden Font-Bytes als `FontFace` registriert
+  (reine Browser-Registrierung, kein Netzugriff, `FontFace` fehlt -> Helvetica). Fehlt der Familie
+  ein Schnitt, zeigt die Zeile Helvetica und ist als „Helvetica-Ersatz" markiert -- deckungsgleich
+  mit `fehlendeVorlagenSchnitte` / dem Renderer-Rueckfall.
+- Der Button-Text spiegelt die aktuelle Wahl (`schriftKurz`, z.B. „Times +1" bei einer
+  Schnitt-Abweichung).
+
+Kein Schema-Wechsel -- reine UI-Umstellung. Verifiziert: `tsc`/`eslint` sauber; `bun test` 2069
+gruen (neu: `schriftKurz` 3); `bun run build` gruen; Headless-Chrome-Smoke: Button oeffnet Modal
+(Titel, 4 Selects, 4 Vorschau-Zeilen, Backdrop, „Fertig"), Grundschrift -> Times faerbt Vorschau
+und Button um, „Fertig" schliesst; mit eingebetteter Font-Fixture erscheint die `vorlage:`-Familie
+im Select und die Vorschau nutzt die `FontFace` (`vfp-…`), 0 neue Konsolenfehler.
+
+## 2026-08-29 (50)
+
+### feat (FormularEditor: gedrehte Vorlagen -- Feld- und Tabellen-Geometrie um 90/180/270 drehen)
+
+Zeigt eine neue Vorlage dasselbe Formular gedreht (Hoch- statt Querformat o.ae.), reicht Skalieren
+
+- Versatz nicht -- die Skalier-Leiste hat jetzt zusaetzlich **„Drehen" (0/90/180/270°)**:
+
+* **Felder und Signaturflaeche** werden konkret um den Seitenmittelpunkt umgerechnet
+  (`skaliereKonfig.ts::dreheKonfig`, `alt`-Seitenmasse als Referenz), die `drehung` jeder Zelle
+  mitgezaehlt, die Referenzgroesse (`SeitenDef.groesse`) getauscht.
+* **Datentabellen** bleiben in der Konfiguration aufrecht (`startY`, `spalten[].x`, `hoehe`
+  unveraendert) -- neu ist nur `TabellenDef.drehung` bzw. `TabellenBereich.drehung`. Renderer
+  (`build.ts`) und Editor-Vorschau (`sammleRechtecke`) drehen jede fertige Tabellenzelle ueber
+  `infrastructure/pdf/tabellenDrehung.ts` um den Seitenmittelpunkt; der Editor-Drag auf einer
+  gedrehten Tabelle rechnet die gezogene Flaeche per `entdrehePunkt` zurueck. `verteile.ts`
+  (Paginierung ueber `maxZeilen`) bleibt unberuehrt.
+* Reihenfolge: **erst im aufrechten Layout skalieren, dann drehen** (`FormularEditor.skalierenUndDrehen`).
+  So bekommen Felder UND Tabellen `f.x` auf x und `f.y` auf y, bevor die Drehung die Achsen
+  tauscht -- vorher liefen die Faktoren bei gedrehten Tabellen ueber Kreuz (Feld-x-Faktor wirkte
+  auf die Tabellen-y-Position). Beim Setzen des Winkels schlaegt die Leiste die Faktoren so vor,
+  dass das skalierte Layout nach der Drehung genau auf die neue Seite passt (bei 90/270 ueber Kreuz).
+
+**Typsystem-Spiegel (3 Stellen):** `TabellenDef.drehung` + `TabellenBereich.drehung`
+(`shared/formular/types.ts`, `configSchema.ts`, `backend/formular.schemas.ts`).
+
+Verifiziert: `tsc`/`eslint` (FE/BE/Shared) sauber; `bun test` -- neue `tabellenDrehung`- (6) und
+erweiterte `skaliereKonfig`-/`build`-Suiten gruen (2055 gesamt); Headless-Chrome-Smoke: Drehen 90°
+
+- Anwenden schreibt Feld `{x50,y700}->{x142,y50}`, `tabellen.haupt.drehung=90`, `groesse` getauscht,
+  keine neuen Konsolenfehler. Drag auf gedrehter Tabelle nicht headless simuliert -- manuell pruefen.
+
+## 2026-08-29 (49)
+
+### feat (FormularEditor: eingebettete Vorlagen-Schriften + Schrift je Schnitt waehlbar)
+
+Zwei Ergaenzungen zur Schriftart-Auswahl (47/48):
+
+- **Eingebettete Vorlagen-Schriften (Testschritt):** der Editor liest die in der hochgeladenen
+  Vorlagen-PDF eingebetteten Schriftfamilien aus (`vorlageFonts.ts` -- `FontDescriptor` ->
+  `FontFile2`/`FontFile3` via `@cantoo/pdf-lib`, gruppiert nach Familie/Schnitt anhand des
+  PostScript-Namens). Eine Familie wird nur angeboten, wenn fontkit sie öffnen kann UND ihre
+  Unicode-cmap den Großteil von Ziffern + Latein-Buchstaben trifft -- Subset-Fonts aus virtuellen
+  Druckern (PDF24) mit kaputter/unvollständiger Zeichenzuordnung erscheinen in der Info-Zeile
+  „Eingebettet: …" nur **durchgestrichen + rot** (Tooltip erklärt warum) statt Zeichensalat in der
+  Vorschau zu erzeugen. `build()` bekommt den optionalen Parameter `eingebetteteFonts` -- **nur** die
+  Beispieldaten-/Platzhalter-Vorschau reicht die Font-Bytes durch (`registerFontkit` + `embedFont`,
+  neue Dependency `@pdf-lib/fontkit`, per `import()` erst geladen wenn wirklich eine `vorlage:`-
+  Familie im Spiel ist -- eigener Bundle-Chunk). Der Download-Pfad ruft `build()` ohne den
+  Parameter; `vorlage:*` faellt dort auf Helvetica zurueck (Konsolen-Warnung). LibreOffice/Word
+  betten regelmaessig nur einen Teilzeichensatz ein -- fehlende Glyphen erscheinen als leere
+  Kaestchen; genau das soll der Schritt vor einer Entscheidung ueber einen Font-Upload zeigen.
+- **Schrift je Schnitt:** `Layout.schriftart` ist jetzt entweder eine Familie fuer alle vier
+  Schnitte **oder** ein Objekt `{ normal, fett, kursiv, fettKursiv }` -- noetig, weil eine
+  eingebettete Vorlagen-Schrift oft nicht alle Schnitte mitbringt (z.B. nur Regular + Bold). UI
+  (`SchriftartWahl.tsx`) unter der Toolbar: ein **„Schrift"**-Dropdown (Grundschrift) plus je
+  Schnitt (Fett/Kursiv/Fett+Kursiv) ein Dropdown mit Vorgabe **„(wie Schrift)"** -- eine
+  Abweichung waehlt man nur dort, wo die Grundschrift den Schnitt nicht hat. `build.ts::ladeSchnitt`
+  nimmt nur die Bytes GENAU dieses Schnitts; fehlt er in einer `vorlage:`-Familie, faellt er auf
+  **Helvetica im passenden Schnitt** zurueck (nicht mehr auf den aufrechten Normal-Schnitt der
+  Vorlage). Warnung im Editor, welche Schnitte die gewaehlte Schrift nicht mitbringt. Konfig
+  verdichtet sich auf einen String, wenn keine echte Abweichung bleibt.
+
+**Typsystem-Spiegel:** `Schriftart` wird `Schriftfamilie | { normal?, fett?, kursiv?, fettKursiv? }`
+(`shared`), `schriftartSchema` als `z.union` in beiden Zod-Spiegeln.
+
+Verifiziert: `tsc`/`eslint` (FE/BE/Shared) sauber; neue `vorlageFonts`- (6) und
+`configSchema`/`formular.schemas`-Schriftart-Tests gruen; Headless-Chrome-Smoke (4 Schnitt-Selects,
+keine neuen Konsolenfehler); Extraktion + Mehrschnitt-Gruppierung als Spike gegen System-Fonts.
+
+## 2026-08-29 (48)
+
+### refactor (FormularEditor: Schriftart global statt pro Zelle, Skalier-Versatz mit Kommazahlen)
+
+Zwei User-Nachtraege zur Editor-Erweiterung (47):
+
+- **Schriftart ist jetzt eine Einstellung des ganzen Formulars** (`Layout.schriftart`) statt
+  eines Feldes pro Feld/Spalte/Sonderzeile. Ein einziges `<select>` in der Editor-Toolbar; der
+  Renderer (`build.ts` `ladeFontSet()`) bettet genau die gewaehlte Standard-14-Familie ein,
+  `zeichne()`s `FontSet` ist wieder die flache Vierergruppe (`normal/fett/kursiv/fettKursiv`).
+  Fett/Kursiv bleiben pro Zelle. Die per-Zelle-`schriftart`-Felder aus (47) sind aus allen drei
+  Typ-Spiegeln und der UI entfernt.
+- **Skalier-Versatz akzeptiert Kommazahlen** (`step="0.01"` statt `"1"`).
+
+Verifiziert: `tsc`/`eslint` sauber (FE/BE/Shared), `bun test` skaliereKonfig (7) + PDF-/Admin-Suiten
+gruen, Headless-Chrome-Smoke (Skalierung+Versatz, globale Schriftart-Auswahl).
+
+## 2026-08-29 (47)
+
+### feat (FormularEditor: Skalierung beim Vorlagen-Wechsel, Schriftgroessen-Messmodus, Schriftart-Auswahl, "Als neue Version anlegen")
+
+Vier Erweiterungen am PDF-Vorlagen-Editor (`features/Admin/components/FormularEditor/`):
+
+- **Skalierung + Versatz beim Vorlagen-Wechsel.** Wird im Editor eine andere PDF-Vorlage geladen
+  (andere Seitengroesse/Aufloesung/Raender), erscheint eine Inline-Leiste (`SkalierLeiste.tsx`):
+  X-/Y-Faktor aus den gemessenen Seitenmassen (`neu ÷ alt`) vorbelegt (Umschalter "X=Y"), plus
+  Versatz X/Y in PDF-Punkten. Jede Koordinate wird `Wert × Faktor + Versatz`. Die
+  Rechteck-Vorschau auf dem Canvas aktualisiert sich live; "Anwenden" schreibt die neuen
+  `x/x2/y/y2/size`-Werte, Tabellen-`startY/hoehe`, Sonderzeilen und die Signaturflaeche einmalig
+  in die Konfiguration (`skaliereKonfig.ts`, reine Funktion, kein gespeicherter Faktor).
+  Schriftgroesse und Tabellen-Zeilenhoehe (Skalare) folgen dem Y-Faktor, ohne Versatz. Auch
+  manuell ueber einen Toolbar-Button. Neu: `SeitenDef.groesse` (Punkt-Masse der Vorlagenseite)
+  wird vom Editor beim Laden nachgetragen und dient als Referenz.
+- **Schriftgroessen-Messmodus** auf dem bestehenden `PdfCanvas`: laedt man die _ausgefuellte_
+  Vorlage, blendet der Toolbar-Toggle "Schriftgroesse messen" die Textstuecke der PDF
+  (`page.getTextContent()`) als klickbare Kaestchen ein; ein Klick liefert die Schriftgroesse
+  (`hypot(transform[2], transform[3])`) und die Font-Familie -- in die Zwischenablage oder, mit
+  scharfgeschaltetem Feld, direkt in dessen `size`.
+- **Schriftart-Auswahl.** Neues optionales `schriftart` (Standard-14: `helvetica`/`times`/
+  `courier`) auf `Feld`/`Spalte`/`SonderZeileZelle`; `<select>` in `DarstellungsFelder` und den
+  Sonderzeilen-Overrides. Der Renderer (`build.ts`/`zeichne.ts`) bettet jetzt alle drei Familien
+  (je 4 Schnitte) ein; `waehleFont()` waehlt erst Familie, dann Schnitt. Ohne Angabe unveraendert
+  Helvetica.
+- **"Als neue Version anlegen"** im Bearbeiten-Modus von `FormularUpload.tsx`: uebernimmt
+  Konfiguration und PDF der bearbeiteten Version in den Anlege-Modus (`POST` statt `PUT`),
+  Versionsname und "gueltig ab" muessen neu vergeben werden. Reiner Frontend-State bis zum
+  Speichern.
+
+`ladePdfjs()` aus `PdfCanvas.tsx` nach `FormularEditor/pdfjsLoader.ts` gezogen (dort auch
+`seitenMasse()`), von beiden genutzt.
+
+Verifiziert: `tsc --noEmit` (Frontend/Backend/Shared) + `eslint` sauber; `bun run build` gruen;
+`bun test` fuer `skaliereKonfig` (neu, 7), `zeichne` (neu: Familien-Auswahl) und die
+PDF-/Admin-Suiten gruen; Headless-Chrome-Smoke des Editors (Vorlage laden, Skalier-Leiste mit
+Faktor 1,5 + Versatz 20/-10 -> Feld `x50→95, y50→65, x2 200→320, y2 70→95, size 10→15` korrekt,
+Messmodus, Schriftart-Select `Helvetica/Times/Courier`, keine Render-Schleife/Konsolenfehler aus
+dem Editor).
+
+## 2026-08-26 (46)
+
+### feat (Bereitschaft: Speicherreihenfolge BZ-vor-BE erzwingen + Hinweis auf noch nicht gespeicherten Bereitschaftszeitraum)
+
+Legt man direkt nacheinander erst einen Bereitschaftszeitraum (BZ) und dann einen Bereitschaftseinsatz
+(BE) an, kann die BZ zum Zeitpunkt der BE-Eingabe noch im AutoSave haengen (kein `_id` bzw.
+`__localState: 'modified'`) -- die bisherige `classifyBzCoverage`-Pruefung erkannte diesen Fall als
+'complete', ohne die BZ vorher zu synchronisieren. Neue Funktion `ensureCompleteBzSynced()` erzwingt
+jetzt fuer genau diesen Fall die Reihenfolge "erst BZ, dann BE": ist eine der beiden Grenz-BZ noch
+unsynced, wird `flushResource('BZ')` angestossen und die Coverage danach neu klassifiziert, bevor der
+BE-Datensatz die BZ-Referenz erhaelt. `flushResource` wirft nie (Fehler werden intern von AutoSave
+behandelt) -- schlaegt der Sync dennoch fehl, greift unveraendert das bisherige Verhalten (BE wird
+ohne BZ-Referenz gespeichert). Das Speichern selbst wird dadurch nie blockiert oder fehlschlagen
+gelassen, nur cleverer sequenziert.
+
+Zusaetzlich zeigen `createAddModalBereitschaftsEinsatz.tsx` und `createEditorModalBereitschaftsEinsatz.tsx`
+jetzt einen rein informativen Warnhinweis, wenn ein Bereitschaftszeitraum im aktuellen Monat noch
+nicht synchronisiert ist -- analog zum bereits bestehenden Muster bei EWT-Referenzen in EA/Neben
+(dort per `disabled`-Option + "(wird noch gespeichert)"-Suffix geloest). Der Hinweis reagiert live auf
+`data:changed` (Ressource `BZ`) und blendet sich automatisch wieder aus, sobald synchronisiert ist.
+
+Neu exportiert aus `features/Bereitschaft/utils`: `isBzUnsynced()` (Praedikat `!_id || __localState
+=== 'modified'`, analog zum bestehenden Muster in `createAddModalEA.tsx`/`createAddModalNeben.tsx`)
+und `ensureCompleteBzSynced()`.
+
+Verifiziert: `tsc --noEmit`/`lint` sauber, `bun test --isolate` 2023/2023 (inkl. neuer Tests für
+Sichtbarkeits-Toggle des Hinweises) gruen.
+
+## 2026-08-26 (45)
+
+### fix (Navbar-Umbruch zwischen 992px und 1118px)
+
+`#navmenu` (Bootstrap-Offcanvas) erhält ab `lg` (992px) über `navbar-expand-lg` `flex-grow:1`,
+die Tab-Liste blieb aber wegen der `.flex-wrap`-Klasse umbruchfähig -- im Fenster 992--1118px
+brach `Berechnung` zweizeilig um, der Monat-Select wirkte gequetscht. Fix in `scss/styles.scss`:
+`flex-nowrap` ab 992px erzwungen, plus im Engpass 992--1199px Padding/Margin der Tabs gestrafft.
+Per Headless-Chrome über 992--1400px verifiziert (konstant einzeilig, 58px Header-Höhe).
+
+## 2026-08-26 (44)
+
+### refactor (Duplikate in Feature-Tabs beseitigt, nach graphify-Analyse)
+
+Ein graphify-gestuetzter Refactoring-Pass (God Nodes, Import-Zyklen, Explore-Scan) deckte
+mehrere Duplikate in den vier strukturell aehnlichen Feature-Tabs (Bereitschaft/EWT/Neben/EA)
+auf. Alle Aenderungen sind reine Extraktionen ohne Verhaltensaenderung:
+
+- `Bereitschaft/index.ts`s `BereitschaftsEinsatzZeiträume`-Konstante nach
+  `Bereitschaft/utils/constants.ts` verschoben -- löst den
+  `BereitschaftTab.tsx <-> components/index.ts <-> createAddModalBereitschaftsZeit.tsx <->
+Bereitschaft/index.ts`-Importzyklus vollständig auf (per `graphify update .` bestätigt).
+  Nebeneffekt: Vite konnte dadurch einen zusätzlichen `utils`-Chunk abspalten, Gesamtgröße
+  unverändert, nur anders verteilt.
+- `customTableRender.ts`: `sortRows`/`handleSortClick` waren nur innerhalb der eigenen Datei
+  genutzt -- unnötiges `export` entfernt.
+- Neuer `bindClickHandlers()`-Helper (`infrastructure/ui/`) übernimmt die in allen vier
+  Feature-Tabs wiederholte `querySelector`/`addEventListener`/`removeEventListener`-Zeremonie für
+  Save/Download/Help/Add-Buttons; die Handler-Logik selbst (Jahres-Gates etc.) bleibt unverändert
+  in den Tabs.
+- Neue `createDatenGetter()`-Factory (`infrastructure/data/`) für die vier fast identischen
+  `getXDaten()`-Funktionen (Storage-Check, Normalisierung, `excludeDeleted`-Filter,
+  `scope:'all'`-Kurzschluss, Monats-Filter) -- jede Feature-Funktion jetzt eine
+  Ein-Zeilen-Instanziierung; EA/Neben behalten ihre Jahres-Untergrenze, Neben seine
+  Zulagen-Hydration, EWT seinen abweichenden `isEwtInMonat`-Filtermodus als jeweilige Config.
+- Neue `syncFieldsFromEwtRows()`-Funktion (`infrastructure/data/`) ersetzt die copy-paste-gleiche
+  Sync-Logik in `syncEwtToNeben.ts`/`syncEwtToEa.ts` (Storage- und Live-Table-Patch, Redraw,
+  Event) -- nur die abgeleiteten Felder unterscheiden sich pro Aufrufer.
+- Neue `components/showModalHelpers.tsx` (`getColumn`/`createTagElement`/`createShowElement3`,
+  generisch über `CustomTableTypes` wie bereits `createShowModalBereitschaft.tsx`) ersetzt die
+  byte-identischen Kopien in `createShowModalEA.tsx`/`createShowModalNeben.tsx`.
+
+Verifiziert: `tsc --noEmit`/`lint` sauber, `bun test --isolate` 2019/2019 unveraendert gruen,
+`bun run build` erfolgreich.
+
+## 2026-08-26 (43)
+
+### feat (Admin: individuelle Berechtigung fuer Formular-Vorlagen + Tab-Reorganisation)
+
+Der Admin-Tab "Formular-Vorlagen" war bisher nur rollenbasiert sichtbar (`isTeamAdminOrHigher`),
+inkonsistent zu "VorgabenGeld"/"Profile-Templates", die beide ein individuelles, vom Org-/Super-Admin
+vergebenes Capability-Flag verlangen. Backend-Gegenstueck: siehe `backend/CHANGELOG.md` (14).
+
+- Zwei neue Checkboxen unter "Spezielle Admin-Berechtigungen" in `AdminUserCard.tsx`: "Darf
+  Formular-Vorlagen erstellen" (`canCreateFormularVorlagen`) und "... bearbeiten"
+  (`canEditFormularVorlagen`) -- unabhaengig voneinander verwaltet, die Erstellen-impliziert-
+  Bearbeiten-Logik lebt ausschliesslich in `fetchCurrentAdminCapabilities()`.
+- Tab-Sichtbarkeit auf `canSeeFormulareTab` umgestellt (statt reiner Rollen-Pruefung).
+- **Tab-Reorganisation:** Dashboard fuehrt jetzt als eigene Gruppe (nur Super-Admin), danach die
+  Team-Admin-Gruppe (Benutzerverwaltung/VorgabenGeld/Profile-Templates/Formular-Vorlagen -- alle
+  drei Capability-Tabs jetzt ohne Trenner in einer Gruppe, da alle demselben Berechtigungsprinzip
+  folgen), danach Ressourcen/Profile/Admin-Logs (Super-Admin). Default-aktiver Tab: Dashboard fuer
+  Super-Admin, Benutzerverwaltung fuer alle anderen.
+- Empty-State-Banner ("keine zusaetzlichen Admin-Rechte...") erwaehnt jetzt auch Formular-Vorlagen.
+
+Verifiziert: `tsc --noEmit`/`lint` sauber, `bun test --isolate` 2019/2019 (vorher 2016, +3 neue
+Tests), `bun run build` erfolgreich.
+
+## 2026-08-26 (42)
+
+### refactor (Rows.ts: Zustandspruefung ueber benannte Konstanten statt `||`-Kette)
+
+In `infrastructure/table/Rows.ts`s `load()` prueften zwei nahezu identische `||`-Ketten, ob ein
+Roh-State-String zu `RowState`/`DirtyRowState` gehoert. Durch `NON_ERROR_ROW_STATES`/
+`DIRTY_ROW_STATES`-Konstanten + `Array.includes()` ersetzt -- selbsterklärend, dedupliziert das
+Muster, keine Verhaltensaenderung.
+
+Verifiziert: `tsc --noEmit`/`lint` sauber, `bun test --isolate` (inkl. `CustomTable.test.ts`) grün.
+
+## 2026-08-26 (41)
+
+### refactor (CustomTable.ts in 6 Module aufgeteilt)
+
+Fortsetzung der 500-Zeilen-Regel-Aufraeumung: `infrastructure/table/CustomTable.ts` (1147 Zeilen,
+die groesste Datei im Projekt) war in der letzten Runde bewusst ausgenommen ("erstmal customtable
+weglassen", Kern-Engine mit `instanceof`-Checks in mehreren Feature-Komponenten). Rein mechanisch
+aufgeteilt, keine Verhaltensaenderung:
+
+- `customTableTypes.ts` -- `CustomTableTypes`, `RowState`, `TableChanges`, `CustomTableOptions(All)`,
+  `getEffectiveRowState()`.
+- `Column.ts` -- `Column`/`Columns`.
+- `Row.ts` -- `Row`-Klasse.
+- `Rows.ts` -- `Rows`-Collection-Klasse (Mutation/Filter/Diffing/Commit).
+- `customTableRender.ts` -- die Render-/Sortier-Methoden (`drawFooter`/`drawRows`/`drawHeader`/
+  `sort`/`onSortClicked`) als freie Funktionen mit explizitem `self`-Parameter statt `this`
+  (nutzt dasselbe Muster, das der Konstruktor fuer `ApplyOptions`/`_parser`/`setState` bereits
+  hatte); Konstruktor selbst bewusst unangetastet gelassen.
+- `CustomTable.ts` (1147→269 Zeilen) bleibt der stabile Importpfad: re-exportiert `Column`/
+  `Columns`/`Row`/`Rows`/Typen unveraendert, sodass alle ~54 externen Importstellen (inkl.
+  `instanceof CustomTable`/`instanceof Row` in mehreren Feature-Editor-Modals) unveraendert bleiben.
+
+Verifiziert: `tsc --noEmit`/`lint` sauber, `bun test --isolate` 2016/2016 (inkl. `CustomTable.test.ts`
+und `CustomTable.xss.test.ts`), `bun run build` erfolgreich, Bundle-Groesse unveraendert.
+
+## 2026-08-26 (40)
+
+### refactor (500-Zeilen-Regel fuer Admin-UI-Komponenten)
+
+User-Wunsch nach Abschluss der Testcoverage-Arbeit: CLAUDE.md-Regel "Keep files under 500 lines"
+umsetzen, mit Toleranz und auf Admin-UI-Komponenten (`autoSave.ts`/`auth.service.ts`/`CustomTable.ts`
+bleiben ausgenommen) eingegrenzt. Fuenf Dateien rein mechanisch aufgeteilt (Helfer/Typen/
+Unterkomponenten in eigene Dateien, Hauptkomponente importiert zurueck), keine Verhaltensaenderung:
+
+- `FeldPanel.tsx` (2652→244 Zeilen) in 9 Module: `feldPanelTypen.ts`, `feldPanelGemeinsam.tsx`,
+  `datenpfadUndFormeln.tsx`, `aggregationUndRechnung.tsx`, `bedingungEditor.tsx`, `FeldZeile.tsx`,
+  `SpalteZeile.tsx`, `TabellenBlock.tsx`.
+- `AdminResourceBrowser.tsx` (935→485 Zeilen) in `adminResourceBrowserGemeinsam.ts` (Konstanten/Typen/
+  Helfer) + `AdminResourceEditModal.tsx` (Edit-Modal als eigene Komponente).
+- `AdminUserList.tsx` (735→432 Zeilen) in `adminUserListTypen.ts` + `AdminUserCard.tsx`
+  (Benutzer-Karte als eigene Komponente).
+- `AdminDashboard.tsx` (714→260 Zeilen) in `adminDashboardCharts.tsx` (Memory-Sparkline/-Card,
+  `formatUptime`).
+- `AdminProfileTemplatesManager.tsx` (709→483 Zeilen) in `adminProfileTemplatesManagerGemeinsam.ts`
+  (Normalisierungs-/Serialisierungs-Helfer wie `normalizePrimitiveRecord`/`buildTemplatePayload`).
+
+Verifiziert je Datei: `tsc --noEmit`/`lint` sauber, `bun test --isolate` 2016/2016, `bun run build`
+erfolgreich, Admin-Bundle-Groesse unveraendert.
+
+## 2026-08-26 (39)
+
+### test (Testcoverage Admin-/Einstellungen-Komponenten)
+
+Fortsetzung von "erhoehe die coverage der tests" nach Abschluss des Backend-Teils. 23 neue/erweiterte
+Testdateien fuer bisher ungetestete Admin-Preact-Modals und Utilities: `applySelectOptions`,
+`beispielSignatur`, `WertVorschau`, `FormularVersionenListe`, `OeTagInput`, `createShowModalVE`,
+`createAdminUserPasswordModal`, `createModalNewUser`, `JsonEditor`, `createModalPasskeySetPassword`,
+`ListenGruppen`, `AdminLogBrowser`, `Berechnung/index`, `createShowModalBereitschaft`,
+`PasswordStrengthMeter`, `formularVersionenApi`, `createAddModalBereitschaftsEinsatz`,
+`createEditorModalBereitschaftsZeit`, `VorgabenBWeekRangeEditor`, `createAdminUserLinksModal`,
+`createEditorModalBereitschaftsEinsatz`, `createAddModalEA`.
+
+Coverage: 80.40 %/84.61 % → 88.76 %/92.42 % (Funcs/Lines), 2016/2016 Tests.
+
+## 2026-08-25 (38)
+
+### refactor (PDF-Render-Engine aus shared nach frontend verschoben)
+
+User-Review-Fund nach (37): `shared/src/download.ts` + `shared/src/formular/abgeleiteteWerte.ts`
+hatten null Verbraucher in `backend` oder sonst irgendwo in `shared` -- einziger Verbraucher war
+`frontend`. Nachprüfung ergab: derselbe Befund gilt für den kompletten Rest der Render-Engine
+(`aggregatoren.ts`, `get.ts`, `listen.ts`, `spaltenFuer.ts`, `tabellenZeilen.ts`) -- `backend`
+nutzt aus `shared/formular/` ausschließlich `types.ts` (Zod-Spiegel-Quelle) und
+`resolve.ts`/`pruefeIntervalle.ts` (Versions-Auflösung).
+
+- 6 Module + 5 Tests von `shared/src/(formular/)*` nach `frontend/src/ts/infrastructure/pdf/`
+  bzw. `frontend/test/infrastructure/pdf/` verschoben: `download.ts`, `abgeleiteteWerte.ts`,
+  `aggregatoren.ts`, `get.ts`, `listen.ts`, `spaltenFuer.ts`, `tabellenZeilen.ts`.
+- Betroffene Frontend-Consumer auf lokale Imports umgestellt: `wert.ts`, `build.ts`,
+  `spaltenWert.ts`, `verteile.ts`, `generatePDF.ts`, `FormularEditor.tsx`, `dummyDaten.ts`.
+- `IEwtDownloadBody` (einziger ungenutzter Typ der verschobenen Module) ersatzlos entfernt; 3
+  Kommentare, die noch vom gelöschten Backend-Downloadpfad sprachen, korrigiert.
+- `shared/src/index.ts`/`formular/index.ts` bereinigt, `shared/package.json` auf `0.8.0` (Marker,
+  noch nicht published/getaggt).
+- Stale Pfad-Referenzen (`shared/src/formular/abgeleiteteWerte.ts` etc.) in Kommentaren
+  (`datenKatalog.ts`, `backend/.claude/skills/ressourcen/SKILL.md`) korrigiert.
+
+**Wichtiger Nebenfund:** die real publizierte `@otto-kirchheim/nebengeld-shared@0.7.0` ist älter
+als die gesamte `formular/`-Pipeline (fehlt dort komplett) -- `node_modules` in `backend` UND
+`frontend` zeigen deshalb schon vorher dauerhaft per Symlink auf das lokale `shared/`, nicht auf
+eine Registry-Version. Kein Publish nötig/sinnvoll, solange dieser Zustand (Feature-Branch
+`feature/formular-typsystem`) andauert -- ein versehentliches `bun install` ohne den Symlink bricht
+den Build (fehlende Exporte), Symlink nach jedem `bun install` prüfen.
+
+Verifiziert: `shared` `tsc`/`bun test` sauber (108→11 Tests, Rest zu frontend gewandert), Frontend
+`tsc`/Lint sauber, `bun run test` 1832/1833 (1 bekannter, unabhängiger Flake --
+`bootstrap.test.ts`, isoliert grün), `bun run build` erfolgreich, Backend (via Symlink live
+betroffen) `tsc`/Lint/`bun test --isolate` 812/812 unverändert grün.
+
+## 2026-08-25 (37)
+
+### refactor (download.ts → generatePDF.ts: vollständig frontend-nativ)
+
+User-Review-Fund nach (35)/(36): auch nach dem Entfernen des toten Server-Downloadpfads trug die
+Funktion noch Reste aus der Backend-Ära -- der Name `download` beschrieb nicht mehr, was passiert
+(PDF wird client-seitig erzeugt, nicht von einem Server geladen), und `VorgabenU.Pers`/`.Fahrzeit`
+liefen durch `userProfileToBackend()`, eine für den Profil-Speichern-Endpunkt (`PUT
+/user-profiles/me`) gebaute Funktion.
+
+Analyse ergab: von `userProfileToBackend()` wird hier nur EIN Transform wirklich gebraucht --
+`Pers.OE` vom Freitext-String (Profil-UI) ins Array-Format (`IPers.OE: string[]`, von der
+PDF-Vorlagen-Pipeline über `FORMAT.oe` erwartet). `Fahrzeit` ist strukturell identisch
+(`IFahrzeit` shared vs. `IVorgabenUfZ` frontend) und braucht gar kein Mapping;
+`Arbeitszeit`/`VorgabenB`/`Einstellungen` wurden nur mitberechnet und nie verwendet.
+
+- `infrastructure/data/download.ts` → `generatePDF.ts`, Funktion `download` → `generatePDF`
+  (Signatur unverändert).
+- `userProfileToBackend()`-Aufruf entfernt; `Pers.OE` wird jetzt direkt mit dem bereits
+  öffentlichen `splitOeInput()` (`infrastructure/data/oeLevels.ts`) konvertiert, `Fahrzeit`
+  unverändert aus `VorgabenU` durchgereicht. `userProfileToBackend()` selbst bleibt unverändert
+  (weiterhin genutzt für `PUT /user-profiles/me` in `dataApi.ts`).
+  Kommentare, die noch von "Backend-Format"/"Backend-Feldnamen" sprachen, korrigiert.
+- 4 Call-Sites (`BereitschaftTab.tsx`, `EwtTab.tsx`, `NebenTab.tsx`, `EaTab.tsx`) sowie
+  `test/Utilities/download.test.ts` → `generatePDF.test.ts` entsprechend umgestellt.
+- Bewusst unverändert: nutzer-sichtbare Texte ("Download nicht möglich…", Dateiname-Präfixe) und
+  HTML-Button-IDs (`btnDownloadB` etc.) -- aus Nutzersicht bleibt es ein Download, das ist
+  weiterhin korrekt; die per-`modus`-Zeilen-Mappings im `switch` (CustomTable-Zeile → kanonisches
+  PDF-`Daten`-Format) sind kein Backend-Relikt und blieben strukturell unverändert.
+
+Verifikation: `bunx tsc --noEmit` sauber, `bun run lint` sauber, `bun run test` (`--isolate`)
+1680/1680, `bun run build` erfolgreich.
+
+## 2026-08-25 (36)
+
+### fix (download.ts: Monat/Jahr aus Storage statt DOM-Input)
+
+User-Einwand nach Review von (35): `download()` las `Monat`/`Jahr` bisher direkt aus den
+`#Monat`/`#Jahr`-Input-Feldern (`+MonatInput.value`), obwohl `changeMonatJahr.ts` genau diese
+Felder ausliest und synchron in `Storage` schreibt -- der DOM-Umweg war unnötig, sobald `Storage`
+bereits die aktuelle Auswahl hält. `download.ts` liest jetzt `Storage.get<number>('Monat'/'Jahr',
+{ check: true })`, die beiden `document.querySelector('#Monat'/'#Jahr')`-Lookups samt
+Existenz-Check entfallen ersatzlos. Dabei auch einen stale gewordenen Kommentar korrigiert
+(sprach noch vom nicht mehr existierenden "Backend-Download-Schema" -- `data` geht seit (35) an
+keinen Backend-Endpunkt mehr, sondern direkt an `ladeUndErzeugePdf()`; `Pers`/`Fahrzeit` müssen
+trotzdem im Backend-Format vorliegen, weil `userProfileToBackend()` -- auch für `PUT
+/user-profiles/me` genutzt -- dieselbe Form liefert).
+
+Tests (`download.test.ts`): `Storage.set('Monat'/'Jahr', ...)` statt `<input>`-Elemente in
+`beforeEach` geseedet; zwei Tests, die `Monat` per direkter DOM-Manipulation
+(`document.querySelector('#Monat')!.value = ...`) umgestellt hatten, jetzt über `Storage.set`
+(die alte DOM-Manipulation griff seit dem Entfernen der `<input>`-Elemente ohnehin ins Leere und
+warf eine `TypeError`, die unbemerkt in nachfolgende Tests derselben Datei durchschlug). Verifiziert:
+`tsc`/Lint sauber, `bun run test` (`--isolate`) 1680/1680, `bun run build` erfolgreich.
+
+## 2026-08-25 (35)
+
+### chore (Rückbau: toter Server-Downloadpfad in download.ts)
+
+Gegenstück zu `backend/CHANGELOG.md` (12): `download.ts`s `if (modus === 'EA' || 'E' || 'B' || 'N')`
+deckte bereits den kompletten `modus`-Typ ab, der `else`-Zweig (`downloadPdf()`-Aufruf gegen den
+alten Backend-Roundtrip) war seit Phase 12 unerreichbarer Totcode.
+
+- `download.ts`: toten `else`-Zweig entfernt, `if`-Bedingung entfällt (immer der client-seitige
+  Renderer-Pfad).
+- `downloadPdf()` aus `infrastructure/api/dataApi.ts` entfernt (einziger Aufrufer war der jetzt
+  entfernte Zweig); `abortController`/`getServerUrl`/`Storage`-Imports dort mitentfernt, soweit nur
+  dafür gebraucht.
+- Tests: `apiService.test.ts`s `describe('downloadPdf', ...)`-Block entfernt; `download.test.ts`s
+  `downloadPdf`-Mock-Plumbing (Modul-Mock, `mockDownloadPdf`, Default-Resolve, alle
+  `expect(mockDownloadPdf).not.toHaveBeenCalled()`-Assertions) entfernt, da der Vergleichspfad nicht
+  mehr existiert.
+
+Verifikation: `bunx tsc --noEmit` grün, `bun run lint` grün, `bun run test` (`--isolate`) 1680/1680
+grün, `bun run build` erfolgreich.
+
+## 2026-08-24 (34)
+
+### feat (Unterschriftsdatum: an Signatur gekoppelt, druckt nur bei explizit "Digital")
+
+User-Wunsch: das Unterschriftsdatum-Feld (bisher generisches `letztesDatum`-Feld, Preset
+"+ Datum (Unterschrift)" in der allgemeinen Feldliste, druckte unabhängig davon ob überhaupt
+unterschrieben wurde) soll inhaltlich mit der Signatur verknüpft sein. **Wichtige Präzisierung nach
+Rückmeldung:** NICHT jedes Fehlen einer gezeichneten Unterschrift blendet das Datum aus, sondern NUR
+die explizite Wahl "Digital" (spätere externe Signatur zu unbekanntem Zeitpunkt macht ein jetzt
+gedrucktes Datum falsch) -- "Ohne Unterschrift" (z.B. für eine Unterschrift auf Papier) lässt das
+Datum dagegen stehen, weil es dort weiterhin sinnvoll ist.
+
+Neues optionales `Feld.nurBeiSignatur?: boolean` im **dreifach gespiegelten Typsystem**
+(`shared/src/formular/types.ts`, `frontend/.../configSchema.ts`, `backend/.../formular.schemas.ts`,
+siehe `.claude/CLAUDE.md`-Hinweis dazu). `wert()` (`infrastructure/pdf/wert.ts`) liefert für ein so
+markiertes Feld sofort `''`, wenn `Kontext.digitaleSignatur` wahr ist -- neues Kontext-Feld (Ersatz
+für ein anfängliches `hatSignatur`, das noch pauschal an `Boolean(signaturPng)` hing und damit auch
+"Ohne Unterschrift" fälschlich unterdrückt hätte), in `build.ts` aus dem neuen `digitaleSignatur`-
+Parameter gesetzt, genau wie `heute` bereits testbar statt `new Date()` inline. Alt-Konfigurationen
+ohne das `nurBeiSignatur`-Flag verhalten sich unverändert (kein Migrationsbedarf).
+
+**`signaturDialog.ts` komplett umgebaut**, um "Digital" von "Ohne Unterschrift" zu unterscheiden --
+`confirmDialog` (fest zwei Buttons) reicht dafür nicht mehr. Ein einziger, eigener Entscheidungsdialog
+(`signaturEntscheidung()`) deckt jetzt BEIDE Fälle ab: ohne Cache "Ja" / "Ohne Unterschrift" /
+"Digital", mit Cache zusätzlich "Verwenden" / "Ändern" statt nur "Ja" -- weiterhin maximal 2 Dialoge
+insgesamt (Entscheidung + optionales Pad). Rückgabetyp von `signaturDialog()` geändert von
+`Promise<string | undefined>` zu `Promise<SignaturErgebnis>` (`{ png?: string; digital: boolean }`),
+dadurch Ripple-Effekt durch die ganze Kette: `download.ts` (Aufrufer), `ladeUndErzeugePdf()`
+(`ladeFormular.ts`, neuer `digitaleSignatur`-Parameter), `build()` (`build.ts`, gibt ihn in den
+`Kontext`). `backdrop: 'static', keyboard: false` (User-Korrektur -- fehlte anfangs, war aber beim
+Pad-Dialog schon so gesetzt): Backdrop-Klick/Escape schließen den Entscheidungsdialog NICHT mehr
+kommentarlos, nur noch der explizite X-Button oben rechts -- konsistent mit dem Pad-Dialog, der aus
+demselben Grund (kein versehentliches Verwerfen einer in Arbeit befindlichen Unterschrift) schon
+immer `static` war. Schließen über den X-Button zählt weiterhin wie "Ohne Unterschrift", NICHT wie
+"Digital" -- ein Wegklicken soll nicht überraschend das Datum verschlucken. Zusätzlich kleiner
+Hinweistext im Dialog ("Die Unterschrift wird nur auf diesem Gerät verarbeitet und
+zwischengespeichert.") sowie an der "Für nächstes Mal merken"-Checkbox im Pad-Footer ergänzt --
+bewusst als sichtbarer Text statt `title`-Tooltip (User-Korrektur: Tooltip wird nicht wahrgenommen).
+
+FormularEditor (`FeldPanel.tsx`): das "+ Datum (Unterschrift)"-Preset ist aus der allgemeinen
+Feldliste (`VORLAGEN`) komplett entfernt -- ein `nurBeiSignatur`-Feld erscheint dort gar nicht mehr
+(`FeldListe` filtert es raus), sondern lebt vollständig in einer eigenen "Unterschriftsdatum"-Sektion
+innerhalb der Signatur-Fläche: Erzeugung ("+ Datum hinzufügen"), Positionierung/Löschen sowie ALLE
+inhaltlich relevanten Formatierungs- und Layout-Einstellungen an einem Ort -- Datenfeld-Auswahl
+(`berechnet.feld`, welche Zeilenspalte das Datum liefert, je Ressource anders) und Tage-Frist
+(`berechnet.maxTage`) neu für diesen Zweck gebaut, Position/Zellgröße (`x`/`x2`/`y`/`y2`) über die
+bereits bestehende `Zellkoordinaten`-Komponente und Schriftschnitt/Ausrichtung/Drehung/Format/
+Auto-Verkleinerung/Umbruch über die bereits bestehende `DarstellungsFelder`-Komponente eingebunden --
+beide sind dieselben wiederverwendbaren Bausteine, die auch der volle generische Feld-Editor nutzt
+(`FeldZeile`), hier nur ohne die für ein berechnetes Feld irrelevanten Teile (Label, `quellen`/
+`trenner`, `wenn`-Bedingung, `listenKopf`). Frei gewordene Key-Vergabe-Logik
+(`naechsterFreierSchluessel`) aus `FeldListe.hinzufuegen()` extrahiert und von beiden Stellen geteilt.
+Editor-Vorschau (`dummyDaten.ts::erzeugeVorschau`) setzt `digitaleSignatur: false`, damit das Feld
+beim Positionieren sichtbar bleibt statt immer leer zu wirken.
+
+Verifikation: `bunx tsc --noEmit` in shared/frontend/backend grün, `bun run lint`
+(frontend+backend) grün, Tests: shared 162/162, frontend 1685/1685 (neue/umgebaute Fälle in
+`wert.test.ts` für `nurBeiSignatur`/`digitaleSignatur`, komplett neu geschriebenes
+`signaturDialog.test.ts` für den umgebauten Entscheidungsdialog, angepasste Erwartungen in
+`ladeFormular.test.ts` + `Utilities/download.test.ts` wegen des neuen `SignaturErgebnis`-Rückgabetyps
+und `digitaleSignatur`-Parameters, ein Smoke-Test in `build.test.ts`), backend 947/947 (inkl.
+`tests/validation` 123/123 für den Schema-Spiegel). Manuelle FormularEditor-/Signatur-Dialog-
+Verifikation im Browser steht noch aus.
+
+## 2026-08-24 (33)
+
+### fix (Dark-Mode: btn-outline-* zu kontrastarm, disabled kaum von aktiv unterscheidbar)
+
+User-Fund: Schaltflächen mit `.btn-outline-secondary` (z.B. Hoch/Runter-Pfeile im Fahrzeiten-Panel)
+erschienen im Dark-Mode dunkelgrau auf dunklem Hintergrund -- Bootstrap 5.3 überschreibt die Farb-
+Variablen dieser Klasse in `[data-bs-theme=dark]` nicht, es bleibt beim festen `#6c757d`. Gleiches
+Muster bei `.btn-outline-primary` (z.B. PDF-Quellenauswahl im FormularEditor): festes `#0d6efd`, gegen
+dunklen Hintergrund ebenfalls zu kontrastarm. Zusätzlich unterscheidet sich bei JEDER Outline-Variante
+(secondary/primary/success/danger/warning/info) der deaktivierte Zustand nur durch 65% Opacity von der
+aktiven Farbe -- Screenshot-Vergleich zeigt aktiv und disabled bei allen sechs Varianten praktisch
+gleich hell, nicht nur bei secondary.
+
+Neue Regeln in `styles.scss` (`[data-bs-theme='dark'] .btn-outline-secondary` /
+`.btn-outline-primary`) binden Bootstraps eigene, theme-bewusste Tokens ein
+(`--bs-secondary-text-emphasis`, `--bs-primary-text-emphasis`) statt der festen Grundfarben. Für alle
+sechs Outline-Varianten zusätzlich eine gemeinsame Regel, die `--bs-btn-disabled-color`/
+`-disabled-border-color` auf `--bs-border-color` setzt -- deaktiviert wirkt jetzt unabhängig vom
+Farbton einheitlich stumpf, aktive Farben (Rot/Grün/Gelb/Cyan) bleiben unverändert. Zentraler Fix statt
+Einzeländerungen, wirkt auf alle ca. 95 Vorkommen der Klassen app-weit (Fahrzeiten-Panel,
+FormularEditor-Pfeile, Admin-Panels, Toggle-Gruppen, signaturDialog, etc.).
+
+Verifikation: Vorher/Nachher-Screenshots mit dem echten kompilierten CSS (`bun run build`) im
+Chrome-Headless-Vergleich. Secondary: Computed Color vorher `rgb(108,117,125)` für aktiv UND disabled
+identisch, nachher aktiv `rgb(167,172,177)` vs. disabled `rgb(73,80,87)`. Primary/Success/Danger:
+vorher aktiv und disabled optisch ununterscheidbar, nachher disabled klar auf Rahmenton abgedunkelt,
+aktiv unverändert farbig. `bun run lint` grün.
+
+## 2026-08-24 (32)
+
+### feat (Unterschrift: optionaler localStorage-Cache per Checkbox)
+
+User-Wunsch: die zuletzt gezeichnete Unterschrift auf Anfrage zwischenspeichern, damit sie nicht bei
+jedem PDF-Download neu gezeichnet werden muss -- aber nur wenn explizit gewünscht, nicht automatisch.
+Neue Checkbox "Für nächstes Mal merken" im `signaturDialog.ts`-Pad-Footer (gleiche Zeile wie
+Löschen/Fertig, damit der Footer genauso schmal bleibt wie bisher -- extra Inhalt im `modal-body` hätte
+die sorgfältig austarierte `berechneCanvasGroesse()`-Rechnung verfälscht). Neuer Storage-Key
+`signaturCache` in `Storage.ts`. Checkbox ist sticky vorangehakt, wenn ein Cache existiert; ist sie beim
+"Fertig"-Klick nicht angehakt, wird ein evtl. vorhandener alter Cache-Eintrag gelöscht (klares Opt-out).
+Existiert ein Cache, wird das Pad beim Öffnen automatisch damit vorbefüllt (`setzeSignaturPng()`, neuer
+Helper in `signaturePad.ts` um `SignaturePad.fromDataURL()`). Die erste Nachfrage übernimmt bei
+vorhandenem Cache direkt die Wiederverwendungs-Entscheidung statt eines dritten Dialogs -- braucht dafür
+aber drei statt zwei Ausgänge (verwenden / ändern / gar keine Unterschrift, z.B. für eine spätere
+digitale Signatur), wofür `confirmDialog` mit seinen fest zwei Buttons nicht reicht. Neuer, lokaler
+Dialog `entscheideUeberGecachteUnterschrift()` in `signaturDialog.ts` (gleiches Vanilla-DOM-Muster wie
+`confirmDialog`, aber mit drei `[data-wahl]`-Buttons): "Verwenden" liefert die gecachte PNG direkt, Pad
+wird komplett übersprungen; "Ändern" öffnet das Pad (vorbefüllt, zum Anpassen/Neuzeichnen); "Nein,
+digitale Unterschrift" (oder Schließen ohne Wahl) resolved `undefined`, kein PDF-Eintrag. Modal-Body
+erklärt die drei Buttons per Kurzliste (User-Feedback: Dialog war ohne Erklärung "zu detaillos") --
+unproblematisch für die Canvas-Größenrechnung, da dieser Dialog anders als das Pad-Modal keinen Canvas
+enthält und `berechneCanvasGroesse()` hier gar nicht läuft. Ohne Cache bleibt die ursprüngliche
+`confirmDialog`-Nachfrage ("Jetzt unterschreiben? Ja/Nein") inkl. kurzer Erklärung, was Ja/Nein
+bedeuten -- weiterhin maximal 2 Dialoge insgesamt in jedem Pfad.
+
+Verifikation: `bunx tsc --noEmit` grün, `bun run lint` grün, `bun run test` 1676/1676 grün (inkl. 7 neuer
+Fälle in `signaturDialog.test.ts` und 1 neuem Fall in `signaturePad.test.ts`).
+
+## 2026-08-24 (31)
+
+### fix (Bereitschaftszulage: eigenes Druckfeld Tarifkraft/Beamter statt roher Pers.TB-Wert)
+
+User-Fund: ein im FormularEditor an `VorgabenU.Pers.TB` gebundenes Feld druckte im PDF den rohen
+TB-Wert (z.B. "Besoldungsgruppe A 8"), sollte für die Bereitschaft aber nur "Tarifkraft"/"Beamter"
+zeigen. `Pers.TB` bleibt bewusst unverändert -- die zwei Besoldungsgruppen-Werte werden weiterhin als
+Schlüssel in die Geld-Vorgaben für die Bereitschaftszulage gebraucht (`geldMonat[tarifKraft]` in
+`bereitschaftszulageAbgeleiteteWerte()`), eine Reduktion auf zwei Werte hätte diesen Lookup zerstört
+und eine DB-Migration bestehender `UserProfile`/`ProfileTemplate`-Dokumente erzwungen. Stattdessen
+neues, zusätzliches abgeleitetes Feld `Bereitschaftszulage.TarifBeamter` (`'Tarifkraft' | 'Beamter'`),
+berechnet in `shared/src/formular/abgeleiteteWerte.ts::bereitschaftszulageAbgeleiteteWerte()` nach der
+bestehenden Konvention `Beamter = TB !== 'Tarifkraft'` -- immer gesetzt, auch bei 0
+Bereitschaftsminuten (vorher `{}`). Neu im Datenkatalog (`FormularEditor/datenKatalog.ts`, Gruppe
+"Bereitschaftszulage") für Bereitschaft-Vorlagen wählbar. Inline-Typduplikat in
+`shared/src/download.ts` (Zyklus-Vermeidung, siehe Kommentar dort) synchron nachgezogen.
+
+Verifikation: shared `tsc --noEmit` + `test` (54/54) grün, frontend `tsc --noEmit` grün,
+`test/Utilities/download.test.ts` (17/17) grün, backend `tsc --noEmit` grün (keine Backend-Datei
+geändert, keine Migration nötig).
+
+## 2026-08-23 (30)
+
+### feat (FormularEditor: Sonderzeilen -- Kopf-/Summenzeilen über mehrere Spalten auf einmal)
+
+User-Anmerkung: bei EZ müssten für elf Zulagen-Spaltenplätze je Überschrift + drei Summenarten (44
+`Feld`-Einträge) einzeln mit eigener Koordinate angelegt werden, obwohl `x` bereits an der Spalte
+selbst hängt. Neues Konzept **Sonderzeile**: einmal festlegen, welche Spalte in dieser Zeile was
+zeigt (Kreuz statt Koordinate) -- x kommt beim Rendern automatisch von der Spalte, nur die y-Position
+wird je Seite eingegeben. Gilt nicht nur für EZ: jede Tabelle mit Fuß-/Kopfsummen (EA/EWT/
+Bereitschaft) kann Sonderzeilen für ihre normalen Spalten nutzen, auch ohne dynamische Listenplätze.
+Rein additiv -- bestehende, manuell gebaute Kopf-/Fuß-Felder bleiben unverändert gültig.
+
+EZ-Korrektur des Users: drei Summenarten statt einer -- rohe Summe (Minuten/Stück), bereinigte Summe
+in vollen Stunden (nur für Minuten-Zulagen, Stück-Zulagen zeigen `"-"`) und Summe in Euro. Zusätzlich
+eine Gesamtsumme über ALLE Zulagen-Spaltenplätze einer Gruppe als normales globales Feld im
+bestehenden Summenfeld-Editor -- ebenfalls in allen drei Arten (User-Nachtrag: "benötige alle 3
+Arten zusammen"), nicht nur in Euro.
+
+Rückfrage geklärt: die Euro-Umrechnung bleibt LIVE im PDF-Renderer aus `Daten.VorgabenGeld` (nicht
+wie bei Bereitschaft vorberechnet beim Download) -- der bereits bestehende `Berechnet.liste`-
+Mechanismus (Eintrag 29) bleibt damit unverändert die Grundlage.
+
+**Vier weitere Browser-Test-Funde (User, direkt im Anschluss):**
+
+1. Testdaten-Vorschau zeigte keine Beispielwerte für Sonderzeilen-Zellen -- `SonderZeilen.tsx` rief
+   `sonderZeileZelleWert()`/`zeilenFuerUeber()` bisher gar nicht auf. Fix: `SonderZeilen` bekommt
+   `tabelleName`/`vorschau` (wie andere Editor-Komponenten) und zeigt je Zelle dieselbe `WertVorschau`
+   wie Feld-/Spalten-Einträge (dafür in eine eigene `WertVorschau.tsx` verschoben, Zirkelimport-Risiko
+   gegenüber `FeldPanel.tsx` vermieden).
+2. Sonderzeile umbenennen ließ den Cursor nach jedem Zeichen aus dem Eingabefeld springen --
+   `onChange` schrieb direkt in den `tabelle.sonderzeilen`-Record-Key, dessen Änderung bei JEDEM
+   Tastendruck die als `key={name}` geschlüsselte Karte für Preact neu gemountet hat. Fix: neue
+   `SonderZeileName`-Komponente mit lokalem Entwurfsstand, Übernahme erst bei `onBlur`/Enter; Karten
+   schlüsseln jetzt über den Array-Index (stabil), `benenneUm()` baut den Record zudem
+   positionserhaltend um (kein Sprung ans Listenende beim Umbenennen).
+3. Bei EWT (sechs Ankreuz-Spalten mit `wenn`, ALLE mit leerem `key`) wurde immer nur die erste
+   Spalte berechnet -- der eben erst eingeführte `spalte`/`listenPlatz`-Bezug (Fix zu Fund 1 unten)
+   löst zwar den Konflikt zwischen dynamischen Spalten, aber Ankreuz-Spalten teilen sich ihren leeren
+   `key` GENAUSO und blieben dadurch weiterhin ununterscheidbar. Fix: `SonderZeileZelle` referenziert
+   eine Spalte jetzt über `spaltenIndex` (Position in `TabellenDef.spalten`) statt über `key`/
+   `listenPlatz` -- die einzige Referenz, die für JEDE Spaltenart eindeutig ist. Zusätzlich hatte eine
+   Ankreuz-Spalte für "Summe" ohnehin keinen sinnvollen Wert (ihr Inhalt entsteht erst je Zeile aus
+   der Bedingung, es gibt kein flaches Zeilenfeld zum Summieren) -- `sonderZeileZelleWert()` zählt
+   für `wenn`-Spalten jetzt, wie viele Zeilen die Bedingung erfüllen. Außerdem gewünschter
+   Standardwert: ein unbelegter Zulagen-Platz liefert jetzt `0` statt einer leeren Zelle.
+4. "wo kann ich die Schriftgröße/Ausrichtung/automatische Schrift verkleinern der Sonderzeile
+   festlegen?" -- bisher gar nicht, eine Zelle übernahm Schriftgröße/Ausrichtung/Auto-Verkleinerung
+   ausnahmslos von ihrer Spalte. `SonderZeileZelle` bekommt `size`/`align`/`autoGroesse` als
+   optionale Übersteuerung (wie `format` schon vorher) -- z.B. eine fett-große Gesamtsumme bei sonst
+   kleiner Datenzeilen-Schrift.
+
+- **`shared/src/formular/types.ts`:** `SonderZeileArt` (`kopf`/`summe`/`bereinigt`/`summeGeld`),
+  `SonderZeileZelle` und `SonderZeile` (`ueber` + `zellen`) neu. `TabellenDef.sonderzeilen?:
+Record<string, SonderZeile>` (Inhalt, wie `listen`), `TabellenBereich.sonderzeilen?: {name; y;
+y2?}[]` (Platzierung je Seite -- ein `name` darf mehrfach vorkommen, deckt "Überschrift oben +
+  Kopie unten" mit EINER Inhaltsdefinition ab). `Berechnet.liste.index` von Pflicht auf optional --
+  ohne `index` Gesamtsumme über ALLE Einträge einer Gruppe statt über einen Platz.
+  **Zwei Browser-Test-Funde (User):** (a) über eine Vorlage angelegte dynamische Spalten teilen sich
+  denselben leeren `key` -- ein Zellbezug allein über `key` konnte sie nicht unterscheiden, ein
+  Zwischenstand über `spalte`/`listenPlatz` löste das nur für dynamische Spalten; (b) Ankreuz-Spalten
+  (`wenn`) teilen sich ihren leeren `key` genauso. `SonderZeileZelle` referenziert eine Spalte deshalb
+  final über `spaltenIndex` (Position in `TabellenDef.spalten`) -- die einzige über jede Spaltenart
+  hinweg eindeutige Referenz. `size?`/`align?`/`autoGroesse?` neu -- ohne Angabe gilt jeweils der
+  Wert der Spalte, analog zu `format`.
+- **`shared/src/formular/abgeleiteteWerte.ts`:** `bereinigteZulagenStunden()` (Minuten-Codes gerundet
+  auf volle Stunden wie in `geldwertZulagenCode()`, Stück-Codes `undefined`), `summeGeldwertGruppe()`
+  und `summeBereinigtGruppe()` (Geldwert bzw. Std.-Summe aller Einträge einer Gruppe, je Eintrag mit
+  eigenem Code) neu. **`aggregatoren.ts`:** `summeGruppe()` (rohe Gesamtsumme aller Einträge, kein
+  Code-Filter) neu.
+- **`infrastructure/pdf/wert.ts`:** `berechneAggregation()` verzweigt bei `liste.index === undefined`
+  je nach `liste.art` auf `summeGruppe()`/`summeBereinigtGruppe()`/`summeGeldwertGruppe()`, mit
+  `index` entsprechend auf den bestehenden Platz-Pfad (`geldwertZulagenCode()`/
+  `bereinigteZulagenStunden()`/roh). `Berechnet.liste.geldwert: boolean` durch `art?:
+'summe'|'bereinigt'|'summeGeld'` ersetzt (Default `'summe'`) -- vereinheitlicht Platz- und
+  Gesamtsumme-Fall auf dieselbe Arten-Auswahl wie `SonderZeileZelle.art`. Neue Funktionen
+  `zeilenFuerUeber()` (Zeilen einer Sonderzeile, eingegrenzt auf eine Tabelle) und
+  `sonderZeileZelleWert()` (Zellinhalt je `art`; für eine Ankreuz-Spalte (`wenn`) zählt `'summe'` die
+  Zeilen mit erfüllter Bedingung statt ein flaches Zeilenfeld zu summieren, das es dort nicht gibt;
+  unbelegter Zulagen-Platz liefert `0` statt einer leeren Zelle; Format-Override pro Zelle sonst
+  `Spalte.format`).
+- **`infrastructure/pdf/build.ts`:** neue Schleife über `bereich.sonderzeilen` je Tabellenbereich --
+  Spalte kommt aus den seiten-aufgelösten `spalten` (nicht `tabelle.spalten` direkt), damit eine
+  Seite mit eigenem Spaltenraster auch hier die richtige x-Position liefert. Neu exportierte
+  `spalteFuerZelle()` liest die Spalte an `zelle.spaltenIndex`; `zellGeometrie()` baut daraus die
+  Zeichen-Geometrie -- x/x2 immer von der Spalte, `size`/`align`/`autoGroesse` von der Zelle
+  überschrieben, wenn gesetzt.
+- **`FormularEditor/SonderZeilen.tsx`** (neu, analog `ListenGruppen.tsx`): verwaltet
+  `tabelle.sonderzeilen` -- pro Zeile Name, Zeilenbezug, und eine Zeile pro Spalte (auch ohne `key`,
+  über ihren Index referenziert) mit Art-Auswahl (`bereinigt`/`summeGeld` nur bei `listenPlatz`-
+  Spalten) plus optionalem Format-/Größe-/Ausrichtung-/Auto-Verkleinern-Override.
+- **`FeldPanel.tsx` (`TabellenBlock`):** `SonderZeilen`-Komponente nach `ListenGruppen` eingehängt,
+  darunter ein Platzierungs-Block je Sonderzeile (y/y2 als `ZahlFeld`, mehrfach platzierbar) samt
+  `ScharfButton`-Zeilenpicker -- Band auf dem PDF ziehen statt y/y2 blind einzutippen, gleicher
+  Mechanismus wie bei "erste Datenzeile"/"letzte Datenzeile". `AggregationEditor`/
+  `listenOptionenFuerTabelle`: pro Platz UND pro Gruppen-Gesamtsumme jetzt alle drei Arten
+  (Summe/bereinigte Summe/Summe €) als eigene Option, neue Optgroup "Zulagen-Gruppen (Gesamtsumme
+  über alle Plätze)" neben der bestehenden "Zulagen-Spaltenplätze"-Optgroup.
+- **`FormularEditor.tsx`:** `Armed` um `{bereich: 'sonderzeile'; tabelle; index}` erweitert,
+  `achseFuer()` sperrt dabei wie bei "erste/letzte Datenzeile" auf die y-Achse, `sammleRechtecke()`
+  zeigt jede Platzierung als Band über die Spaltenbreite, `handleRechteck()` schreibt y/y2 in den
+  passenden Eintrag von `bereich.sonderzeilen`.
+- **`datenKatalog.ts`:** `FORMATE`-Liste aus `FeldPanel.tsx` hierher verschoben (exportiert), damit
+  `SonderZeilen.tsx` sie ohne Zirkelimport mitnutzen kann. Gleiches Prinzip für `WertVorschau`
+  (eigene `WertVorschau.tsx`).
+- **Zod-Spiegel** (`configSchema.ts`, `backend/formular.schemas.ts`): `sonderZeileZelleSchema`/
+  `sonderZeileSchema` neu, `tabellenDefSchema.sonderzeilen`/`tabellenBereichSchema.sonderzeilen`
+  ergänzt, `berechnetSchema.liste.index` optional, `geldwert: boolean` durch `art` (Enum, s.o.)
+  ersetzt -- die `refine()`-Pflicht für `geldwert` entfällt damit (roh/bereinigt sind jetzt auch ohne
+  `index` gültige, sinnvolle Optionen).
+
+Verifiziert: `shared` `tsc`/Test 161/161 (16 neue Tests). Frontend `tsc`/Lint sauber, 1660/1660 (32
+neue Tests), Produktionsbuild erfolgreich. Backend `tsc`/Lint sauber, 947/947 (voller Lauf, nicht nur
+`tsc`).
+
+## 2026-08-23 (29)
+
+### feat (EZ: Summenfelder je dynamischem Zulagen-Spaltenplatz, inkl. Geldwert)
+
+User-Frage: "wie kann ich Summenfelder für die Listen machen?" -- bisher konnte `Berechnet.feld`
+nur ein flaches Zeilenfeld lesen, keinen Wert aus einer verschachtelten Liste (EZ: `Zulagen`).
+Zusätzlich meldete der User, dass eine reine Zeit-/Stückzahl-Summe nicht reicht -- gebraucht wird
+auch der Geldwert (Normale Summe × Satz der Zulage), und genau diese Formel existiert bereits im
+Berechnung-Tab (`calculateBerechnungRows.ts::N_ZULAGEN_CALC`), dort je `paymentHint`-Kategorie.
+
+**Kurskorrektur während der Umsetzung (User-Einwand):** ein erster Entwurf ließ im Editor einen
+FESTEN Zulagen-Code für das Summenfeld wählen. Der User wies zu Recht darauf hin, dass die
+Spaltenplätze nicht fest sind -- welcher Code an einem Platz landet, entscheidet erst die
+Monatsauflösung (`schluesselAufPlatz()`/`listenBelegung()`, dieselbe wie für die Spaltenüberschrift).
+Ein fest eingetragener Code hätte an der Überschrift vorbeigerechnet, sobald sich die Platzbelegung
+verschiebt. Fix: `Berechnet.liste` referenziert jetzt den PLATZ (`tabelle`+`gruppe`+`index`, wie
+`Feld.listenKopf`), der zugehörige Code wird zur Renderzeit über denselben Mechanismus aufgelöst.
+
+- **`shared/src/formular/types.ts`:** `Berechnet.liste?: ListenPlatz & { tabelle, geldwert? }` neu --
+  Alternative zu `feld` für Summen über einen dynamischen Spaltenplatz.
+- **`shared/src/formular/aggregatoren.ts`:** `summeUeberListe()` -- Summe der `wert`-Felder aller
+  Listen-Einträge mit passendem `schluessel`, über mehrere Zeilen (nimmt weiterhin einen aufgelösten
+  Code entgegen, die Platz-Auflösung passiert eine Ebene darüber in `wert.ts`).
+- **`shared/src/formular/abgeleiteteWerte.ts`:** `geldwertZulagenCode()` -- repliziert
+  `N_ZULAGEN_CALC` je einzelnem Code (mehrere Codes teilen sich denselben `paymentHint`/Satz, z.B.
+  alle "B"-klassifizierten Erschwerniszulagen).
+- **`shared/src/domain.ts`:** `IVorgabeValue.GKR?: number` neu -- Ganzkörperreinigung hatte im
+  Berechnung-Tab bisher keine Geldformel ("noch nicht berechnet"), für die PDF-Summenfelder jetzt
+  eine eigene Rate (User-Entscheidung, größerer Eingriff statt "nur Anzahl, kein €-Feld").
+- **`AdminVorgabenEditor.tsx`:** `GKR` in `GELD_FIELDS` ergänzt -- Eingabefeld für den neuen Satz.
+- **`infrastructure/pdf/wert.ts`:** `berechneAggregation()` löst bei gesetztem `berechnet.liste`
+  zuerst über `kontext.listen[tabelle]`/`schluesselAufPlatz()` den an diesem Platz aktiven Code auf
+  (derselbe Weg wie `Feld.listenKopf`), summiert dann per `summeUeberListe()` und rechnet bei
+  `geldwert: true` zusätzlich über `geldwertZulagenCode()` in Euro um (Satz aus `Daten.VorgabenGeld`).
+- **`FormularEditor/FeldPanel.tsx` (`AggregationEditor`):** neue Optgroup "Zulagen-Spaltenplätze
+  (Summe je Platz)" im Summenfeld-Dropdown -- eine Option je TATSÄCHLICH angelegter Spalte mit
+  `listenPlatz` (nicht je theoretisch möglichem Code), Label übernimmt den Spalten-`label` zur
+  Wiedererkennung, je zwei Varianten (normale Summe / "(€)"), nur sichtbar bei Op "Summe".
+- **Zod-Spiegel** (`configSchema.ts`, `backend/formular.schemas.ts`): `berechnetSchema.liste`
+  ergänzt; **Backend** (`schemas.ts`, `models/Vorgabe.ts`): `GKR` im Vorgabe-Wert-Schema/-Modell.
+
+Verifiziert: `shared` 145/145 (19 neue Tests), Frontend `tsc`/Lint sauber, 1628/1628 (5 neue Tests),
+Produktionsbuild erfolgreich. Backend `tsc`/Lint sauber, 947/947.
+
+## 2026-08-23 (28)
+
+### fix (Testdaten-Vorschau: mehrere Listen-Gruppen überschrieben sich gegenseitig)
+
+User-Fund beim Konfigurieren der EZ-Zulagenspalten: "Es fehlen Beispiele für die Listen
+Erschwerniszulage und Fahrentschädigung" in der Testdaten-Vorschau.
+
+- **`FormularEditor/dummyDaten.ts::macheListen()`:** schrieb `zeile[gruppe.quelle]` direkt in der
+  Schleife über `tabelle.listen` -- bei EZ teilen sich alle drei Gruppen (Erschwerniszulage,
+  Leistungsprämie/Fahrentschädigung, Ganzkörperreinigung) dasselbe Zeilenfeld `Zulagen`, jede
+  weitere Gruppe überschrieb die Beispiele der vorherigen komplett. Übrig blieb nur die zuletzt
+  verarbeitete Gruppe (i.d.R. Ganzkörperreinigung, da zuletzt angelegt). Fix: Einträge je `quelle`
+  sammeln (`Map<string, unknown[]>`) und erst nach der Schleife gebündelt in die Zeile schreiben.
+- **Test:** neuer Fall in `dummyDaten.test.ts` mit drei Gruppen, die sich dieselbe Quelle teilen --
+  prüft, dass alle drei Gruppen-Codes in der Vorschau-Zeile landen, nicht nur die letzte.
+
+Verifiziert: `tsc`/Lint sauber, 1623/1623 (1 neuer Test), Produktionsbuild erfolgreich.
+
+## 2026-08-23 (27)
+
+### feat (EZ: Arbeitszeit-Spalte "Beginn-Ende" verkettet)
+
+Nachtrag zur Phase-12-EZ-Migration -- entgegen der ursprünglichen Annahme ("keine abgeleiteten
+Werte") braucht EZ doch einen vorberechneten Wert: die Arbeitszeit-Spalte im Formular zeigt
+`Beginn` und `Ende` zusammen in einer Zelle (`"07:00-15:45"`). `Spalte` (anders als `Feld`) hat
+kein `quellen`/`trenner` zum Verketten mehrerer Datenpfade -- Lösung wie bei EWT/Bereitschaft:
+vorberechnen statt Renderer generisch erweitern.
+
+- **`shared/src/formular/abgeleiteteWerte.ts`:** neu `ezAbgeleiteteWerte()`, liefert
+  `{ Arbeitszeit: `${Beginn}-${Ende}` }`.
+- **`shared/src/download.ts`:** `IDownloadNebengeld` um optionales `Arbeitszeit?: string` ergänzt
+  (analog `IDownloadEWT`/`IDownloadBereitschaftszeitraum`).
+- **`infrastructure/data/download.ts`:** `case 'N'` merged `ezAbgeleiteteWerte()` pro Zeile mit ins
+  Zeilenobjekt, `build()` sieht `Arbeitszeit` dann als normalen Datenpfad.
+- **`datenKatalog.ts`:** neuer Katalogeintrag `Arbeitszeit` (Gruppe "Berechnet") für `ez` -- damit im
+  Editor direkt als Spalten-Datenpfad wählbar, ohne eigene Rechnung im Editor nachzubauen.
+- **Bugfix nebenbei gefunden (Backend-Integrationstests):** `backend/tests/integration/formularVorlagenPipeline.test.ts`
+  hatte zwei `TabellenDef`-Fixtures ohne die seit dem letzten `startY`/`maxZeilen`-Umbau
+  (Vortag) plichtigen Felder -- 15 von 947 Backend-Tests schlugen fehl (`bun test` war nach jenem
+  Umbau nie bis zum Ende durchgelaufen, nur `tsc --noEmit`). Beide Fixtures nachgezogen.
+
+Verifiziert: `shared` 130/130 (2 neue Tests), Frontend `tsc`/Lint sauber, 1622/1622,
+Produktionsbuild erfolgreich. Backend `tsc`/Lint sauber, 947/947 (vorher 932/947, Fixtures gefixt).
+
+## 2026-08-22 (26)
+
+### feat (Phase 12: EZ-Migration auf neuen PDF-Renderer -- Cleanup separat)
+
+Letzte der vier Ressourcen (nach EA/EWT/Bereitschaft, Phase 9-11) auf den client-seitigen
+`build()`-Renderer umgestellt. EZ hat laut Plan keine abgeleiteten Werte -- Rohdaten (`Daten.N`)
+gehen unverändert wie bisher in den Export.
+
+- **`infrastructure/data/download.ts`:** `modus === 'N'` läuft jetzt wie `'EA'`/`'E'`/`'B'` über
+  `ladeUndErzeugePdf('ez', ...)` (Version server-seitig aufgelöst, PDF client-seitig gebaut) statt
+  über den alten `downloadPdf()`-POST-Pfad. `FORMULAR_JE_MODUS` um `N: 'ez'` ergänzt.
+- Datenkatalog (`datenKatalog.ts`) hatte den `ez`-Formularcode bereits (`Daten.N` als
+  Nebengeld-Einträge) -- keine Änderung nötig.
+- **Bewusst NICHT Teil dieser Änderung (Cleanup separat, User-Vorgabe):** der alte
+  Backend-Downloadpfad für EZ (`nebengeld.routes.ts`/`.controller.ts`/`.service.ts`) und der
+  `else`-Zweig in `download.ts` (`downloadPdf()`) bleiben unangetastet stehen -- gebündelter
+  Rückbau für alle vier Ressourcen erst in der separaten Phase-12-Cleanup-Aufgabe.
+- **Tests (`test/Utilities/download.test.ts`):** neue `describe("modus 'N'")`-Gruppe analog zu
+  `'B'`/`'EA'` (Signatur-Dialog, Fehlerfall bei ungültiger Version, Fehler ohne `Error`-Objekt,
+  VorgabenGeld-Merge über mehrere Monate). Die bisherigen generischen `downloadPdf()`-Tests, die
+  zuletzt an `modus 'N'` hingen (Phase-11-Erbe), sind hinfällig, da nach dieser Migration kein Modus
+  mehr den alten Pfad durchläuft.
+
+Verifiziert: Frontend `tsc`/Lint sauber, 1622/1622, Produktionsbuild erfolgreich. `shared`/Backend
+unverändert (keine Typ-/Schema-Änderung nötig).
+
+## 2026-08-22 (25)
+
+### feat (FormularEditor: startY/Höhe/Zeilen als EINE Seiten-Override-Gruppe)
+
+`startY`/`maxZeilen` waren bisher Pflichtfelder je Seite ohne globalen Standard -- jede Seite musste
+sie redundant wiederholen, selbst wenn (wie bei EA) alle Seiten identisch sind und nur die Spalten
+abweichen (z.B. Übertragsspalte auf Folgeseiten). Jetzt folgen `startY`/`hoehe`/`maxZeilen` demselben
+Muster wie `spalten`: global auf der Tabelle definiert, pro Seite nur überschreiben, was abweicht.
+
+- **`shared/src/formular/types.ts`:** `TabellenDef` bekommt neue Pflichtfelder `startY`/`maxZeilen`
+  (globaler Standard). `TabellenBereich.startY`/`maxZeilen` werden optional -- `tabelle` ist jetzt
+  das einzige Pflichtfeld eines Bereichs.
+- **BREAKING CHANGE:** Bestehende Formulare brauchen einmalig einen globalen `startY`/`maxZeilen`
+  je Tabelle im Admin-Editor (z.B. von Seite 1 übernommen) -- danach bleiben alle bisherigen
+  Pro-Seiten-Werte unverändert als Override gültig, keine Vorlage muss neu kalibriert werden.
+- **`shared/src/formular/spaltenFuer.ts`:** `startYFuer()`/`maxZeilenFuer()` neu, neben `hoeheFuer()`.
+- **Zod-Spiegel** (`frontend/.../pdf/configSchema.ts`, `backend/.../formular.schemas.ts`): gleiche
+  Umkehr bei `tabellenDefSchema`/`tabellenBereichSchema`.
+- **`infrastructure/pdf/verteile.ts`:** neuer dritter Parameter `tabellen` -- die Zeilen-Kapazität
+  je Seite fällt jetzt auf den globalen Wert der Tabelle zurück, wenn ein Bereich keinen eigenen
+  setzt (`kapazitaetVon()`).
+- **`build.ts`, `FormularEditor.tsx`, `dummyDaten.ts`:** alle Lesestellen auf
+  `startYFuer()`/`maxZeilenFuer()` umgestellt; die Klick-Kalibrierung ("erste"/"letzte Datenzeile")
+  schreibt `startY`+`Höhe` nur noch gemeinsam in den Bereich, wenn die Seite bereits eine eigene
+  Platzierung hat, sonst weiterhin gemeinsam in die Tabelle.
+- **`FeldPanel.tsx`:** die "eigene je Seite"-Checkbox an der "Datenzeile"-Überschrift steuert jetzt
+  `startY`+`Höhe`+`Zeilen` gemeinsam (vorher nur Höhe). Neuer Button "Mit Werten der Tabelle
+  platzieren" -- legt eine Tabelle auf einer neuen Seite ohne Klick-Kalibrierung an (reines
+  `{ tabelle }`, erbt alles), deckt den EA-Fall ab (nur Spalten weichen ab).
+- **Tests:** `shared/tests/formular/spaltenFuer.test.ts` (`startYFuer`/`maxZeilenFuer`, je 2 neue
+  Fälle), `frontend/test/infrastructure/pdf/verteile.test.ts` (2 neue Fälle für den
+  `maxZeilen`-Fallback über die Tabelle), `frontend/test/infrastructure/pdf/build.test.ts` (1 neuer
+  EA-artiger Fall: zwei Seiten mit bloßem `{ tabelle }`, nur Spalten weichen ab).
+
+Verifiziert: `shared` 128/128, Backend `tsc` sauber, Frontend `tsc`/Lint sauber, 1624/1624,
+Produktionsbuild erfolgreich.
+
+## 2026-08-22 (24)
+
+### fix (FormularEditor: Zeilenhöhe pro Seite überschreibbar + Tabelle von Seite entfernen)
+
+`TabellenBereich.hoehe` (neues optionales Feld, `shared`) macht die Zeilenhöhe seitenweise
+überschreibbar — bisher schrieb die "erste/letzte Datenzeile markieren"-Kalibrierung im Editor
+ihr Ergebnis immer in `TabellenDef.hoehe`, wodurch das Kalibrieren auf einer Seite ungewollt auch
+die Zeilenhöhe auf allen anderen Seiten derselben Tabelle änderte. Reales Bereitschaft-Formular
+braucht das: 4 Seiten mit unterschiedlicher Tabellenanordnung (Seite 1+2 alle drei Tabellen, Seite
+3 nur BE/LRE3, Seite 4 nur BZ+BE/LRE1+2), plausibel mit je eigenem Zeilenabstand.
+
+- **`shared/src/formular/types.ts`:** `TabellenBereich.hoehe?: number`, gleiches Override-Muster
+  wie `spalten?`. Neue `hoeheFuer(bereich, tabelle)` in `spaltenFuer.ts` neben `spaltenFuer()`.
+- **Zod-Spiegel** (`frontend/.../pdf/configSchema.ts`, `backend/.../formular.schemas.ts`):
+  `hoehe: z.number().positive().optional()` in `tabellenBereichSchema`.
+- **`infrastructure/pdf/build.ts`, `FormularEditor.tsx`:** alle Lesestellen von `tabelle.hoehe` auf
+  `hoeheFuer(bereich, tabelle)` umgestellt (Renderer, Zeilenraster-Indikator, Rechtecke). Die
+  Klick-Kalibrierung ("erste"/"letzte Datenzeile") schreibt jetzt nur noch dann in `bereich.hoehe`
+  (nur diese Seite), wenn diese Seite bereits eine eigene Höhe hat — sonst wie bisher gemeinsam in
+  `tabelle.hoehe`. `startY`/`maxZeilen` bleiben unverändert strikt pro Seite (kein Gegenstück auf
+  `TabellenDef`, ein Leck war strukturell nie möglich).
+- **`FeldPanel.tsx`:** neue "eigene je Seite"-Checkbox neben dem Höhe-Feld (gleiches UX-Muster wie
+  bei Spalten). Neuer seiten-lokaler "Von dieser Seite entfernen"-Button (`link_off`-Icon) neben
+  dem bestehenden globalen Lösch-Button — nimmt nur den `bereich` dieser Seite, Tabelle und ihre
+  Bereiche auf anderen Seiten bleiben erhalten (bisher gab es nur die globale Löschung).
+- **Tests:** `shared/tests/formular/spaltenFuer.test.ts` (2 neue Fälle für `hoeheFuer`),
+  `frontend/test/infrastructure/pdf/build.test.ts` (1 neuer Fall: eigene `bereich.hoehe` bricht den
+  Renderer nicht, `startY`/`maxZeilen` bleiben seitenweise unabhängig).
+
+Verifiziert: `shared` 124/124, Backend `tsc` sauber, Frontend `tsc`/Lint sauber, 1621/1621,
+Produktionsbuild erfolgreich.
+
+## 2026-08-22 (23)
+
+### feat (Offline-Cache für Formular-Version + Vorlagen-PDF)
+
+`ladeUndErzeugePdf()` (ea/ewt/bereitschaft-Export) funktioniert jetzt auch offline, sofern ein
+Formular+Monat schon einmal erfolgreich online geladen wurde.
+
+- **Neu `infrastructure/pdf/formularCache.ts`:** cached die serverseitig aufgelöste `Version`
+  (Schlüssel `formular:stichtag`, unbegrenzt -- klein, ~12 Einträge/Jahr/Formular) und die
+  Vorlagen-PDF-Bytes als Base64 (Schlüssel `vorlagenId`, content-addressed dedupliziert, gedeckelt
+  auf 10 Einträge mit LRU-Eviction). Alles best-effort -- ein Schreibfehler (Quota, privater Modus)
+  bricht den PDF-Export nie ab. Ein strukturell kaputter Cache-Eintrag (z.B. nach künftiger
+  Typsystem-Änderung) gilt als Cache-Miss statt offline abzustürzen.
+- **`infrastructure/pdf/ladeFormular.ts`:** `holeVorlageAlsDatei()` und die neue
+  `loeseVersionAuf()` fallen bei echtem Transportfehler (offline, Server nicht erreichbar) auf den
+  Cache zurück -- ein `ApiFehler` von einem erreichbaren Server (z.B. 404 "Vorlage gelöscht", "keine
+  gültige Version für diesen Stichtag") wird dagegen NIE durch einen veralteten Cache-Eintrag
+  maskiert. Bei einem Cache-Treffer erscheint eine Snackbar ("Offline: zwischengespeicherte Vorlage
+  verwendet").
+- **Neue `TStorageData`-Keys** in `infrastructure/storage/Storage.ts`: `formularVersionCache`,
+  `vorlagenPdfCache`.
+- **Tests:** neue `test/infrastructure/pdf/formularCache.test.ts` (Round-Trip, Chunk-Grenze,
+  LRU-Eviction, Cache-Miss bei kaputtem Eintrag); `test/infrastructure/pdf/ladeFormular.test.ts`
+  um 8 Fälle erweitert (Cache schreiben/lesen, Fallback bei Netzwerkfehler, Cache wird bei
+  `ApiFehler` NICHT verwendet).
+
+Verifiziert: `tsc`/Lint sauber, 1620/1620, Produktionsbuild erfolgreich.
+
+## 2026-08-22 (22)
+
+### fix (FormularEditor: Name-Feld, Schlüssel, Mehrfachauswahl, Zeilenraster)
+
+Vier User-Funde aus dem echten Browser-Test der Bereitschaft-Vorlage -- siehe Root-`CHANGELOG.md`
+für den vollen Kontext (`Berechnet.tabellen`-Typänderung, Breaking Change für gespeicherte
+Versionen).
+
+- **`infrastructure/data/download.ts`:** `Name` wird nur fürs PDF als "Nachname, Vorname"
+  zusammengesetzt.
+- **`FormularEditor/FeldPanel.tsx`:** Schlüssel-Eingabe verwirft leere Werte;
+  `eindeutigerSpaltenSchluessel()`-Default fällt auf `'feld'` statt `''` zurück; `DatenpfadWahl`
+  markiert belegte Pfade als `disabled`; `AggregationEditor` bekommt eine Checkbox-Mehrfachauswahl
+  für `Berechnet.tabellen`, Feld-Dropdown-Optionen jetzt mit `pfad|label`-Key.
+- **`infrastructure/pdf/wert.ts`:** `ausKontext()` vereinigt Zeilen mehrerer gewählter Tabellen
+  statt nur einer.
+- **`infrastructure/pdf/configSchema.ts`:** Zod-Spiegel für `Berechnet.tabellen`.
+- **`FormularEditor/{FormularEditor,PdfCanvas}.tsx`:** Zeilenraster-Indikator berechnet seine
+  x-Position jetzt aus der jeweils ersten Spalte der Tabelle (`spaltenFuer()`, seitenspezifische
+  Spalten berücksichtigt) statt einem festen Seitenrand.
+- **Tests:** `test/Utilities/download.test.ts` (Name-Feld), `test/infrastructure/pdf/wert.test.ts`
+  (5 neue Tests für Mehrfachauswahl über `Berechnet.tabellen`).
+
+Verifiziert: `tsc`/Lint sauber, 1602/1602, Produktionsbuild erfolgreich.
+
+## 2026-08-22 (21)
+
+### feat (PDF-Vorlagen-Pipeline: Bereitschaftszulage-Zwischenwerte) + fix (Pause-Vorzeichen)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext (Architektur-Entscheidung, verworfene
+Zwischenstände).
+
+- **`infrastructure/data/download.ts`:** `modus === 'B'` zieht das BZ-/BE-Mapping in benannte
+  Variablen (`bzMitDauer`/`beMitDauer`, statt inline in `data.Daten`), damit dieselben Zeilen für
+  `bereitschaftMinuten` (Σ `Dauer` BZ minus Σ `Dauer` BE) wiederverwendbar sind. Ergebnis geht über
+  `bereitschaftszulageAbgeleiteteWerte(bereitschaftMinuten, TB, VorgabenGeld[Monat])` in
+  `data.Bereitschaftszulage`.
+- **`FormularEditor/datenKatalog.ts`:** `KatalogEintrag.formulare?: FormularCode[]` (neu) und
+  `basisFuer(formular)`-Filter in `katalogFelder()`/`beispielWert()` -- verhindert, dass die sechs
+  neuen `Bereitschaftszulage.*`-Basis-Einträge auch bei ez/ewt/ea im Kopf-/Fuß-Datenpfad-Picker
+  auftauchen und dort ins Leere laufen.
+- **`test/Utilities/download.test.ts`:** BZ-`Dauer`-Erwartung `450 → 510` (Pause-Fix). Neuer
+  Test für den Beamter-Zweig überschreibt die `tableToArray`-Mocks mit einem größeren
+  BZ-Zeitraum (26h statt 8h), damit `bereitschaftMinuten` über der 600-Minuten-Schwelle liegt --
+  sonst wären `SummeBeamter1`/`2` negativ bzw. `-0` geworden (kein aussagekräftiger Testfall).
+
+Verifiziert: `tsc`/Lint sauber, 1597/1597, Produktionsbuild erfolgreich.
+
+## 2026-08-22 (20)
+
+### feat (PDF-Vorlagen-Pipeline: Privat-km-Betrag für Bereitschaftseinsatz)
+
+Bereitschaftseinsatz (BE) bekam bisher nur `PrivatKm` als reine Kilometerzahl im Formular --
+fehlender €/Ct-Betrag daraus. Analog zu `PrivatKmBetrag = km * Satz` in
+`Berechnung/calculateBerechnungRows.ts` (Tarifkraft/Beamter haben unterschiedliche Sollwerte).
+
+- **`infrastructure/data/download.ts`:** `modus === 'B'` bestimmt `beamter` (`TB !== 'Tarifkraft'`,
+  gleiche Konvention wie bei EWT) und liest den passenden Satz aus `VorgabenGeld[Monat]`
+  (`PrivatPKWTarif`/`PrivatPKWBeamter`), reicht ihn an `beAbgeleiteteWerte()` weiter.
+- **`FormularEditor/datenKatalog.ts`:** neuer Eintrag `PrivatKmBetrag` (Gruppe "Berechnet", Quelle
+  `Daten.BE`, Format-Vorschlag `waehrung`).
+- **`test/Utilities/download.test.ts`:** `modus 'B'`-Tests um `PrivatKmBetrag` ergänzt, inkl. eigenem
+  Test für den Beamter-Satz (TB ≠ Tarifkraft).
+
+Verifiziert: `tsc`/Lint sauber, 1597/1597 -- siehe Root-`CHANGELOG.md` für die `shared`-Änderung
+(`beAbgeleiteteWerte()`).
+
+## 2026-08-22 (19)
+
+### refactor (download.ts: formular-Zuordnung als Mapped Type, toter Kommentar entfernt)
+
+Reine Code-Qualitaet, kein Verhaltensaenderung.
+
+- `infrastructure/data/download.ts`: die Ternary-Kette (`modus === 'EA' ? 'ea' : modus === 'E' ?
+'ewt' : 'bereitschaft'`) durch ein `{ [key in typeof modus]: string }`-Lookup ersetzt, analog dem
+  bestehenden `vorDateiName`-Muster weiter unten in derselben Datei. `typeof modus` greift dort die
+  durch die vorausgehende `if`-Bedingung genarrowte Union (`'EA'|'E'|'B'`) ab -- kommt kuenftig ein
+  vierter Modus zur Bedingung dazu, ohne das Lookup-Objekt nachzuziehen, ist das ein Compile-Error
+  statt eines stillen Fallbacks auf den letzten Ternary-Zweig.
+- Eine versehentlich mitcommittete auskommentierte Alternativzeile (`.includes()`-Variante aus dem
+  vorherigen Review-Vergleich) entfernt.
+
+Verifiziert: `tsc`/Lint sauber, `download.test.ts` 18/18, volle Suite 1596/1596.
+
+## 2026-08-22 (18)
+
+### fix (PDF-Vorlagen-Pipeline: Bereitschaft-Dauer als Minuten, Labels disambiguiert)
+
+Nachtrag zu Eintrag 17, User-Korrektur. `Dauer` (BZ/BE) ist jetzt `number` (Minuten) statt
+`"HH:mm"`-Text -- siehe Root-`CHANGELOG.md` fuer den vollen Kontext (`shared`-Aenderung).
+
+- **`FormularEditor/datenKatalog.ts`:** Labels der beiden `Dauer`-Eintraege in
+  `ZEILEN_FELDER.bereitschaft` waren identisch ("Dauer (HH:mm)", nur ueber `quelle` getrennt) und
+  in Kontexten ohne Tabellenbezug (z.B. Summenfeld-Dropdown fuer Kopf/Fuss) dadurch nicht
+  unterscheidbar -- jetzt "Dauer Zeitraum (Minuten)" (`Daten.BZ`) / "Dauer Einsatz (Minuten)"
+  (`Daten.BE`), Beispielwerte als Zahl (450/45).
+- **`test/Utilities/download.test.ts`:** `modus 'B'`-Test auf numerische `Dauer`-Werte angepasst.
+
+Verifiziert: `tsc`/Lint sauber, 1596/1596.
+
+## 2026-08-22 (17)
+
+### feat (PDF-Vorlagen-Pipeline: Bereitschaft-Download auf neuen Pfad umgestellt, Phase 11)
+
+Gleiches Cutover-Muster wie EA (Phase 9) und EWT (Phase 10). Siehe Root-`CHANGELOG.md` fuer den
+vollen Kontext (`shared/src/formular/abgeleiteteWerte.ts`, Cleanup-Entscheidung).
+
+- **`infrastructure/data/download.ts`:** `modus === 'B'` laeuft jetzt ueber
+  `ladeUndErzeugePdf('bereitschaft', stichtag, data, signaturPng)` statt `downloadPdf('B', data)`.
+  BZ-Zeilenmapping merged pro Zeile `bzAbgeleiteteWerte(basis)`, BE-Zeilenmapping
+  `beAbgeleiteteWerte(basis)` -- `build()` sieht das vorberechnete `Dauer` als normalen Datenpfad
+  (`Daten.BZ[].Dauer`/`Daten.BE[].Dauer`).
+- **`FormularEditor/datenKatalog.ts`:** je ein neuer Eintrag in `ZEILEN_FELDER.bereitschaft`
+  (Gruppe "Berechnet") fuer `Dauer` auf `Daten.BZ` und auf `Daten.BE`, getrennt ueber `quelle` wie
+  die bestehenden BZ-/BE-Felder.
+- **`test/Utilities/download.test.ts`:** eigene `describe`-Gruppe fuer `modus 'B'` (Signatur-Dialog,
+  `ladeUndErzeugePdf`-Aufruf inkl. vorberechneter `Dauer`, Fehlerfall) analog EA/EWT. Die bisherigen
+  generischen `downloadPdf`-/VorgabenGeld-Tests, die `modus 'B'` nur als Vehikel nutzten, auf
+  `modus 'N'` (letzter verbleibender Alt-Pfad) umgehaengt; ein Fallback-Filename-Test war dadurch
+  ein exaktes Duplikat eines bestehenden `modus 'N'`-Tests und wurde entfernt statt umgehaengt.
+
+Verifiziert: `tsc`/Lint sauber, 1596/1596.
+
+## 2026-08-21 (16)
+
+### fix (Unterschrift-Dialog: Box-Proportionen, Fullscreen im Querformat, Desktop-Größe)
+
+Nachtrag zu Eintrag 15 -- User meldete nach dem resize-Fix weiterhin: "Bildschirm dann deutlich
+breiter". Ursache war eine zweite, unabhängige Baustelle: Canvas-CSS war `width:100%;
+height:200px` -- die Breite skaliert mit dem Viewport, die Höhe blieb aber fix, im Querformat
+wurde die Box dadurch viel breiter bei gleicher Höhe.
+
+Mehrere CSS-only-Anläufe (`aspect-ratio`, `modal-fullscreen-*-down`, `max-height`, `modal-lg`,
+Flex-Zentrierung) scheiterten reihum an echten Bootstrap-Layout-Interaktionen -- u.a. füllte der
+Canvas als Flex-Item (`.modal-body{display:flex}`) die verfügbare Breite trotz `width:auto;
+max-width:100%` nicht zuverlässig (blieb bei ~304px unabhängig von der Dialogbreite hängen), und
+`max-height` allein verzerrte das Ratio (bis zu 4.24 statt 5/2=2.50), weil nur die Höhe gedeckelt
+wurde, nicht die Breite mit. Jede Runde live im Browser verifiziert, jeder Fehlschlag sofort am
+tatsächlichen Messwert erkannt statt spekulativ weitergeraten.
+
+**Lösung: deterministische Berechnung in JS statt weiterer CSS-Interaktionsraten, mit zwei
+Darstellungsmodi.**
+
+- **`infrastructure/pdf/signaturDialog.ts`:** neue `berechneCanvasGroesse()` -- ermittelt aus
+  Viewport-Breite/-Höhe (abzüglich Kopf-/Fußzeile UND dem Rahmen von `.modal-content` selbst, alle
+  unabhängig von der Canvas-Größe messbar, kein Henne-Ei-Problem) die größtmögliche Fläche im
+  festen `5/2`-Verhältnis, die ohne Scrollen ins Modal passt. Zwei Modi je nachdem, welche
+  Dimension bindet:
+  - **Breiten-gebunden** (typisch Hochformat/große Screens): ruhige zentrierte Box, Rand
+    `DIALOG_RAND` (8px, fest statt Bootstraps je Breakpoint unterschiedlichem Default -- die
+    Rechnung setzt ihn selbst via `dialog.style.margin`), Breite gedeckelt auf max. 900px (auch
+    auf sehr breiten Monitoren keine unnötig gestreckte Fläche).
+  - **Höhen-gebunden** (typisch Querformat-Handy, wenig Vertikalraum -- User-Fund: "im Querformat
+    wird definitiv Fullscreen benötigt"): randloses Fullscreen (`dialog.style.margin='0'`,
+    `maxWidth:100vw`) MIT kompakter Kopf-/Fußzeile (neue `.signatur-modal-kompakt`-Klasse,
+    kleineres Padding/Titel-Schrift) -- gewinnt zusätzlichen Vertikalraum zurück statt ihn an
+    Bootstraps Standard-Chrome zu verlieren.
+    Ergebnis wird direkt als `canvas.style.width/height` (px) sowie `dialog.style.maxWidth/margin`
+    gesetzt, neu berechnet bei `shown.bs.modal` UND bei jedem `resize` (Handydrehung, Fenster
+    verschieben) -- eine einzige Formel deckt beide Fälle ab, keine CSS-Breakpoint-Klasse mehr nötig.
+- **`scss/styles.scss`:** `.signatur-canvas` auf `display:block; margin:0 auto; box-sizing:
+border-box` reduziert (Größe kommt vollständig aus JS; `border-box` verhindert, dass der 1px-
+  Rahmen zur gesetzten Größe dazukommt statt darin enthalten zu sein); neue
+  `.signatur-modal-kompakt`-Klasse für den Fullscreen-Fall.
+
+Mehrere Korrekturrunden, jede live verifiziert: ein pauschaler 90%-Sicherheitsabschlag machte das
+Feld auf kleinen Screens spürbar kleiner als vorher (User-Fund: "zu klein, da das Fullscreen
+fehlt") -- ersetzt durch Rechnung mit dem tatsächlich verfügbaren Platz. Ein `modal-lg`-Versuch
+brach die Breiten-Füllung komplett (Canvas blieb bei ~304px hängen, unabhängig von der
+Dialogbreite) -- verworfen zugunsten der deterministischen Lösung. Ohne eigenes Fullscreen war
+Querformat trotz mehr Fläche schmäler als Hochformat (User-Fund: "aktuell ist das
+Unterschriftenfeld im Hochformat größer als im Querformat!!!!!") -- behoben durch den zweiten
+Modus oben. Ein konstanter 2px-Überlauf im Fullscreen-Fall kam vom eigenen Rahmen von
+`.modal-content` (Bootstrap-Default), der bislang nicht in die Höhen-Rechnung einging.
+
+Verifiziert live im echten Chrome (Puppeteer, `google-chrome-stable`, echter Vite-Dev-Server,
+echtes `signature_pad`/Bootstrap-Modal, kein Mock): Ratio in jedem getesteten Fall exakt 2.50,
+Content passt (bis auf sub-pixel Rundungsrauschen von <0.4px, ohne sichtbare/funktionale Wirkung)
+ohne Scrollen in den Viewport, Pixelpuffer nach echtem `resize`-Event synchron zur neuen
+CSS-Größe, Dialog horizontal zentriert. Kernvergleich (gleiches Gerät gedreht, 390×844 vs.
+844×390): Querformat-Fläche jetzt ~193.000px² gegenüber ~47.000px² im Hochformat (vorher war es
+umgekehrt kleiner). Desktop-Canvas 868×347 statt ursprünglich ~466×186 (deutlich größere,
+komfortablere Fläche, gedeckelt statt auf riesigen Monitoren unbegrenzt zu wachsen). `tsc
+--noEmit`/ESLint sauber, `signaturDialog.test.ts` 8/8 grün, voller Testlauf 1595/1595.
+
+## 2026-08-21 (15)
+
+### fix (Unterschrift-Dialog: verzerrt nach Handydrehung)
+
+**User-Fund:** Unterschriftenfeld verzerrt (Maße/Verhältnisse falsch), wenn das Handy während des
+Signierens gedreht wird. Ursache: `signaturePad.ts::erstelleSignaturPad()` setzt die Canvas-
+Pixelgröße (`canvas.width`/`canvas.height`) EINMALIG beim Öffnen aus `offsetWidth`/`offsetHeight`.
+Das Canvas selbst ist per CSS `width:100%` responsiv -- dreht sich das Handy, ändert sich die
+CSS-Breite, die interne Pixelgröße bleibt aber stehen. Der Browser streckt das alte, falsch
+proportionierte Bitmap auf die neue Boxgröße, und `signature_pad`s Touch-Koordinaten-Mapping
+(basiert auf der beim Erstellen fixierten Canvas-Größe) läuft gegenüber der neuen Anzeige aus dem
+Ruder.
+
+- **`infrastructure/pdf/signaturDialog.ts`:** neuer `window`-`resize`-Listener (aktiv solange das
+  Modal offen ist) baut das Pad bei jeder Größenänderung neu auf (`pad.off()` erst, sonst sammeln
+  sich bei mehrfachem Drehen doppelte Pointer-Listener auf `window` an, die `signature_pad` intern
+  selbst dort registriert). Eine bereits begonnene Unterschrift geht beim Neuaufbau verloren --
+  proportionale Punkt-Umrechnung wäre fehleranfällig, die paar Striche sind schnell nachgezogen.
+  Listener wird beim Schließen (`hidden.bs.modal`) wieder entfernt.
+- **`test/infrastructure/pdf/signaturDialog.test.ts`:** 3 neue Tests (Pad-Neuaufbau bei resize,
+  No-op vor `shown.bs.modal`, Listener-Entfernung beim Schließen). Dabei einen bereits vorher
+  bestehenden Test-Hygiene-Mangel gefunden und behoben: zwei ältere Tests klickten "Fertig" über
+  das gemockte `bsModal.hide()`, ohne danach das reale `hidden.bs.modal`-Event zu simulieren --
+  harmlos, bis der neue `window`-Listener das in späteren Tests als Leak sichtbar machte (3 statt 1
+  Aufruf bei einem `resize`-Dispatch). Beide Tests lösen jetzt zusätzlich `hidden.bs.modal` aus,
+  wie es Bootstrap nach der echten Ausblend-Animation auch täte.
+
+Verifiziert: `bun run test` 1595/1595 grün, `tsc --noEmit`/ESLint sauber. Nicht im echten Browser
+mit tatsächlicher Handydrehung nachgestellt (kein Gerät/Emulator in dieser Session verfügbar) --
+Fix beruht auf Codelesung der `signature_pad`-Quelle (`.off()`-Verhalten, `window`-Listener) und
+dem bekannten Resize-Verzerrungsmuster bei Canvas-Elementen mit responsivem CSS und fixer
+Pixelgröße.
+
+## 2026-08-21 (14)
+
+### fix (OE-Format war falsch geraten) + feat (Monatsname-Formate)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext.
+
+- **`infrastructure/pdf/configSchema.ts`:** `'oe'`, `'monatName'`, `'monatNameKurz'` im
+  Format-Enum ergänzt.
+- **`FormularEditor/datenKatalog.ts`:** OE-Katalogeintrag `format: 'liste'` → `format: 'oe'`.
+- **`FormularEditor/FeldPanel.tsx`:** neue Format-Optionen im Dropdown; OE-Beispiele in Hilfetext
+  und Platzhalter-Hilfe-Modal korrigiert (zeigten vorher `:liste` statt `:oe`).
+- **`FormularEditor/dummyDaten.ts`:** Vorschau-Testwert für `monatName`/`monatNameKurz` ist jetzt
+  eine Zahl 1-12 statt eines Datums.
+- **`test/infrastructure/pdf/wert.test.ts`:** OE-Tests auf `format: 'oe'` umgestellt; die
+  generischen Fallback-Tests, die vorher (irreführend) OE als Beispiel nutzten, laufen jetzt über
+  ein neutrales Feld (`zulagen`).
+
+Verifiziert: voller Testlauf 1592/1592 grün, `tsc --noEmit`/ESLint sauber.
+
+## 2026-08-21 (13)
+
+### fix (FormularEditor: Ankreuz-Spalte/-Feld bekommt keinen Titel-Vorschlag beim Feld-Wechsel)
+
+**User-Fund:** Beim Wählen des geprüften Felds in einer Ankreuz-Bedingung -- besonders bei den
+vorberechneten EWT-Booleans (`Wohnung8bis14` etc.) -- blieb der Anzeigename der Spalte/des Felds
+leer. Ursache: `spalte.label`/`feld.label` sind unabhängig von `wenn.feld`, nichts hielt sie
+synchron; der Feld-Auswahl-Dropdown in `AnkreuzBedingung`/`FeldAnkreuzBedingung` änderte bisher
+nur `wenn.feld`, nie den Titel der Spalte/des Felds selbst.
+
+- **`FormularEditor/FeldPanel.tsx`:** Feld-Auswahl in `AnkreuzBedingung` (Spalte) und
+  `FeldAnkreuzBedingung` (Dokument-Feld) übernimmt jetzt das `label` des gewählten Katalog-
+  Eintrags als Titel -- IMMER, nicht nur wenn noch keiner gesetzt ist (User-Korrektur: anders als
+  der Format-Vorschlag aus Eintrag 8, der eine bewusste Wahl nie überschreibt, beschreibt der Titel
+  hier direkt die Bedingung -- ein stehen gelassener alter Titel nach einem Feld-Wechsel zeigt sonst
+  die falsche Bedingung an). Wer einen abweichenden Titel will, tippt ihn danach im
+  Anzeigename-Feld ein.
+
+Verifiziert: `tsc --noEmit` sauber, ESLint sauber, voller Testlauf 1590/1590 grün (keine
+dedizierte Testdatei für `FeldPanel.tsx`, siehe frühere Notiz zu fehlender Component-Test-
+Infrastruktur).
+
+## 2026-08-21 (12)
+
+### feat (FormularEditor: echte Boolean-Auswahl statt `bereich`-Umweg für Ankreuz-Bedingungen)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext.
+
+- **`infrastructure/pdf/wert.ts`:** `trifftFeldBedingung()`-Cast auf `boolean` erweitert.
+- **`FormularEditor/datenKatalog.ts`:** `istBooleanFeld()` -- markiert die sechs EWT-Ankreuz-
+  Booleans.
+- **`FormularEditor/FeldPanel.tsx`:** `VergleichWahl` zeigt für Boolean-Felder eine Ja/Nein-
+  Auswahl; Feld-Auswahl in `AnkreuzBedingung`/`FeldAnkreuzBedingung` (inkl. der initialen
+  „Ankreuzen"-Buttons) belegt `werte: [true]` automatisch vor.
+- **`dummyDaten.ts`:** `platzhalter()`-Rückgabetyp auf `boolean` erweitert (Folge der `werte`-
+  Erweiterung).
+- **Tests:** `test/infrastructure/pdf/wert.test.ts` (Feld-Ebene), `shared/tests/formular/
+aggregatoren.test.ts` (`trifftBedingung`), `test/features/Admin/FormularEditor/dummyDaten.test.ts`
+  (Vorschau-Zeilen mit `werte: [true]`).
+
+Verifiziert: `tsc --noEmit`/ESLint sauber, voller Testlauf 1590/1590 grün.
+
+## 2026-08-21 (11)
+
+### fix (FormularEditor: Ankreuz-Spalte mit `bereich` (z.B. Boolean-Felder) in Vorschau immer leer/falsch)
+
+**User-Fund** beim Konfigurieren einer Ankreuz-Spalte für einen der EWT-Booleans
+(`Wohnung8bis14` etc., über `Bedingung.bereich: { von: 1, bis: 2 }` wie in `abgeleiteteWerte.ts`
+dokumentiert): Feld blieb in der Editor-Vorschau für jede Zeile leer bzw. zeigte scheinbar
+zufällige Treffer.
+
+- Ursache: `dummyDaten.ts::macheZeile()` befüllte Testzeilen für eine Ankreuz-Spalte nur für den
+  `werte`-Fall (`zeile[feld] ??= wenn.werte?.[0] ?? ''`). Im `bereich`-Fall ist `werte` immer
+  `undefined`, also landete überall der Fallback `''` bzw. blieb das Feld ganz unbelegt.
+  `alsVergleichswert('')`/`alsVergleichswert(undefined)` sind beide `0` -- das liegt bei jedem
+  `bereich` mit `von >= 1` nie im Treffer-Fenster (daher „immer leer"), kann bei einem `bereich`
+  mit `von <= 0` aber spurios treffen (daher „falsch berechnet" bei anderen Wertebereichen).
+  Betraf nur die Editor-Vorschau, nicht die echte PDF-Erzeugung -- dort liefert `download.ts` für
+  EWT bereits echte gemergte `ewtAbgeleiteteWerte()`-Booleans.
+- Fix: neuer Zweig für `spalte.wenn.bereich` -- gerade Zeilen bekommen `alsVergleichswert(von)`
+  (liegt IMMER im Bereich, einschließlich), ungerade `alsVergleichswert(bis)` (liegt NIE im
+  Bereich, ausschließlich) als rohen Zeilenwert. Zeigt in der Vorschau wieder beide Fälle, wie es
+  der bestehende Kommentar „jede zweite Zeile erfüllt die Bedingung" für den `werte`-Fall schon
+  vorsah.
+- **`test/features/Admin/FormularEditor/dummyDaten.test.ts`:** Regressionstest über
+  `trifftBedingung()` (prüft echten Treffer/Nicht-Treffer, nicht nur den rohen Zellwert).
+
+Verifiziert: `bun run test` 1588/1588 grün, `tsc --noEmit` sauber, ESLint sauber. Echte
+PDF-Erzeugung (Browser mit Backend) nicht gegengeprüft -- Codelesung von `download.ts` zeigt
+korrektes Merging, aber ohne Live-Test keine 100%ige Garantie für den realen Ankreuz-Fall.
+
+## 2026-08-21 (10)
+
+### feat (FormularEditor: Hilfe-Modal für Platzhalter & Formate)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext.
+
+- **`FormularEditor/FeldPanel.tsx`:** Link "Alle Platzhalter & Formate…" unter dem Festtext-Feld
+  öffnet ein dynamisch erzeugtes Modal (Muster wie `openHelpModal.tsx`) mit vollständiger Tabelle
+  aller Platzhalter-Varianten und aller Formatnamen (aus `FORMATE` generiert, keine zweite Quelle).
+
+Verifiziert: `tsc --noEmit` sauber, ESLint sauber, `bun run test` 1587/1587 grün.
+
+## 2026-08-21 (9)
+
+### feat (PDF-Rendering: Format erzwingbar in Text-Platzhaltern, `{Pfad:Format}`)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext.
+
+- **`infrastructure/pdf/wert.ts`:** `zerlegePlatzhalter()` trennt `{Pfad:Format}` am ersten `:`,
+  unbekannte Formatnamen werden ignoriert statt die Zelle zu brechen. `datenPlatzhalter()`
+  schneidet den Format-Teil vor dem Pfad-Lookup ab (Testdaten-Vorschau).
+- **`FormularEditor/FeldPanel.tsx`:** Hilfetext ergänzt.
+- **`test/infrastructure/pdf/wert.test.ts`:** 7 neue Tests.
+
+Verifiziert: `bun run test` 1587/1587 grün, `tsc --noEmit` sauber, ESLint sauber.
+
+## 2026-08-21 (8)
+
+### fix (PDF-Rendering: weitere Formatierungs-Lücken + Auto-Vorbelegung im Editor)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext.
+
+- **`infrastructure/pdf/wert.ts`:** `ersetzePlatzhalter()` (Festtext-Platzhalter `{Datenpfad}`)
+  hatte einen eigenen `String()`-Fallback statt den von `formatiere()` zu teilen -- auf den
+  gemeinsamen `standardText()` aus `shared` umgestellt.
+- **`infrastructure/pdf/spaltenWert.ts`:** ebenfalls auf `standardText()` umgestellt.
+- **`FormularEditor/datenKatalog.ts`:** `KatalogEintrag.format` von `'waehrung' | 'datum'` auf den
+  vollen `FormatName` erweitert; `VorgabenU.Pers.OE` und `Zulagen` mit `format: 'liste'` versehen.
+- **`FormularEditor/FeldPanel.tsx`:** `umbenennen()` (Felder) und der Spalten-`DatenpfadWahl`-
+  Handler übernehmen jetzt den Format-Vorschlag aus dem Katalog, wenn das Feld/die Spalte noch kein
+  eigenes Format hat -- verhindert die OE-Bug-Klasse strukturell statt nur den Fallback abzufedern.
+- **`test/`:** keine neuen Testdateien; Katalog-Lookup ad hoc per Skript gegen `katalogFelder()`/
+  `katalogZeilenFelder()` geprüft.
+
+Verifiziert: `bun run test` (alle betroffenen Suiten, 86/86 gruen über `shared`+`frontend`),
+`tsc --noEmit` sauber, ESLint sauber. UI-Verhalten (Format-Dropdown springt beim Pfad-Wechsel um)
+NICHT per Headless-Browser verifiziert -- Formulare-Tab ist serverseitig auf `super-admin`
+gegated, im backendlosen Verify-Rezept nicht erreichbar; manuelle Nachprüfung mit echtem Backend
+steht noch aus.
+
+## 2026-08-21 (7)
+
+### feat (PDF-Rendering: Format `jaNein` fuer Boolean-Felder)
+
+Anschluss an Eintrag (6): unformatierte Boolean-Werte fielen ebenfalls auf `String()` zurueck
+(`true`/`false` statt Deutsch). Siehe Root-`CHANGELOG.md` fuer den vollen Kontext.
+
+- **`infrastructure/pdf/wert.ts`, `infrastructure/pdf/spaltenWert.ts`:** `formatiere()`-Fallback
+  nutzt bei `typeof roh === 'boolean'` jetzt `FORMAT.jaNein` statt `String()`.
+- **`FormularEditor/FeldPanel.tsx`:** `jaNein` als waehlbares Format im Editor-Dropdown.
+- **`test/infrastructure/pdf/wert.test.ts`:** Regressionstest ergaenzt.
+
+Verifiziert: `bun test test/infrastructure/pdf/wert.test.ts test/infrastructure/pdf/spaltenWert.test.ts test/features/Admin/FormularEditor/vorschau.test.ts test/infrastructure/pdf/configSchema.test.ts` (73/73 gruen), `tsc --noEmit` sauber.
+
+## 2026-08-21 (6)
+
+### fix (PDF-Rendering: unformatierte Array-Felder nicht mehr roh gejoint)
+
+`VorgabenU.Pers.OE` (Organisationseinheit) erschien auf der EA-PDF als `I,IW,MI,N,MUS,IL,` --
+Feld im Formular-Editor ohne `format` konfiguriert, `formatiere()` fiel auf `String(array)`
+zurueck (JS-Array-Stringify: kommagetrennt ohne Leerzeichen, leere Endeintraege erzeugen ein
+trailing Komma). `FORMAT.liste` (`shared/src/formular/aggregatoren.ts`) existiert genau fuer
+diesen Fall, wurde aber nur bei explizit gesetztem `format: 'liste'` angewendet.
+
+- **`infrastructure/pdf/wert.ts`, `infrastructure/pdf/spaltenWert.ts`:** `formatiere()` faellt
+  bei fehlendem `format` jetzt fuer Arrays auf `FORMAT.liste` statt `String()` zurueck --
+  unformatierte Array-Feld-Konfigurationen rendern damit nie wieder als rohes Array.
+- **`test/infrastructure/pdf/wert.test.ts`:** Regressionstest fuer den OE-Fall ergaenzt.
+
+Verifiziert: `bun test test/infrastructure/pdf/wert.test.ts test/infrastructure/pdf/spaltenWert.test.ts test/features/Admin/FormularEditor/vorschau.test.ts` (63/63 gruen), `tsc --noEmit` sauber.
+
+## 2026-08-21 (5)
+
+### feat (PDF-Vorlagen-Pipeline: EWT-Download auf neuen Pfad umgestellt, Phase 10)
+
+Gleiches Cutover-Muster wie EA (Phase 9). Siehe Root-`CHANGELOG.md` fuer den vollen Kontext
+(`shared/src/formular/abgeleiteteWerte.ts`, Cleanup-Entscheidung).
+
+- **`infrastructure/data/download.ts`:** `modus === 'E'` laeuft jetzt ueber
+  `ladeUndErzeugePdf('ewt', stichtag, data, signaturPng)` statt `downloadPdf('E', data)`. EWT-
+  Zeilenmapping merged pro Zeile `ewtAbgeleiteteWerte(basis, beamter)` (`beamter` aus
+  `VorgabenU.Pers.TB !== 'Tarifkraft'`) -- `build()` sieht die vorberechneten Felder als normale
+  Datenpfade (`Daten.EWT[].DauerWohnung` etc.).
+- **`FormularEditor/datenKatalog.ts`:** acht neue Eintraege in `ZEILEN_FELDER.ewt` (Gruppe
+  "Berechnet"): `DauerWohnung`/`DauerErsteTkgSt` plus sechs Zeitband-Booleans. Boolean-Felder im
+  Editor als Ankreuz-Quelle ueber `Bedingung.bereich: { von: 1, bis: 2 }` nutzen, nicht ueber
+  `werte` (siehe Kommentar in `abgeleiteteWerte.ts` fuer die Begruendung).
+- **`test/Utilities/download.test.ts`:** Bestandstests fuer `modus 'E'` auf den neuen Pfad
+  umgeschrieben. Dabei einen Mock-Queue-Versatz gefunden: ein Test rief weiterhin `download(...,
+'E')` mit einem auf `mockDownloadPdf` gequeueten `mockResolvedValueOnce` auf, das nach dem Cutover
+  nie mehr konsumiert wurde und dadurch mehrere NACHFOLGENDE Tests (`modus 'N'`/`'B'`) mit falschen
+  Werten versorgte -- jeder Einzeltest lief isoliert grün, nur in der vollen Suite sichtbar. Fix:
+  betroffenen Test auf `modus 'B'` umgestellt (ruft weiterhin `downloadPdf` auf). Lehre in
+  `tasks/lessons.md` festgehalten.
+
+Verifiziert: `tsc`/Lint sauber, 1578/1578.
+
+## 2026-08-21 (4)
+
+### fix (PDF-Vorlagen-Pipeline: Summe-Button-Reset, Signatur-Zentrierung)
+
+**User-Funde beim echten EA-Browser-Test (Phase 9), Fortsetzung von (3).**
+
+- `FeldPanel.tsx`: "Summe"-Modus-Button in `FeldZeile` setzte `berechnet` bei jedem Klick unbedingt
+  auf `{ op: 'summe', ueber: '$seite' }` zurueck statt (wie alle anderen Modus-Buttons: Text/Mehrere/
+  Ankreuzen/Ueberschrift) den bereits gesetzten Wert zu erhalten -- ein erneuter Klick auf den schon
+  aktiven Button warf z.B. `$bisher` ("alle Vorseiten") zurueck auf `$seite`. Fix:
+  `feld.berechnet ?? { op: 'summe', ueber: '$seite' }`, analog zu den anderen Modi.
+- `build.ts`: Signatur-Bild sass an der unteren linken Ecke der `signaturBild`-Box statt darin
+  zentriert -- `png.scaleToFit(w, h)` verkleinert bei abweichendem Seitenverhaeltnis nur, verschiebt
+  aber nicht. Fix: Restdifferenz zur Box-Groesse haelftig auf `x`/`y` verteilt.
+- Zugehoeriger Backend-Fix (verlorenes `$`-Praefix beim Speichern): siehe `backend/CHANGELOG.md`.
+
+Verifiziert: `tsc`/Lint sauber, 1578/1578 (kein Test deckt die konkreten UI-Interaktionen bzw. die
+Bild-Position ab -- manuelle Verifikation im Editor/PDF durch den User ausstehend).
+
+**Nachtrag (`download.ts`):** EA setzt seit Phase 9 kein `filename` mehr (kein Backend-Roundtrip fuer
+den PDF-Inhalt), lief deshalb immer in den generischen Fallback -- dessen Format
+(`EA_MM_YY_Vorname Nachname_Gewerk ErsteTkgSt.pdf`) wich vom bisherigen server-seitigen EA-Namen ab.
+Auf Vorschlag statt EA separat zu behandeln den gemeinsamen Fallback selbst auf das Server-Schema
+umgestellt: Praefix je Modus (`RB`/`Verpf.`/`EZ`/`Entgeltausgleich`) + `Nachname V. Gewerk ErsteTkgSt
+MM.JJJJ.pdf`, wie `buildBaseFileName` im Backend. Gilt jetzt einheitlich fuer alle vier Modi im
+Fallback-Fall. `download.test.ts` auf das neue Format angepasst. Verifiziert: `tsc`/Lint sauber,
+1578/1578.
+
+## 2026-08-21 (3)
+
+### feat (PDF-Vorlagen-Pipeline: EA-Download auf neuen Pfad umgestellt, Phase 9)
+
+Erster echter Cutover der PDF-Vorlagen-Pipeline (Plandatei Phase 9, EA/Entgeltausgleich als Pilot --
+mit EZ getauscht, siehe dortiger Phase-8.5/Tausch-Kontext). `build()` fetchte `layout.template`
+bisher ungeprüft ohne Auth-Header (Kommentar in `build.ts`: "Anbindung folgt in Phase 9") -- diese
+Anbindung jetzt nachgezogen.
+
+- **`infrastructure/pdf/ladeFormular.ts`** (neu): `ladeUndErzeugePdf(formular, stichtag, daten,
+signaturPng?)` löst die gültige Version server-seitig auf (`GET /formulare/:f?stichtag=`), lädt
+  die Vorlage authentifiziert nach (`holeVorlageAlsDatei`, verschoben aus
+  `Admin/components/formularVersionenApi.ts` -- Layer-Regel verletzt, wenn `infrastructure/` aus
+  `features/` importiert) und biegt `layout.template` auf eine lokale `blob:`-URL um, bevor `build()`
+  sie fetcht (derselbe Trick wie die Testdaten-Vorschau im Admin-Editor). `formularVersionenApi.ts`
+  re-exportiert `holeVorlageAlsDatei`/`ApiFehler`, damit `FormularUpload.tsx` unverändert bleibt.
+- **`configSchema.ts`:** `versionSchema` exportiert, neue `parseVersion()` -- Gegenstück zu
+  `parseRegistry()`, validiert aber eine einzelne vom Server aufgelöste `Version` statt einer ganzen
+  Registry.
+- **`infrastructure/pdf/signaturDialog.ts`** (neu): kapselt den Ja/Nein-Entscheidungsdialog plus
+  Canvas-Signatur-Pad (bisher nur als Bruchstück in der Dev-Testseite `pdf-test.ts` vorhanden) in
+  eine wiederverwendbare, promise-basierte Funktion -- vanilla DOM wie `confirmDialog`, kein
+  Preact/`showModal` nötig. Pad wird erst nach `shown.bs.modal` erstellt, nicht beim Rendern
+  (Phase-4-Lehre: vorher erstelltes Pad auf unsichtbarem Canvas ist unbenutzbar).
+- **`infrastructure/data/download.ts`:** `modus === 'EA'` läuft jetzt über den neuen Pfad
+  (`signaturDialog()` + `ladeUndErzeugePdf()`) statt über `downloadPdf()`/den alten Backend-Sheets-
+  Export; `B`/`E`/`N` unverändert. Stichtag für `resolve()` = erster Tag des Exportmonats. Kein
+  eigenes Datenmapping nötig -- die bestehende `Daten`-Konstruktion im `case 'EA':`-Zweig hat schon
+  exakt die Form, die `build()` erwartet.
+- Tests: `ladeFormular.test.ts`, `signaturDialog.test.ts` (neu), `download.test.ts` um den
+  EA-Pfad ergänzt (Signatur-Weiterreichung, Fehlerfall "keine gültige Version").
+- **Bewusst NICHT Teil dieser Änderung:** der alte Backend-Pfad
+  (`entgeltausgleich.service.ts::download()`, Route, Test) bleibt stehen, bis eine echte EA-Vorlage
+  über den Admin-Editor angelegt und der neue Pfad im Browser verifiziert ist -- ohne echte Vorlage
+  in der DB liefert `GET /formulare/ea?stichtag=` sonst 404 und EA hätte gar keinen PDF-Export mehr.
+
+## 2026-08-21 (2)
+
+### feat (PDF-Vorlagen-Editor: Ankreuzen bei Feld, Overlay-Wertquellen entdoppelt)
+
+Siehe Root-`CHANGELOG.md` fuer den vollen Kontext ueber alle drei Submodule (Plandatei-Phase 8.5).
+
+- **`wert.ts`:** neue `Feld.wenn`-Auswertung (`trifftFeldBedingung()`), geteilte
+  `berechneAggregation()`-Funktion fuer `Feld.berechnet` UND `Feld.wenn.berechnet` (bisher nur inline in
+  `Feld.berechnet`). Bleibt in `wert.ts`, nicht `shared`, weil sie den frontend-eigenen `Kontext`-Typ
+  braucht.
+- **`FeldPanel.tsx`:** neue Wertquelle "Ankreuzen" bei Feldern (`FeldAnkreuzBedingung`, sechster Modus
+  neben Datenfeld/Text/Mehrere/Summe/Ueberschrift). Text-Modus bekommt `PlatzhalterPicker` -- Datenpfad
+  per Klick als `{pfad}` an der Cursorposition einfuegen statt Freihand-Tippen. Drei gemeinsame Bausteine
+  aus bisher dupliziertem Code gezogen: `AggregationEditor` (Feld-Summe + Feld-Ankreuzen-Berechnung),
+  `VergleichWahl` (Werte-Liste/Wertebereich-Vergleich, aus Spalten- UND Feld-Ankreuzen genutzt),
+  `berechneteEintraege()` (`andereBerechnete`-Sammlung, bisher in `FeldZeile` und `TabellenBlock` fast
+  identisch dupliziert).
+- **`dummyDaten.ts`:** Testdaten-Vorschau befuellt jetzt auch `Feld.wenn`-Datenpfade, mit Bias auf
+  `wenn.werte[0]`, damit die Bedingung in der Vorschau sichtbar zutrifft (analog zur bestehenden
+  "jede zweite Zeile"-Bias bei `Spalte.wenn`).
+- **"Mehrere" (`quellen`/`trenner`) bewusst NICHT entfernt** trotz anfaenglicher Planung -- deckt weiter
+  den Leerteile-Filter bei optionalen Feldern ab (z.B. `Adress2`), den Text-Platzhalter nicht koennen.
+  Siehe Review-Abschnitt der Plandatei.
+- Tests: `wert.test.ts` um `wenn`-Faelle (Feld/Bereich/Berechnet) ergaenzt.
+
+## 2026-08-21
+
+### chore (Bun 1.4: Legacy-Matcher, Version gepinnt)
+
+Siehe Root-`CHANGELOG.md` fuer den vollen Bun-1.4-Kontext ueber alle drei Submodule.
+
+- `Utilities.test.ts`: `.toThrowError()` → `.toThrow()` (Bun 1.4 entfernt denselben Legacy-Alias
+  wie Jest 30). Einziger Fund im Repo, alle 1560 Tests unter Bun 1.4.0 verifiziert gruen.
+- `bunfig.toml`: `[install]` `linker = "hoisted"` ergaenzt (Verhalten unveraendert, jetzt explizit).
+- CI (`deploy.yml`): `bun-version` von `latest` auf `1.4.0` fixiert.
+
+## 2026-08-16 (13)
+
+### fix (Bereitschaft-Datenkatalog: BZ/BE vermischt)
+
+- **User-Fund:** „BZ Beginn+Ende ist timedate, BE Beginn+Ende ist nur time. Warum sind die Werte der
+  2 Tabellen vermischt?" `datenKatalog.ts` bot `Beginn`/`Ende` als EINEN Eintrag fuer beide
+  Zeilenquellen (BZ: voller Zeitstempel, BE: reine `"HH:mm"`), und `katalogZeilenFelder()` filterte
+  nie nach Tabelle — der Editor zeigte beim Bearbeiten der BZ-Tabelle auch BE-Felder mit an und
+  umgekehrt.
+- **`datenKatalog.ts`:** neues `KatalogEintrag.quelle`, `katalogZeilenFelder()`/`beispielWert()`
+  filtern jetzt danach; `FeldPanel.tsx`/`dummyDaten.ts` reichen `tabelle.quelle` durch. BE-
+  Beispielwerte (`15:45`/`07:00`, die volle BZ-Zeitraumspanne) auf `01:15`/`02:00` korrigiert — ein
+  kurzer Anruf waehrend des Zeitraums, siehe `createAddModalBereitschaftsEinsatz.tsx`.
+
+### feat (Ankreuz-Bedingungen: Wertebereich, Berechnung, Wiederverwendung)
+
+- **User-Fund:** „Berechnen Zeitraum von Abfahrt bis Ankunft Einsatzort — wenn Wert ab 8:00 und unter
+  14:00, muss angekreuzt werden." `Spalte.wenn` konnte nur Mitgliedschaft in einer festen Werteliste
+  gegen ein rohes Zeilenfeld pruefen.
+  - `AnkreuzBedingung` (`FeldPanel.tsx`): Umschalter Feld/Berechnung (Rechnung wiederverwendet aus
+    `Spalte.berechnet`) und Werte-Liste/Wertebereich (`von`/`bis`, `von` einschliesslich, `bis`
+    ausschliesslich — Zahl, Uhrzeit oder Datum, je nachdem was das Feld liefert).
+  - **User-Nachtrag:** Bereich war zunaechst fest auf Uhrzeit/Zahl gelesen; neue `alsVergleichswert()`
+    (`shared`) erkennt den Werttyp selbst.
+  - **User-Nachtrag:** bereits angelegte berechnete/Ankreuz-Spalten derselben Tabelle sind jetzt im
+    Feld-Dropdown der Bedingung waehlbar (`andereBerechnete`), statt dieselbe Rechnung ein zweites Mal
+    aufzubauen — moeglich, weil `mitBerechnetenSpalten()` (`shared`) ihren Wert schon unter `key` in
+    die Zeile eintraegt.
+  - **User-Nachtrag:** dieselbe Wiederverwendung jetzt auch bei Summenfeldern (`Feld.berechnet` in
+    `FeldZeile`) — inklusive Ankreuz-Spalten, deren Ergebnis `mitBerechnetenSpalten()` bisher GAR NICHT
+    in die Zeile eintrug (mit einem numerischen `dann`, z.B. `'1'` statt `'X'`, zaehlt eine Summe
+    darueber jetzt die zutreffenden Zeilen — z.B. Anzahl LRE-1-Einsaetze ohne eigene gefilterte
+    Tabelle).
+- **Bugfix aus derselben Runde:** `Spalte.key` war nur im Modus „Datenfeld" editierbar, in „Berechnet"/
+  „Ankreuzen" blieb er unsichtbar eingefroren; „+ Spalte" vergab fuer jede neue Spalte denselben
+  Default-Schluessel — zwei neue Spalten ohne manuelle Umbenennung ueberschrieben sich gegenseitig in
+  Bedingungen/Summen. `SpalteZeile` zeigt jetzt ein eigenes Schluessel-Feld in diesen Modi,
+  `eindeutigerSpaltenSchluessel()` vergibt beim Anlegen einen von den bestehenden Spalten
+  unterscheidbaren Default.
+- **Verifikation:** `shared` 76/76, Frontend `tsc --noEmit`/Build gruen, gezielte Tests
+  (Formular-Editor + PDF-Infrastruktur) 124/124, `eslint` auf den geaenderten Dateien sauber. Voller
+  Frontend-Lauf (`bun test --isolate`) 1553/1560 — die 7 Fehlschlaege liegen in
+  `Bereitschaft.test.ts`/`Bereitschaft.submitBereitschaftsEinsatz.test.ts` (Zeitzonen-/DST-Artefakt
+  gegen fest codierte `2023-04-…`-Fixture-Daten), unberuehrt von dieser Aenderung.
+
+## 2026-08-16 (12)
+
+### feat (Formular-Versionen bearbeiten und loeschen, Phase 8.4)
+
+- **User-Fund:** „Formular-Vorlage sollen nicht nur hochgeladen, sondern auch geloescht und bearbeitet werden koennen (falls ein Fehler entstanden ist)."
+- **`FormularVersionenListe.tsx` (neu):** Bestandsliste der Versionen je Formular mit „Bearbeiten" und „Loeschen".
+- **`formularVersionenApi.ts` (neu):** Upload, Liste, Anlegen, Aendern, Loeschen sowie `holeVorlageAlsDatei()` — der Editor arbeitet gegen eine lokale `File`, die gespeicherte PDF wird dafuer zurueckgeholt. `ApiFehler` traegt den Statuscode, damit der Intervall-Konflikt (409) erkennbar bleibt.
+- **`FormularUpload.tsx`:** dieselbe Maske dient Anlegen und Bearbeiten. Ohne neue Datei bleibt die gespeicherte PDF stehen (kein zweiter Upload derselben Bytes); bei 409 fragt ein Dialog, ob der luckenhafte Zwischenstand trotzdem gespeichert bzw. geloescht werden soll — noetig, um die Vorgaengerversion vor dem Anlegen einer Nachfolgerin zu schliessen.
+
+### feat (Seitenfolge statt erste/weitere Seite + seitenspezifische Spalten, Phase 8.4)
+
+- **User-Fund:** „Bereitschaft sieht zwischen Seite 1, 2 und 3 unterschiedlich aus … Seite 3 und 4 sind aber gleich" und „die Spalten sind auf den Seiten nicht unbedingt gleich".
+- **`Konfig`/`Layout`:** `seiten: SeitenDef[]` ersetzt `ersteSeite`/`weitereSeite?`; eine Seite mit `wiederholt` wird bei Ueberlauf so oft gedruckt, wie Zeilen uebrig sind.
+- **`verteile.ts`:** laeuft die Seitenfolge der Reihe nach ab. Seite 1 kommt immer, jede weitere nur, wenn ihre Tabellen Zeilen haben oder sie gar keine Datentabelle traegt (reine Text-/Unterschriftsseite) — damit entfaellt die BE-Seite, wenn es keine Einsaetze gab. Wiederholungen entstehen direkt an ihrer Stelle in der Folge, nicht am Ende, damit eine nachgelagerte Abschlussseite dahinter landet.
+- **`TabellenBereich.spalten?`:** eigenes Spaltenraster je Seite (`spaltenFuer()` aus `shared` als gemeinsame Regel fuer Renderer, Editor und Vorschau). Im Editor per „eigene je Seite" umschaltbar, die vorhandenen Spalten werden dabei als Ausgangspunkt kopiert.
+- **`FormularEditor.tsx`:** Seiten-Tabs sind dynamisch (anlegen/entfernen), mit Wiederholungs-Schalter und „Einstellungen uebernehmen von <Seite>" — kopiert Felder, Tabellenbereiche und Signaturflaeche einer anderen Seite, behaelt aber die eigene Vorlagenseite.
+- **`dummyDaten.ts`:** Zeilenbedarf ueber alle Seiten summiert (plus eine Zeile, sobald eine Seite wiederholt wird); Testdaten befuellen auch Spalten, die es nur im Raster einer einzelnen Seite gibt.
+
+### feat (gedrehter Text und dynamische Spalten, Phase 8.4)
+
+- **User-Fund:** „es gibt Zettel, wo der Text um 90° gedreht ist" und „die Zulagen bei EZ funktionieren etwas anderes … das Feld Zulagen ist eine Liste, hier muss auch noch eine Überschrift mit festgelegt werden".
+- **`zeichne.ts`:** `drehung` (0/90/180/270) je Zelle. Gerechnet wird nicht mehr in x/y, sondern in Lauf- und Querachse — dieselben Formeln, nur ihre Zuordnung zu den Seitenkoordinaten dreht sich. Ausrichtung wirkt entlang der Laufrichtung, die Zentrierung quer dazu; ohne Querkante bleibt die gesetzte Koordinate wie bisher die Grundlinie.
+- **Dynamische Spalten (`ListenGruppe`):** eine Zeile trägt unter `Zulagen` eine Liste, das Formular hat dafür feste Spaltenplätze. Welcher Schlüssel welchen Platz belegt, wird EINMAL je Dokument über alle Zeilen bestimmt (`listenBelegung`) — sonst stünde auf Seite 2 eine andere Zulage über derselben Spalte. `Spalte.listenPlatz` druckt den Wert der Zeile zu diesem Schlüssel, `Feld.listenKopf` die zugehörige Überschrift (Code oder hinterlegter Kurztext); unbelegte Plätze bleiben samt Überschrift leer.
+- **`ListenGruppen.tsx` (neu):** Gruppenverwaltung im Editor. Die EZ-Vorlagen (Erschwerniszulage 7 Plätze, Leistungsprämie/Fahrentschädigung 3, Ganzkörperreinigung 1) kommen aus dem gemeinsamen `ZULAGEN_CATALOG`, damit hier keine zweite Codeliste gepflegt wird; ein Klick legt Gruppe UND Spaltenplätze an.
+- **`dummyDaten.ts`:** erzeugt Listenwerte passend zur Zahl der konfigurierten Plätze — die erste Zeile belegt alle (sonst bliebe eine Spalte in der Vorschau unbeschriftet), spätere lassen einzelne aus, damit auch leere Zellen sichtbar werden. Nebenbefund dabei behoben: `alleSpalten()` zählte die Tabellenspalten doppelt, wenn eine Seite kein eigenes Raster hat.
+- `Zeile` trägt jetzt `unknown`-Werte statt nur Text/Zahl — Zeilen aus dem Download-Body enthalten mit `Zulagen` echtes Verschachteltes.
+
+### fix (Koordinateneingabe im Editor, Zahlenraster)
+
+- **User-Fund:** „Beim Absenden werden Werte, die nicht im 0,5-Raster liegen, nicht angenommen. Und bei Zeilen lassen sich auch 0,5 Zeilen eingeben + negative Werte."
+- **`FeldPanel.tsx`:** `ZahlFeld` nutzt `step="any"` statt `step="0.5"` — die HTML-Formularpruefung wies bisher jede gezogene Koordinate zwischen den Rasterpunkten beim Absenden ab. Zaehlwerte (`Zeilen`) sind jetzt ganzzahlig mit Untergrenze 1, `Hoehe` mindestens 0,1; die Anzeige rundet auf zwei statt eine Nachkommastelle.
+
+### feat (Format „Tag zweistellig")
+
+- Neues Format `tagZweistellig` (`05` statt `5`) fuer Formulare mit zweistelligem Tageskaestchen.
+
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` **1546/1546 gruen**.
+
+### docs (Hilfe zur Koordinaten-Config)
+
+- Ergaenzt: die Vorlage ist EINE PDF mit allen Seiten (nicht je Seite eine Datei), wie die Seitenfolge dazu angelegt wird, wann welche Seite im Ergebnis landet, wozu „bei Ueberlauf wiederholen" dient und wie Seiteneinstellungen kopiert bzw. eigene Spalten je Seite gesetzt werden.
+
+## 2026-08-16 (11)
+
+### feat (Startseite: Schnellzugriff-Buttons für Mobilansicht, Issue #5)
+
+- **User-Wunsch:** Auf dem Handy liegt die Tab-Navigation hinter dem Hamburger-Menü — zwei Taps, um z. B. EWT zu öffnen. Neuer Schnellzugriff-Block auf der Startseite (`#startSchnellzugriff`, nur `d-lg-none`) springt per einem Tap direkt in Bereitschaft, EWT, Nebenbezüge, Entgeltausgleich, Berechnung oder Einstellungen.
+- **Sichtbarkeit gespiegelt statt neu erfunden:** Die vier Feature-Buttons folgen exakt der bestehenden `aktivierteTabs`-Logik aus `updateTabVisibility.ts` (gleiche Quelle, die auch die Nav-Einträge ein-/ausblendet) — ein Nutzer ohne aktivierten EA-Tab sieht auch keinen EA-Schnellzugriff. Berechnung/Einstellungen sind ungated und erscheinen wie der Rest der Navigation erst nach Login.
+- **Layout-Falle beim ersten Wurf:** `d-none` zunächst auf den `<button>` statt auf den umgebenden `.col` gesetzt — Bootstraps `row-cols-2` zählt Grid-Slots nach DOM-Position, nicht nach Sichtbarkeit, ein versteckter Button hinterließ trotzdem eine leere Grid-Zelle mitten im Block. Korrigiert, indem `id`/`d-none` auf den `.col`-Wrapper wandern; versteckte Buttons reißen jetzt keine Lücke mehr.
+- **Klick-Verdrahtung:** Schnellzugriff-Buttons klicken per JS den zugehörigen echten Tab-Button (`document.querySelector('#'+jumpTab)?.click()`), keine doppelte `data-bs-toggle`-Verdrahtung nötig — Bootstraps Tab-State bleibt auf den echten Nav-Buttons konsistent.
+- **Verifikation:** `lint`, `build`, `test`. Zusätzlich end-to-end mit Puppeteer (Chrome headless, `frontend/.claude/skills/verify`) gegen den Dev-Server geprüft: Container erscheint nur mobil (`d-lg-none` greift ab `lg`) und nur eingeloggt; Feature-Gating korrekt (inaktive Tabs bleiben versteckt); Klick auf einen Schnellzugriff-Button aktiviert die zugehörige Tab-Pane und setzt `aria-selected`/`active` am echten Nav-Button.
+
+### fix (Fahrzeiten-Panel: "Zeile hinzufügen" wirkte deaktiviert, Issue #5)
+
+- **User-Fund:** Der Button nutzte `btn-outline-secondary` — bewusst zurückhaltender Stil, aber niedriger Kontrast genug, um mit einem deaktivierten Button verwechselt zu werden, obwohl er voll funktionsfähig war. Auf `btn-secondary` (gefüllt) umgestellt, damit die Aktion eindeutig als aktiv erkennbar bleibt.
+
+## 2026-08-16 (10)
+
+### feat (PDF-Vorlagen-Pipeline: laufende Summe, Beispieldaten ab dem Monatsersten, Phase 8.3)
+
+- **Bugfix Beispieldaten (User-Fund: „Tag 1 fällt komplett weg"):** die Datums-Beispielwerte begannen am **2.** des Monats — in der Tages-Spalte sah das wie ein verlorener Datensatz aus. Beginnen jetzt am 1.
+- **Neuer Summenbezug `$laufend`** („bis hierher: Übertrag + diese Seite"). Bisher gab es nur `$bisher` (nur Vorseiten), `$seite` (nur diese) und `$alle` (ganzes Dokument) — die fortgeschriebene Zwischensumme, die ein Übertragsformular eigentlich braucht, war damit **nicht** ausdrückbar. Wer sie über `$alle` nachbaute, bekam auf jeder Seite die Gesamtsumme und nur auf der letzten zufällig den richtigen Wert.
+- **Waisenzeilen-Schutz entfernt** (User-Fund „Seite 2 hat 11 Zeilen, es werden aber nur 10 eingetragen", danach User-Entscheidung). Der Schutz aus Phase 5 zog eine Zeile von der Vorseite nach, wenn die letzte Seite sonst nur eine einzige Zeile getragen hätte. Auf einem Formular mit vorgedruckten Zeilen hinterlässt das mitten im Dokument einen freien Platz, der wie ein vergessener Eintrag aussieht — und ein Prüfer kann nicht erkennen, ob dort etwas fehlt. Seiten füllen sich jetzt streng der Reihe nach; eine letzte Seite mit einer einzigen Zeile ist ausdrücklich in Ordnung. Neuer Test hält fest, dass **nur** die letzte Seite angebrochen sein darf.
+- **Verifikation:** `lint`, `tsc --noEmit`, `test` (1534/1534; der `$laufend`-Test nutzt einen eigenen Kontext mit Zeilen einer Folgeseite, sonst wären laufende Summe und Gesamtsumme in der Fixture zufällig gleich). Am real erzeugten dreiseitigen PDF nachgerechnet — 24 Zeilen à 2:30, Tage 1 bis 24 lückenlos:
+
+  | Seite   | Zeilen    | Übertrag | diese Seite | bis hierher | gesamt |
+  | ------- | --------- | -------- | ----------- | ----------- | ------ |
+  | 1 von 3 | 12 von 12 | 0:00     | 30:00       | 30:00       | 60:00  |
+  | 2 von 3 | 11 von 11 | 30:00    | 27:30       | 57:30       | 60:00  |
+  | 3 von 3 | 1 von 11  | 57:30    | 2:30        | 60:00       | 60:00  |
+
+## 2026-08-16 (9)
+
+### fix (PDF-Vorlagen-Pipeline: Summen über Zeit- und Rechenspalten, Phase 8.3)
+
+- **User-Fund:** „bei den Beispieldaten werden die Summen nicht berechnet" — 12 EA-Zeilen à `02:30` müssten 30:00 ergeben. Zwei unabhängige Ursachen, beide führten still zu falschen Zahlen statt zu einem Fehler:
+- **(1) Aggregationen konnten keine Zeitwerte lesen.** `OPS.summe`/`max` rechneten mit `Number(...) || 0`, und `Number("02:30")` ist `NaN` — jede Summe über eine gespeicherte Dauer war damit exakt 0. Neue `alsZahl()` liest `"HH:mm"` als Minuten und alles andere wie bisher; sie wird jetzt in `summe`, `max` und als Standard-Operandenleser in Zeilenrechnungen benutzt. Da `Number("02:30")` vorher ohnehin `NaN` ergab, ändert sich für bisher funktionierende Konfigurationen nichts.
+- **(2) Summen über berechnete Spalten fanden gar keinen Wert.** Das Ergebnis einer berechneten Spalte (z.B. Bereitschafts-Dauer aus Ende − Beginn) entstand nur beim Zeichnen und stand nirgends in den Daten — eine Fußsumme darüber lief ins Leere. `tabellenZeilen()` legt den berechneten Wert jetzt unter dem Spalten-Key in eine **Kopie** der Zeile (Nutzdaten bleiben unangetastet), womit jede Aggregation ihn findet. Ein gleichnamiges gespeichertes Feld wird dabei überschrieben, damit die Summe zu dem passt, was in der Spalte gedruckt steht. Ankreuz-Spalten (`wenn`) bleiben außen vor — ihr Inhalt ist Text, keine Zahl.
+- **Verifikation:** `shared` 53/53 (13 neue Tests: `alsZahl`, Summe/Maximum über Dauer-Spalten, berechnete Spalten in `tabellenZeilen`, Unversehrtheit der Nutzdaten), Frontend `lint`/`tsc --noEmit`/`test` (1533/1533), Backend `tsc --noEmit`/`test` (929/931, dieselben 2 vorbestehenden EA-Fehlschläge). Der gemeldete Fall am real erzeugten PDF nachgerechnet: 12 Zeilen à 2:30 ergeben Seiten- **und** Gesamtsumme `30:00`, das Maximum `2:30`.
+
+## 2026-08-16 (8)
+
+### feat (PDF-Vorlagen-Pipeline: Werte-Vorschau je Eintrag im Editor, Phase 8.3)
+
+- **User-Wunsch:** die Beispielwerte direkt im Editor sehen, „so dass ich z.B. auch die Summen richtig sehe". Bisher war jeder Wert nur über die Testdaten-Vorschau als PDF prüfbar — für einen Tippfehler im Datenpfad oder einen falschen Summenbezug ein unverhältnismäßig langer Weg.
+- **Jedes Feld und jede Spalte zeigt jetzt ihren gerenderten Beispielwert** unter den Einstellungen, leere Werte als `(leer)` gekennzeichnet. Berechnet wird er über denselben `wert()`/`spaltenWert()`-Pfad wie im PDF, es kann also nicht auseinanderlaufen.
+- **Die Vorschau bekommt den echten Renderer-Kontext** (`erzeugeVorschau()`): die Beispielzeilen werden über `verteile()` auf Seiten aufgeteilt und die zum aktiven Tab passende Seite ausgewählt. Dadurch stimmen `$alle`-Gesamtsummen, `$seite`-Zwischensummen **und** der `$bisher`-Übertrag — letzterer wäre mit einem Behelfskontext immer 0 geblieben, also genau bei dem Feld nutzlos, das am schwersten zu prüfen ist. Auch `{seite}`/`{seite-1}` zeigen die Nummern der gewählten Seite. Wirft `verteile()` bei halbfertiger Konfiguration, fällt die Vorschau auf eine Einzelseite zurück, statt die Feldliste unbrauchbar zu machen.
+- **Bugfix Testdaten-Vorschau:** Datenpfade **innerhalb** von Text-Platzhaltern wurden nie mit Beispielwerten belegt — `Zulagen {Monat}/{Jahr}` erschien im Vorschau-PDF als „Zulagen /". Ursache war eine zu grobe Regel („feste Texte lesen nichts aus den Daten"): der Feld-_Key_ ist bei einem Textfeld tatsächlich kein Datenpfad, die Pfade stecken aber in den Platzhaltern. Neue `datenPlatzhalter()` zieht genau diese heraus (ohne die vom Kontext bedienten `seite`/`seiten`/`heute`), sie werden jetzt mitbefüllt.
+- **Zweite Werteart „Beispieldaten"** (User-Nachtrag: „ich möchte nicht »Testwert 1« stehen haben, sondern einen passenden Wert"). Der Datenkatalog trägt jetzt je Feld einen fachlich passenden Beispielwert — konstant (Nachname „Mustermann", Betrieb, Entgeltgruppe) oder als Funktion über den Zeilenindex, wo Wiederholung stören würde (Tage, Auftragsnummern). Beide Vorschauen bleiben nebeneinander bestehen: `Beispieldaten` sieht aus wie ein ausgefülltes Formular, `Platzhalter` zeigt weiterhin, welche Zelle zu welchem Eintrag gehört. Die Werte-Vorschau in der Feldliste nutzt die Beispieldaten. Pfade ohne hinterlegtes Beispiel fallen auf den generischen Platzhalter zurück.
+  - Für Bereitschaft liegt hinter `Beginn`/`Ende` bewusst ein **Zeitstempel**, kein `"HH:mm"`: Format „Uhrzeit" liest daraus die Tageszeit, „Datum kurz" das Datum — ein Wert bedient damit BZ (Zeitraum über Tage) und BE (Einsatz-Uhrzeit) gleichermaßen.
+  - Bei berechneten Spalten werden die Operanden zuerst aus dem Katalog belegt, sonst gewinnt der generische Zeitwert über das `??=` in `fuelleOperanden()`.
+- **Verifikation:** `lint`, `tsc --noEmit`, `test` (1533/1533, 10 neue Tests für `erzeugeVorschau` — Gesamtsumme ungleich 0, gefülltes `$bisher` auf der Folgeseite, Seitenzahlen passend zum Tab, befüllte Text-Platzhalter, der Rückfall bei unfertiger Konfiguration sowie beide Wertearten). Beide Vorschauen zusätzlich als echtes PDF gegenübergestellt: `Mustermann, Max` / `30012345` / `I / IW / MI` / `Zulagen 3/2026` / `02.03.2026 06:00 14:30 A-10023` gegenüber `Name (Test)` / `PNummer (Test)` / `Zulagen Monat (Test)/Jahr (Test)`.
+
+## 2026-08-16 (7)
+
+### feat (PDF-Vorlagen-Pipeline: Seitenzahl-Platzhalter mit Versatz, Phase 8.3)
+
+- **User-Frage:** wie kommt die Nummer in „Übertrag von Seite ##" — `{seite - 1}`? Genau so ging es bisher nicht: alles außer `{seite}`/`{seiten}`/`{heute}` wurde als Datenpfad gelesen, `{seite - 1}` lief also ins Leere.
+- **`{seite}` und `{seiten}` vertragen jetzt einen ganzzahligen Versatz:** `{seite-1}`, `{seite + 1}`, `{seiten-1}`; Leerzeichen sind erlaubt, damit die naheliegende Schreibweise funktioniert. Bewusst nur Plus/Minus auf den beiden Seitenzahlen und keine allgemeine Formel — gebraucht wird der Verweis auf die Nachbarseite, alles darüber hinaus wäre eine Ausdruckssprache im Fließtext. Andere Muster (`{seite*2}`, `{seite-1.5}`) bleiben Datenpfade und damit leer, statt still etwas Falsches zu rechnen.
+- **Verifikation:** `lint`, `tsc --noEmit`, `test` (1523/1523, 4 neue Tests inkl. der abgelehnten Muster). Am real erzeugten zweiseitigen PDF gegengeprüft: Seite 2 trägt „Übertrag von Seite 1" neben „Seite 2 von 2".
+
+## 2026-08-16 (6)
+
+### feat (PDF-Vorlagen-Pipeline: Datum neben der Unterschrift, Phase 8.3)
+
+- **User-Anforderung:** ein Datumsfeld neben der Unterschrift — „heute, oder wenn der letzte Eintrag innerhalb der letzten 14 Tage liegt, dann das letzte Datum aus den Einträgen".
+- **Neue Summenart `letztesDatum`** (`OpName`): jüngster Datumswert eines Feldes über `$alle`/`$seite`/`$bisher`, wahlweise auf eine Tabelle eingegrenzt. Liefert bewusst einen Zeitstempel in Millisekunden statt eines Datums-Strings — dadurch bleibt der `OPS`-Rückgabetyp einheitlich und jedes Datumsformat (`datum`, `datumKurz`, `monatJahr`, …) greift unverändert. Das vorhandene `max` taugt dafür nicht: es rechnet `Number("2026-03-20")` und bekäme `NaN`.
+- **Neues `Berechnet.maxTage`** als Frist in Tagen: ist der jüngste Eintrag älter — oder gibt es gar keine Zeilen —, wird das heutige Datum gesetzt. Ohne Angabe bleibt es immer beim letzten Eintrag. Ein Eintrag in der Zukunft zählt als aktuell, damit vorausgefüllte Termine nicht überraschend auf heute zurückfallen.
+- **Neuer Platzhalter `{heute}`** im festen Text für den einfachen Fall („Musterstadt, den {heute}") — wie bei der Seitenzahl kein eigener Feldtyp nötig.
+- **Der Erzeugungstag steckt im `Kontext`**, nicht in einem `new Date()` mitten im Renderer: einmal je Dokument bestimmt (ein Lauf über Mitternacht ergäbe sonst zwei verschiedene Datumsangaben im selben PDF) und in Tests injizierbar.
+- **Editor:** „Letztes Datum" in der Summenart-Auswahl mit Eingabefeld für die Frist, plus Schnellanlage-Knopf „+ Datum (Unterschrift)" mit 14 Tagen und Format `datum` vorbelegt; das Datumsfeld der Tabelle wählt der Admin, es ist je Ressource ein anderes.
+- **Verifikation:** `shared` 41/41 (9 neue Tests für `OPS.letztesDatum` und `datumMitFrist`, inkl. Fristgrenze, fehlender Zeilen und des `max`-Gegenbeispiels), Frontend `lint`/`tsc --noEmit`/`test` (1519/1519, 6 neue Tests in `wert.test.ts`), Backend `lint`/`tsc --noEmit`/`test` (929/931, dieselben 2 vorbestehenden EA-Fehlschläge). Beide Zweige zusätzlich am real erzeugten PDF geprüft: mit altem letzten Eintrag steht dort `16.08.2026` (heute), mit einem Eintrag vom 10.08. steht `10.08.2026` — während `{heute}` in derselben Datei unverändert `16.08.2026` bleibt.
+
+## 2026-08-16 (5)
+
+### feat (PDF-Vorlagen-Pipeline: Raster-Indikator am Seitenrand und Beispiel-Unterschrift, Phase 8.3)
+
+- **Indikator am linken Seitenrand** (User-Wunsch): je Tabelle eine Klammer über die Spannweite des Zeilenrasters, mit einem Strich je Zeile und ohne Beschriftung. Bisher zeigte das Overlay nur die erste Datenzeile — ob `maxZeilen` noch aufs Formular passt, war daraus nicht zu sehen. Mehrere Tabellen bekommen nebeneinanderliegende Spuren, die scharf geschaltete ist hervorgehoben.
+- **Beispiel-Unterschrift in der Testdaten-Vorschau** (User-Fund: „es gibt kein Beispiel für die Unterschrift"): die Signaturfläche blieb als einziges Element ohne Beispielwert, obwohl gerade dort Größe und Überdeckung schwer einzuschätzen sind. Neue `beispielSignatur.ts` zeichnet einen Schriftzug auf ein Canvas — bewusst gezeichnet statt als Bild eingebettet, damit das Ergebnis dieselbe Beschaffenheit hat wie die echte Unterschrift aus `signaturePad.ts` (transparenter Hintergrund, gleiche Kantenglättung). Ohne 2D-Kontext liefert sie `undefined`, die Vorschau läuft dann wie bisher ohne Unterschrift weiter.
+- **Inline-Hilfe** beantwortet zwei wiederkehrende Fragen direkt: senkrecht wird der Text immer in der Zelle zentriert, sobald sie als Rechteck aufgezogen wurde (ohne Ober-/Unterkante bleibt `y` die Grundlinie); und für die zertifikatsbasierte Signatur der zwei Prüfenden ist **nichts** zu hinterlegen — sie ziehen die Box im Adobe Reader selbst auf, im Formular muss nur Platz frei bleiben.
+- **Zeilenhöhe aus zwei Zeilen messen** (Folge aus dem Indikator: dessen Striche liefen unten aus den Zeilen heraus). Ursache ist nicht die Vorlage, sondern die Messung — `hoehe` wurde freihändig über EINE Zeile gezogen, und der Renderer zieht je Zeile dieselbe `hoehe` ab, wodurch sich Bruchteile eines Punktes aufsummieren (0,5 pt × 11 Zeilen = 5,5 pt Versatz unten). Neuer Scharf-Modus „letzte Datenzeile": Band über die letzte Zeile ziehen, `zeilenHoeheAus()` mittelt `(startY − y) / (Zeilen − 1)` und trägt das Ergebnis mit zwei Nachkommastellen ein. Das ist bei 12 Zeilen rund 11× genauer als die Einzelmessung; die Snackbar nennt den gemessenen Wert.
+- **Bugfix vertikale Zentrierung in Tabellenzeilen (User-Fund: „alles am unteren Rand gerendert"):** `build.ts` übergab je Spalte nur `y`, kein `y2` — ohne Oberkante ist `y` laut `zeichne()` die **Grundlinie**, der Text saß also auf der Zeilenunterkante statt mittig. Die Zentrierung war nie kaputt, sie griff für Spalten nur nicht, weil `Spalte` von sich aus keine y-Kanten hat. Diese kommen jetzt aus der Zeilenhöhe (`y2: y + tabelle.hoehe`) — also aus genau dem Band, das im Editor über die erste Datenzeile gezogen wurde. **Verhaltensänderung:** bestehende Konfigurationen rücken um `(hoehe − 0,72·size)/2` nach oben; bei Zeilenhöhe 14 und Schriftgröße 9 sind das 3,76 pt. `startY` bleibt unverändert die Grundlinie der ersten Zeile.
+- **Verifikation:** `lint`, `tsc --noEmit`, `test` (1513/1513, 5 neue Tests für `zeilenHoeheAus` inkl. des Fehlerbildes selbst, plus ein Test für die Zeilenzelle). Die Zentrierung zusätzlich am real erzeugten PDF per `pdftotext -bbox` nachgemessen: Text 3,76 pt höher als vorher, Zeilenabstand unverändert bei exakt 14 pt — deckt sich mit der Formel. Die vertikale Zentrierung ist bereits durch `zeichne.test.ts` abgedeckt („mit y2 liegt die Baseline vertikal mittig in der Zelle"). Indikator und Beispiel-Unterschrift sind headless nicht prüfbar (`happy-dom` liefert keinen Canvas-2D-Kontext) und brauchen den Blick im Browser.
+
+## 2026-08-16 (4)
+
+### feat (PDF-Vorlagen-Pipeline: verschachtelte Zeilenrechnungen und Zeitspannen über Tage, Phase 8.3)
+
+- **User-Fund:** „Es gibt auch mehrere Berechnungen: z.B. Bereitschaft Ende − Beginn + Pause". `ZeilenBerechnet` hatte genau **einen** Operator über N Operanden — gemischte Operatoren waren nicht darstellbar.
+- **Operanden dürfen jetzt selbst Rechnungen sein** (`ZeilenOperand = string | number | ZeilenBerechnet`). Die Klammerung steht damit explizit in der Struktur; bewusst **keine** implizite Punkt-vor-Strich-Regel, die man beim Konfigurieren falsch erwarten könnte. Beispiel: `{op:'summe', operanden:[{op:'zeitspanne', operanden:['Ende','Beginn']}, 'Pause']}`. Ob die Pause addiert oder abgezogen wird, ist damit reine Konfiguration (`summe` statt `differenz`), nicht im Code festgelegt.
+- **Bugfix `zeitdifferenz` bei Bereitschaftszeiträumen:** `alsMinuten()` liest nur Stunde und Minute **des Tages** — ein Zeitraum vom 02.03. 16:00 bis 05.03. 06:00 kam als 14:00 heraus statt 62:00, ohne Fehler oder Warnung. Neue Rechenart **`zeitspanne`** mit `alsZeitstempelMinuten()` rechnet über vollständige Zeitstempel und darf über Tage laufen. `zeitdifferenz` bleibt für Uhrzeiten eines Tages (Einsätze, mit Mitternachts-Ergänzung) — die Doku am Typ benennt jetzt beide Bezüge und die Folge des falschen Operators.
+- **Auswertung liegt jetzt in `shared`** (`berechneZeile()`), weil sie rekursiv ist und je Operator einen eigenen Operanden-Parser braucht: Zeit-Operatoren lesen `"HH:mm"` bzw. Zeitstempel, alles andere `Number`. Jeder Knoten liest **seine eigenen** Blatt-Operanden — so bleibt `Pause` im äußeren `summe`-Knoten eine schlichte Minutenzahl, während der innere Knoten Zeitstempel parst. `spaltenWert.ts` ruft nur noch auf.
+- **Editor:** die berechnete Spalte ist eine eigene, rekursive `Rechnung`-Komponente. Jeder Operand lässt sich auf „Zwischenrechnung (Klammer)…" umstellen oder direkt als solche anhängen; verschachtelte Rechnungen sind eingerückt und einzeln entfernbar. Operator-Auswahl benennt den Unterschied im Klartext („Dauer aus Uhrzeiten (ein Tag, über Mitternacht)" vs. „Zeitspanne aus Zeitstempeln (über mehrere Tage)").
+- **Testdaten-Vorschau** füllt Operanden jetzt rekursiv und **positionsabhängig**: Zeit-Operatoren rechnen `erster − folgende`, also bekommt die erste Stelle den späteren Zeitpunkt. Vorher erhielten alle Operanden denselben Wert, wodurch jede Zeit-Rechnung in der Vorschau 0 ergab.
+- **Datenkatalog Bereitschaft:** `Beginn`/`Ende` sind **ein** Eintrag unter „Zeile BZ + BE" (User: „einfach BZ Beginn oder Ende reicht"). Datum und Uhrzeit sind im Formular zwei Zellen, aber kein zweites Datenfeld — dafür dasselbe Feld zweimal als Spalte setzen, einmal mit Format „Datum kurz", einmal mit „Uhrzeit".
+- **Verifikation:** `shared` 32/32 (10 neue Tests für `berechneZeile`, `alsZeitstempelMinuten`, `operandenFelder`), Frontend `lint`/`tsc --noEmit`/`test` (1507/1507, u.a. rekursive Zod-Validierung inkl. kaputter Zwischenrechnung), Backend `lint`/`tsc --noEmit`/`test` (929/931, dieselben 2 vorbestehenden EA-Fehlschläge; ein Zwischenlauf zeigte zusätzlich wechselnde 5000-ms-Timeouts in Integrationstests, die im Wiederholungslauf verschwanden — flaky, unabhängig von dieser Änderung). Real erzeugtes Bereitschafts-PDF bestätigt die BZ-Dauer `62:30` (62 h Zeitraum + 30 min Pause) und `62:00` ohne Pause, bei unveränderten Einsatz-Dauern über `zeitdifferenz`.
+
+## 2026-08-16 (3)
+
+### feat (PDF-Vorlagen-Pipeline: mehrere Datentabellen je Version, Phase 8.3)
+
+- **User-Fund:** „bei Bereitschaft gibt es 3 Datentabellen" — BZ (Zeiträume), BE gefiltert auf LRE 1+2, BE gefiltert auf LRE 3. Das bisherige Modell kannte genau **eine** Tabelle pro Version und **ein** Zeilenraster pro Seite; Bereitschaft war damit nicht abbildbar.
+- **`Version.tabellen: Record<string, TabellenDef>`** ersetzt `Version.zeilen`, **`SeitenDef.bereiche: TabellenBereich[]`** (`{tabelle, startY, maxZeilen}`) ersetzt `startY`/`maxZeilen`. Eine Seite trägt beliebig viele Tabellen, jede mit eigenem Platz.
+- **`TabellenDef.filter`** ist der Kern des Falls: dieselbe Quelle (`Daten.BE`) speist zwei Tabellen, getrennt über `LRE` — keine künstliche zweite Datenquelle nötig. **`Berechnet.tabelle`** grenzt Summen auf eine Tabelle ein (ohne Angabe wird weiterhin über alle gerechnet).
+- **`Spalte.wenn`** (neu) macht eine Spalte zur Ankreuz-Spalte: trägt einen festen Text („X"/„1") nur ein, wenn das Zeilenfeld einen der gewählten Werte hat. Deckt die LRE-Spalten ab — inklusive „bei keiner LRE bleibt die Zelle leer" (`LRE 1/2 ohne x` fällt in den Tabellenfilter, kreuzt aber nirgends an). Die bekannten LRE-Werte stehen im Editor als Checkboxen, nichts abzutippen.
+- **Rechenart `zeitdifferenz`** (neu) mit `alsMinuten()`: die Einsatz-Dauer ist kein gespeichertes Feld, sondern `Ende − Beginn` — `Number("07:00")` wäre `NaN`. Rechnet über Mitternacht korrekt weiter (22:00→01:15 = 3:15) und ergibt mit Format `stunden` eine Zeitspanne.
+- **Renderer:** `verteile()` verteilt pro Tabelle in deren eigenen Seitenbereich und öffnet eine Folgeseite, sobald **irgendeine** Tabelle überläuft; Waisenzeilen-Schutz greift pro Tabelle. Wirft mit klarer Meldung, wenn Zeilen übrig bleiben und `weitereSeite` fehlt **oder** die Folgeseite für die betroffene Tabelle keinen Bereich definiert (verhindert eine Endlosschleife). `build.ts` zeichnet je Seite alle Bereiche, `Kontext.$seite`/`$bisher`/`$alle` sind nach Tabellenname aufgeschlüsselt.
+- **Editor:** Tabellenliste (anlegen/löschen/umbenennen, Quelle + Filter mit Werte-Checkboxen), je Seite die Zuordnung Tabelle → Bereich mit eigenem `startY`/`maxZeilen`.
+- **Achsen-Bänder statt Rechteck (User-Rückfrage: „ist ein Quadrat bei nur x- oder nur y-Werten sinnvoll?"):** Beim Zeilenraster wurden die x-Kanten verworfen, bei Spalten die y-Kanten — ein Rechteck zu ziehen, von dem die Hälfte weggeworfen wird, war irreführend. Jetzt zeigt die Vorschau nur die genutzte Achse als Band (Raster = waagerecht über die Seitenbreite, Spalte = senkrecht über die Seitenhöhe), Hinweistext und Live-Koordinaten nennen ebenfalls nur diese Achse.
+- **Verifikation:** `shared` 22/22, Frontend `lint`/`tsc --noEmit`/`test` (1504/1504), Backend `lint`/`tsc --noEmit`/`test` (929/931, dieselben 2 vorbestehenden EA-Download-Fehlschläge). Real erzeugtes Bereitschafts-PDF mit allen drei Tabellen, `qpdf --check` fehlerfrei, per `pdftotext` gegengerechnet: BZ mit Datum (`02.03.`) und Uhrzeit (`16:00`) als getrennte Spalten aus demselben Feld, `be12` = 3 gefilterte Zeilen mit Ankreuzern nur bei `LRE 1`/`LRE 2`, `be3` = 2 Zeilen, Dauer 2:30/3:15 (über Mitternacht)/2:45, `anzahl` über `be12` = 3 und `summe` der Privat-km nur über `be3` = 50. Zweiter Lauf mit Überlauf einer von drei Tabellen: nur `be12` bricht um (2+2 statt 3+1 wegen Waisenschutz), BZ und `be3` bleiben vollständig auf Seite 1.
+
+## 2026-08-16 (2)
+
+### refactor (PDF-Vorlagen-Pipeline: ein Feldbereich statt drei, Seitenzahl konfigurierbar, Phase 8.1)
+
+- **User-Frage deckte auf:** `kopf` und `seitenfuss` waren im Renderer **exakt identisch** (beide mit seitenbezogenem Kontext), nur `fuss` unterschied sich (Summen über alle Zeilen statt über die aktuelle Seite). Drei Bereiche, aber nur zwei Verhalten — und die Namen suggerierten eine Position, die in Wahrheit allein aus den Koordinaten kommt.
+- **`SeitenDef.felder` ersetzt `kopf`/`seitenfuss`/`fuss`/`uebertrag`.** Der einzige echte Unterschied steckt jetzt dort, wo er hingehört: in `Berechnet.ueber`, das neben `$seite` und `$bisher` nun auch **`$alle`** kennt (Gesamtsumme des Dokuments). `build.ts` braucht dadurch keine vier Renderphasen und keinen zweiten Kontext mehr.
+- **Seitenzahl war fest verdrahtet** (`x:500, y:30, size:8`) und damit weder positionier- noch abschaltbar. Jetzt entsteht sie als normales Feld über **Platzhalter im festen Text**: `{seite}`/`{seiten}` — und, auf Wunsch des Users allgemein gehalten, **jeder Datenpfad** als `{name}` (z.B. `"Zulagen {Monat}/{Jahr} — Seite {seite} von {seiten}"`). Unbekannte Platzhalter werden zu leerem Text, damit nie ein roher `{…}`-Rest im PDF landet.
+- **Editor:** eine Feldliste statt vier, mit Schnellanlage-Knöpfen (`+ Feld`, `+ Gesamtsumme`, `+ Übertrag`, `+ Seitenzahl`), die die passende Vorkonfiguration mitbringen. Der Summen-Bezug ist als Klartext wählbar („alle Zeilen (Gesamtsumme)" / „nur diese Seite" / „alle Vorseiten (Übertrag)").
+- **JSON-Ansicht der Konfiguration** (User-Wunsch: „alles auf einmal kopieren/einfügen") unter dem Editor: zeigt den kompletten Stand, nimmt eingefügtes JSON aber erst auf Knopfdruck an und validiert es dabei gegen das neue, aus `configSchema.ts` exportierte `konfigSchema` — halbfertiges Tippen setzt den Editor also nicht laufend zurück, und kaputtes JSON landet nie im State.
+- **Bugfix Overlay-Beschriftungen (User-Fund):** Das Rechteck des Zeilenrasters teilt sich die linke Kante mit der ersten Spalte, wodurch beide Beschriftungen exakt übereinander lagen und unlesbar wurden. Das Raster beschriftet sich jetzt an der rechten Kante (`Rechteck.labelRechts`), zusätzlich weichen kollidierende Beschriftungen generell nach oben aus — das greift auch bei mehreren Feldern auf gleicher Höhe, nicht nur in diesem Fall.
+- **Verifikation:** `shared` 22/22, Frontend `lint`/`tsc --noEmit`/`build`/`test` (1504/1504), Backend `lint`/`tsc --noEmit`/`test` (929/931, dieselben 2 vorbestehenden EA-Download-Fehlschläge). Real erzeugtes zweiseitiges PDF bestätigt `Seite 1 von 2 — 3/2026` (Seiten- **und** Datenpfad-Platzhalter zusammen), Gesamtsumme 150,00 über `$alle` und Übertrag 60,00 über `$bisher`. Dabei fingen die Tests erneut zwei nicht typgeprüfte Fixtures (`pdf-test.ts`, `configSchema.test.ts`) ab, die `tsc` wegen untypisierter Objektliterale durchgelassen hatte — dieselbe Falle wie beim Layout-Redesign. Die Overlay-Beschriftung selbst ist headless nicht prüfbar (`happy-dom` liefert kein Canvas-`2d`-Kontext) und braucht den Blick im Browser.
+
+## 2026-08-16 (1)
+
+### feat (PDF-Vorlagen-Pipeline: Editor-Nachbesserungen aus dem User-Review, Phase 8.1)
+
+- **Zellen statt Punkte:** Felder und Spalten werden als Rechteck aufgezogen (Maustaste gedrückt halten, ziehen, loslassen) statt per Einzelklick gesetzt. `Feld` hat dafür optionale `x2`/`y2` (rechte/obere Kante), `Spalte` ein `x2`. `zeichne.ts` platziert den Text laut `align` in dieser Zelle und immer vertikal mittig; ohne `x2`/`y2` bleibt das alte Ankerpunkt-Verhalten erhalten (abwärtskompatibel zu Konfigurationen aus Phase 3–8).
+- **Ausrichtung `zentriert`** — laut User sind die meisten Formularzellen zentriert; der Text wird zwischen den beiden gezogenen Kanten mittig gesetzt.
+- **Lupe** beim Positionieren: sobald ein Eintrag scharf geschaltet ist, zeigt eine Lupe (3-fach) den Ausschnitt unter dem Cursor — **schon beim Hover, nicht erst beim Ziehen**, sonst wäre der Startpunkt gesetzt, bevor man ihn vergrößert sieht. Zusätzlich Zoom-Auswahl (100–300 %).
+- **Datenzuordnung statt Freitext:** neuer `datenKatalog.ts` mit den tatsächlich vom Download-Body gelieferten Feldern je Ressource (abgeleitet aus `shared/src/download.ts`), gruppiert als Dropdown. Freier Datenpfad bleibt als Escape-Hatch. Formularwechsel setzt die Konfiguration zurück, da Zeilen-Quelle und Datenpfade ressourcenspezifisch sind.
+- **Berechnete Spalten** (`Spalte.berechnet`): Produkt/Summe/Differenz/Quotient über Felder **derselben** Datenzeile (z.B. Betrag = Dauer × Satz), Operanden sind Zeilenfelder oder feste Zahlen — neue `spaltenWert.ts`, abgegrenzt von `wert.ts` (das über mehrere Zeilen aggregiert).
+- **Übertragszeile** (`SeitenDef.uebertrag`): eigene Zellen im Datenbereich der Folgeseiten, je Zelle fester `text` (Beschriftung) oder Summe über `$bisher`. `Feld.text` neu für feste Beschriftungen.
+- **Mehr Formate** (User: „die Formate sind zu wenige"): zusätzlich `zahl`, `ganzzahl`, `datumKurz`, `tag`, `wochentag`, `monatJahr`, `uhrzeit`, `stunden`, `liste`, `grossbuchstaben`. `liste` fügt Arrays zusammen (z.B. `Pers.OE` als Hierarchie-Ebenen), `uhrzeit`/`stunden` verstehen sowohl `"HH:mm"` als auch ISO-Zeitstempel. **Verhaltensänderung:** `datum` liefert jetzt `15.03.2026` statt `15.3.2026` (Formularzellen erwarten zweistellig).
+- **`autoGroesse`/`umbruch`** je Feld und Spalte: Schrift wird verkleinert, bis der Text in die Zelle passt (Untergrenze 4pt), und/oder an Wortgrenzen umgebrochen; mehrzeilige Blöcke werden vertikal in der Zelle zentriert. Harte Umbrüche (`\n`) werden dabei immer respektiert.
+- **Zusammengesetzte Felder** (`Feld.quellen` + `Feld.trenner`): mehrere Datenpfade in einer Zelle, verbunden mit frei wählbarem Trennzeichen (`", "`, `" / "`, `"; "`, `" - "`, `" | "`, Zeilenumbruch oder eigenes). Leere/fehlende Teile fallen weg, damit optionale Werte wie `Adress2` keine doppelten Trennzeichen hinterlassen; ein gesetztes Format gilt für jeden Teil einzeln (z.B. zwei Datumswerte als Zeitraum).
+- **Koordinaten nachjustierbar:** die Koordinaten-Anzeige im Kopf jedes Eintrags klappt zu Zahlenfeldern für alle vier Kanten auf — freihändig gezogene Rechtecke treffen selten exakt dieselbe Höhe wie das Feld daneben. Zeilenraster und Signaturfläche ebenfalls direkt eingebbar.
+- **Live-Koordinaten** beim Positionieren: während des Ziehens zeigt eine Anzeige die PDF-Punkte, die beim Loslassen gesetzt würden (inkl. Breite × Höhe), beim reinen Hover die Cursorposition.
+- **Bugfix Overlay:** die Rechteck-Vorschau liegt jetzt auf einem eigenen Canvas über dem PDF — vorher löste jede Mausbewegung beim Ziehen einen kompletten `pdfjs`-Seitenrender aus (Ruckeln, parallele `render()`-Aufrufe auf demselben Canvas).
+- **Bugfix Querformat (User-Fund):** das Zeilenraster-Rechteck war auf feste x-Werte (40–555) verdrahtet und deckte bei Querformat-Vorlagen nur einen Teil der markierten Zeile ab. Es spannt jetzt über die konfigurierten Spalten bzw. die echte Seitenbreite aus dem Viewport.
+- **Verifikation:** `shared` 22/22, Frontend `lint`/`tsc --noEmit`/`build`/`test` (1499/1499), Backend `lint`/`tsc --noEmit`/`test` (929/931, dieselben 2 vorbestehenden EA-Download-Fehlschläge). Zusätzlich real erzeugtes zweiseitiges PDF über den echten `build()`-Pfad, mit `qpdf --check` (fehlerfrei) und `pdftotext` gegengerechnet: zentrierte Kopfzellen, `liste`-Format (`I / IW / MI`), umgebrochener Text über zwei Zeilen, `uhrzeit` aus `"7:05"` **und** ISO-Zeitstempel je `07:05`/`08:30`, berechnete Spalte (×2), Fußsumme 150,00 über alle fünf Zeilen, Übertrag 60,00 auf Seite 2 = Summe der drei Zeilen von Seite 1. Zusammengesetzte Felder ebenfalls im echten PDF bestätigt: `Mustermann, Max`, `Bahnweg 1 / 12345 Berlin` (fehlendes `Adress2` sauber übersprungen) und `01.03.2026 - 05.03.2026` (Format je Teil).
+
+## 2026-08-15 (7)
+
+### feat (PDF-Vorlagen-Pipeline: visueller Koordinaten-Editor, Phase 8)
+
+- **JSON-Textarea aus Phase 7 vollständig ersetzt** — User-Review verwarf den Rohtext-Modus ("Wo ist die Hilfe zur Konfiguration der Felder?"), Nachfolge-Anforderung: Koordinaten per Klick auf die echte PDF-Vorschau setzen statt Hand-JSON.
+- **Neue Komponenten unter `features/Admin/components/FormularEditor/`:** `PdfCanvas.tsx` (rendert die lokal gewählte PDF-Datei via `pdfjs-dist`, kein Server-Roundtrip; Seiten-Navigator; zeichnet Feld-/Spalten-/Signatur-Marker; Klick auf Canvas nur bei scharf geschaltetem Feld aktiv), `FeldPanel.tsx` (volles CRUD für Kopf/Seitenfuß/Fuß/Spalten/Zeilenraster/Signatur — Interaktionsmodell: Feld in Liste "scharf schalten", dann Klick auf dem PDF setzt die Koordinate), `dummyDaten.ts` (Testdaten-Generator für die Vorschau), `FormularEditor.tsx` (Tabs Erste/Weitere Seite, Testdaten-Vorschau ruft das bestehende `build()` unverändert mit `layout.template = URL.createObjectURL(datei)` auf).
+- **Neue Dependency `pdfjs-dist`.** Worker-Setup (`pdf.worker.mjs?url`, Vite-Konvention) bewusst per dynamischem Import statt statisch geladen — Bun (Testlauf) kennt das `?url`-Suffix nicht und würde beim statischen Modulgraph-Aufbau abbrechen, auch wenn kein Test die Komponente rendert.
+- **`FormularUpload.tsx`:** `konfigJson`/`KONFIG_PLATZHALTER`/`JsonEditor`-Nutzung entfernt, ersetzt durch `<FormularEditor>` (aktiv sobald eine PDF-Datei gewählt ist). Inline-Hilfe auf das neue Interaktionsmodell umgeschrieben.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run build` (bestätigt korrektes Worker-Chunk-Bundling durch Vite) und `bun run test` (1470/1470) grün. Neuer Test `dummyDaten.test.ts`. **Offen:** manueller PC-Durchlauf (Felder setzen, Testdaten-Vorschau, echter Upload-Flow) steht beim User noch aus — reines Canvas-Zeichnen/Klick-Verhalten ist headless nicht sinnvoll testbar (siehe Phase-4-Lesson zu `happy-dom`).
+
+## 2026-08-15 (6)
+
+### refactor (PDF-Vorlagen-Pipeline: ein Layout pro Version statt einseitig/mehrseitig-Split)
+
+- **User-Review nach Phase 7** deckte auf: die Aufteilung `Version.einseitig`/`Version.mehrseitig` war nur wegen Kandidat C (pyHanko-Signaturfeld-Namenskollision) nötig und entfällt unter Kandidat E — ergänzend: `SeitenDef.fuss` sollte pro-Seite datengetrieben bleiben statt hart auf "letzte Seite" verdrahtet, damit Bereitschafts abweichender Fall (Summe über alles auf Seite 1) ohne Sonderfall im Renderer funktioniert.
+- **`verteile.ts` neu:** verteilt auf `ersteSeite` (immer genau einmal) + `weitereSeite` (wiederholt nur bei tatsächlichem Überlauf) statt auf ein `seiten[]`-Array mit `wiederholSeite`-Index — keine erzwungenen leeren Folgeseiten mehr bei wenig/keinen Zeilen.
+- **`build.ts`:** keine `einseitig`/`mehrseitig`-Auswahl mehr, `verteile()` bekommt direkt `cfg.layout`. `fuss` rechnet weiterhin über ALLE Zeilen, unabhängig davon, auf welcher Seite es steht.
+- **`configSchema.ts`:** Zod-Schema folgt der neuen `Layout`-Form.
+- **`FormularUpload.tsx`:** EIN Datei-Upload statt zwei, Config-JSON als `{ersteSeite, weitereSeite?, zeilen}` in einem Editor. **Neu: Inline-Hilfe zur Feldkonfiguration** (`<details>`-Aufklapper — User-Review: "Wo ist die Hilfe zur Konfiguration der Felder?") — Koordinatensystem, Feld-Typen, `berechnet`-Syntax, kurzes Beispiel direkt auf der Seite.
+- **Tests:** `verteile.test.ts`, `build.test.ts`, `configSchema.test.ts` auf die neue Form umgeschrieben (u. a. "0 Zeilen" liefert jetzt nur 1 Seite statt 3 erzwungene leere Seiten — Verhalten bewusst geändert, nicht nur die Fixtures).
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` (1465/1465) grün. Zusätzlich real erzeugtes Bereitschafts-PDF (Fuß/Summe auf Seite 1 statt Seite 3) über den echten `build()`-Codepfad geprüft: `qpdf --check` fehlerfrei, `pdftotext` bestätigt Summe 57,00 (alle 5 Zeilen) korrekt auf Seite 1.
+
+## 2026-08-15 (5)
+
+### feat (PDF-Vorlagen-Pipeline: Minimal-Admin-UI für Vorlagen-Upload, Phase 7)
+
+- **Neue Komponente `features/Admin/components/FormularUpload.tsx`:** lädt zwei PDF-Vorlagen (einseitig + mehrseitig, "zwei Vorlagendateien je Version" laut Konzept) hoch und legt darüber eine neue Formular-Version im Backend an. Koordinaten-Config als JSON über die bestehende `JsonEditor.tsx`-Komponente (Wiederverwendung wie geplant) — bewusst schlicht, wird in Phase 13 zur vollen Drag/Resize-Oberfläche ausgebaut, JSON-Modus bleibt dann als Power-User-Fallback.
+- **`FetchRetry` kann keine Multipart-Bodies senden** (JSON-only) — Upload nutzt einen eigenen Roh-`fetch()` mit denselben Auth-Headern (`getServerUrl()`/`Storage`-Token), Versionsanlage selbst läuft über `FetchRetry` (JSON).
+- **Neuer Admin-Tab "Formular-Vorlagen"** in `features/Admin/index.tsx`, sichtbar ab Team-Admin (passend zur Backend-Rollenschwelle `authorize(Role.TEAM_ADMIN)` für die Upload-Routen) — kein neues Capability-Flag nötig, reine Rollen-Prüfung wie serverseitig.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` (1464/1464) grün. Kein dedizierter Komponententest — die Plan-Verifikation für Phase 7 sieht hierfür explizit den manuellen End-zu-End-Durchlauf vor (PDF hochladen, Version anlegen, beide ausgelieferten PDFs prüfen), noch nicht durchgeführt.
+
+## 2026-08-15 (4)
+
+### feat (PDF-Vorlagen-Pipeline: Versionsauflösung verdrahten, Phase 6)
+
+- **Neue Dependency `zod`.**
+- **`infrastructure/pdf/configSchema.ts`:** spiegelt das Typsystem aus `@otto-kirchheim/nebengeld-shared` (`formular/types.ts`) als Zod-Schema. `parseRegistry(json: unknown): Registry` validiert die vom Server geladene Konfiguration (zur Laufzeit `unknown`) und wirft `ZodError` statt eines stillen Fehlverhaltens bei kaputten/unerwarteten Daten.
+- **Dev-Testseite umgestellt:** `pdf-test.ts` ruft jetzt `resolve(registry, 'ez', leistungsdatum)` statt eine feste `Version` zu verwenden — Registry mit zwei Testversionen (`v1` bis 2026-01-01, `v2` danach offen), neues Datumsfeld auf der Testseite steuert die Auflösung, Titel im PDF zeigt zur Kontrolle die getroffene Version.
+- **Tests:** `configSchema.test.ts` — valide Registry parst korrekt; kaputte Eingaben (fehlendes Pflichtfeld, falscher Feldtyp, komplett falsche Form: Array/`null`/String) werfen `ZodError` statt eines Laufzeitabsturzes; unbekannte Zusatzfelder werden toleriert (kein `.strict()`); Integrationstest bestätigt dieselben Datumsgrenzfälle wie mit Handdaten (siehe `shared`s `resolve.test.ts`) auch über den Schema-validierten Pfad.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` grün. Rein automatisiert, kein manueller Schritt nötig (reine Logik laut Plan).
+
+## 2026-08-15 (3)
+
+### feat (PDF-Vorlagen-Pipeline: Mehrseitigkeit, Phase 5)
+
+- **`infrastructure/pdf/verteile.ts`:** verteilt Zeilen auf die Layout-Seiten, wiederholt die `wiederholSeite` bei Überlauf beliebig oft. **Waisenzeilen-Schutz** (über den Original-Konzept-Code hinaus, explizit von der Planung gefordert): hätte die Abschlussseite dadurch nur 1 Zeile, wird stattdessen eine Zeile von der vorletzten Seite übernommen, sofern die noch mehr als 1 Zeile behält und die Abschlussseite Kapazität hat — vermeidet eine fast leer wirkende letzte Seite.
+- **`build()` erweitert:** wählt `einseitig`/`mehrseitig` anhand der Zeilenzahl, rendert alle von `verteile()` gelieferten Seiten, führt `$bisher` (kumulierte Vorseiten-Zeilen) über die Seiten fort, zeichnet `seitenfuss` auf jeder Seite (laufende Zwischensumme/Übertrag) und `fuss` nur auf der Abschlussseite (rechnet über ALLE Original-Zeilen, nicht nur die der letzten Seite). Neu: Seitenzahl-Anzeige `Seite X von Y` auf jeder Seite — generisch gebaut, fachlich erst ab Phase 11 (Bereitschaft) und Phase 12 (EA) relevant, da EZ/EWT immer einseitig bleiben.
+- **Tests:** `verteile.test.ts` (Grenzwerte 0/1/maxZeilen/maxZeilen+1/2×maxZeilen∓1, Wiederholseiten-Überlauf, Waisenzeilen-Schutz, Zeilenreihenfolge bleibt erhalten); `wert.test.ts` (neu — `$seite`/`$bisher`-Summenbildung war bisher ungetestet, jetzt inkl. `anzahl`/`max`/Datenpfad-Aggregation).
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` grün. Zusätzlich zwei reale Mehrseiten-PDFs über den echten `build()`-Codepfad erzeugt und mit `qpdf --check`+`pdftotext` seitenweise geprüft: ein Zweiseiter (Waisenzeilen-Schutz im Zusammenspiel mit `$bisher` bestätigt) und ein echter Dreiseiter nach Konzept-Vorlage (Kopf/Kennzeile-wiederholt/Kennzeile+Fuß+Signatur) — Übertragssummen (30,00 → 45,00) und Gesamtsumme (57,00, über alle 5 Original-Zeilen) exakt wie von Hand berechnet, Signatur korrekt nur auf der Abschlussseite (via `pdfimages -list` bestätigt).
+
+## 2026-08-15 (2)
+
+### feat (PDF-Vorlagen-Pipeline: Canvas-Unterschrift, optional, Phase 4)
+
+- **Neue Dependency `signature_pad`.**
+- **`infrastructure/pdf/signaturePad.ts`:** Canvas-Wrapper — `skaliereFuerDisplay()` (pure, testbar) berechnet die Canvas-Pixelgröße für scharfe Linien auf High-DPI-Displays (`devicePixelRatio`), `erstelleSignaturPad()` wendet das auf ein echtes Canvas an (transparenter Hintergrund), `holeSignaturPng()` liefert `pad.toDataURL('image/png')` oder `null` bei leerem Pad.
+- **`build()` erweitert:** neuer optionaler dritter Parameter `signaturPng?: string` — bei vorhandenem Input **und** `signaturBild`-Koordinaten auf der Seite wird die Unterschrift per `embedPng()`/`drawImage()` eingebettet, sonst bleibt die Fläche leer. Kein Nachsignieren eines bereits heruntergeladenen PDFs vorgesehen.
+- **Neue Dev-Testseite `src/pdf-test.html`+`src/ts/pdf-test.ts`:** NICHT Teil der echten App (kein Link aus `index.html`, kein Produktions-Build-Eintrag — Vite bündelt standardmäßig nur `index.html`). Dummy-Formular mit "Jetzt unterschreiben?"-Dialog (wiederverwendet `confirmDialog`) → Ja: Canvas-Pad zeichnen → PDF mit Signatur; Nein: PDF direkt ohne Signatur. Vorlage wird im Browser selbst erzeugt (leeres A4-Blatt, `blob:`-URL) statt als Static-Asset abgelegt, damit nichts davon versehentlich mit ins Produktions-Build wandert.
+- **Tests:** `signaturePad.test.ts` (`skaliereFuerDisplay()` gegen Grenzfälle); `build.test.ts` erweitert um Image-XObject-Anwesenheit/Abwesenheit (mit/ohne Signatur-Input, mit/ohne `signaturBild`-Koordinaten).
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` grün. Der eigentliche Canvas-Zeichentest (Schärfe/Transparenz bei echtem Pointer-Input) ist headless nicht prüfbar (`happy-dom` liefert `getContext('2d')` als `null`) — **manueller Browser-Test durch den User über die neue Testseite steht noch aus.**
+
+## 2026-08-15
+
+### feat (PDF-Vorlagen-Pipeline: Renderer-Grundgerüst, Phase 3)
+
+- **Neue Dependency `@cantoo/pdf-lib`** (aktiv gepflegter Fork des originalen `pdf-lib`, siehe Plan-Kontext für die Begründung).
+- **`infrastructure/pdf/build.ts`:** einseitiges Renderer-Grundgerüst — lädt eine PDF-Vorlage per `fetch`+`PDFDocument.load()`, kopiert die Zielseite (`copyPages`/`addPage`), zeichnet Kopf-/Zeilen-/Fuß-Felder via `page.drawText()`. Noch ohne Mehrseitigkeit (Phase 5), Unterschrift (Phase 4) und `resolve()`-Anbindung (Phase 6) — die `Version`-Konfiguration wird direkt übergeben, nicht aufgelöst.
+- **`infrastructure/pdf/wert.ts`/`zeichne.ts`:** Feld-Wertauflösung (Direktwert oder `Berechnet`-Aggregation über `$seite`/`$bisher`, via `OPS`/`FORMAT`/`get` aus `@otto-kirchheim/nebengeld-shared`) und minimale `drawText`-Zeichenfunktion mit Rechtsbündig-Unterstützung.
+- **Test-Vorlage `test/fixtures/test_1seitig.pdf`:** leeres A4-Blatt (595×842pt, kein AcroForm-Feld) — programmatisch erzeugt statt in LibreOffice, da für ein reines Koordinaten-Overlay kein visueller Inhalt nötig ist.
+- **Tests:** `test/infrastructure/pdf/build.test.ts` (neues Testmuster, erster PDF-Struktur-Test im Repo) — Seitenzahl, `Subject`-Metadaten, Template-URL-Aufruf, leere Datenliste.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` grün. Zusätzlich manuell: Dummy-PDF über den echten `build()`-Codepfad erzeugt und mit `qpdf --check` (fehlerfrei) sowie `pdftotext` geprüft — Titel/Name/Zeilen/Summe erscheinen exakt wie erwartet (Summenbildung über `$seite` inkl. Währungsformat bestätigt).
+
+## 2026-08-11
+
+### feat (Entgeltausgleich: neues Feature-Modul, spiegelt Nebengeld-Struktur)
+
+- **Neues Feature `EA`** (`features/EA/`): Monatstabelle mit einer Zeile je Kalendertag (`Tag`, `Dauer`, `Taetigkeit`, `Entgeltgruppe`), optional verknuepft mit einem EWT-Eintrag. Mirror der `Neben`-Struktur (`index.ts` → `EaTab.tsx` → `components/` → `utils/`), aber ohne Zulagen-Konzept.
+- **Dauer-Berechnung bei EWT-Verknuepfung:** `calculateEaDauerFromEwt.ts` berechnet die Dauer aus `beginE`/`endeE` des verknuepften EWT-Eintrags abzueglich der gesetzlichen Pause nach §4 ArbZG (ab 6h 30 Minuten, ab 9h 45 Minuten — ersetzt, addiert sich nicht). Ohne Verknuepfung ist `Dauer` ein freies `HH:mm`-Feld. `syncEwtToEa.ts`/`syncEaDurationFromEwtRows` haelt die Dauer bei nachtraeglichen EWT-Aenderungen synchron (Storage + gemountete Tabelle), analog `syncEwtToNeben.ts`; `unlinkEaRefsForDeletedEwtIds` (`savePipeline.ts`) loest die EWT-Verknuepfung beim Loeschen des referenzierten EWT-Eintrags, analog dem Nebengeld-Pendant.
+- **Tab standardmaessig deaktiviert:** Anders als Bereitschaft/EWT/Neben ist der EA-Tab fuer alle Bestands- und Neu-User zunaechst unsichtbar. Der bisherige Fallback bei leerem `aktivierteTabs` ("alle Tabs an") galt sowohl fuer `syncFeatureTabs.ts` (Feature-Mount) als auch fuer `updateTabVisibility.ts` (Nav-Sichtbarkeit) — beide haetten den EA-Tab ungewollt fuer alle User sichtbar gemacht. Neue Konstante `LEGACY_DEFAULT_ON_KEYS`/`LEGACY_DEFAULT_ON_TAB_IDS` entkoppelt den Alt-User-Fallback (`bereitschaft`/`ewt`/`neben`) von der vollstaendigen Feature-/Tab-Map; `ea` mountet/erscheint nur, wenn `aktivierteTabs` es explizit enthaelt.
+- **Berechnung-Integration:** EA fliesst als reine Stunden-Anzeige (`IVorgabenBerechnungMonat.EA.Minuten`, `IBerechnungMonatsErgebnis.eaMinuten`) in die Jahresuebersicht und die mobile Kartenansicht ein, bewusst **ohne** Einfluss auf `summeGesamt` (kein Geldwert). Neuer Helper `parseDauerToMinutes` (Kehrfunktion zu `timeConvert`).
+- **UserProfile-Kopf-Felder:** `Pers.Taetigkeit`/`Pers.Entgeltgruppe` (optional, Grundtaetigkeit/-Entgeltgruppe des Nutzers, unabhaengig von den gleichnamigen Tages-Feldern der EA-Zeilen) ergaenzt in `IVorgabenU`, `fieldMapper.ts`, `AdminUserProfileEditor.tsx` und `profileTemplates.shared.ts` (Vorlagen-Editor).
+- **Backend-Anbindung:** Volle Bulk-CRUD-Anbindung an `/ea` (Create/Update/Delete via AutoSave/Speichern-Button, wie bei Nebengeld) sowie `POST /ea/download` fuer den PDF-Export. **EA ist wie BZ/BE/EWT/N vollstaendig in den jahresweiten Server-Load/Konflikt-Abgleich eingebunden** (`loadAllYearData`/`SyncTimestamps`/`LoadedYearData` um `EA`/`dataEA` erweitert, `syncLoadedYearResources`/`loadUserDaten.helpers.ts` (`MONTH_AWARE_STORAGE_NAMES`, `countByMonth`, `rowMatchesMonth`) behandeln `dataEA` gleichwertig, alle drei Konflikt-Aktionen in `loadUserDaten.ts` sowie `overwriteUserDaten.ts` haben einen `EA`-Zweig, `#tableEA` wird beim Login/Jahreswechsel geladen und gefiltert).
+- **Admin-Panel:** `AdminResourceBrowser.tsx` (`RESOURCES`/`SCHEMA_FIELDS`/`TIME_STRING_FIELDS`) um Entgeltausgleich (`entgeltausgleich`-Endpunkt) erweitert, `AdminDashboard.tsx`/`Admin/utils/api.ts` (`AdminStats`) zeigen die neuen `resources.entgeltausgleich`/`growth.entgeltausgleichLast7d`-Kennzahlen.
+- **Bugfix (Bestandsdaten):** `calculateBerechnungRows.ts` griff beim App-Start ungeprüft auf `item.EA.Minuten` zu — ein aus einer Session vor Einführung von EA gecachtes `datenBerechnung` (Storage-Snapshot, wird beim Boot ungeprüft gerendert, siehe `Berechnung/index.ts`) hat kein `EA`-Feld und crashte den Start (`Cannot read properties of undefined`). Jetzt mit `item.EA?.Minuten ?? 0` defensiv.
+- **Tests:** `test/EA.test.ts`, `test/EA.calculateEaDauerFromEwt.test.ts` (Pausen-Staffelung inkl. Grenzwerte bei 360/540 Minuten), `test/EA.syncEwtToEa.test.ts`, Erweiterungen in `Berechnung.*.test.ts`, `Utilities/savePipeline.test.ts`, `orchestration/syncFeatureTabs.test.ts`, `Utilities/updateTabVisibility.test.ts`, `Utilities/apiService.test.ts`, `core/auth/loadUserDaten.sync.test.ts`.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` (1424 Tests), `bun run build` gruen.
+
+### feat (Entgeltausgleich: durchgängige Schnellerfassung über EWT-Einträge, Tätigkeit-Schnellauswahl, Entgeltgruppen-Vorschlag)
+
+- **Neues, dediziertes Hinzufügen-Modal** (`createAddModalEA.tsx`): schließt nach dem Speichern NICHT mehr, sondern wählt automatisch den nächsten noch nicht mit einer EA-Zeile verknüpften EWT-Eintrag des Monats (chronologisch) und füllt Tag/Dauer daraus — durchgängige Eingabe mehrerer EWT-Tage ohne Modal-Neustart, kein manuelles Weiterklicken nötig. Sind alle EWT-Einträge bereits verknüpft, wird Tag/Dauer für die manuelle Eingabe freigegeben (Hinweis-Snackbar). `addEaTag.ts` liefert jetzt `boolean` zurück (Zeile angelegt ja/nein), damit das Modal nur bei echtem Erfolg weiterspringt. Der bisherige `EditorModalEA` bleibt unverändert für das Bearbeiten einzelner Zeilen (schließt wie gehabt nach dem Speichern).
+- **Tätigkeit bleibt Freitext, jetzt mit Schnellauswahl:** `list`-Attribut auf `MyInput` ergänzt (neuer optionaler Prop), `TAETIGKEIT_VORSCHLAEGE` (aktuell: "Teamleiter in Vertretung LST Kirchheim") als HTML-`<datalist>` im Hinzufügen- und im Bearbeiten-Modal — Autovervollständigung, Feld bleibt frei editierbar.
+- **Entgeltgruppe-Vorschlag:** Neue Zeile schlägt `VorgabenU.Pers.Entgeltgruppe - 1` als Startwert vor (nur bei numerischer Basis-Entgeltgruppe, sonst leer) — bleibt frei überschreibbar; da das Add-Formular zwischen Einträgen nicht zurückgesetzt wird, bleibt ein manuell angepasster Wert für die nächste Zeile erhalten (identisches Verhalten wie Tätigkeit).
+- **Tests:** `test/EA.addEaTag.test.ts` (inkl. Rückgabewert), `test/EA.suggestNextEntgeltgruppe.test.ts`.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` (1432 Tests), `bun run build` gruen.
+
+### fix (Entgeltausgleich: Tag-Feld blieb nach Rueckwechsel auf "keine Zuordnung" gesperrt)
+
+- **Problem:** `applyEwtSelection` (`createAddModalEA.tsx`) sperrte bei EWT-Auswahl nur `Dauer`, nicht `Tag`. Wechselte man das EWT-Auswahlfeld zurueck auf "— keine Zuordnung —", blieb `Tag` weiterhin `disabled` und war nicht mehr editierbar.
+- **Fix:** `applyEwtSelection` togglet jetzt `Tag` und `Dauer` gemeinsam ueber denselben `Boolean(selectedId)`-Zweig; die beiden Aufrufstellen, die zuvor das Tag-Feld separat gesetzt haben, wurden entsprechend vereinfacht.
+
+### fix (Entgeltausgleich: Weiterschalten nach dem Hinzufügen aenderte nur das Tag-Feld, EWT-Auswahl blieb stehen)
+
+- **Problem:** `applySelectOptions` (geteiltes Util, `Neben/utils/`) haelt bewusst die vorherige Select-Auswahl, solange ihr Wert unter den neuen Optionen noch existiert — praktisch fuer den Hintergrund-Sync-Listener, aber falsch fuer `advanceToNextEwt`: der gerade verknuepfte EWT-Eintrag bleibt nach dem Speichern weiterhin in der Liste (jetzt nur `disabled`), also sprang die Auswahl nie zum naechsten Eintrag — nur `Tag`/`Dauer` wurden durch den separaten `applyEwtSelection`-Aufruf sichtbar aktualisiert.
+- **Fix:** `advanceToNextEwt` setzt `select.value` nach `applySelectOptions` explizit auf den naechsten Eintrag (`next?._id ?? ''`), statt sich auf das automatische Beibehalten zu verlassen.
+- **Neuer Fallback ohne freien EWT-Eintrag:** Statt Tag/Dauer nur zu leeren, wird jetzt der naechste Kalendertag im Monat ohne bestehenden EA-Eintrag vorgeschlagen (`findNextFreeDay`). Entspricht dieser Tag zufaellig einem noch nicht verknuepften EWT-Eintrag (z.B. gerade erst angelegt), wird direkt dieser verknuepft statt Tag/Dauer manuell zu verlangen.
+- **Nachbesserung 1 (weiterhin wurde immer der erste statt der naechste EWT-Eintrag gewaehlt):** `getUsedEwtRefs` las den "bereits verknuepft"-Status bisher aus dem Storage-Snapshot (`Storage.get('dataEA')`) — dieser wird erst durch `persistTableData`/`mergeVisibleResourceRows` geschrieben, ein Roundtrip mit eigener Serialisierungs-/Filterlogik. Liest jetzt direkt aus der Live-Tabelle (`tableEA.rows.array`), synchron und ohne Storage-Abhaengigkeit — `findNextAvailableEwt` erkennt den gerade verknuepften Eintrag dadurch zuverlaessig als verbraucht.
+- **Nachbesserung 2 (Weiterschalten sprang bei fruehen Luecken zurueck statt vorwaerts):** Beispiel: Tag 1 hat bereits einen EA-Eintrag, Tag 2 ist offen (kein EWT-Bezug), Tag 3 wird gerade angelegt — danach sollte Tag 4 folgen, es kam aber wieder Tag 2. Ursache: `findNextAvailableEwt` suchte den chronologisch _ersten_ noch offenen EWT-Eintrag im gesamten Monat, nicht den naechsten _nach_ dem gerade bearbeiteten Tag — ein frueher liegender, weiterhin unverknuepfter Tag riss den Fortschritt bei jedem Speichern zurueck. Neuer optionaler `after`-Parameter (chronologisch letzter bearbeiteter Tag, aus dem `Tag`-Feld unmittelbar vor dem Ueberschreiben gelesen) grenzt die Suche auf "danach" ein; `findNextFreeDay`-Fallback bekommt denselben unteren Rand. Tag 2 bleibt dabei jederzeit manuell ueber das Dropdown waehlbar, wird nur nicht mehr automatisch angesprungen.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run format`, `bun run test` (1432 Tests) gruen.
+
+### fix (Admin: Taetigkeit/Entgeltgruppe-Felder im User-Profil-Editor unsichtbar)
+
+- **Problem:** `AdminUserProfileEditor.tsx` blendete die beiden Felder nur ein, wenn der bearbeitete User `ea` in `aktivierteTabs` hatte — der EA-Tab ist aber bewusst standardmaessig deaktiviert (siehe oben), also praktisch nie sichtbar. Zusaetzlich fehlen `Pers.Taetigkeit`/`Pers.Entgeltgruppe` bei Bestandsusern als Schluessel im Dokument (kein Schema-Default), wodurch `Object.entries(edit.pers)` sie auch ohne die Sichtbarkeitsbedingung uebersprungen haette.
+- **Fix:** Sichtbarkeitsbedingung entfernt — die Felder rendern jetzt unconditional ueber dieselbe generische Pers-Feld-Schleife wie z.B. `Gewerk` (Admin muss die Grunddaten unabhaengig vom eigenen Tab-Toggle des Users pflegen koennen). `buildEditState` setzt `Taetigkeit`/`Entgeltgruppe` per `??= ''` auf einen Default, damit die Schluessel bei Bestandsusern ohne die Felder ueberhaupt in der Schleife auftauchen.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run format`, `bun run test` (1432 Tests) gruen.
+
+### fix (Entgeltausgleich: Taetigkeit/Entgeltgruppe fehlten auch in Einstellungen > Persoenliche Daten)
+
+- **Problem:** Der vorherige Fix betraf nur `AdminUserProfileEditor.tsx`. Im eigentlichen Nutzer-Formular (`index.html`, Accordion "Persönliche Daten") gab es fuer `Taetigkeit`/`Entgeltgruppe` gar keine `<input>`-Elemente — `setElementValues`/`saveEinstellungen` sind generisch (iterieren `Object.keys(VorgabenU.Pers)` bzw. suchen `#<key>` im DOM), koennen aber kein Feld anzeigen oder einlesen, das im Markup nicht existiert.
+- **Fix:** Zwei neue `<input>`-Felder in `index.html` neben `Gewerk` ergaenzt (nicht `required`, da nur fuer EA relevant). `generateEingabeMaskeEinstellungen.ts`/`saveEinstellungen.ts` defaulten `VorgabenU.Pers.Taetigkeit`/`Entgeltgruppe` per `??= ''`, bevor die `Object.keys`-Schleifen laufen — sonst fehlt bei Bestandsusern (kein Server-Default) der Object-Key komplett und weder Anzeige noch Speichern wuerden das Feld je erreichen (identische Ursache wie beim Admin-Editor-Fix). `addressValidation.ts`: `Taetigkeit`/`Entgeltgruppe` zu `PERS_FIELD_LABELS` ergaenzt plus eigener `switch`-Zweig (optional — leer bleibt gueltig, sonst `TEXT_REGEX`-Pruefung wie bei `Gewerk`/`Betrieb`).
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run format`, `bun run test` (1432 Tests) gruen.
+
+## 2026-08-05
+
+### fix (AutoSave: Commit-Race verlor waehrend eines laufenden Saves neu angelegte/geaenderte Zeilen)
+
+- **Problem:** `_commitCreateAndUpdate` (`CustomTable.ts`) setzte nach jedem erfolgreichen Bulk-Save unconditional alle aktuell `new`/`modified`/`deleted` Zeilen zurueck, ermittelt aus dem _aktuellen_ Tabellenzustand statt aus dem Zustand zum Zeitpunkt des Requests. Legte ein Nutzer waehrend eines laufenden AutoSave-Requests (Netzwerk-Roundtrip) eine neue Zeile an oder aenderte eine bestehende, wurde diese Zeile beim Commit der vorherigen Antwort ebenfalls als "gespeichert" markiert — ohne je an den Server gesendet worden zu sein. Neue Zeilen verloren dabei endgueltig ihre `_id`-Zuordnung und waren fuer `getChanges()` danach unsichtbar (stiller Datenverlust); geaenderte Zeilen verloren die zuletzt eingetippte Aenderung. Der bestehende `queuedDuringSave`-Mechanismus (siehe Eintrag vom 2026-08-03, "AutoSave-Race") loeste zwar zuverlaessig einen Folge-Save aus, kam aber zu spaet — der fehlerhafte Commit war zu dem Zeitpunkt bereits gelaufen.
+- **Fix:** Neue Methode `Rows.getChangeRows()` liefert die Row-_Referenzen_ (statt Zellen-Kopien) hinter den aktuellen Aenderungen; `getChanges()` baut jetzt darauf auf (eine gemeinsame Filterquelle statt zwei unabhaengig gepflegter). `saveResourceNow` (`autoSave.ts`) nimmt vor dem Request einen Row-Referenz-Snapshot und reicht ihn als `includedRows` an `commitChanges`/`commitAutoSave` durch — nur Zeilen aus diesem Snapshot werden committet/entfernt, alles danach Angelegte/Geaenderte bleibt unangetastet und wird vom naechsten (bereits vorhandenen) Save-Lauf sauber erfasst. `mapCreatedIdsByClientRequestId`/`mapCreatedIdsByContent` (`changeTracking.ts`) und `collectRowErrorMatches` (`savePipeline.ts`) nutzen denselben Snapshot statt den Live-Tabellenzustand erneut zu filtern, damit sich Positions-Indizes nicht mehr durch zwischenzeitliche Aenderungen verschieben koennen. `markFetchErrorRows` (`errorHandling.ts`, Fehlerpfad) markiert ebenfalls nur noch Zeilen aus dem Snapshot als Fehler.
+- **Regressionstests:** `CustomTable.test.ts` ("AutoSave-Commit-Race") deckt beide Faelle direkt an der echten `Rows`-Klasse ab — waehrend des Requests neu angelegte Zeile bleibt nach `commitAutoSave` `new` ohne `_id`; waehrend des Requests geloeschte Zeile bleibt nach `commitChanges` erhalten.
+- **Verifikation:** `bunx tsc --noEmit`, `bun run lint`, `bunx prettier --check`, `bun run test` (1388 Tests) gruen.
+
+## 2026-08-03
+
+### fix (Nebengeld: Race Condition zwischen EWT-AutoSave und manueller Zulagen-Anlage)
+
+- **Problem:** Legt man während der laufenden EWT-AutoSave-Verzögerung (10 s Debounce) im Neben-Tab eine Zulage für genau den noch nicht synchronisierten EWT-Tag an, listete das Tag-Dropdown (`createAddModalNeben.tsx`/`createEditorModalNeben.tsx`) diesen Tag ganz normal auf. Die EWT-Referenz im Payload (`EWT: day._id`) war zu dem Zeitpunkt aber `undefined` und wurde von `JSON.stringify` stillschweigend aus dem Wert entfernt. Landete der EWT-Eintrag danach vor dem Neben-Request in der DB, quittierte `nebengeld.service.ts` (`assertEwtRules`) das mit `422 Für diesen Tag existiert eine EWT-Schicht`. Landete er danach, entstand ein dauerhaft unverknüpfter Neben-Eintrag ohne Fehler (stille Dateninkonsistenz).
+- **Fix:** Tage mit ausstehender EWT-AutoSave — neu angelegt (`!day._id`) oder lokal geändert, aber noch nicht gespeichert (`day.__localState === 'modified'`, direkt aus dem bereits geladenen `dataE` gelesen, kein zusätzlicher State nötig) — sind im Dropdown jetzt `disabled` und tragen den Hinweis "(wird noch gespeichert)".
+- **Live-Refresh:** Solange das Modal offen bleibt, hört es über `onEvent('data:changed', …)` auf abgeschlossene EWT-Saves und baut die Options neu auf (neues Util `Neben/utils/applySelectOptions.ts`), damit der Tag nutzbar wird, sobald der Sync durch ist — ohne Modal-Neuöffnen. Abmeldung über den bestehenden `hide.bs.modal`-Listener.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` (1386 Tests) grün.
+
+### fix (Einstellungen: AutoSave-Verzögerung/-Aktivierung griff erst nach Reload)
+
+- Eine Änderung von "AutoSave aktiviert" oder der AutoSave-Verzögerung in den Einstellungen wurde zwar korrekt gespeichert, wirkte sich auf den laufenden AutoSave aber erst nach einem vollständigen Neuladen der Seite aus: `applyEinstellungenToRuntime()` (`Einstellungen/index.ts`), das den Runtime-State in `autoSave.ts` setzt, lief ausschließlich einmalig beim App-Start; der Speichern-Button (`saveDaten.ts`) rief es nie erneut auf.
+- Die Apply-Logik liegt jetzt gebündelt als `applyAutoSaveSettings()` in `infrastructure/autoSave/autoSave.ts` (von `Einstellungen/index.ts` und `saveDaten.ts` gemeinsam genutzt) und wird zusätzlich direkt nach dem Speichern der Einstellungen aufgerufen — die Änderung greift damit sofort, ohne Reload.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` (1386 Tests) grün.
+
+## 2026-08-02
+
+### fix (CustomTable: Zellinhalte wurden als HTML interpretiert)
+
+- Aus einem Security-Scan: `CustomTable.ts` setzte Zellwerte über `innerHTML`. Der Standard-Parser reicht den Rohwert durch, betroffen sind also auch Freitextfelder aus Benutzereingaben (`Einsatzort` in EWT, `Auftragsnummer` in Nebenbezüge). Ein Eintrag wie `<img src=x onerror=…>` wurde beim Rendern ausgeführt. Der Radius ist begrenzt, weil jeder Benutzer nur eigene Zeilen sieht (Self-XSS), betrifft aber auch Daten, die ein Admin für einen Benutzer anlegt oder per Vorlagen-/Muster-Übernahme kopiert.
+- Zellinhalte werden jetzt über `textContent` gesetzt. HTML gibt es nur noch als bewusste Ausnahme je Spalte über die neue Option `html: true` — sie ist ausschließlich für Spalten gedacht, deren Parser festes Markup aus dem eigenen Code erzeugt, nie für Freitext aus Benutzereingaben.
+- Betroffen sind genau zwei Spalten in `EwtTab.tsx`: der Berechnen-Schalter (`<input type="checkbox">`, interpoliert nur einen Boolean) und die Schicht-Spalte (`switch` über feste Fälle). Alle Parser der übrigen Tabellen wurden geprüft und erzeugen kein Markup.
+- Die Zulagen-Spalte in `NebenTab.tsx` ersetzte `\n` durch `<br>`; sie liefert jetzt Rohtext, den die neue Spaltenklasse `cell-multiline` (`white-space: pre-line`) umbricht — hier ist kein HTML nötig.
+- Regressionstests: `test/Utilities/CustomTable.xss.test.ts` (Markup im Zellwert erzeugt ohne `html: true` kein Element und bleibt wörtlich als Text; mit `html: true` wird es weiterhin gerendert).
+
+### fix (Massenänderung: Bedien-Feedback aus dem ersten Durchlauf)
+
+- **Modal-Breite wirkte nicht.** `MyDivModal` hängte die `size`-Klasse an `.modal-content`, Bootstrap erwartet sie auf `.modal-dialog` — die Massenänderung lief dadurch trotz `size="xl"` in der Standardbreite (500 px). Statt die Semantik des bestehenden `size`-Props (und damit sechs andere Modals) zu ändern, gibt es jetzt `dialogClass` für Klassen auf `.modal-dialog`; die Massenänderung nutzt `modal-xl modal-fullscreen-lg-down modal-dialog-scrollable`. Der Formular-Schritt liegt zusätzlich in einem Grid, das ab `xl` zweispaltig wird (OE-Karte neben "Weitere Felder").
+- **Benutzer einzeln abwählen** (`BulkEditUserOverview.tsx`): jede Zeile der Übersicht hat einen Abwählen-Button; die Auswahl ist jetzt Modal-State statt reiner Prop, der Titel zählt mit. Der letzte verbleibende Benutzer lässt sich nicht entfernen.
+- **Ersetzen-Boxen sind jetzt leer und tragen den bisherigen Wert nur als Platzhalter.** Vorbefüllte Werte hatten suggeriert, es werde alles ersetzt; ersetzt wird ausschließlich, was eingetippt ist. Die Boxen erscheinen außerdem erst, wenn ein Ziel angehakt ist (analog zu den Checkboxen unter "Weitere Felder"), und lassen sich wie überall sonst um Ebenen erweitern/kürzen.
+- **Team-/Org-Admin-OEs sitzen in derselben Karte** wie das Ebenen-Ersetzen ("OE ändern"), weil sie dieselben OE-Pfade betreffen. Ihre Eingabefelder starten mit so vielen Boxen, wie die aktuelle OE tief ist (`defaultLevelCount`), statt mit einer einzelnen — dasselbe gilt für `OeTagInput` in `AdminUserList.tsx`.
+- **Numerische Teamnummer ohne Bindestrich:** ist die letzte Ebene rein numerisch, zeigt der Editor davor ein Leerzeichen statt `-` — dieselbe Regel, die `joinOeLevels` beim Zusammensetzen anwendet.
+- **Eingabefelder wachsen mit dem Inhalt** (Breite aus Wert- bzw. Platzhalter-Länge, mindestens 2 Zeichen) statt fester 4,5 rem.
+- **Eingetippte Ebenen sind erkennbar:** mit leeren Boxen und Platzhaltern war nicht mehr zu sehen, wo etwas geändert wurde. Ausgefüllte Ebenen haben jetzt einen gelben 2-px-Rahmen und halbfette Schrift, Platzhalter sind kursiv und gedimmt (`.oe-level-input::placeholder` in `styles.scss`).
+- **Team-/Org-Admin-OE-Hinzufügen bekommt dieselbe Vorlage:** Platzhalter aus den gemeinsamen Ebenen der vorhandenen Admin-OE-Pfade der Auswahl (`computeCommonPathLevels`), ersatzweise aus der gemeinsamen Pers.OE. Anders als beim Ersetzen muss hier ein vollständiger Pfad entstehen, daher werden leer gelassene Ebenen aus der Vorlage übernommen; der resultierende Pfad steht als "Wird hinzugefügt: …" unter den Boxen. Ohne jede Eingabe bleibt die Aktion leer (kein versehentliches Anlegen der Vorlage).
+- **Trenner vor der letzten Ebene umgedreht:** dort steht standardmäßig kein Bindestrich (leere Ebene oder Teamnummer); er erscheint erst, sobald etwas anderes als eine Zahl eingetragen wird.
+- **Overflow in "Weitere Felder setzen" und im Übernahme-Block:** `ms-4` lag direkt auf `form-control`/`form-select` (Breite 100 %), die Felder ragten dadurch aus der Karte heraus. Die Einrückung sitzt jetzt auf einem Wrapper.
+- **OE-Boxen fehlten im Vorlagen-Editor:** `AdminProfileTemplateContentEditor.tsx` rendert `Pers.OE` jetzt ebenfalls über `OeLevelBoxes` statt als Freitextfeld.
+- **Massenänderungen im Admin-Log sichtbar:** die Einträge (`admin.UserProfile.bulkUpdate`) wurden schon immer geschrieben, waren in der Liste aber nicht von anderen Aktionen zu unterscheiden (kein Ziel-Benutzer, keine Details). `AdminLogBrowser.tsx` hat jetzt je Zeile einen Details-Aufklapper, der den geloggten Payload zeigt (betroffene Benutzer, geänderte Felder, Summary).
+- Die gemeinsame Darstellung der Ebenen-Boxen (Trenner, Breite, Hinzufügen/Entfernen, Platzhalter) liegt neu in `OeLevelInputs.tsx`; `OeLevelBoxes.tsx` ist der String-Wrapper darum, der Massenänderungs-Ersetzen-Block nutzt sie direkt mit positionsgebundenem Array (dort müssen leere Ebenen erhalten bleiben).
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit && bun run build` grün (1383 Tests, 7 neue in `OeLevelBoxes.test.tsx`/`createAdminBulkEditModal.test.tsx` für Standard-Boxenanzahl, erhaltene Leerebene, Trenner-Regeln, Hervorhebung, Abwählen und Vorlagen-Übernahme beim Hinzufügen).
+
+### feat (Massenänderung überarbeitet: Übersicht, Mehrfeld-OE-Editor, neue Felder, Team-/Org-Admin-OE)
+
+- Nutzer-Feedback zur Massenänderung ("unbrauchbar/unübersichtlich/nicht vollständig") behoben: keine Übersicht der ausgewählten Benutzer, OE-Ebene wurde blind über ein Dropdown gewählt, der Übernahme-Bereich wirkte angeflanscht, mehrere gewünschte Felder fehlten.
+- **Neue Übersicht** (`BulkEditUserOverview.tsx`): scrollbare Tabelle der ausgewählten Benutzer mit aktueller OE und aktuellem Betrieb, ab 5 Benutzern mit Filterleiste (`matchesOeQuery`/`useDebouncedValue`, wiederverwendet aus `AdminUserList`). Dafür führt `AdminUserRow`/`fetchAdminUsers` neu auch `betrieb` (bislang nicht abgerufen, obwohl der Endpoint es schon liefert).
+- **Neuer Mehrfeld-OE-Editor** (`OeLevelBoxes.tsx`): ein Textfeld pro Ebene statt eines zusammengesetzten Strings, String-in/String-out über `joinOeLevels`/`splitOeInput`. Ersetzt das bisherige Freitext-OE-Feld überall im Admin-Bereich (`AdminUserList.tsx`, `AdminUserProfileEditor.tsx`, `OeTagInput.tsx` fürs Hinzufügen neuer Team-/Org-Admin-OE-Einträge) — bewusst nicht in der normalen (nutzereigenen) Einstellungen-Ansicht. Entfernen ist nur für die letzte Ebene möglich (kein Lösch-Button pro Box), Hinzufügen bis maximal 10 Ebenen (Payload-Grenze im Backend).
+- **Massenänderung — Ersetzen-Block** (`BulkEditOeLevelsEditor.tsx`): ein gemeinsamer Editor für alle drei OE-Ziele (Pers.OE, Team-Admin-OEs, Org-Admin-OEs, mehrfach wählbar). Boxen sind vorausgefüllt, wo alle ausgewählten Benutzer übereinstimmen, sonst leer; leer = Ebene bleibt unangetastet. Bei Listen (Team-/Org-Admin-OEs) wirkt eine Ersetzung auf jeden Eintrag, der diese Ebene besitzt. Das Ziel-Häkchen ist der bewusste Auslöser — nicht der Box-Inhalt, sonst hätte schon eine reine Vorbefüllung (z. B. bei nur einem ausgewählten Benutzer stimmen alle Ebenen zwangsläufig überein) ungewollt einen Fehler erzwungen.
+- **Neue einfache Felder** (`BulkEditSimpleFieldsBlock.tsx`): Gewerk, Erste TkgSt, TkgSt Adresse zusätzlich zu Betrieb, jeweils Checkbox-gated wie bisher.
+- **Team-Admin-OEs/Org-Admin-OEs erstmals in der Massenänderung** (`BulkEditAdminOesBlock.tsx`): Hinzufügen (über `OeLevelBoxes` komponierter neuer Pfad) und Entfernen (Auswahl aus der Vereinigungsmenge der bei der Auswahl tatsächlich vorhandenen Pfade, kein blindes Freitext-Tippen).
+- **Übernahme-Block entwirrt** (`BulkEditApplySourceBlock.tsx`): Vorlage-/Muster-Benutzer-Select steht jetzt direkt unter dem jeweils gewählten Radio, nicht mehr gemeinsam unterhalb aller drei Optionen.
+- **Vorschau-Tabelle** (`BulkEditPreviewTable.tsx`): zeigt nur Spalten für tatsächlich in diesem Lauf aktivierte Felder statt aller möglichen.
+- **Breaking Change am Payload:** `oe: { levelIndex, newValue }` ist durch `oeLevels`/`oeLevelsApplyTo` ersetzt (siehe `backend/CHANGELOG.md`) — Frontend und Backend gehören zusammen deployed.
+- `createAdminBulkEditModal.tsx` (455 Zeilen) auf einen schlanken Orchestrator (State, `buildPayload`, Vorschau/Anwenden, Footer) plus sieben neue, einzeln testbare Dateien in `Admin/components/` und `Admin/utils/bulkEditOe.ts` aufgeteilt, um unter dem 500-Zeilen-Limit zu bleiben. `AdminBulkEditModal` ist zusätzlich als named export verfügbar (Komponenten-Tests ohne den Bootstrap-Modal-Wrapper).
+- **Verifikation:** `bun run lint && bun run test --isolate && bunx tsc --noEmit && bun run build` grün (1376 Tests), davon 28 neue: `OeLevelBoxes.test.tsx` (Split/Join-Rundtrip, Hinzufügen/Entfernen, 10er-Obergrenze), `bulkEditOe.test.ts` (Vorbefüllungs-/Tiefen-Logik), `createAdminBulkEditModal.test.tsx` (Übersicht, Ersetzen-Validierung, Ziel-Kombination, Feld-Gate, Entfernen-Select, dynamische Vorschau-Spalten, Vorlage-Zuordnung).
+
+## 2026-08-01
+
+### fix (Vorlagen-Editor: Tarif/Beamter war ein Freitextfeld)
+
+- `Pers.TB` wurde im Vorlagen-Editor als freies Textfeld gepflegt, im Profil-Editor dagegen als Auswahl. Der Wert dient in der Berechnung als Schlüssel in die Geld-Vorgaben (`datenGeld[monat][TB]`) — ein abweichender Text ergibt dort `undefined` und damit NaN-Beträge für jeden Benutzer, der aus dieser Vorlage angelegt wird. Das Backend prüfte den Wert bislang nicht (`z.string().max(100)`, kein Enum in Zod noch in Mongoose), die Oberfläche war also der einzige Schutz — im selben Arbeitsgang durch ein serverseitiges Enum ergänzt (siehe `backend/CHANGELOG.md`).
+- TB ist jetzt in beiden Editoren eine Auswahl; die gültigen Werte kommen als `TB_VALUES` aus `@otto-kirchheim/nebengeld-shared` (dieselbe Liste, die Zod und Mongoose im Backend durchsetzen), `profileTemplates.shared.ts` exportiert sie unter `TB_OPTIONS` weiter statt einer eigenen Kopie im Profil-Editor. `addressValidation.ts` nutzt für dieselbe Prüfung ebenfalls `TB_VALUES` statt einer dritten lokalen Liste.
+- Bestandsdaten geprüft: alle 23 Profile und 3 Vorlagen tragen `Tarifkraft`, es sind keine ungültigen Werte entstanden.
+
+### fix (OE-Anzeige in Admin-Profilverwaltung und Vorlagen-Editor)
+
+- Admin-Tab "Profile": die OE erschien nach der Umstellung auf Ebenen sowohl in der Liste als auch im Bearbeiten-Formular als `V,IW,MI,M,KSL,IL` — die generische Feldausgabe reichte das Array direkt an `String()` weiter. Beide Stellen nutzen jetzt `joinOeLevels`, die Eingabe wird über `splitOeInput` wieder zerlegt.
+- Vorlagen-Verwaltung: `normalizePrimitiveRecord` filterte beim Laden alles heraus, was kein String/Number/Boolean ist — die OE fiel damit aus dem Formular und wäre beim nächsten Speichern der Vorlage gelöscht worden, da `buildTemplatePayload` `Pers` vollständig aus dem Entwurf neu aufbaut. Beide Funktionen behandeln die OE jetzt gezielt und sind für den Rundlauf-Test exportiert.
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit && bun run build` grün (1346 Tests); neue Tests decken Anzeige, Rückkonvertierung und den Laden-Speichern-Rundlauf einer Vorlage ab.
+
+### feat (Admin-Massenänderung für Benutzerprofile + OE als Hierarchie-Ebenen)
+
+- **OE-Datenmodell:** `Pers.OE` ist im Wire-Format (`IPers` aus `@otto-kirchheim/nebengeld-shared`) jetzt ein Ebenen-Array. Die Eingabe bleibt bewusst ein einzelnes Textfeld: `fieldMapper.ts` fügt die Ebenen beim Laden zusammen (`userProfileFromBackend`) und zerlegt die Eingabe beim Speichern wieder (`userProfileToBackend`) — bestehende Formulare, `setElementValues` und die Adressvalidierung blieben dadurch unangetastet.
+- Neu: `infrastructure/data/oeLevels.ts` mit `joinOeLevels`/`splitOeInput`. Bewusst eine lokale Portierung der Backend-Funktionen (`oe-scope.ts`) statt eines geteilten Imports, da laut Shared-Library-Entscheidung vorerst nur Typen und Daten-Konstanten geteilt werden, keine Funktionen — wie bereits bei `overlapGuard.ts` dokumentiert. Ein Test sichert ab, dass das Anzeigeformat identisch zum Backend bleibt, sonst zeigte die Vorschau andere Werte als die gespeicherten.
+- `AdminUserRow.oe` ist ein `string[]`; der OE-Filter (`matchesOeQuery`) bekommt die Ebenen jetzt einzeln statt als einen zusammengesetzten String und trifft dadurch pro Ebene genauer.
+- **Neu: Massenänderung im Admin-Benutzer-Tab** (nur für Super-Admins sichtbar). Karten haben eine Auswahl-Checkbox plus "Alle auswählen"; bei getroffener Auswahl erscheint eine Aktionsleiste. Die eigene Zeile ist nicht auswählbar — passend dazu, dass Rolle/OE/Rechte des handelnden Admins auch einzeln nicht über diese Oberfläche änderbar sind. Jeder Filterwechsel verwirft die Auswahl, da sonst Benutzer aus einer nicht mehr sichtbaren Ansicht mitgeändert würden.
+- `createAdminBulkEditModal.tsx`: dreistufiger Dialog (Formular → Vorschau → Ergebnis). Die Vorschau ruft denselben Endpunkt mit `dryRun: true` und zeigt pro Benutzer die vollständige OE vorher/nachher — nötig, weil das Ersetzen einer Ebene den ganzen String in die kanonische Schreibweise bringt und nicht nur das eine Token austauscht. Der Absenden-Button ist während laufender Anfragen gesperrt.
+- Die Ebenen-Auswahl zeigt 1-basierte Beschriftungen ("Ebene 1"), sendet aber den 0-basierten Index; die Anzahl der Optionen ist nur eine Schätzung aus der tiefsten ausgewählten OE — ob eine Ebene wirklich existiert, entscheidet die Vorschau pro Benutzer.
+- Kategorie-Übernahme aus Vorlage oder Muster-Benutzer beschränkt sich auf Fahrzeiten, Arbeitszeiten, Bereitschafts-Vorgaben und Einstellungen; persönliche Daten sind ausgeschlossen und der Dialog weist darauf hin.
+- `AdminUserList` erhält `isSuperAdmin` als Prop — der Wert wurde in `Admin/index.tsx` bereits berechnet, aber bisher nicht an diese Komponente weitergereicht.
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit && bun run build` grün (1340 Tests, 14 Snapshots), davon neu: Auswahl-Verhalten von `AdminUserList` (Sichtbarkeit nur für Super-Admins, eigene Zeile gesperrt, Übergabe an den Dialog, Reset bei Filterwechsel), `oeLevels`-Rundlauf und der Bulk-API-Aufruf.
+
+### fix (Passwort-Zeichenrestriktion entfernt, Live-Stärkeanzeige ergänzt)
+
+- Alle Passwort-Felder (Login, Registrierung, Passwort-Ändern, Reset, Passkey-Passwort-Setzen, Admin-Passwort-Setzen) hatten ein `pattern`-Attribut, das versehentlich vom Benutzername-Feld kopiert wurde und Zeichen wie Umlaute, `$`, Leerzeichen und Emoji im Passwort verbot, obwohl das Backend nie eine Zeichen-Restriktion hatte (nur Längenprüfung). `pattern`-Prop entfernt.
+- Inkonsistentes `.trim()` auf Passwort-Werten behoben: alle Passwort-_setzenden_ Flows trimmten den Wert vor dem Senden, der Login-Flow nicht — hätte bei Passwörtern mit Leerzeichen zum Login-Fehlschlag geführt. Trimmen jetzt nirgends mehr angewendet (an Login angeglichen).
+- Popover-Hinweistexte und `invalidFeedbackText` auf die einzige tatsächlich geprüfte Regel (Mindestlänge) gekürzt — die bisherigen Bullet-Punkte zu Groß-/Kleinbuchstaben/Zahlen/erlaubten Zeichen waren nie durchgesetzt und damit irreführend.
+- Neu: `PasswordStrengthMeter`-Komponente (`components/PasswordStrengthMeter.tsx`, Scoring in `infrastructure/validation/passwordStrength.ts`) — eigenständige, selbst gebaute Live-Stärkeanzeige (4 Bootstrap-Progress-Segmente + Label), angehängt an das jeweilige "Neues Passwort"-Feld in Registrierung/Passwort-Ändern/Reset/Passkey-Set/Admin-Set (nicht Login, nicht Wiederholungs-/Alt-Passwort-Felder).
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` grün.
+
+### feat (Welle 2 Schritt 6 — UserProfile-Container-Keys vereinheitlicht: pers/aZ/fZ/vorgabenB → Pers/Arbeitszeit/Fahrzeit/VorgabenB)
+
+- `IVorgabenU`/`IVorgabenUServer` (`core/types/IVorgabenU.ts`): die 4 Top-Level-Container-Schlüssel `pers`/`aZ`/`fZ`/`vorgabenB` → `Pers`/`Arbeitszeit`/`Fahrzeit`/`VorgabenB` (deckungsgleich mit dem Backend-Modell `UserProfile.ts`). Alle verschachtelten Blattfelder waren laut Vorab-Analyse bereits identisch benannt (Backend nutzt seit längerem das neue Pro-Wochentag-Arbeitszeitmodell) — dieser Schritt ist reines Umbenennen der 4 Container-Keys, keine Feld-für-Feld-Migration.
+- `@otto-kirchheim/nebengeld-shared` v0.7.0: neue Typen `IPers`/`IFahrzeit` in `domain.ts` — nur für die beiden Container übernommen, deren Feldnamen UND Optionalität 1:1 mit dem Frontend übereinstimmen. `Arbeitszeit`/`VorgabenB` bewusst NICHT als gemeinsamer Typ verschoben: das Frontend haelt dafuer weiterhin seine eigene, vollstaendig hydrierte Form (`IVorgabenUaZ`/`IVorgabenUvorgabenB`), die zwar dieselben Feldnamen traegt, aber Felder (z. B. `spaet`/`nacht`/`sonder`, `aktiv`) garantiert setzt, die im Backend-Wire-Format optional sind — dieselbe Art bewusst nicht vereinheitlichter Divergenz wie bei `Beginn`/`Ende` in fruaeheren Ressourcen, nur bei Optionalitaet statt Zeitformat.
+- `VorgabenB` bleibt intern im Frontend eine Map (`{[key]: IVorgabenUvorgabenB}`), waehrend `IVorgabenUServer.VorgabenB` (Wire-Format) ein Array bleibt — nur der Feldname wurde auf beiden Seiten vereinheitlicht, die bewusst unterschiedliche Form (Array vs. Map) blieb unangetastet (`fieldMapper.ts`s `userProfileFromBackend`/`userProfileToBackend`/`vorgabenUFromServer` konvertieren weiterhin dazwischen).
+- Groesster Rename-Umfang dieser Welle: ~50 Dateien betroffen (Bereitschaft-, EWT-, Einstellungen-Feature komplett, `fieldMapper.ts`, `download.ts`, Auth-/Onboarding-Orchestrierung, ~30 Tests). Durchgefuehrt per Typ-Rename-zuerst + `tsc`-Fehlerliste als praezise Landkarte jeder echten Verwendungsstelle (wie schon bei den generischen `code`/`value`-Feldern in Ressource 5), da `pers`/`aZ`/`fZ` zu kurz fuer einen sicheren blinden Grep/Sed waeren (Kollisionsgefahr z. B. mit `IVorgabenE.fZ`, einem fachlich unabhaengigen Fahrzeit-Duration-Typ in `calculateEwtEintraege.ts`, dort bewusst unveraendert gelassen).
+- 8 Test-Dateien enthielten `as unknown as IVorgabenU`/`as never`-Fixtures mit den alten Container-Keys, die `tsc` nicht als Fehler erkannte (Cast umgeht die strukturelle Pruefung) und die deshalb erst im vollen Testlauf als echte Laufzeit-Fehlschlaege auffielen (u. a. `Bereitschaft.utils.extra.test.ts`, `EWT.ewtBerechnen.test.ts`, `EWT.utils.extra.test.ts`, mehrere Bereitschaft-Override-Tests) — jeweils die Fixture-Keys auf die neuen Container-Namen korrigiert.
+- Keine Business-Logik veraendert — reiner Bezeichner-Rename, durch vollstaendigen Testlauf verifiziert.
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` gruen (1319 Tests, 14 Snapshots) gegen die real veroeffentlichte v0.7.0.
+
+### feat (Welle 2 Schritt 5 — Nebengeld-Feldnamen vereinheitlicht: IDatenN/INebenZulage auf Backend-Namen)
+
+- `IDatenN` (`core/types/IDaten.ts`): `ewtRef`/`tagN`/`beginN`/`endeN`/`auftragN`/`zulagenN` → `EWT`/`Tag`/`Beginn`/`Ende`/`Auftragsnummer`/`Zulagen` (deckungsgleich mit `INebengeld`, siehe `@otto-kirchheim/nebengeld-shared` v0.6.0). `INebenZulage`: `code`/`value` → `Typ`/`Wert` (deckungsgleich mit `IZulage`). `zulagenAnzeigeN` bleibt unverändert (Frontend-only, kein Backend-Gegenstück).
+- Zweistufiger Rename: 37 Dateien für die Top-Level-Felder (Sed-Rename, per `tsc` verifiziert — dabei erneut `endeN` als mehrdeutigen String erkannt: kollidiert mit dem unabhängigen UserProfile-`vorgabenB`-Nacht-Ende-Feld, 13 Dateien bewusst ausgeschlossen, `test/mockData.ts` mischt wieder beide Kontexte und wurde gezielt korrigiert). `.code`/`.value` auf `INebenZulage`-Objekten wurden NICHT blind ersetzt (zu generische Wortwahl, Kollisionsgefahr mit Zulagen-Katalog-Feldern `IZulageCatalogItem.code`, DOM-`input.value`, `IVorgabenU`-`{key,value}`-Paaren etc.) — stattdessen gezielt anhand der `tsc`-Fehlerliste jede Stelle einzeln geprüft und nur echte `INebenZulage`-Zugriffe umbenannt (`nebengeldZulagen.ts`, `createEditorModalNeben.tsx`, `calculateZulagenBreakdown.ts`, `fieldMapper.ts`, `download.ts`, mehrere Tests inkl. zwei Test-Helfer mit lokal zu lose typisierten Zulagen-Parametern, die `tsc` deshalb nicht automatisch fing).
+- `fieldMapper.ts`: `BackendNebengeld` erweitert jetzt das geteilte `INebengeld` statt die Felder selbst zu deklarieren.
+- Keine Business-Logik verändert — reiner Bezeichner-Rename, durch vollständigen Testlauf verifiziert.
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` gruen (1319 Tests) gegen die real veröffentlichte v0.6.0.
+
+### feat (Welle 2 Schritt 4 — EWT-Feldnamen vereinheitlicht: 4 von 13 Feldern auf Backend-Namen)
+
+- `IDatenEWT` (`core/types/IDaten.ts`): `tagE`/`buchungstagE`/`eOrtE`/`schichtE` → `Tag`/`Buchungstag`/`Einsatzort`/`Schicht` (deckungsgleich mit `IEinsatzwechseltaetigkeit`, siehe `@otto-kirchheim/nebengeld-shared` v0.5.0). Die restlichen 9 Felder (`abWE`/`ab1E`/`anEE`/`beginE`/`endeE`/`abEE`/`an1E`/`anWE`/`berechnen`) trugen bereits identische Namen, unverändert. Durchgängig umbenannt in 45 Dateien (EWT-Feature komplett, Neben-Modals über die EWT-Verknüpfung, `fieldMapper.ts`, `download.ts`, Business-Logik, Tests) — keine Snapshot-Datei betroffen, keine Mixed-Context-Kollision gefunden (alle 4 Feldnamen tragen das eindeutige `E`-Suffix).
+- `fieldMapper.ts`: `BackendEWT` erweitert jetzt das geteilte `IEinsatzwechseltaetigkeit` statt die Felder selbst zu deklarieren; `ewtFromBackend`/`ewtToBackend` unverändert in ihrer Logik (nur Feldnamen).
+- Keine Business-Logik verändert, insbesondere die bekannte `Buchungstag`-Formatdiskrepanz beim PDF-Download (`download.ts`, zweistelliger Tages-String statt ISO-Date) bewusst unangetastet.
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` gruen (1319 Tests) gegen die real veröffentlichte v0.5.0.
+
+### feat (Welle 2 Schritt 3 — Bereitschaftseinsatz-Feldnamen vereinheitlicht: 7 Felder auf Backend-Namen)
+
+- `IDatenBE` (`core/types/IDaten.ts`): `bereitschaftszeitraumBE`/`tagBE`/`auftragsnummerBE`/`beginBE`/`endeBE`/`lreBE`/`privatkmBE` → `Bereitschaftszeitraum`/`Tag`/`Auftragsnummer`/`Beginn`/`Ende`/`LRE`/`PrivatKm` (deckungsgleich mit `IBereitschaftseinsatz`, siehe `@otto-kirchheim/nebengeld-shared` v0.4.0). Durchgängig umbenannt in 25 Dateien: CustomTable-Spaltenkonfiguration, Add/Edit-Modal, `isSameBereitschaftsEinsatz.ts`, `submitBereitschaftsEinsatz.ts`, `aktualisiereBerechnung.ts`, `fieldMapper.ts`, `download.ts`, zugehörige Tests (keine Snapshot-Datei für BE betroffen).
+- `fieldMapper.ts`: `BackendBereitschaftseinsatz` erweitert jetzt das geteilte `IBereitschaftseinsatz` statt die Felder selbst zu deklarieren; `beFromBackend`/`beToBackend` dadurch reine Identitäts-Zuordnungen. Nebeneffekt: `LRE` ist jetzt durchgängig als `LreType`-Enum statt `string` typisiert — ein jetzt überflüssiger `as IDatenBE['LRE']`-Cast in `beFromBackend` entfernt, ein Test (`fieldMapper.test.ts`) nutzte noch den rohen String `'LRE 1'` statt `LreType.LRE_1` und wurde korrigiert.
+- Keine Business-Logik verändert — reiner Bezeichner-Rename, durch vollständigen Testlauf verifiziert.
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` gruen (1319 Tests) gegen die real veröffentlichte v0.4.0.
+
+### feat (Welle 2 Schritt 2 — Bereitschaftszeitraum-Feldnamen vereinheitlicht: beginB/endeB/pauseB → Beginn/Ende/Pause)
+
+- `IDatenBZ` (`core/types/IDaten.ts`): Felder `beginB`/`endeB`/`pauseB` → `Beginn`/`Ende`/`Pause` (jetzt deckungsgleich mit dem Backend-Modell `IBereitschaftszeitraum`, siehe `@otto-kirchheim/nebengeld-shared` v0.3.0). Durchgängig umbenannt in 31 betroffenen Dateien: CustomTable-Spaltenkonfiguration (`BereitschaftTab.tsx`), Add/Edit-Modal, Business-Logik (`calculateBereitschaftsZeiten.ts`, `submitBereitschaftsEinsatz.ts`, `aktualisiereBerechnung.ts`, `overlapGuard.ts`, `savePipeline.ts`, `getMonatFromItem.ts`), `fieldMapper.ts`, `download.ts` sowie zugehörige Tests + 2 Snapshot-Dateien neu generiert (reiner Feldnamen-Diff, keine Werteänderung).
+- **Bewusst nicht angefasst:** Die gleichnamigen, aber fachlich unabhängigen UserProfile-Felder `beginnB`/`endeB` (Bereitschafts-Vorgabe-Zeitplan in `vorgabenB`-Einträgen, z. B. `IVorgabenU.ts`, `AdminProfileTemplatesManager.tsx`) — kollidieren nicht mit den jetzt umbenannten `IDatenBZ`-Feldern und werden erst in Ressource 6 (UserProfile/ProfileTemplate) behandelt.
+- `fieldMapper.ts`: `BackendBereitschaftszeitraum` erweitert jetzt das geteilte `IBereitschaftszeitraum` statt die Felder selbst zu deklarieren; `bzFromBackend`/`bzToBackend` sind dadurch reine Identitäts-Zuordnungen (nur noch `_id`-Auswahl + `Pause`-Default), keine Umbenennung mehr nötig.
+- Keine Business-Logik verändert — reiner Bezeichner-Rename, durch vollständigen Testlauf (inkl. Snapshot-Vergleich) verifiziert.
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` gruen (1319 Tests, 14 Snapshots) gegen die real veröffentlichte `@otto-kirchheim/nebengeld-shared` v0.3.0 (nicht nur lokal verlinkt via `bun link`).
+
+### feat (Welle 2 Schritt 1 — Vorgabe-Domain-Typ vereinheitlicht: IVorgabeValue)
+
+- `@otto-kirchheim/nebengeld-shared` v0.2.0: `core/types/IVorgabenGeldType.ts` ist jetzt `type IVorgabenGeldType = Required<IVorgabeValue>` statt einer unabhaengig gepflegten Feldliste — `IVorgabeValue` (shared) beschreibt den rohen, pro Monat nur teilweise befuellten Speicher-Eintrag (optionale Felder, wie im Backend-Mongoose-Schema), `Required<>` bildet den nach `createDatenGeldProxy`-Merge garantiert vollstaendigen Wert ab, den `calculateBerechnungRows.ts` konsumiert.
+- Keine Feldnamen-Aenderung (alle 17 Felder waren bereits deckungsgleich), keine Aenderung an der Merge-Business-Logik (`createDatenGeldProxy` bleibt Frontend-lokal, Plan: kein Verschieben von Berechnungslogik).
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` gruen (1319 Tests) — insbesondere `calculateBerechnungRows.ts` kompiliert unveraendert trotz optionaler Basis-Felder in `IVorgabeValue`.
+
+### feat (Gemeinsame Bibliothek @otto-kirchheim/nebengeld-shared eingebunden — Welle 1: Enums/Types/Konstanten)
+
+- Wie im Backend (siehe `backend/CHANGELOG.md`): neues privates Repo `otto-kirchheim/nebengeld-shared` als Single-Source-of-Truth. `TUserRole`, `TResourceKey`/`TSaveStatus`, `TDataScope`/`TEwtFilter`, `ZULAGEN_CATALOG` (+ `ZulageCategory`/`ZulageEntryUnit`/`IZulageCatalogItem`/`IZulageEntryRule`), das `lreBE`-Union in `IDatenBE`, `BackendEnvelope` (jetzt `ApiResponse` aus dem Paket) sowie `UserCookieData.role` (jetzt `Role`-Enum statt `string`) sind auf das Paket umgestellt — meist als Re-Export mit Alias (`Role as TUserRole` etc.), damit bestehende Imports aus `@/types` unveraendert funktionieren.
+- `infrastructure/data/download.ts`: PDF-Download-Payloads (`data.Daten`) sind jetzt gegen die geteilten Download-DTOs typgeprueft (`satisfies IBereitschaftszeitraumDownloadBody['Daten']` / `INebengeldDownloadBody['Daten']`). EWT-Zweig bewusst ausgenommen: `Buchungstag` wird als zweistelliger Tages-String gesendet, das geteilte DTO typisiert es (wie das bisherige Backend-Modell) als `number` — vorbestehende Diskrepanz, unveraendert übernommen, kein Funktions-Fix im Rahmen dieser Migration.
+- `zulagenCatalogByCode`/`CATALOG_BY_CODE`-Maps (`Berechnung`, `Neben`) explizit auf `Map<string, IZulageCatalogItem>` typisiert, da Zulagen-Codes aus gespeicherten Nebengeld-Zeilen (`string`) gegen den jetzt literal-typisierten Katalog (`ZulagenCode`-Union) nachgeschlagen werden.
+- Diverse Testdateien auf Enum-Werte (`Role.MEMBER`, `LreType.LRE_1` etc.) statt roher String-Literale umgestellt, wo TypeScript das jetzt einfordert.
+- **CI:** `deploy.yml` installiert jetzt mit `NODE_AUTH_TOKEN: secrets.PACKAGES_READ_TOKEN`, da das (oeffentliche) GitHub-Pages-Repo beim Build ein privates Package aufloesen muss.
+- Reine Typen-/Konstanten-Migration, keine Business-Logik/Funktionen veraendert (Plan: `plane-das-auslagern-von-concurrent-pearl.md`). Domain-Modell-Feldnamen-Vereinheitlichung (Welle 2) folgt als separater Umbau.
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` gruen (1319 Tests).
+
+## 2026-07-31
+
+### feat (Live-Mount/Unmount beim Speichern in Einstellungen)
+
+- **Aufbauend auf dem modularen Tab-Umbau (siehe unten):** Bisher wirkte eine Änderung an `aktivierteTabs`
+  erst beim nächsten Login/Jahreswechsel auf den Tab-Inhalt. Jetzt reagiert der Mount-Zustand direkt auf
+  "Speichern" in Einstellungen — ohne Datenverlust und ohne die bereits bestehende, sofort wirksame
+  Nav-Sichtbarkeit anzufassen.
+- **`saveDaten.ts`:** Ruft `syncFeatureTabs(...)` jetzt direkt nach `await flushAll()` auf (mit den frisch
+  aus dem `pre-save:settings`-Hook gesammelten `aktivierteTabs`, oder den vorherigen, falls das Sammeln
+  fehlschlug). Bewusst nicht vorher: Ein Unmount vor dem Flush hätte die Tabelle aus dem DOM entfernt,
+  bevor `flushAll`s `findTable()`-Check sie noch als "hat offene Änderungen" erkennen konnte — Änderungen
+  wären verloren gegangen, ohne dass je ein Request rausging.
+- **`syncFeatureTabs.ts`:** Prüft vor jedem Unmount, ob eine der Ressourcen des betroffenen Features noch
+  ungesynchte Änderungen hat (`hasPendingTableChanges(..., true)`) oder im `error`-Status feststeckt
+  (`getResourceStatus(...).status`). Falls ja: Unmount für diesen Durchlauf übersprungen (Feature bleibt im
+  internen Mount-Tracking als "gemountet"), Warn-Snackbar ("X konnte nicht deaktiviert werden – ungespeicherte
+  Änderungen"). Wird beim nächsten erfolgreichen Speichern oder Login automatisch nachgeholt — kein manuelles
+  Eingreifen nötig. Nav-Button ist in diesem Fall trotzdem schon versteckt (separater, unveränderter
+  Mechanismus über `updateTabVisibility.ts`).
+- **Tests:** Neue Datei `test/orchestration/syncFeatureTabs.test.ts` (9 Fälle: Mount/Unmount, Idempotenz,
+  Snackbar-Block bei offenen Änderungen/Fehlerstatus, automatisches Nachholen, `resetFeatureTabSync`,
+  leere/undefined `aktivierteTabs` = alle aktiv); `saveDaten.test.ts` +3 Fälle (`syncFeatureTabs`-Aufruf mit
+  korrekten `aktivierteTabs`, Fallback bei Einstellungen-Fehler, Aufruf-Reihenfolge nach `flushAll`). Suite
+  1319 Tests grün, `tsc`/Lint sauber.
+
+### feat (Modulare Feature-Tabs: Bereitschaft/EWT/Neben ohne Inhalt, wenn deaktiviert)
+
+- **Root Cause/Ziel:** Ein per `Einstellungen.aktivierteTabs` deaktivierter Tab war bisher nur kosmetisch versteckt (`updateTabVisibility.ts` setzte nur `d-none` auf den Nav-Button) — Tabelle und Buttons wurden trotzdem unconditioniert beim App-Boot gebaut (`registerAppStartTask`, lief vor Login, kannte `aktivierteTabs` also gar nicht). Ziel: ein deaktivierter Tab hat jetzt wirklich keinen Inhalt (kein DOM, keine Tabelle), nicht nur ein verstecktes Nav-Item.
+- **Neu: `BereitschaftTab.tsx` / `EwtTab.tsx` / `NebenTab.tsx`:** Je eine dünne Preact-Komponente pro Feature (Chrome als JSX + `useEffect` für `CustomTable`-Aufbau/Button-Wiring — `CustomTable` selbst bleibt Vanilla-DOM). `frontend/src/index.html` enthält für diese drei Tab-Panes nur noch einen leeren Mount-Container (`#bereitschaft-root`/`#ewt-root`/`#neben-root`), analog zu Admin (`#admin-root`).
+- **`{Bereitschaft,EWT,Neben}/index.ts`:** Registrieren sich jetzt über `featureLifecycleRegistry` (`register()`/`unregister()` mounten/unmounten die Preact-Komponente) statt über `registerAppStartTask`. `Bereitschaft/index.ts` behält den weiterhin extern genutzten Export `BereitschaftsEinsatzZeiträume` (Einstellungen-Default) unverändert auf Modulebene. `Neben/index.ts` behält den `onEvent('ewt:persisted', ...)`-Listener bewusst außerhalb des Mount-Lifecycles — er aktualisiert `Storage.dataN` unabhängig vom DOM und muss auch synchronisieren, wenn Neben gerade deaktiviert ist (sonst driften verknüpfte Nebengeld-Zeiten bei aktivem EWT unbemerkt).
+- **Neu: `core/orchestration/syncFeatureTabs.ts`:** Mountet/unmountet die drei Features passend zu `aktivierteTabs`, aufgerufen aus `loadUserDaten.ts` (Login + Jahr-/Monatswechsel) direkt neben dem bestehenden `updateTabVisibility(...)`. Bewusst nicht aus `saveEinstellungen.ts` verdrahtet — eine Einstellungsänderung wirkt sich auf den Tab-Inhalt (anders als auf die Nav-Sichtbarkeit) erst beim nächsten Login/Reload aus. `resetFeatureTabSync()` wird beim Logout aufgerufen, damit der gemerkte Mount-Zustand nicht stehen bleibt, wenn `featureLifecycleRegistry.teardownAll()` die Features unabhängig davon bereits unmounted hat.
+- **`setMonatJahr.ts`:** Warf bisher `throw`, wenn irgendeine der Monats-Headings (`#MonatB`/`#MonatE`/`#MonatN`) fehlte — das hätte bei nur einem deaktivierten Tab den Monatswechsel für die gesamte App blockiert. Jetzt Einzel-Guard pro Heading, `#MonatBerechnung` bleibt Pflicht (Berechnung ist nie deaktiviert).
+- **`autoSaveIndicator.ts`:** Neue Funktion `registerAutoSaveButton(buttonId, resources)` — die Save-Buttons von Bereitschaft/EWT/Neben existieren jetzt erst nach dem Mount (später als der einmalige `initAutoSaveIndicator()`-Lauf beim Login), rufen diese Funktion daher selbst in ihrem `useEffect` auf, statt sich auf den globalen Init-Durchlauf zu verlassen.
+- **`frontend/CLAUDE.md`:** Regel 4 um eine Ausnahme ergänzt („bei größeren Umbaus kann in Betracht gezogen werden, auf Preact zu wechseln") — Grundlage für den Wechsel von Template-String auf Preact-Shell bei diesen drei Features.
+- **Bewusst unverändert:** Datenabruf (`loadAllYearData` lädt weiterhin alle 4 Ressourcen unconditioniert) — `Berechnung/berechnungGroupVisibility.ts` zeigt bewusst Altdaten eines deaktivierten Bereichs weiter in der Gesamtberechnung an, Fetch kappen wäre ein Finanz-Risiko und keine reine DOM-Frage.
+- **Tests:** Bestehende Suite (1306 Tests, keine Feature-`index.ts` wird von Tests direkt importiert) unverändert grün; `tsc --noEmit` und `bun run lint` sauber; manuell per Headless-Chrome (Vite-Dev-Server, ohne Backend) geprüft: Mount-Container existieren nach Boot leer, keine Konsolen-Fehler; Kontrollmessung gegen den unveränderten Stand (`git stash`) bestätigt identisches Verhalten für alles, was nicht Teil dieses Umbaus ist.
+
+### fix (Speichern: Tabellen-Buttons zeigten trotz Erfolg keine Snackbar bei Einstellungs-Fehler)
+
+- **`saveDaten.ts`:** Folgefehler aus dem Fix vom 2026-07-17 (Settings-Validierungsfehler entkoppelt von `flushAll`): Die Erfolgs-Snackbar haengte an `userData !== null`, also am Erfolg der (bei jedem Speichern-Button unconditioned mitlaufenden) Einstellungs-Sammlung — nicht am tatsaechlichen Erfolg des geklickten Buttons. Klickte man z. B. `btnSaveB` (nur BZ/BE) mit gueltigen Aenderungen, waehrend irgendwo im (inaktiven) Einstellungen-Tab ein ungueltiges Feld stand, wurden BZ/BE korrekt gespeichert, aber es erschien keinerlei Erfolgsmeldung — nur die feldgenaue, thematisch unpassende Fehler-Snackbar aus `saveEinstellungen`. Fix: Erfolgs-Snackbar wird nur noch unterdrueckt, wenn der Button ausschliesslich die Ressource `settings` betrifft (`btnSaveEinstellungen`) UND diese fehlgeschlagen ist; bei allen anderen Buttons erscheint die Erfolgsmeldung wie vor dem 2026-07-17-Fix.
+- **Tests:** `saveDaten.test.ts` — 2 bestehende Faelle angepasst (Default-Button mit Tabellen- und Settings-Ressourcen erwartet jetzt Erfolgs-Snackbar trotz Settings-Fehler); Suite 1305 Tests gruen.
+
+### fix (Ueberschneidungs-/Duplikat-Checks blockierten faelschlich bei lokal geloeschten, ungesynchten Zeilen — weitere Stellen)
+
+- **Root Cause:** Der Fix vom 2026-07-30 (Ersatz-Zeitraum faelschlich als Ueberschneidung blockiert) patchte nur zwei Call-Sites (BZ-/EWT-Editor-Modal) direkt inline. Alle vier Resource-Getter (`getBereitschaftsZeitraumDaten`, `getBereitschaftsEinsatzDaten`, `getEwtDaten`, `getNebengeldDaten`) sind strukturell identisch und keiner filtert `__localState === 'deleted'` — jede weitere Validierungs-/Berechnungs-Stelle, die einen dieser Getter nutzt, hatte denselben Bug.
+- **`IDataQueryOptions`:** Neue Option `excludeDeleted?: boolean` (Default `false`, rueckwaertskompatibel). Alle vier Getter filtern lokal geloeschte, ungesynchte Zeilen jetzt nur noch, wenn explizit angefordert — Tabellen-Init/-Reload (die Undo-Zeilen weiterhin anzeigen muss) bleibt unveraendert.
+- **Tatsaechlich betroffen und gefixt:**
+  - **BE:** `hasOverlap`/`hasLre12TooClose`/`hasConflictingLre1` (`submitBereitschaftsEinsatz.ts`) — Loeschen eines Bereitschaftseinsatzes blockierte einen sofort danach angelegten ueberschneidenden Ersatz-Einsatz faelschlich (Quick-Submit + Editor-Modal).
+  - **BZ-Delete-Guard:** `Bereitschaft/index.ts` (`countLinkedEinsaetze`/`beImZeitraum`) zaehlte bereits lokal geloeschte BE-Einsaetze noch als "verknuepft" und blockierte damit das Loeschen eines Bereitschaftszeitraums faelschlich.
+  - **BZ-Coverage:** `classifyBzCoverage(getBereitschaftsZeitraumDaten(), ...)` (3 Aufrufstellen in `submitBereitschaftsEinsatz.ts` + Editor-Modal) beruecksichtigte bereits geloeschte Zeitraeume noch als gueltige Abdeckung.
+  - **N:** `createAddModalNeben.tsx` deaktivierte einen Tag im Hinzufuegen-Dropdown, obwohl der einzige Eintrag fuer diesen Tag bereits (ungesynct) geloescht war.
+  - **EWT-Verknuepfung:** `createEditorModalNeben.tsx` bot bereits geloeschte EWT-Tage weiterhin als gueltiges Verknuepfungsziel an; `setNaechsterEwtTag.ts` uebersprang bereits geloeschte Tage bei der Freie-Tag-Suche unnoetig.
+  - **Berechnung:** `calculateZulagenBreakdown.ts` zaehlte bereits geloeschte Nebengeld-Zeilen noch in die Jahres-Zulagen-Summen.
+  - **BZ-/EWT-Editor-Modal:** Inline-`__localState`-Checks vom 2026-07-30-Fix auf die neue Getter-Option umgestellt (kein Verhaltensunterschied, nur ein Filter-Ort statt zwei).
+- **Bewusst unveraendert:** Tabellen-Init (`rows:` in `Bereitschaft/index.ts`, `EWT/index.ts`, `Neben/index.ts`), `recalculateEwtMonat.ts`-Reload und `overwriteUserDaten.ts` (Server-Daten ohne `__localState`) — muessen geloeschte Zeilen weiterhin anzeigen bzw. sind vom Marker nicht betroffen.
+- **Tests:** `EWT.getEwtDaten.test.ts` +1 Fall (`excludeDeleted`-Option); `Bereitschaft.submitBereitschaftsEinsatz.test.ts` — bestehender Ueberschneidungs-Test um Aufruf-Assertion erweitert (Getter wird mit `excludeDeleted: true` aufgerufen); `tsc`/Lint sauber, Suite 1306 Tests gruen.
+
+## 2026-07-30
+
+### fix (Speichern nach Löschen: Ersatz-Zeitraum wurde faelschlich als Ueberschneidung blockiert)
+
+- **`createEditorModalBereitschaftsZeit.tsx` / `createEditorModalEWT.tsx`:** Der lokale Ueberschneidungs-Check beim Anlegen eines neuen BZ-/EWT-Eintrags las `dataBZ`/`dataE` aus dem Storage — inklusive bereits lokal geloeschter, aber noch nicht synchronisierter Zeilen (`__localState: 'deleted'`). Loeschte man einen Zeitraum/Eintrag und legte direkt danach einen ueberschneidenden Ersatz an, blockierte die eigene, noch nicht gesendete Loeschung das Anlegen mit „dürfen sich nicht überschneiden". Fix: Zeilen mit `__localState === 'deleted'` werden im Vergleich jetzt ausgeschlossen.
+- **`createEditorModalEWT.tsx` (Ergänzung):** Beim Neuanlegen wird eine bereits zum Löschen vorgemerkte, zeitlich überschneidende Zeile jetzt reaktiviert und mit den neuen Werten überschrieben (`undoDelete()` + `val()`), statt eine zweite, separate Zeile anzulegen — analog zum bereits bestehenden Verhalten in `addEwtTag.ts` (Schnelleingabe). Dadurch bleibt die ursprüngliche `_id` erhalten (z. B. eine verknüpfte Nebengeld-Referenz `ewtRef` verwaist nicht) und es wird als Update statt Delete+Create gesendet.
+- **`infrastructure/autoSave/overlapGuard.ts` (neu):** AutoSave sendet Loeschungen bewusst nicht automatisch mit (nur manuelles Speichern tut das, siehe Backend-Aenderung „Bulk-Reihenfolge Delete vor Create/Update" vom 2026-07-17). Ohne Guard konnte AutoSave dadurch trotzdem eine neue/geaenderte Zeile senden, die serverseitig noch mit dem (lokal bereits geloeschten) alten Datensatz kollidiert — sichtbar als unerwarteter 422-Fehler im Hintergrund. Neuer Guard erkennt Zeitfenster-Ueberschneidungen zwischen ausstehenden Neuanlagen/Aenderungen und ausstehenden, ungesyncten Loeschungen derselben Ressource (BZ/EWT; BE/N bewusst ausgenommen — LRE-Adjazenzregeln lassen sich nicht risikofrei im Frontend duplizieren) und haelt die betroffene Ressource für AutoSave zurück, statt den Request zu senden.
+- **`autoSave.ts`:** Betroffene Zeilen werden ueber die bestehende Fehler-Darstellung (`markOverlapBlockedRows` in `errorHandling.ts`) markiert (rote Zeile, Tooltip, Modal-Banner) und der Ressourcen-Status auf einen neuen `'blocked'`-Status gesetzt, statt einen vermeidbaren Fehlschlag zu riskieren. Manuelles Speichern (`flushResource`/`flushAll`, `includeDeletes=true`) ist vom Guard unberührt und sendet Loeschung+Neuanlage wie gewohnt zusammen (Server verarbeitet Loeschungen zuerst).
+- **`TSaveStatus`/`autoSaveIndicator.ts`:** Neuer Status `'blocked'` (gelbes `warning`-Badge, Tooltip „Überschneidung mit ungespeicherter Löschung – bitte manuell speichern") an den Speichern-Buttons, Prioritaet zwischen `error` und `saving`.
+- **Tests:** Neue Testdatei `overlapGuard.test.ts` (8 Faelle: BZ/EWT-Ueberschneidung inkl. Nachtschicht-Tagesuebertrag, kein Block ohne Ueberschneidung/Loeschung, BE/N immer leer); `autoSave.test.ts` +2 Faelle (AutoSave blockiert überschneidende Neuanlage, manuelles Speichern ignoriert den Guard); `autoSaveIndicator.test.ts` +2 Faelle (blocked-Badge, Prioritaet ggü. saving/error); `EWT.utils.extra.test.ts` +1 Fall (Reaktivierung statt Zweitanlage beim Neuanlegen). Suite 1305 Tests gruen, `tsc`/Lint/Format sauber.
+
+## 2026-07-18
+
+### fix (PWA: Workbox-Dev-Logging aus, API-Cache-Pattern geschärft)
+
+- **`vite.config.ts` (Preact-Preset):** Latenter Typfehler behoben — die Option hieß `devtools`, existiert im Preset aber nicht (stiller No-op; korrekt ist `devToolsEnabled`). Verhalten jetzt wie ursprünglich beabsichtigt: Preact-Devtools nur im Dev-Serve, nicht im Build.
+
+- **`vite.config.ts` (Dev-Server-Ausgabe):** Kleines `print-proxy-url`-Plugin — im Proxy-Modus (`bun run start`) zeigt die Vite-Startausgabe jetzt zusätzlich `➜ Proxy: https://dev.otto.home64.de/` an (Vite kennt den Zoraxy nicht und listet sonst nur die lokalen Interfaces); im Lokal-Modus (`bun run dev`) entfällt die Zeile bewusst.
+- **`vite.config.ts` (Workbox):** `disableDevLogs: true` — der Dev-Service-Worker (devOptions.enabled) loggte jeden Request in die Konsole. Außerdem `runtimeCaching`-Pattern für den `api-cache` von `/\/api\//` auf `/\/api\/v2\//` geschärft: das alte Pattern traf in Dev auch Quell-Dateien unter `/ts/infrastructure/api/…` (landeten fälschlich im api-cache); echte API-Calls (`…/api/v2/…`) matchen unverändert.
+
+### feat (Dev-Server über HTTPS via Zoraxy-Proxy erreichbar)
+
+- **`vite.base-config.ts`:** Der Dev-Server ist jetzt hinter dem Zoraxy-Reverse-Proxy als `https://dev.otto.home64.de` erreichbar (echtes Wildcard-Zertifikat `*.otto.home64.de` → keine Zertifikatswarnungen, auch am Smartphone; Secure Context für Passkeys/Service Worker). Dafür: `host: true`, `allowedHosts: ['dev.otto.home64.de']` und HMR-Client auf `wss://dev.otto.home64.de:443` (der Websocket läuft über den Proxy zurück — funktioniert auch bei direktem Zugriff auf `localhost:8080`, solange der Proxy erreichbar ist). Für Proxy-losen Betrieb (offline/unterwegs): neues Skript **`bun run dev`** (`VITE_LOCAL_HMR=1`) mit klassischem lokalem HMR.
+- **`FetchRetry.ts`:** Dev-API-URLs auf `https://api-dev.otto.home64.de/api/v2` (primär) umgestellt; `http://localhost:8081` und `http://192.168.178.56:8081` bleiben als Fallback (auf der HTTPS-Seite verlieren sie als Mixed Content automatisch das Server-Rennen, im HTTP-Fallback-Betrieb gewinnen sie). Redundanter `127.0.0.1`-Eintrag entfernt.
+- **Hinweis:** `https://dev.otto.home64.de` ist ein neuer Origin — einmalig neu einloggen (localStorage wandert nicht mit); alte Service-Worker/Caches der HTTP-Origins bei Bedarf via DevTools → Application → Clear storage aufräumen. Backend-Gegenstück (CORS/Passkey-Env) siehe `backend/CHANGELOG.md`.
+
 ## 2026-07-17
+
+### fix (Fahrzeit-Eingaben: Uhrzeit-Picker im Admin-Template-Editor + Legacy-Normalisierung)
+
+- **`AdminProfileTemplateContentEditor.tsx`:** Das Fahrzeit-Wert-Feld im Admin-Template-Editor (Admin → Profile-Templates → Fahrzeit) war ein freies Textfeld ohne Validierung — Eingaben wie „0:30" wurden gespeichert, sind für dayjs aber ungültig (erwartet „00:30"). Jetzt `type="time"` wie im Einstellungs-Panel.
+- **`timeString.ts` (neu, infrastructure/validation):** `normalizeTimeString` hebt Legacy-Werte („0:30", „08:15:00") auf `HH:mm`; ungültige Werte ergeben `''`. Wird beim Laden angewendet in `AdminProfileTemplatesManager.normalizeFahrzeit` **und** im `FahrzeitenPanel` (Einstellungen) — ein `type="time"`-Input zeigt nicht normalisierte Werte sonst kommentarlos als leeres Feld an, während der ungültige Wert beim Speichern erhalten bliebe.
+- **Tests:** Neuer Unit-Test `timeString.test.ts` (6 Fälle); `FahrzeitenPanel.test.tsx` +1 Fall (Legacy-Wert wird im Input und in der Save-Bridge normalisiert). Backend-Gegenstück (Zod-Validierung) siehe `backend/CHANGELOG.md`.
 
 ### feat (E-Mail-Verifizierung läuft jetzt über das Frontend)
 

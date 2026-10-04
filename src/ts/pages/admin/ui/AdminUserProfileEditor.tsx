@@ -1,0 +1,670 @@
+import {
+  DBButton,
+  DBHeadingH6,
+  DBLoadingIndicator,
+  DBNotification,
+  DBStack,
+  DBTooltip,
+} from '@db-ux/react-core-components';
+import MyDialog from '@/shared/ui/modal/MyDialog';
+import MyDialogFooter from '@/shared/ui/modal/MyDialogFooter';
+import MyModalHeader from '@/shared/ui/modal/MyModalHeader';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+
+import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
+import { joinOeLevels, splitOeInput } from '@/shared/lib/ressource/oeLevels';
+import { JsonEditor } from './JsonEditor';
+import { OeLevelBoxes } from './OeLevelBoxes';
+import { TB_OPTIONS } from './profileTemplates.shared';
+import {
+  fetchAdminUserProfiles,
+  updateAdminUserProfileDoc,
+  setAdminEmailVerified,
+  fetchAdminPasskeys,
+  deleteAdminPasskey,
+  fetchAdminUserEmailVerified,
+  type AdminPage,
+  type AdminPasskey,
+} from '../api/api';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
+
+const BUNDESLAND_OPTIONS = [
+  { value: 'BW', label: 'Baden-Württemberg' },
+  { value: 'BY', label: 'Bayern' },
+  { value: 'BE', label: 'Berlin' },
+  { value: 'BB', label: 'Brandenburg' },
+  { value: 'HB', label: 'Bremen' },
+  { value: 'HH', label: 'Hamburg' },
+  { value: 'HE', label: 'Hessen' },
+  { value: 'MV', label: 'Mecklenburg-Vorpommern' },
+  { value: 'NI', label: 'Niedersachsen' },
+  { value: 'NW', label: 'Nordrhein-Westfalen' },
+  { value: 'RP', label: 'Rheinland-Pfalz' },
+  { value: 'SL', label: 'Saarland' },
+  { value: 'SN', label: 'Sachsen' },
+  { value: 'ST', label: 'Sachsen-Anhalt' },
+  { value: 'SH', label: 'Schleswig-Holstein' },
+  { value: 'TH', label: 'Thüringen' },
+];
+
+// Felder in Pers die als Dropdown gerendert werden
+const PERS_SELECT_FIELDS: Record<string, { value: string; label: string }[] | readonly string[]> = {
+  Bundesland: BUNDESLAND_OPTIONS,
+  TB: TB_OPTIONS,
+};
+
+const PERS_NUMBER_FIELDS = new Set(['kmArbeitsort', 'kmnBhf']);
+const ITEMS_PER_PAGE = 20;
+
+const PERS_FIELD_LABELS: Record<string, string> = {
+  Vorname: 'Vorname',
+  Nachname: 'Nachname',
+  PNummer: 'Personalnummer',
+  Telefon: 'Telefon',
+  Adress1: 'Adresse 1',
+  Adress2: 'Adresse 2',
+  ErsteTkgSt: 'Erste TkgSt',
+  ErsteTkgStAdresse: 'TkgSt Adresse',
+  Bundesland: 'Bundesland',
+  Betrieb: 'Betrieb',
+  OE: 'OE',
+  Gewerk: 'Gewerk',
+  kmArbeitsort: 'km Arbeitsort',
+  nBhf: 'nächster Bhf',
+  kmnBhf: 'km Bhf',
+  TB: 'Tarif/Besoldung',
+  Taetigkeit: 'Tätigkeit (EA)',
+  Entgeltgruppe: 'Entgeltgruppe (EA)',
+};
+
+const JSON_SECTIONS = ['Fahrzeit', 'Arbeitszeit', 'VorgabenB', 'Einstellungen'] as const;
+
+type ProfileRow = {
+  _id: string;
+  User: string;
+  vorname: string;
+  nachname: string;
+  oe: string;
+  doc: Record<string, unknown>;
+};
+
+type EditState = {
+  profileId: string;
+  userId: string;
+  pers: Record<string, unknown>;
+  jsonValues: Record<string, unknown>;
+  jsonRaw: Record<string, string>;
+  jsonErrors: Record<string, string>;
+  emailVerified: boolean | null;
+  passkeys: AdminPasskey[];
+  passkeysLoading: boolean;
+  saving: boolean;
+  saveError: string | null;
+};
+
+/**
+ * Leitet aus einem Profil-Dokument die Tabellenzeile ab.
+ *
+ * @param doc - Profil-Dokument aus der Admin-API.
+ * @returns Tabellenzeile mit Namen und OE als Text.
+ */
+function extractRow(doc: Record<string, unknown>): ProfileRow {
+  const pers = (doc['Pers'] ?? {}) as Record<string, unknown>;
+  return {
+    _id: String(doc['_id'] ?? ''),
+    User: String(doc['User'] ?? ''),
+    vorname: String(pers['Vorname'] ?? ''),
+    nachname: String(pers['Nachname'] ?? ''),
+    oe: joinOeLevels((pers['OE'] as string[] | undefined) ?? []),
+    doc,
+  };
+}
+
+/**
+ * OE wird als Ebenen-Array gespeichert, hier aber als ein Textfeld bearbeitet.
+ *
+ * @param key - Name des Pers-Felds.
+ * @param value - Gespeicherter Wert.
+ * @returns Text für das Eingabefeld (OE-Ebenen zu einem Text zusammengefügt).
+ */
+function persFieldToInput(key: string, value: unknown): string {
+  if (key === 'OE') return joinOeLevels((value as string[] | undefined) ?? []);
+  return String(value ?? '');
+}
+
+/**
+ * Erzeugt den Bearbeitungsstand eines Profils inkl. JSON-Rohtexten der komplexen Abschnitte.
+ *
+ * @param doc - Profil-Dokument aus der Admin-API.
+ * @returns Bearbeitungsstand; fehlende Felder erhalten Standardwerte, E-Mail-Status und Passkeys werden später nachgeladen.
+ */
+function buildEditState(doc: Record<string, unknown>): EditState {
+  const pers = { ...((doc['Pers'] ?? {}) as Record<string, unknown>) };
+  // Bestandsnutzer haben diese Felder noch nicht im Dokument (kein Schema-Default) -- ohne
+  // Default fehlt der Object-Key komplett und das Formularfeld wird gar nicht erst gerendert.
+  pers['Taetigkeit'] ??= '';
+  pers['Entgeltgruppe'] ??= '';
+  const jsonValues: Record<string, unknown> = {};
+  const jsonRaw: Record<string, string> = {};
+
+  for (const section of JSON_SECTIONS) {
+    const val = doc[section];
+    jsonValues[section] = val ?? (section === 'VorgabenB' || section === 'Fahrzeit' ? [] : {});
+    jsonRaw[section] = JSON.stringify(jsonValues[section], null, 2);
+  }
+
+  return {
+    profileId: String(doc['_id'] ?? ''),
+    userId: String(doc['User'] ?? ''),
+    pers,
+    jsonValues,
+    jsonRaw,
+    jsonErrors: {},
+    emailVerified: null,
+    passkeys: [],
+    passkeysLoading: false,
+    saving: false,
+    saveError: null,
+  };
+}
+
+/**
+ * Unterscheidet eine Benutzer-Id von einem Suchtext.
+ *
+ * @param s - Zu prüfender Text.
+ * @returns `true` bei einer 24-stelligen Hex-Id (MongoDB-ObjectId).
+ */
+function isUserId(s: string): boolean {
+  return /^[0-9a-f]{24}$/i.test(s);
+}
+
+/**
+ * Admin-Editor für Benutzerprofile: seitenweise Liste mit Suche und Bearbeiten-Dialog (Pers, JSON-Abschnitte, E-Mail-Status, Passkeys).
+ *
+ * @param props - `initialSearch`: Suchtext oder Benutzer-Id (öffnet direkt dessen Profil); `searchKey` löst die Auswertung erneut aus, auch bei gleichem Wert.
+ */
+export function AdminUserProfileEditor({
+  initialSearch = '',
+  searchKey = 0,
+}: {
+  initialSearch?: string;
+  searchKey?: number;
+}) {
+  const [page, setPage] = useState<AdminPage | null>(null);
+  const [rows, setRows] = useState<ProfileRow[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [edit, setEdit] = useState<EditState | null>(null);
+  const [search, setSearch] = useState('');
+
+  /**
+   * Lädt eine Seite der Profile; Fehler erscheinen als Meldung über der Tabelle.
+   *
+   * @param pageNum - Seitennummer (ab 1).
+   */
+  function loadPage(pageNum: number) {
+    setLoading(true);
+    setLoadError(null);
+    fetchAdminUserProfiles({ page: pageNum, limit: ITEMS_PER_PAGE })
+      .then(result => {
+        setPage(result);
+        setRows(result.data.map(extractRow));
+        setCurrentPage(pageNum);
+      })
+      .catch((err: unknown) => setLoadError(err instanceof Error ? err.message : 'Ladefehler'))
+      .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    loadPage(1);
+  }, []);
+
+  // Navigation von ResourceBrowser: userId direkt laden und Edit-Modal öffnen
+  useEffect(() => {
+    if (!initialSearch) return;
+    if (isUserId(initialSearch)) {
+      fetchAdminUserProfiles({ userId: initialSearch })
+        .then(result => {
+          const doc = result.data[0];
+          if (doc) void openEdit(extractRow(doc));
+        })
+        .catch(() => {});
+    } else {
+      setSearch(initialSearch);
+    }
+  }, [initialSearch, searchKey]);
+
+  /**
+   * Öffnet den Bearbeiten-Dialog und lädt E-Mail-Status und Passkeys des Benutzers nach.
+   *
+   * @param row - Zu bearbeitendes Profil.
+   */
+  async function openEdit(row: ProfileRow) {
+    const state = buildEditState(row.doc);
+    setEdit({ ...state, passkeysLoading: true });
+    try {
+      const [passkeys, userInfo] = await Promise.all([
+        fetchAdminPasskeys(state.userId),
+        fetchAdminUserEmailVerified(state.userId),
+      ]);
+      setEdit(prev =>
+        prev ? { ...prev, passkeys, passkeysLoading: false, emailVerified: userInfo.emailVerified } : prev,
+      );
+    } catch {
+      setEdit(prev => (prev ? { ...prev, passkeysLoading: false } : prev));
+    }
+  }
+
+  /**
+   * Schließt den Bearbeiten-Dialog.
+   */
+  function closeEdit() {
+    setEdit(null);
+  }
+
+  /**
+   * Übernimmt eine Änderung eines Pers-Felds in den Bearbeitungsstand.
+   *
+   * @param key - Name des Pers-Felds.
+   * @param value - Eingabetext; für Zahlenfelder als Zahl (Fallback 0), für OE als Ebenen-Array übernommen.
+   */
+  function handlePersChange(key: string, value: string) {
+    if (!edit) return;
+    const parsed: unknown = PERS_NUMBER_FIELDS.has(key)
+      ? parseFloat(value) || 0
+      : key === 'OE'
+        ? splitOeInput(value)
+        : value;
+    setEdit({
+      ...edit,
+      pers: { ...edit.pers, [key]: parsed },
+    });
+  }
+
+  /**
+   * Übernimmt JSON-Text eines Abschnitts; bei ungültigem JSON bleibt der Wert unverändert und ein Fehler wird gemerkt.
+   *
+   * @param section - Name des JSON-Abschnitts.
+   * @param raw - Roher JSON-Text aus dem Editor.
+   */
+  function handleJsonChange(section: string, raw: string) {
+    if (!edit) return;
+    const jsonRaw = { ...edit.jsonRaw, [section]: raw };
+    const jsonErrors = { ...edit.jsonErrors };
+    let jsonValues = edit.jsonValues;
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      jsonValues = { ...jsonValues, [section]: parsed };
+      delete jsonErrors[section];
+    } catch {
+      jsonErrors[section] = 'Ungültiges JSON';
+    }
+    setEdit({ ...edit, jsonRaw, jsonErrors, jsonValues });
+  }
+
+  /**
+   * Speichert Pers und JSON-Abschnitte des Profils und aktualisiert die Zeile; bei JSON-Fehlern wird nicht gespeichert.
+   */
+  async function saveEdit() {
+    if (!edit) return;
+    if (Object.keys(edit.jsonErrors).length > 0) {
+      setEdit({ ...edit, saveError: 'Bitte JSON-Fehler zuerst beheben.' });
+      return;
+    }
+
+    const payload: Record<string, unknown> = {
+      Pers: edit.pers,
+      ...Object.fromEntries(JSON_SECTIONS.map(s => [s, edit.jsonValues[s]])),
+    };
+
+    setEdit({ ...edit, saving: true, saveError: null });
+    try {
+      const updated = await updateAdminUserProfileDoc(edit.profileId, payload);
+      setRows(prev => prev.map(r => (r._id === edit.profileId ? extractRow(updated) : r)));
+      closeEdit();
+    } catch (err: unknown) {
+      setEdit(prev =>
+        prev ? { ...prev, saving: false, saveError: err instanceof Error ? err.message : 'Speicherfehler' } : prev,
+      );
+    }
+  }
+
+  /**
+   * Schaltet nach Bestätigung das Flag emailVerified des Benutzers um.
+   */
+  async function handleToggleEmailVerified() {
+    if (!edit) return;
+    const newVal = !(edit.emailVerified ?? false);
+    const confirmed = await confirmDialog(`emailVerified wird auf ${String(newVal)} gesetzt.`, {
+      title: 'emailVerified ändern?',
+      confirmLabel: 'Setzen',
+      confirmColor: 'warning',
+    });
+    if (!confirmed) return;
+    try {
+      await setAdminEmailVerified(edit.userId, newVal);
+      setEdit(prev => (prev ? { ...prev, emailVerified: newVal } : prev));
+    } catch (err: unknown) {
+      setEdit(prev => (prev ? { ...prev, saveError: err instanceof Error ? err.message : 'Fehler' } : prev));
+    }
+  }
+
+  /**
+   * Löscht einen Passkey des Benutzers nach Bestätigung.
+   *
+   * @param credentialId - Id des zu löschenden Passkeys.
+   */
+  async function handleDeletePasskey(credentialId: string) {
+    if (!edit) return;
+    const confirmed = await confirmDialog(`credentialId: ${credentialId}`, {
+      title: 'Passkey löschen?',
+      confirmLabel: 'Löschen',
+    });
+    if (!confirmed) return;
+    try {
+      await deleteAdminPasskey(edit.userId, credentialId);
+      setEdit(prev =>
+        prev ? { ...prev, passkeys: prev.passkeys.filter(pk => pk.credentialId !== credentialId) } : prev,
+      );
+    } catch (err: unknown) {
+      setEdit(prev => (prev ? { ...prev, saveError: err instanceof Error ? err.message : 'Löschfehler' } : prev));
+    }
+  }
+
+  const filteredRows = search
+    ? rows.filter(
+        r =>
+          r.vorname.toLowerCase().includes(search.toLowerCase()) ||
+          r.nachname.toLowerCase().includes(search.toLowerCase()) ||
+          r.oe.toLowerCase().includes(search.toLowerCase()),
+      )
+    : rows;
+
+  const totalPages = page ? Math.ceil(page.total / ITEMS_PER_PAGE) : 1;
+
+  return (
+    <div>
+      <div className="luft-unten-sm">
+        <DbFeld
+          beschriftung="Name oder OE suchen…"
+          dicht
+          type="search"
+          placeholder="Name oder OE suchen…"
+          value={search}
+          onChange={e => setSearch((e.target as HTMLInputElement).value)}
+        />
+      </div>
+
+      {loadError && <DBNotification semantic="critical">{loadError}</DBNotification>}
+
+      <div className="db-table" data-width="full" data-size="small" data-divider="both" data-interactive="true">
+        <table className="ohne-luft-unten">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>OE</th>
+              <th>User-ID</th>
+              <th style={{ width: '5rem' }} className="zelle-rechts">
+                Aktion
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr>
+                <td colSpan={4} className="zelle-mitte zelle-luft">
+                  <DBLoadingIndicator size="small" showLabel={false}>
+                    Lädt
+                  </DBLoadingIndicator>
+                </td>
+              </tr>
+            )}
+            {!loading && filteredRows.length === 0 && (
+              <tr>
+                <td colSpan={4} className="zelle-mitte zelle-luft-klein farbe-gedaempft">
+                  Keine Profile
+                </td>
+              </tr>
+            )}
+            {!loading &&
+              filteredRows.map(row => (
+                <tr key={row._id}>
+                  <td className="zelle-klein">
+                    {row.vorname || row.nachname ? (
+                      `${row.vorname} ${row.nachname}`.trim()
+                    ) : (
+                      <em className="farbe-gedaempft">kein Name</em>
+                    )}
+                  </td>
+                  <td className="zelle-klein">{row.oe || <em className="farbe-gedaempft">—</em>}</td>
+                  <td>
+                    <code className="zelle-klein farbe-gedaempft">…{row.User.slice(-8)}</code>
+                  </td>
+                  <td className="zelle-rechts">
+                    <DBButton
+                      type="button"
+
+                      variant="outlined"
+                      size="small"
+                      icon="pen"
+                      noText
+                      onClick={() => openEdit(row)}
+                    >
+                      <DBTooltip>Bearbeiten</DBTooltip>
+                    </DBButton>
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+
+      {totalPages > 1 && (
+        <DBStack
+          direction="row"
+          wrap
+          alignment="center"
+          justifyContent="space-between"
+          gap="x-small"
+          className="luft-oben-sm"
+        >
+          <small className="farbe-gedaempft">
+            Gesamt: {page?.total ?? 0} · Seite {currentPage}/{totalPages}
+          </small>
+          <DBStack direction="row" wrap gap="2x-small">
+            <DBButton
+              type="button"
+              variant="outlined"
+              disabled={currentPage <= 1}
+              onClick={() => loadPage(currentPage - 1)}
+              aria-label="Vorherige Seite"
+            >
+              ‹
+            </DBButton>
+            <DBButton
+              type="button"
+              variant="outlined"
+              disabled={currentPage >= totalPages}
+              onClick={() => loadPage(currentPage + 1)}
+              aria-label="Nächste Seite"
+            >
+              ›
+            </DBButton>
+          </DBStack>
+        </DBStack>
+      )}
+
+      <div className="zelle-rechts luft-oben-xs">
+        <DBButton
+          type="button"
+          variant="outlined"
+          size="small"
+          icon="circular_arrows"
+          onClick={() => loadPage(currentPage)}
+        >
+          Aktualisieren
+        </DBButton>
+      </div>
+
+      {/* Portal: in einer ausgeblendeten Tab-Pane (display:none) wäre der Dialog sonst unsichtbar */}
+      {edit &&
+        createPortal(
+          <MyDialog
+            size="xl"
+            onClose={closeEdit}
+            header={
+              <MyModalHeader
+                title={`UserProfile: ${(edit.pers['Vorname'] as string) ?? ''} ${(edit.pers['Nachname'] as string) ?? ''}`}
+              />
+            }
+            footer={
+              <MyDialogFooter>
+                <DBButton type="button" variant="filled" onClick={closeEdit} disabled={edit.saving}>
+                  Schließen
+                </DBButton>
+                <DBButton type="button" variant="brand" onClick={saveEdit} disabled={edit.saving}>
+                  <DBLoadingIndicator overlay autoDisable={false} state={edit.saving ? 'active' : 'inactive'}>
+                    Speichert
+                  </DBLoadingIndicator>
+                  {edit.saving ? 'Speichern…' : 'Profil speichern'}
+                </DBButton>
+              </MyDialogFooter>
+            }
+          >
+            <div className="dialog-koerper">
+              {edit.saveError && <DBNotification semantic="critical">{edit.saveError}</DBNotification>}
+
+              <div className="raster abstand-4">
+                <div className="sp-md-6">
+                  <DBHeadingH6 className="admin-ueberschrift">Persönliche Daten</DBHeadingH6>
+                  {Object.entries(edit.pers).map(([key, val]) => {
+                    const selectOpts = PERS_SELECT_FIELDS[key];
+                    return (
+                      <div key={key} className="luft-unten-xs">
+                        {selectOpts ? (
+                          <DbAuswahl
+                            beschriftung={PERS_FIELD_LABELS[key] ?? key}
+                            beschriftungZeigen
+                            dicht
+                            value={String(val ?? '')}
+                            onChange={e => handlePersChange(key, e.target.value)}
+                          >
+                            <option value="">(keine Auswahl)</option>
+                            {typeof selectOpts[0] === 'string'
+                              ? (selectOpts as string[]).map(opt => (
+                                  <option key={opt} value={opt}>
+                                    {opt}
+                                  </option>
+                                ))
+                              : (selectOpts as { value: string; label: string }[]).map(opt => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {opt.label} ({opt.value})
+                                  </option>
+                                ))}
+                          </DbAuswahl>
+                        ) : key === 'OE' ? (
+                          <>
+                            <span className="zelle-klein fett">{PERS_FIELD_LABELS[key] ?? key}</span>
+                            <OeLevelBoxes
+                              value={persFieldToInput(key, val)}
+                              onChange={value => handlePersChange(key, value)}
+                            />
+                          </>
+                        ) : (
+                          <DbFeld
+                            beschriftung={PERS_FIELD_LABELS[key] ?? key}
+                            beschriftungZeigen
+                            dicht
+                            type={PERS_NUMBER_FIELDS.has(key) ? 'number' : 'text'}
+                            value={persFieldToInput(key, val)}
+                            onChange={e => handlePersChange(key, e.target.value)}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="sp-md-6">
+                  <DBHeadingH6 className="admin-ueberschrift">Komplexe Felder (JSON)</DBHeadingH6>
+                  {JSON_SECTIONS.map(section => (
+                    <div key={section} className="luft-unten-sm">
+                      <label className="zelle-klein fett luft-unten-2xs">{section}</label>
+                      <JsonEditor
+                        value={edit.jsonRaw[section] ?? ''}
+                        onChange={raw => handleJsonChange(section, raw)}
+                        error={edit.jsonErrors[section]}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="admin-abschnitt-oben">
+                <DBHeadingH6 className="fett luft-unten-sm">Benutzer-Aktionen</DBHeadingH6>
+                <DBStack direction="row" wrap gap="small" alignment="start">
+                  <div>
+                    <div className="zelle-klein farbe-gedaempft luft-unten-2xs">emailVerified</div>
+                    <DBButton
+                      type="button"
+                      variant={edit.emailVerified ? 'filled' : 'outlined'}
+                      data-color={edit.emailVerified ? 'successful' : undefined}
+                      size="small"
+                      onClick={handleToggleEmailVerified}
+                    >
+                      {edit.emailVerified === null ? 'unbekannt' : edit.emailVerified ? 'true ✓' : 'false – umschalten'}
+                    </DBButton>
+                    {edit.emailVerified === null && (
+                      <div className="zelle-klein farbe-gedaempft luft-oben-2xs">Klicken zum Setzen auf true</div>
+                    )}
+                  </div>
+
+                  <div className="waechst">
+                    <div className="zelle-klein farbe-gedaempft luft-unten-2xs">
+                      Passkeys
+                      {edit.passkeysLoading && (
+                        <DBLoadingIndicator size="small" showLabel={false} className="luft-links-xs">
+                          Passkeys werden geladen
+                        </DBLoadingIndicator>
+                      )}
+                    </div>
+                    {edit.passkeys.length === 0 && !edit.passkeysLoading && (
+                      <div className="zelle-klein farbe-gedaempft">Keine Passkeys</div>
+                    )}
+                    {edit.passkeys.map(pk => (
+                      <DBStack
+                        key={pk.credentialId}
+                        direction="row"
+                        alignment="center"
+                        gap="x-small"
+                        className="luft-unten-2xs"
+                      >
+                        <span className="zelle-klein">
+                          {pk.name ?? 'Passkey'} <code className="farbe-gedaempft">…{pk.credentialId.slice(-8)}</code>
+                        </span>
+                        <DBButton
+                          type="button"
+
+                          variant="outlined"
+                          data-color="critical"
+                          size="small"
+                          icon="bin"
+                          noText
+                          onClick={() => handleDeletePasskey(pk.credentialId)}
+                        >
+                          <DBTooltip>Passkey löschen</DBTooltip>
+                        </DBButton>
+                      </DBStack>
+                    ))}
+                  </div>
+                </DBStack>
+              </div>
+            </div>
+          </MyDialog>,
+          document.body,
+        )}
+    </div>
+  );
+}

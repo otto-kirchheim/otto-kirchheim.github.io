@@ -1,0 +1,87 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
+
+// --- Hoisted mocks ---
+const { mockCreateSnackBar, mockSetDisableButton, mockReconnectHandler } = (
+  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
+).hoisted(() => ({
+  mockCreateSnackBar: vi.fn(() => ({ Close: vi.fn() })),
+  mockSetDisableButton: vi.fn(),
+  mockReconnectHandler: vi.fn(),
+}));
+
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
+vi.mock('@/shared/ui/button-loading/buttonDisable', () => ({ setDisableButton: mockSetDisableButton }));
+
+import setOffline from '@/app/shell/setOffline';
+import { registerHook, clearAllHooks } from '@/shared/lib/feature';
+
+describe('setOffline', () => {
+  // Cleanup-Tracking: um registrierte Event-Listener nach jedem Test zu entfernen
+  let addEventSpy: ReturnType<typeof vi.spyOn>;
+  const registeredListeners: { type: string; listener: EventListenerOrEventListenerObject }[] = [];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clearAllHooks();
+    registeredListeners.length = 0;
+    registerHook('network:reconnect', mockReconnectHandler);
+
+    addEventSpy = vi
+      .spyOn(window, 'addEventListener')
+      .mockImplementation(
+        (type: string, listener: EventListenerOrEventListenerObject, _options?: AddEventListenerOptions | boolean) => {
+          registeredListeners.push({ type, listener });
+        },
+      );
+  });
+
+  afterEach(() => {
+    addEventSpy.mockRestore();
+  });
+
+  it('deaktiviert Buttons', () => {
+    setOffline();
+    expect(mockSetDisableButton).toHaveBeenCalledWith(true);
+  });
+
+  it('zeigt Offline-Snackbar', () => {
+    setOffline();
+    expect(mockCreateSnackBar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Du bist offline',
+        status: 'error',
+        dismissible: false,
+        timeout: false,
+      }),
+    );
+  });
+
+  it('registriert online-Event Listener', () => {
+    setOffline();
+    expect(addEventSpy).toHaveBeenCalledWith('online', expect.any(Function), { once: true });
+  });
+
+  it('bei online-Event: aktiviert Buttons, schließt Snackbar, zeigt online-Nachricht', () => {
+    const closeFn = vi.fn();
+    mockCreateSnackBar.mockReturnValueOnce({ Close: closeFn });
+
+    setOffline();
+
+    // Registrierten online-Handler manuell aufrufen
+    const onlineHandler = registeredListeners.find(l => l.type === 'online')?.listener;
+    expect(onlineHandler).toBeDefined();
+    (onlineHandler as EventListener)(new Event('online'));
+
+    expect(mockSetDisableButton).toHaveBeenCalledWith(false);
+    expect(mockReconnectHandler).toHaveBeenCalled();
+    expect(closeFn).toHaveBeenCalled();
+    // Zweiter Snackbar-Call für "Du bist wieder online"
+    expect(mockCreateSnackBar).toHaveBeenCalledTimes(2);
+    expect(mockCreateSnackBar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Du bist wieder online',
+        timeout: 2000,
+      }),
+    );
+  });
+});

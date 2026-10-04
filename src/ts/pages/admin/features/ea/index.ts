@@ -1,0 +1,34 @@
+import type { AdminFeature } from '../../adminFeatures';
+import katalog from './katalog';
+
+/** Admin-Anteile des Entgeltausgleichs (`ea`). */
+const adminFeature: AdminFeature = {
+  id: 'ea',
+  resources: [
+    {
+      label: 'Entgeltausgleich',
+      shortLabel: 'EA',
+      endpoint: 'entgeltausgleich',
+      tableFields: ['User', 'Jahr', 'Monat', 'Tag', 'Dauer'],
+      extraFields: ['EWT', 'Taetigkeit', 'Entgeltgruppe', 'createdAt'],
+      schemaFields: ['User', 'EWT', 'Jahr', 'Monat', 'Tag', 'Dauer', 'Taetigkeit', 'Entgeltgruppe'],
+      nurDatumFelder: ['Tag'],
+      zeitFelder: ['Dauer'],
+    },
+  ],
+  // Verknuepfung auf die EWT (Feld `EWT`); ohne das EWT-Feature entfaellt der Link.
+  crossRefs: { EWT: { endpoint: 'einsatzwechseltaetigkeiten' } },
+  formular: { code: 'ea', label: 'Endgeltausgleich (EA)', order: 4, katalog },
+  statsRows: [
+    { label: 'Entgeltausgleich-Einträge', countKey: 'entgeltausgleich', growthKey: 'entgeltausgleichLast7d' },
+  ],
+  // Pers-Felder, die nur der Entgeltausgleich nutzt (Vorbelegung neuer EA-Eintraege).
+  profilVorlage: {
+    persFelder: [
+      { key: 'Taetigkeit', label: 'Tätigkeit (Entgeltausgleich)' },
+      { key: 'Entgeltgruppe', label: 'Entgeltgruppe (Entgeltausgleich)' },
+    ],
+  },
+};
+
+export default adminFeature;

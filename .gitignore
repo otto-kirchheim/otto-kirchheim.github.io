@@ -4,8 +4,25 @@ dist/
 dev-dist/
 .vscode/
 plan/
+graphify-out/
+
+# Environment variables
+.env
+.env.*
+.env.local
+.env.local.*
 
 # ruflo / MCP (lokale Agenten-Tooling-Artefakte, nicht Teil des Projekts)
 ruvector.db
 agentdb.rvf
 agentdb.rvf.lock
+.claude-flow/
+.claude/.proven-config-version
+.claude/proven-config.json
+.swarm
+
+# TypeScript inkrementeller Build-Cache
+*.tsbuildinfo
+
+# Sichtvergleich (scripts/sichtvergleich.ts): Fotos und Diffs je Lauf
+.sichtvergleich/

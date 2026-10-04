@@ -1,92 +1,442 @@
-$material-icons-font-path: '~material-icons/iconfont/';
+@use 'breakpoints' as bp;
+@import 'raster';
+@import 'admin';
 
-@import '~bootstrap/scss/bootstrap';
-@import '~material-icons/iconfont/round.scss';
-
-.dropdown-menu .active .bi {
-  display: block !important;
+// Knopfreihen der Tabs: jeder Knopf begrenzt, sonst zieht er ueber die halbe Seite.
+.knopfreihe > * {
+  max-inline-size: var(--db-container-2xs);
 }
 
-.bi {
-  font-size: 16px;
+// Gleich breite Knoepfe einer `<DBStack>`-Reihe: feste Breite, sonst zieht der laengste Text die anderen schief. Zwei
+// Elemente plus Abstand muessen auf 360px-Handys passen (`sizing-2xl` = 10rem).
+.knopfreihe-gleich > * {
+  inline-size: var(--db-sizing-2xl);
 }
 
-body {
-  justify-content: center;
+// Kacheln fuellen die Zeile gleichmaessig (wachsen/schrumpfen), mindestens `container-3xs` (14rem).
+.karten-gleich > * {
+  flex: 1 1 0%;
+  min-inline-size: var(--db-container-3xs);
 }
 
-.w200 > * {
-  max-width: 250px;
+// Start-Tab (`pages/start/ui/StartTab.tsx`).
+.start-kopf {
+  margin-block-end: var(--db-spacing-fixed-md);
+  text-align: center;
+
+  @media screen and (min-width: #{bp.$md}px) {
+    margin-block-end: var(--db-spacing-fixed-xl);
+  }
+}
+
+.start-titel {
+  margin-block-start: var(--db-spacing-fixed-xs);
+}
+
+.infotext-block {
+  display: block;
+}
+
+.start-untertitel {
+  margin-block-start: var(--db-spacing-fixed-md);
+  padding: 0;
+  font-size: inherit;
+  line-height: inherit;
+  color: var(--db-adaptive-on-bg-basic-emphasis-70-default);
+}
+
+.start-karten {
+  margin-block-end: var(--db-spacing-fixed-md);
+}
+
+.start-karte {
+  block-size: 100%;
+  text-align: start;
+
+  p {
+    margin-block-end: 0;
+  }
+}
+
+.start-icon {
+  color: var(--db-brand-origin-default);
+}
+
+// Illustrationen (`Illustration.tsx`, nur mit DB-Assets): 4rem = Originalgroesse der SVGs (64px), sitzen wie ein Icon in der Zeile.
+.illustration {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  inline-size: var(--db-sizing-lg);
+  block-size: var(--db-sizing-lg);
+}
+
+.start-schnell-knopf {
+  flex-direction: column;
+  gap: var(--db-spacing-fixed-2xs);
+  padding-block: var(--db-spacing-fixed-sm);
+}
+
+// Start-Karten-Titel: zwei Zeilen Platz, damit die Absaetze darunter auf einer Hoehe beginnen.
+.karten-titel {
+  display: flex;
+  align-items: center;
+  gap: var(--db-spacing-fixed-xs);
+  min-block-size: var(--db-sizing-lg);
+}
+
+// `.db-stack` hat `inline-size: 100%` (als Flex-Kind eines Stack-Rows drueckt es die Geschwister in eigene Zeilen),
+// `block-size: 100%` (fuellt in einer gestreckten Rasterzelle die ganze Hoehe, der naechste Stack ueberlappt) und
+// `overflow: auto` (schneidet Fokusringe/Schatten ab) -- alles zuruecksetzen.
+.db-stack {
+  inline-size: auto;
+  block-size: auto;
+  overflow: visible;
+}
+
+// Feld + angehaengter Knopf (Ersatz fuer `.input-group`). Container-Eigenschaften kommen per `<DBStack>`-Props,
+// hier nur die Kind-Regeln.
+.feldgruppe {
+  > .db-input,
+  > .db-select {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+
+  // Knoepfe/Vorsatztexte behalten ihre Inhaltsbreite, sonst schrumpft der Knopf mit dem Feld.
+  > :not(.db-input, .db-select) {
+    flex: 0 0 auto;
+  }
+}
+
+// DB zeigt den Tooltip bei `:hover`/`:focus-visible` des Elternknotens; ein Eingabefeld gibt den Fokus aber an sein
+// `<input>` weiter -- `:focus-within` holt den Hinweis fuer die Tastatur zurueck.
+[data-has-tooltip='true']:focus-within > .db-tooltip:first-of-type {
+  visibility: visible;
 }
 
 .w20 {
-  width: 20%;
+  inline-size: 20%;
 }
 
 .w40 {
-  width: 40%;
+  inline-size: 40%;
 }
 
 .u-min-w-120 {
-  min-width: 120px;
+  min-inline-size: var(--db-sizing-xl);
 }
 
-.small-icons {
-  vertical-align: middle;
-  font-size: 1.3rem;
+// Icon-Groesse: `--db-icon-font-size` (gesetzt von den `db-font-size-*`-Klassen).
+
+// Standard: DB-UX-Icon-Schrift aus `@db-ux/db-theme-icons` (DB-Font-Lizenz, nur DB-Kontext), gerendert ueber
+// `[data-icon]::before { content: var(--db-icon, attr(data-icon)) }` mit Ligatur-Schrift.
+//
+// Wechsel auf Material Symbols: Runbook in `src/ts/shared/ui/icons/iconRegistry.ts`.
+
+// Icon-Buttons: `.db-icon` hat `font-size: 0`, das Glyph sitzt im `::before` auf der Grundlinie -- neben Text zu
+// gross und zu tief. Flex zentriert beides, die Groesse haengt an der Button-Schrift.
+.db-button:has(> .db-icon) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--db-spacing-fixed-xs);
 }
 
-.big-icons {
-  vertical-align: middle;
-  width: 36px;
-  font-size: 36px;
-  margin-right: 0.2rem;
+.db-button > .db-icon {
+  --db-icon-font-size: 1.25rem;
+  --db-icon-vertical-align: middle;
 }
 
-.einstellungen-icons {
-  font-size: 36px;
-  padding: 10px 2px 0;
+.db-button[data-size='small'] > .db-icon {
+  --db-icon-font-size: 1rem;
 }
 
-.card {
-  min-width: min-content;
+// DB setzt am Knopf `white-space: pre-line`: der Zeilenumbruch zwischen `<button>` und Beschriftung (kommt nur aus der
+// Prettier-Formatierung) wuerde zu einer leeren ersten Zeile. Umbrueche kommen nie aus dem Inhalt, also einsammeln.
+.db-button {
+  white-space: normal;
 }
 
-.icon-ewt {
+// Semantik-Knoepfe: DB kennt am Knopf nur `data-variant`; `data-color` stellt die `--db-adaptive-*`-Tokens um, und `filled`
+// ist dann nur eine 16-%-Lasur (matter Grund, farbiger Text). Die Aufrufstellen nutzen `filled` + `data-color`, hier
+// bekommt es die Vollfarbe der Palette; `outlined` zeigt die Semantik in Rahmen und Schrift. `brand` fehlt bewusst:
+// roter Text am Knopf ist nach DB-Regelwerk nur fuer Links/Warnungen erlaubt (Markenfarbe: `data-variant="brand"`).
+@each $semantik in ('critical', 'successful', 'warning', 'informational') {
+  .db-button[data-color='#{$semantik}'][data-variant='filled'] {
+    background-color: var(--db-#{$semantik}-origin-default);
+    color: var(--db-#{$semantik}-on-origin-default);
+    border-color: transparent;
+
+    --db-icon-color: var(--db-#{$semantik}-on-origin-default);
+
+    &:hover:not(:disabled) {
+      background-color: var(--db-#{$semantik}-origin-hovered);
+    }
+
+    &:active:not(:disabled) {
+      background-color: var(--db-#{$semantik}-origin-pressed);
+    }
+  }
+
+  .db-button[data-color='#{$semantik}'][data-variant='outlined'] {
+    // Rahmen in Semantikfarbe wie bei DB-Formularfeldern (`<farbe>-on-bg-basic-emphasis-70`).
+    border-color: var(--db-#{$semantik}-on-bg-basic-emphasis-70-default);
+    color: var(--db-#{$semantik}-origin-default);
+
+    --db-icon-color: var(--db-#{$semantik}-origin-default);
+  }
+}
+
+// Zum-Aktualisieren-Ziehen (`pullToRefresh.ts`): der Kreis faehrt hinter der Oberkante des Inhaltsbereichs hervor.
+// `position: fixed`, weil `overflow-y: auto` an `.db-shell-content` ein Kind oberhalb abschneiden wuerde;
+// Lage und Sichtbarkeit setzt das Skript inline.
+.ptr-indikator {
+  position: fixed;
+  inset-block-start: var(--ptr-oben, 0);
+  inset-inline-start: 50%;
+  z-index: 100;
   display: flex;
   align-items: center;
-  justify-content: center; //space-evenly;
-  padding-inline: 30px;
+  justify-content: center;
+  inline-size: var(--db-sizing-md);
+  block-size: var(--db-sizing-md);
+  border-radius: var(--db-border-radius-full);
+  background-color: var(--db-base-bg-color-basic-level-1);
+  box-shadow: 0 0.125rem 0.375rem rgb(0 0 0 / 25%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+
+}
+
+// Der Abstand zwischen Symbol und (versteckter) Beschriftung schoebe den `DBLoadingIndicator` aus der Mitte.
+.ptr-indikator > .db-loading-indicator {
+  gap: 0;
+}
+
+// Ab der Ausloese-Distanz gruener Ring: "jetzt loslassen" (und waehrend des Neuladens).
+.ptr-indikator--bereit > .db-loading-indicator {
+  --db-loading-indicator-segment-color: var(--db-successful-origin-default);
+}
+
+// Zwei Motive fehlen im DB-Satz (Theme-Automatik, Filter zuruecksetzen): SVG unter `src/icons/`
+// (`scripts/icon-varianten.py`), per Maske mit `currentColor` gefaerbt.
+.app-icon {
+  display: inline-block;
+  inline-size: var(--db-icon-font-size, var(--db-sizing-sm));
+  block-size: var(--db-icon-font-size, var(--db-sizing-sm));
+  vertical-align: middle;
+  background: currentcolor;
+  mask: var(--app-icon) center / contain no-repeat;
+}
+
+.app-icon--theme-auto {
+  --app-icon: url('../icons/theme-auto.svg');
+}
+
+.app-icon--filter-off {
+  --app-icon: url('../icons/filter-off.svg');
+}
+
+// EWT-Anzeige-Modal: Tag-Zeile und "Berechnen?"-Schalter teilen eine Flex-Zeile (Schalter oben rechts, ohne eigene Rasterzeile).
+.ewt-kopf {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--db-spacing-fixed-sm);
+}
+
+// `createTagElement` rendert ein eigenes `.raster`; als Flex-Kind darf es schrumpfen, damit ein langer Buchungstag den
+// Schalter nicht aus der Zeile drueckt.
+.ewt-kopf > :first-child {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  margin-block-end: 0;
+}
+
+.ewt-kopf-schalter {
+  flex: none;
+}
+
+// EWT-Anzeige-Modal: Pfeil-, Titel- und Zeitzeile teilen ein Raster mit festen Aussenspalten, damit Pfeile, `ab`/`von`/`an`/`bis`
+// und Zeitwerte senkrecht fluchten.
+.ewt-zeit {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr 4.5rem;
+  align-items: center;
+  column-gap: var(--db-spacing-fixed-xs);
+  padding-inline: var(--db-spacing-fixed-md);
+  margin-block-end: var(--db-spacing-fixed-xs);
   font-size: smaller;
 }
 
-.icon-ewt-arrow {
-  display: flex;
-  justify-content: space-around;
+.ewt-zeit-links {
+  grid-column: 1;
+  justify-self: center;
+  text-align: center;
+}
+
+.ewt-zeit-rechts {
+  grid-column: 3;
+  justify-self: center;
+  text-align: center;
+}
+
+.ewt-zeit-titel {
+  grid-column: 2;
+  margin: 0;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ewt-zeit-pfeile {
+  font-size: inherit;
+}
+
+// Trennlinie im EWT-Anzeige-Modal: `DBDivider` zeichnet die Linie, hier nur die volle Rasterbreite.
+.ewt-trenner {
+  grid-column: 1 / -1;
 }
 
 td:has(.SchichtBereitschaft) {
-  padding: 0 0.5rem;
+  padding: 0 var(--db-spacing-fixed-xs);
 }
 
-.alertstyle {
+// Liste ohne Aussenrahmen, Eintraege nur durch eine Linie getrennt (Passkeys, Fehlerlisten beim Massenspeichern).
+.trennliste {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.trennliste-eintrag {
+  padding-block: var(--db-spacing-fixed-sm);
+  border-block-end: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+
+  &:last-child {
+    border-block-end: 0;
+  }
+}
+
+// Berechnung (`BerechnungTab.tsx`, `BerechnungMobileCards.tsx`): unter sm Monatskarten, ab sm Tabelle mit Monatsfenster.
+.berechnung-tab {
+  margin-block-end: var(--db-spacing-fixed-sm);
+}
+
+.berechnung-karten {
+  text-align: start;
+
+  @media screen and (min-width: #{bp.$sm}px) {
+    display: none;
+  }
+}
+
+.berechnung-monatsnav {
+  display: none;
+
+  @media screen and (min-width: #{bp.$sm}px) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--db-spacing-fixed-sm);
+    margin-block-end: var(--db-spacing-fixed-xs);
+  }
+}
+
+.berechnung-tabelle {
+  display: none;
+
+  @media screen and (min-width: #{bp.$sm}px) {
+    display: block;
+  }
+}
+
+.monatskarte-kopf {
+  display: flex;
+  justify-content: space-between;
+  inline-size: 100%;
+  margin-inline-end: var(--db-spacing-fixed-xs);
+}
+
+.monatskarte-inhalt {
+  padding-block: var(--db-spacing-fixed-xs);
+}
+
+.abschnitt-versteckt {
+  display: none;
+}
+
+.ausrichtung-start {
+  text-align: start;
+}
+
+.titel-mit-tag {
+  display: flex;
+  align-items: center;
+  gap: var(--db-spacing-fixed-xs);
+}
+
+.passkey-info {
+  margin-block-start: var(--db-spacing-fixed-sm);
+}
+
+.passkey-kopf {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  gap: var(--db-spacing-fixed-sm);
+  margin-block-end: var(--db-spacing-fixed-sm);
+
+  @media screen and (min-width: #{bp.$md}px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
 }
 
-.alertstyle > button {
-  margin: 0.5rem;
+.einstellungen-speichern {
+  margin-block-end: var(--db-spacing-fixed-md);
 }
 
-.table {
-  max-width: -moz-fit-content;
-  max-width: fit-content;
+.passkey-eintrag {
+  display: flex;
+  flex-direction: column;
+  gap: var(--db-spacing-fixed-md);
+
+  @media screen and (min-width: #{bp.$md}px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.passkey-eintrag__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--db-spacing-fixed-xs);
+  text-align: start;
+}
+
+.passkey-eintrag__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--db-spacing-fixed-xs);
+}
+
+.db-table > table {
+  max-inline-size: fit-content;
   margin: auto;
 }
 
-.table > tbody {
+.db-table > table > tbody {
   white-space: nowrap;
+}
+
+// Ersatz fuer `table-hover`: ganze Tabelle ueber `data-interactive` an der Huelle (DB markiert sonst einzelne Zeilen am `tr`).
+.db-table[data-interactive='true'] > table > tbody > tr:hover {
+  background-color: var(--db-adaptive-bg-basic-transparent-full-hovered);
 }
 
 .table-Berechnung {
@@ -97,49 +447,74 @@ td:has(.SchichtBereitschaft) {
 .table-Berechnung > thead > tr > th:nth-child(1),
 .table-Berechnung tbody tr th {
   font-weight: normal;
-  left: -2px;
-  position: -webkit-sticky;
+  inset-inline-start: -2px;
   position: sticky;
-  // Feste Breite der Label-Spalte — identisch auf allen Breakpoints,
-  // Grundlage für die dynamische Monatsanzahl im Zwischenbereich
-  width: 11.5rem;
-  min-width: 11.5rem;
-  max-width: 11.5rem;
+
+  // Feste Label-Spalte: Grundlage der dynamischen Monatsanzahl.
+  // 11.5rem (`sizing-2xl` + `sizing-sm`): schmaler bricht „040 Fahrentsch.“ und „Anzahl der Abwesenheiten“ um.
+  // `berechnungMonatsFenster.ts` (`ERSTE_SPALTE_PX`) rechnet mit derselben Breite.
+  inline-size: calc(var(--db-sizing-2xl) + var(--db-sizing-sm));
+  min-inline-size: calc(var(--db-sizing-2xl) + var(--db-sizing-sm));
+  max-inline-size: calc(var(--db-sizing-2xl) + var(--db-sizing-sm));
   white-space: normal;
 }
+
+// Die klebende (`sticky`) Label-Spalte braucht einen eigenen Hintergrund, sonst scrollen die Monatsspalten durch; `inherit`
+// uebernimmt den Ton der Zeile (Zebra, Kopfband).
+.table-Berechnung > thead > tr > th:first-child,
 .table-Berechnung tbody tr th {
-  background-color: var(--bs-body-bg);
+  background-color: inherit;
 }
 
-// Verschachtelte Label-Tabellen (EWT-Schwellen, Zulagen-Codes) müssen in der
-// festen 11.5rem-Spalte umbrechen statt in die Monatszellen zu überlaufen
-.table-Berechnung tbody tr th table {
-  width: 100%;
-}
+// Verschachtelte Auslege-Tabellen im Zeilenkopf (EWT-Schwellen, Zulagen-Codes): umbrechen in der festen 11.5rem-Spalte und
+// erben nichts von der `db-table`-Huelle (Rahmen, Zebra, Grid) -- alles zuruecksetzen. `display: table` ist noetig, weil die
+// Gegenregel in `db-gegenregeln.scss` nur `.db-table > table` abfaengt, nicht `.db-table table`.
+.berechnung-label-tabelle {
+  display: table;
+  inline-size: 100%;
+  margin: 0;
+  border: 0;
+  border-collapse: collapse;
 
-.table-Berechnung tbody tr th table td {
-  white-space: normal;
+  tbody {
+    display: table-row-group;
+  }
+
+  tr {
+    display: table-row;
+    border: 0;
+    background-color: transparent;
+  }
+
+  td,
+  th {
+    display: table-cell;
+    padding-block: 0;
+    border: 0;
+    background-color: transparent;
+    white-space: normal;
+  }
 }
 
 .table-Berechnung > tbody > tr.berechnung-gruppen-start > th,
 .table-Berechnung > tbody > tr.berechnung-gruppen-start > td {
-  border-top: 2px solid var(--bs-secondary-color);
+  border-block-start: var(--db-border-width-2xs) solid var(--db-adaptive-on-bg-basic-emphasis-70-default);
 }
 
 #berechnungMobileCards {
-  .accordion-button {
+  .db-accordion-item summary {
     font-size: 0.95rem;
-    padding-block: 0.65rem;
+    padding-block: var(--db-spacing-fixed-sm);
   }
 
   .berechnung-card-gruppe {
     font-size: 0.9rem;
   }
 
-  .accordion-body > .berechnung-card-gruppe:not(:first-child) {
-    border-top: 2px solid var(--bs-secondary-color);
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
+  .db-accordion-item summary + div > .berechnung-card-gruppe:not(:first-child) {
+    border-block-start: var(--db-border-width-2xs) solid var(--db-adaptive-on-bg-basic-emphasis-70-default);
+    margin-block-start: var(--db-spacing-fixed-xs);
+    padding-block-start: var(--db-spacing-fixed-xs);
   }
 
   .berechnung-card-zeile {
@@ -148,85 +523,181 @@ td:has(.SchichtBereitschaft) {
 
   // Dünne Linien nur zwischen aufeinanderfolgenden Zeilen, keine am Gruppenende
   .berechnung-card-zeile + .berechnung-card-zeile {
-    border-top: 1px solid var(--bs-border-color);
+    border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
   }
 }
 
-.vertical-center {
-  min-height: 85%;
-  min-height: 85vh;
+// FormularEditor: ausklappbare Abschnitte/Zeilen. `<summary>` ohne nativen Marker; `.klapp-pfeil` ersetzt ihn und dreht sich.
+.klapp-zeile > summary,
+.klapp-abschnitt > summary {
+  list-style: none;
+}
 
+.klapp-zeile > summary::-webkit-details-marker,
+.klapp-abschnitt > summary::-webkit-details-marker {
+  display: none;
+}
+
+.klapp-pfeil {
+  display: inline-block;
+  flex: none;
+  transition: transform 0.12s ease;
+}
+
+.klapp-zeile[open] > summary .klapp-pfeil,
+.klapp-abschnitt[open] > summary .klapp-pfeil {
+  transform: rotate(90deg);
+}
+
+.vertical-center {
+  min-block-size: 85vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
-.modal-footer {
-  justify-content: space-evenly;
-}
-
-.modal-body.row {
+.dialog-koerper.raster {
   align-content: start;
 }
 
-.form-group.required .control-label:after,
-.form-floating.required label:after {
-  content: '*' !important;
-  color: var(--bs-danger);
-  margin-right: -4px;
-  padding-right: 2px;
+/* Unterschrift-Canvas (`signaturDialog.ts`): Groesse kommt als Pixelwerte aus JS (`berechneCanvasGroesse()`), hier nur Zentrierung und Optik. */
+.signatur-canvas {
+  display: block;
+  margin: 0 auto;
+
+  /* border-box, sonst kommt der 1px-Rahmen zur per JS gesetzten Groesse dazu (2px je Achse) und laesst enge Fullscreen-Faelle ueberlaufen. */
+  box-sizing: border-box;
+  border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+  touch-action: none;
+
+  /* Immer weiss, unabhaengig vom Theme: der Canvas simuliert Papier fuer die schwarze Tinte im PDF (im Dark Mode waere sie unsichtbar).
+     Nur die Anzeige; das exportierte PNG bleibt transparent (`erstelleSignaturPad()`). */
+  background-color: var(--db-neutral-0-default, #fff);
+
+  /* Hilfslinie fuer die Schreibhoehe (`SIGNATUR_LINIE_ANTEIL`, Lage per `--signatur-linie` aus `signaturDialog.ts`); nur Anzeige, nicht im PNG. */
+  background-image: linear-gradient(
+    to bottom,
+    transparent calc(var(--signatur-linie, 80%) - var(--db-border-width-3xs)),
+    var(--db-adaptive-on-bg-basic-emphasis-60-default) calc(var(--signatur-linie, 80%) - var(--db-border-width-3xs)),
+    var(--db-adaptive-on-bg-basic-emphasis-60-default) var(--signatur-linie, 80%),
+    transparent var(--signatur-linie, 80%)
+  );
+}
+
+/* Der Unterschrift-Dialog hat keine Kopfzeile; die Fusszeile haelt vier Elemente in einer schmalen Reihe -- jede Zeile Hoehe fehlt der Schreibflaeche. */
+.signatur-fusszeile {
+  gap: var(--db-spacing-fixed-2xs);
+  padding: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-xs);
+  flex-wrap: nowrap;
+
+  // „Merken“ links, die Knoepfe rechts.
+  .db-checkbox {
+    margin-inline-end: auto;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .db-button {
+    margin: 0;
+  }
+}
+
+/* Kompakter Modus (`signaturDialog.ts`, wenn die Hoehe bindet, z. B. Querformat-Handy): knapper Inhaltsrand und Fusszeile geben dem Canvas Vertikalraum zurueck. */
+.signatur-kompakt :is(.db-dialog-content, .db-drawer-content) {
+  padding: var(--db-spacing-fixed-2xs);
+}
+
+.signatur-dialog :is(.db-dialog-content, .db-drawer-content) {
   display: flex;
-  justify-content: end;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
 }
 
-.form-floating.required input:disabled + label::after {
-  color: rgba(var(--bs-body-color-rgb), 0.65);
+/* Ohne Kopfzeile belegt der Drawer-Grid (Kopf auto / Inhalt 1fr / Fuss auto) die Zeilen der Reihe nach: der Inhalt landet in der Kopfzeile, die Fusszeile in der 1fr-Zeile und das Feld klebt oben. Explizit platzieren. */
+.signatur-dialog .db-drawer-container > .db-drawer-content {
+  grid-row: 2;
 }
 
-.row > .form-floating > label {
-  left: auto;
+.signatur-dialog .db-drawer-container > .db-drawer-footer {
+  grid-row: 3;
 }
 
-.form-floating.required.readonly label:after {
-  content: '' !important;
-  color: var(--bs-danger);
-  margin-left: -5px;
-  padding-left: 2px;
+.signatur-kompakt .signatur-fusszeile {
+  padding: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-xs);
 }
 
-.form-switch {
-  margin: auto 0 auto 1rem;
+// Formularbeschriftungen richten sich am Feld aus, nicht an `text-center` des Abschnitts.
+.db-input > label,
+.db-select > label,
+.db-textarea > label,
+.db-checkbox > label,
+.db-switch > label {
+  text-align: start;
 }
 
-td > .form-switch {
-  margin: auto 0 auto 1.7rem;
+/* Zellen mit Zeilenumbruechen im Datenwert (CustomTable setzt Zellen als Text, nicht als HTML). */
+.cell-multiline {
+  white-space: pre-line;
+}
+
+/* Platzhalter der OE-Ebenen zeigen den bisherigen Wert — klar von einer Eingabe absetzen. */
+.oe-level-input::placeholder {
+  font-style: italic;
+  opacity: 0.6;
+}
+
+// Schalter in Tabellenzellen sollen mittig unter der Spaltenueberschrift stehen.
+td > .db-switch {
+  margin: auto 0 auto var(--db-spacing-fixed-lg);
 }
 
 .bereitschaft {
-  width: 90%;
+  inline-size: 90%;
 }
 
-footer {
+// Nur die eigene fixierte Fusszeile laesst Klicks durch (`pointer-events: none`). Ein Tag-Selektor `footer` traf auch
+// `DBDrawerFooter` und machte dessen Knoepfe (z. B. Impressum-"Schliessen") fuer Mausklicks unerreichbar.
+.app-footer {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 1030;
   pointer-events: none;
 }
-footer > .impressum {
+
+// Nachfahren- statt Kind-Selektor: `DBFooterMeta` verschachtelt den Knopf in `.db-footer-meta-content`.
+.app-footer .impressum {
   pointer-events: all;
 }
 
-.app-footer {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1030;
+// Datenschutzerklaerung (`DatenschutzInhalt.tsx`): Abschnitte mit Liste sollen wie die Text-Abschnitte (Titel, `<br>`, Text)
+// direkt unter dem Titel beginnen -- ohne das Browser-Standard-`margin` der `<ul>` stand dort eine Leerzeile.
+.datenschutz strong + ul {
+  margin-block-start: 0;
 }
 
-body {
-  padding-bottom: 3.5rem;
+// Die Fusszeilen-Reservierung gehoert an `.db-shell-content`, nicht auf `body`: `.db-shell` ist schon exakt `100dvh` hoch, ein
+// `padding-block-end` auf `body` machte zusaetzlich das Dokument scrollbar (zwei gestapelte Scrollbalken). Als Aussenabstand
+// (nicht Innenabstand) endet der Scrollbalken des Inhalts ueber der fixierten Fusszeile statt dahinter.
+.db-shell-content {
+  margin-block-end: var(--app-footer-hoehe, var(--db-spacing-fixed-2xl));
 }
 
-.offcanvas-impressum {
-  margin-bottom: 3.25rem !important;
+// Chromes eigenes Zum-Aktualisieren-Ziehen aus (`pullToRefresh.ts` ersetzt es): sonst reicht der Container die Geste an den
+// Wurzel-Scroller weiter, der parallel und mit eigener Schwelle neu laedt.
+html,
+body,
+.db-shell-content {
+  overscroll-behavior-y: contain;
+}
+
+// `DBFooterMeta` stapelt Copyright/Knopf unter dieser Breite (Footer 41px -> 69px). Die gemessene Hoehe (`AppFooter`) deckt das ab;
+// die Token sind nur der Rueckfall vor dem ersten Messen.
+@media (max-width: 47.9375em) {
+  .db-shell-content {
+    margin-block-end: var(--app-footer-hoehe, var(--db-spacing-fixed-3xl));
+  }
 }
 
 .custom-text-truncate {
@@ -235,43 +706,20 @@ body {
   white-space: nowrap;
 }
 
-#settings-zulagen-list .form-check {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--bs-border-color-translucent);
-  border-radius: var(--bs-border-radius-sm);
+// Zulagen als einzeln umrandete Zeilen; Haken und Abstand kommen von DB, hier nur der Rahmen.
+#settings-zulagen-list .db-checkbox {
+  padding: var(--db-spacing-fixed-xs) var(--db-spacing-fixed-sm);
+  border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+  border-radius: var(--db-border-radius-xs);
 }
 
-#settings-zulagen-list .form-check-input {
-  margin-left: 0;
-  margin-top: 0.2rem;
-  flex: 0 0 auto;
-}
-
-#settings-zulagen-list .form-check-label {
-  text-align: left;
+#settings-zulagen-list .db-checkbox > label {
+  text-align: start;
   line-height: 1.35;
-  margin: 0;
-  flex: 1;
 }
 
-#admin-tabs {
-  align-items: center;
-}
-
-#admin-tabs .nav-link {
+#admin-tabs .db-navigation-item > button {
   white-space: normal;
-}
-
-@media (prefers-color-scheme: dark) {
-  .bg-darkmode-override {
-    background-color: #23272b !important;
-    color: #f8f9fa !important;
-    border-color: #444950 !important;
-  }
 }
 
 .admin-user-cards {
@@ -281,10 +729,10 @@ body {
 
 .admin-user-card-col {
   break-inside: avoid;
-  margin-bottom: 1rem;
+  margin-block-end: var(--db-spacing-fixed-md);
 }
 
-@media screen and (min-width: 768px) {
+@media screen and (min-width: #{bp.$sm}px) {
   .admin-user-cards {
     column-count: 2;
   }
@@ -300,9 +748,9 @@ body {
   flex-wrap: nowrap;
 }
 
-.admin-fahrzeit-input-group > .form-control {
-  min-width: 0;
-  width: 0;
+// Die drei Felder teilen sich die Zeile nach den flex-Vorgaben unten; ohne `min-inline-size: 0` setzt jedes seine Mindestbreite durch.
+.admin-fahrzeit-input-group > .db-input {
+  min-inline-size: 0;
 }
 
 .admin-fahrzeit-input-group > .admin-fahrzeit-key {
@@ -317,44 +765,150 @@ body {
   flex: 0 0 5.75rem;
 }
 
-.admin-fahrzeit-input-group > .btn {
+.admin-fahrzeit-input-group > .db-button {
   flex: 0 0 auto;
 }
 
-// Zwischenbereich (Tabelle mit dynamischem Monats-Fenster, unterhalb xl):
-// table-layout: fixed hält die Label-Spalte hart auf 11.5rem, unabhängig davon,
-// wie viele Monatsspalten berechnungMonatsFenster.ts einblendet. Scrollen bleibt Fallback.
+// Unter 1200px (dynamisches Monatsfenster): `table-layout: fixed` haelt die Label-Spalte bei 11.5rem, egal wie viele
+// Monatsspalten `berechnungMonatsFenster.ts` einblendet; Scrollen bleibt Fallback.
 @media screen and (max-width: 1199.98px) {
-  #Berechnung .table-responsive {
+  #Berechnung .db-table {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
   table.table-Berechnung {
     table-layout: fixed;
-    width: 100%;
-    max-width: none;
+    inline-size: 100%;
+    max-inline-size: none;
   }
 
   .table-Berechnung > thead > tr > th:first-child,
   .table-Berechnung > tbody > tr > th {
     z-index: 1;
   }
-  // Sichtbare Monatsspalten teilen sich den Platz rechts der festen
-  // Label-Spalte gleichmäßig; die Anzahl liefert berechnungMonatsFenster.ts
-  // über die CSS-Variable (col-1-Prozentbreite wird hier überschrieben)
+
+  // Sichtbare Monatsspalten teilen sich den Platz rechts der Label-Spalte; die Anzahl liefert `berechnungMonatsFenster.ts` ueber
+  // `--berechnung-monatsspalten` (ueberschreibt die `sp-1`-Prozentbreite).
   .table-Berechnung > thead th[data-monat]:not(.d-none) {
-    width: calc((100% - 11.5rem) / var(--berechnung-monatsspalten, 6));
+    inline-size: calc((100% - var(--db-sizing-2xl) - var(--db-sizing-sm)) / var(--berechnung-monatsspalten, 6));
   }
 }
 
-// Aktionen-Spalte der Fahrzeiten-Tabelle so schmal wie ihre Buttons halten
-.fahrzeiten-aktionen-spalte {
-  width: 1%;
+// Ab sm (48em) tragen die Spaltenkoepfe die Beschriftung, im Feld bleibt sie nur fuer Screenreader. `--db-label-visible-above: 0`
+// ist noetig, sonst haelt DB die Zeile ueber dem Feld frei (leere Zeile Hoehe je Tabellenzeile).
+@media screen and (min-width: 48em) {
+  .fahrzeit-feld {
+    --db-label-visible-above: 0;
+  }
+
+  .fahrzeit-feld > label {
+    position: absolute;
+
+    // Screenreader-Muster wie `.visually-hidden`.
+    inline-size: var(--db-border-width-3xs);
+    block-size: var(--db-border-width-3xs);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+// Tabellenzelle/-zeile mittig, auch senkrecht (Fahrzeiten-Panel).
+.zelle-zentriert {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.fahrzeiten-panel {
+  margin-block-start: var(--db-spacing-fixed-sm);
+}
+
+@media screen and (min-width: #{bp.$md}px) {
+  .fahrzeiten-neu {
+    margin-block-start: var(--db-spacing-fixed-xs);
+  }
+}
+
+// EWT-Dialoge (`createEditorModalEWT.tsx`, `createAddModalEWT.tsx`): Pfeilzeilen und Ueberschriften zwischen den Zeitgruppen.
+.zeit-pfeile {
+  position: relative;
+  display: flex;
+  color: var(--db-adaptive-on-bg-basic-emphasis-70-default);
+
+  > div {
+    inline-size: 50%;
+    text-align: center;
+  }
+}
+
+.zeit-pfeile__titel {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -50%);
+  text-transform: uppercase;
+}
+
+.zeit-kopf {
+  display: block;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.feld-abstand-oben {
+  margin-block-start: var(--db-spacing-fixed-sm);
+}
+
+.checkbox-hinweis {
+  display: block;
+  margin-block-start: var(--db-spacing-fixed-2xs);
+}
+
+// Zulagen-Einstellungen (`ez/ui`): Mount-Ziel der Checkbox-Liste und eine Kategorie darin.
+.zulagen-liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--db-spacing-fixed-xs);
+  inline-size: 100%;
+}
+
+.zulagen-kategorie {
+  margin-block-end: var(--db-spacing-fixed-sm);
+}
+
+.zulagen-kategorie__hinweis {
+  display: block;
+  margin-block-end: var(--db-spacing-fixed-xs);
+}
+
+.nowrap {
   white-space: nowrap;
 }
 
-@media screen and (max-width: 767.95px) {
+// Anzeige-Dialog mit Innenabstand (`MyModalBody className`), z. B. EA/Neben.
+.anzeige-koerper {
+  padding: var(--db-spacing-fixed-md);
+}
+
+// Aktionen-Spalte der Fahrzeiten-Tabelle: so schmal wie ihre Buttons.
+.fahrzeiten-aktionen-spalte {
+  inline-size: 1%;
+  white-space: nowrap;
+}
+
+// Sortier-Leiste des Fahrzeiten-Panels: nur unter sm, weil dort das Karten-Layout den Tabellenkopf samt Sortier-Knoepfen ausblendet.
+.fahrzeiten-sortierung {
+  margin-block-end: var(--db-spacing-fixed-sm);
+}
+
+@media screen and (min-width: #{bp.$sm}px) {
+  .fahrzeiten-sortierung {
+    display: none;
+  }
+}
+
+@media screen and (max-width: #{bp.$sm - 0.05}px) {
   #collapseFour table thead {
     display: none;
   }
@@ -363,39 +917,38 @@ body {
   #collapseFour table tr,
   #collapseFour table td {
     display: block;
-    width: 100%;
+    inline-size: 100%;
   }
 
   #collapseFour table tbody tr {
-    margin-bottom: 0.75rem;
-    border: 1px solid var(--bs-border-color);
-    border-radius: var(--bs-border-radius);
-    background-color: var(--bs-body-bg);
+    margin-block-end: var(--db-spacing-fixed-sm);
+    border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+    border-radius: var(--db-border-radius-sm);
+    background-color: var(--db-adaptive-bg-basic-level-1-default);
     overflow: hidden;
   }
 
   #collapseFour table tbody td {
     border: 0;
-    padding: 0.25rem 0.5rem;
+    padding: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-xs);
   }
 
   #collapseFour table tbody td:first-child {
-    padding-top: 0.5rem;
+    padding-block-start: var(--db-spacing-fixed-xs);
   }
 
   #collapseFour table tbody td:last-child {
-    padding-bottom: 0.5rem;
+    padding-block-end: var(--db-spacing-fixed-xs);
   }
 
-  #collapseFour .input-group-mobile-fahrzeit .input-group-text {
-    min-width: 9.25rem;
-    justify-content: flex-start;
+  #collapseFour .fahrzeit-feld > label {
+    min-inline-size: var(--db-sizing-2xl);
   }
 
   // Zeilen-Aktionen (↑/↓/Löschen) im Karten-Layout als volle Breite für gute Tap-Ziele
   #collapseFour .fahrzeiten-aktionen {
     display: flex;
-    width: 100%;
+    inline-size: 100%;
   }
 
   .admin-fahrzeit-input-group > .admin-fahrzeit-key {
@@ -410,90 +963,624 @@ body {
     flex: 0 0 4.25rem;
   }
 
-  .admin-fahrzeit-input-group > .btn {
+  .admin-fahrzeit-input-group > .db-button {
     flex: 0 0 2.25rem;
-    padding-right: 0.25rem;
-    padding-left: 0.25rem;
+    padding-inline: var(--db-spacing-fixed-2xs);
   }
 
   #btnResendVerificationEmail {
     font-size: 0.8rem;
     line-height: 1.2;
-    padding: 0.25rem 0.5rem;
+    padding: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-xs);
     white-space: normal;
     text-align: center;
-    max-width: 8.5rem;
+    max-inline-size: var(--db-sizing-2xl);
   }
 }
 
 @media screen and (max-width: 575.95px) {
   #btnResendVerificationEmail {
     font-size: 0.75rem;
-    padding: 0.2rem 0.4rem;
+    padding: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-xs);
   }
 }
 
 @media screen and (min-width: 992px) {
   .arbeitszeit-col-left {
-    border-right: 1px solid var(--bs-border-color);
-    padding-right: 1.5rem;
+    border-inline-end: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+    padding-inline-end: var(--db-spacing-fixed-lg);
   }
 
   .arbeitszeit-col-right {
-    padding-left: 1.5rem;
+    padding-inline-start: var(--db-spacing-fixed-lg);
   }
 }
 
-@media screen and (max-width: 479.95px) {
+// Kappungsbreite der `Einsatzort`-Spalte, gestuft an denselben DB-Schwellen, an denen die Nachbarspalten der EWT-Tabelle
+// auftauchen (`customtable.scss`); oberhalb der groessten Stufe ungekappt.
+@media screen and (max-width: #{bp.$xs - 0.05}px) {
   .custom-text-truncate {
-    max-width: 120px;
+    max-inline-size: var(--db-sizing-xl);
   }
 }
 
-@media screen and (min-width: 480px) and (max-width: 575.95px) {
+@media screen and (min-width: #{bp.$xs}px) and (max-width: #{bp.$sm - 0.05}px) {
   .custom-text-truncate {
-    max-width: 130px;
+    max-inline-size: var(--db-sizing-2xl);
   }
 }
 
-@media screen and (min-width: 576px) and (max-width: 767.95px) {
+@media screen and (min-width: #{bp.$sm}px) and (max-width: #{bp.$md - 0.05}px) {
   .custom-text-truncate {
-    max-width: 140px;
+    max-inline-size: var(--db-sizing-3xl);
   }
 }
 
-@media screen and (min-width: 768px) and (max-width: 991.95px) {
+@media screen and (min-width: #{bp.$md}px) and (max-width: #{bp.$lg - 0.05}px) {
   .custom-text-truncate {
-    max-width: 240px;
+    max-inline-size: var(--db-container-lg);
   }
 }
 
-@media screen and (min-width: 992px) and (max-width: 1199.95px) {
+@media screen and (min-width: #{bp.$lg}px) and (max-width: #{bp.$xl - 0.05}px) {
   .custom-text-truncate {
-    max-width: 480px;
+    max-inline-size: var(--db-container-2xl);
   }
 }
 
-@media screen and (min-width: 1200px) and (max-width: 1399.95px) {
-  .custom-text-truncate {
-    max-width: 650px;
-  }
-}
-
-// Ersteinrichtungs-Panel: volle Breite auf xs/sm, feste Breite ab md (schwebt unten rechts)
+// Ersteinrichtungs-Panel: unter sm volle Breite, ab sm feste Breite (schwebt unten rechts).
 .onboarding-panel {
-  width: 100%;
+  position: fixed;
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  inline-size: 100%;
+  padding: var(--db-spacing-fixed-xs);
 }
 
-@media screen and (min-width: 768px) {
+@media screen and (min-width: #{bp.$sm}px) {
   .onboarding-panel {
-    width: 26rem;
+    inline-size: var(--db-container-sm);
   }
+}
+
+@media screen and (min-width: #{bp.$md}px) {
+  .onboarding-panel {
+    padding: var(--db-spacing-fixed-sm);
+  }
+}
+
+// Ersteinrichtungs-Panel (`OnboardingGuidePanel.tsx`): Kopf- und Fussleiste abgesetzt, Inhalt scrollt.
+.ersteinrichtung {
+  box-shadow: var(--db-elevation-md);
+}
+
+.ersteinrichtung__kopf,
+.ersteinrichtung__fuss {
+  padding: var(--db-spacing-fixed-xs) var(--db-spacing-fixed-sm);
+  background-color: var(--db-adaptive-bg-basic-level-2-default);
+}
+
+.ersteinrichtung__kopf {
+  border-block-end: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.ersteinrichtung__fuss {
+  border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.ersteinrichtung__titel {
+  margin-inline-end: auto;
+}
+
+.ersteinrichtung__ueberspringen {
+  margin-inline-end: auto;
+}
+
+.ersteinrichtung__inhalt {
+  max-block-size: 45vh;
+  padding: var(--db-spacing-fixed-sm);
+  overflow: auto;
+}
+
+// Login-Dialog (`createModalLogin.tsx`): Fusszeile ohne eigenen Rand, Bereiche mit Seitenabstand.
+.login-fuss {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+}
+
+.login-fuss__bereich {
+  inline-size: 100%;
+  padding-inline: var(--db-spacing-fixed-sm);
+}
+
+.login-fuss__bereich--oben {
+  padding-block-start: var(--db-spacing-fixed-sm);
+}
+
+.login-fuss__bereich--unten {
+  padding-block-end: var(--db-spacing-fixed-sm);
 }
 
 // Hebt während der Ersteinrichtung den gerade zu prüfenden Einstellungen-Bereich hervor
 .onboarding-focus {
-  outline: 2px solid var(--bs-primary);
+  outline: 2px solid var(--db-brand-origin-default);
   outline-offset: 2px;
-  border-radius: var(--bs-border-radius);
+  border-radius: var(--db-border-radius-sm);
+}
+
+// Die Kopfzeile bleibt beim Scrollen stehen (sticky); weder Desktop- noch Mobile-Control-Panel bringen das mit, und `DBShell`
+// haelt beide gleichzeitig im DOM (CSS-Weiche bei 48em) -- daher beide Klassen.
+.db-control-panel-desktop,
+.db-control-panel-mobile {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1030;
+}
+
+// DBs `data-position="top"` zentriert die Marke im mobilen Header (`justify-items: center`, gewolltes DB-Verhalten); hier
+// linksbuendig wie am Desktop. Die uebrigen Spalten sind `min-content`, `start` aendert dort nichts.
+.db-control-panel-mobile[data-position='top'] {
+  justify-items: start;
+}
+
+// `DBControlPanelNavigationItem` leitet ohne `tooltip`/`text`-Prop selbst einen Tooltip aus dem Link-Text ab (gedacht fuer
+// eingeklappte Sidebars). Im horizontalen `position="top"`-Modus verdoppelt er nur das sichtbare Label; kein Prop schaltet
+// ihn ab (`tooltip=""` loest den Fallback trotzdem aus), daher per CSS.
+.db-control-panel-navigation-item .db-tooltip {
+  display: none;
+}
+
+// `DBControlPanelBrand` zeigt sein Logo per `::before`/`--db-logo-url`; eigenes App-Icon per Variable, nicht als Kind-`<img>`
+// (das erzeugte ein zweites Icon neben dem DB-Logo).
+.db-control-panel-brand {
+  --db-logo-url: url('/icons/192x192-icon.png');
+}
+
+// ── App-Schale (`App.tsx`) ──
+
+// `hidden` blendet immer aus, auch Elemente mit eigener `display`-Regel (`.raster-auto`, `#start`). DB-Komponenten pruefen
+// `:not([hidden])` selbst.
+[hidden] {
+  display: none !important;
+}
+
+// Panels ohne Berechtigung (`setzeTabSichtbar`, Admin): gesperrt unabhaengig davon, welcher Tab aktiv ist (`hidden` gehoert
+// dem aktiven Tab).
+[role='tabpanel'][data-gesperrt] {
+  display: none !important;
+}
+
+// Act-As-Hinweis ueber den Tabs.
+.app-hinweise {
+  inline-size: 100%;
+  padding-inline: var(--db-spacing-fixed-xs);
+  margin-block-start: var(--db-spacing-fixed-xs);
+
+  @media screen and (min-width: #{bp.$md}px) {
+    padding-inline: var(--db-spacing-fixed-sm);
+  }
+}
+
+// Abstand der Tabs zur Kopfzeile, ausser auf Start: Start reicht per `min-block-size` exakt bis zur Fusszeile.
+#tabContent {
+  margin-block-start: var(--db-spacing-fixed-sm);
+
+  &:has(> #start:not([hidden])) {
+    margin-block-start: 0;
+  }
+}
+
+// Startseite reicht exakt bis zur Fusszeile (kein senkrechter Scrollbalken), deshalb entfaellt hier die Reservierung -- aber
+// NUR ab der Fusszeilen-Bruchstelle: auf dem Handy blendet `#startSchnellzugriff` sechs Kacheln ein, der Bereich scrollt, und die
+// letzte Kachel verschwaende sonst hinter der fixierten Fusszeile.
+@media (min-width: 48em) {
+  .db-shell-content:has(#start:not([hidden])) {
+    padding-block-end: 0;
+  }
+}
+
+// Schnellzugriff nur mobil: ab 64em (`md`) wechselt `DBHeader` von Mobile-Drawer auf Desktop-Navigation.
+.start-schnellzugriff {
+  margin-block-end: var(--db-spacing-fixed-md);
+
+  @media screen and (min-width: #{bp.$md}px) {
+    display: none;
+  }
+}
+
+.start-ladeanzeige {
+  margin-block-start: var(--db-spacing-fixed-md);
+}
+
+// Nur wenn der Startbereich sichtbar ist (`hidden` blendet ihn sonst aus).
+#start {
+  display: flex;
+  flex-direction: column;
+
+  // Viewport minus Kopf- (Puppeteer gemessen:
+  // .db-control-panel-desktop 73px bei regular-Dichte/1440px), Fusszeilenhoehe (41px) UND der
+  // stets vorhandene Abstand des (meist leeren) `#actAsNotice`-Wrappers `.app-hinweise` in
+  // `App.tsx` (8px, unconditional -- kollabiert mit nichts mehr, seit `#tabContent`s Abstand fuer
+  // Start selbst entfaellt, siehe dort) = 122px = 7.625rem bei 16px-Wurzel. Bei
+  // Aenderungen an Kopf-/Fusszeileninhalt oder dieser Wrapper-Struktur neu vermessen.
+  min-block-size: calc(100dvh - 7.625rem);
+}
+
+// Die Marke ist ein Link auf den Start-Tab, soll aber wie eine Wortmarke aussehen.
+.db-brand {
+  gap: var(--db-spacing-fixed-xs);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+// DB stylt in Navigationseintraegen nur `a` (Navigation = Links) und den Aufklapp-Schalter.
+// Die Design-Auswahl sind aber echte Schaltflaechen -- sie bekommen denselben Look.
+.db-navigation-item > button:not(.db-navigation-item-expand-button) {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: var(--db-spacing-fixed-xs);
+  inline-size: 100%;
+  padding: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-sm);
+  border: var(--db-border-width-3xs) solid transparent;
+  border-radius: var(--db-border-radius-xs);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--db-adaptive-bg-basic-transparent-full-hovered);
+  }
+}
+
+// Unternavigation des Admin-Panels: DB legt `.db-navigation > menu` erst ab `md` waagerecht aus und bricht nie um; die bis zu
+// acht kurzen Eintraege sollen auch auf dem Handy nebeneinander passen.
+.admin-unternavigation {
+  inline-size: 100%;
+  padding: var(--db-spacing-fixed-2xs);
+  border-radius: var(--db-border-radius-md);
+  background-color: var(--db-adaptive-bg-basic-level-2-default);
+
+  > menu {
+    flex-flow: row wrap;
+    align-items: center;
+    gap: var(--db-spacing-fixed-xs);
+  }
+}
+
+// Rein optischer Trennstrich zwischen den Gruppen der Unternavigation.
+.admin-unternavigation-trenner {
+  align-self: stretch;
+  inline-size: var(--db-border-width-3xs);
+  background-color: var(--db-adaptive-on-bg-basic-emphasis-50-default);
+}
+
+// Der Monatswechsel steht in der Kopfzeile neben dem Anmelde-Knopf und darf dort nicht
+// auf ein paar Buchstaben zusammenschrumpfen.
+.db-control-panel-actions-1 .db-select {
+  inline-size: auto;
+  min-inline-size: var(--db-sizing-2xl);
+}
+
+// Dialoge liegen in einem `DBDrawer` (nativer `<dialog>`); die App-Huellen `dialog-kopf`/`-koerper`/`-fuss` liefern nur die
+// Gliederung, Rahmen/Hintergrund/Abstand kommen vom Drawer (sonst Kasten im Kasten).
+//
+// Die Variable sitzt am `.db-drawer` (`<dialog>`), damit auch die `:has(> .signatur-drawer)`-Ausnahme sie per Vererbung sieht.
+.db-drawer {
+  --db-drawer-max-width: 36rem;
+}
+
+// `:not(.db-control-panel-mobile-drawer)` gehoert an `.db-drawer-container`: `DBDrawer` reicht `className` an das innere
+// `<article class="db-drawer-container">`, nicht an das `<dialog>`. `min(..., 100%)` haelt den Drawer bei schmalem Viewport
+// (auch mit klassischem Scrollbalken) vollstaendig im Bild -- sonst lief seine linke Kante ins Negative und schnitt Text ab.
+.db-drawer-container:not(.db-control-panel-mobile-drawer) {
+  max-inline-size: min(var(--db-drawer-max-width), 100%);
+}
+
+// Breitenstufen: die Vorgabe steht am `<dialog>`, der Rumpf liegt darin -- `:has()` hebt sie hoch, damit der Dialog-Inhalt seine
+// Breite selbst mitbringen kann (`TMyModal.size`).
+.db-drawer:has([data-breite='lg']) {
+  --db-drawer-max-width: 48rem;
+}
+
+.db-drawer:has([data-breite='xl']) {
+  --db-drawer-max-width: 64rem;
+}
+
+// Breitenstufen: die Vorgabe steht am `<dialog>`, der Rumpf liegt darin -- `:has()` hebt sie hoch, damit der Dialog-Inhalt seine
+// Breite selbst mitbringen kann (`TMyModal.size`).
+.db-drawer:has([data-breite='lg']) {
+  --db-drawer-max-width: 48rem;
+}
+
+.db-drawer:has([data-breite='xl']) {
+  --db-drawer-max-width: 64rem;
+}
+
+// Dialoge: kleiner Randabstand (DB-Standard 40px liesse Formulare zu schmal); auf dem Handy oeffnet stattdessen ein
+// Vollbild-`DBDrawer` (`MyDialog`).
+.db-dialog {
+  --db-dialog-viewport-inset: var(--db-spacing-fixed-xs);
+}
+
+// Rumpf, Kopf, Koerper und Fusszeile eines Dialogs: nur die innere Gliederung.
+.dialog-rumpf {
+  display: flex;
+  flex-direction: column;
+}
+
+.db-drawer-header {
+  display: flex;
+  align-items: center;
+  gap: var(--db-spacing-fixed-xs);
+  padding-block-end: var(--db-spacing-fixed-sm);
+  border-block-end: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+
+  // Titel nimmt den freien Platz, Hilfe und Schliessen ruecken nach rechts.
+  > :first-child {
+    flex: 1 1 auto;
+  }
+
+  :is(h1, h2, h3, h4, h5, h6) {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+}
+
+.dialog-koerper {
+  flex: 1 1 auto;
+  padding-block: var(--db-spacing-fixed-md);
+}
+
+// Schriftart-Dialog: Grundschrift + drei Schnitt-Abweichungen als ausgerichtete Zeilen
+// (Beschriftungsspalte fest, Auswahl fuellt) statt als umbrechende Inline-Reihe.
+.schriftwahl-raster {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-sm);
+}
+
+.schriftwahl-zeile {
+  display: contents;
+}
+
+// Fusszeilen aller Dialoge/Drawer einheitlich: Knoepfe nebeneinander, gleichmaessig verteilt (DB-Standard waere beim Drawer eine
+// Spalte, beim Dialog rechtsbuendig). Der Login-Dialog baut seine Fusszeile selbst auf (`.login-fuss`).
+.db-drawer-footer:not(.login-fuss),
+.db-dialog-footer:not(.login-fuss) {
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
+.dialog-fuss {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: var(--db-spacing-fixed-xs);
+  padding-block-start: var(--db-spacing-fixed-sm);
+  border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+// Deaktivierte Felder mit Tooltip: Hover soll die Hülle treffen (disabled-Inputs liefern je nach Browser keine Events).
+.feld-hinweis :disabled {
+  pointer-events: none;
+}
+
+// ── Admin (`App.tsx`, `pages/admin/index.tsx`) ──
+
+.admin-rahmen {
+  inline-size: 100%;
+  padding-inline: var(--db-spacing-fixed-sm);
+  margin-block-end: var(--db-spacing-fixed-sm);
+
+  @media screen and (min-width: #{bp.$md}px) {
+    padding-inline: var(--db-spacing-fixed-md);
+  }
+}
+
+// Unter-Tab-Panel mit Randfarbe je Bereich.
+.admin-pane {
+  padding: var(--db-spacing-fixed-sm);
+  margin-block-end: var(--db-spacing-fixed-md);
+  border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+  box-shadow: var(--db-elevation-sm);
+}
+
+@each $modifikator, $familie in (primary: brand, info: informational, warning: warning, danger: critical, success: successful) {
+  .admin-pane--#{$modifikator} {
+    border-color: var(--db-#{$familie}-on-bg-basic-emphasis-50-default);
+  }
+}
+
+// Hilfedialog (`MyHelpModal.tsx`): Abstaende zwischen den Abschnitten kommen aus dem `DBStack`, Absaetze und Listen ohne
+// eigenen unteren Rand.
+.hilfe-inhalt :is(p, ul, ol) {
+  margin-block-end: 0;
+}
+
+// ── Gemeinsame Bausteine (`shared/ui`) ──
+
+// Lade-Knopf mit AutoSave-Abzeichen in der Ecke (`DBLoadingButton`, `DBBadge placement="corner-top-right"`).
+.db-button:has(> .autosave-badge) {
+  position: relative;
+}
+
+.passwort-staerke {
+  margin-block-start: var(--db-spacing-fixed-2xs);
+}
+
+// Fehlermeldung oben im Dialog (`MyDivModal`, `MyFormModal`).
+.dialog-fehler {
+  margin: var(--db-spacing-fixed-sm) var(--db-spacing-fixed-sm) 0;
+}
+
+// Monatskarten der Berechnung (`berechnungBausteine.tsx`): Label links, Wert rechts ohne Umbruch.
+.berechnung-card-zeile,
+.berechnung-card-gruppe {
+  > :first-child {
+    text-align: start;
+  }
+
+  > :last-child {
+    text-align: end;
+    white-space: nowrap;
+  }
+}
+
+.berechnung-card-zeile {
+  padding-block: var(--db-spacing-fixed-2xs);
+  padding-inline-start: var(--db-spacing-fixed-sm);
+}
+
+.berechnung-card-gruppe {
+  padding-block: var(--db-spacing-fixed-xs) var(--db-spacing-fixed-2xs);
+}
+
+// Umrandete Feldgruppe mit Titel in Grossbuchstaben (`shared/ui/gruppe/Gruppe.tsx`).
+.gruppe {
+  padding: var(--db-spacing-fixed-xs);
+  border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.gruppe__titel {
+  display: block;
+  margin-block-end: var(--db-spacing-fixed-xs);
+  text-transform: uppercase;
+}
+
+.gruppe__hinweis {
+  display: block;
+  margin-block-start: var(--db-spacing-fixed-xs);
+}
+
+// Zeitzeilen der Bereitschafts-Dialoge (`createAddModalBereitschaftsZeit.tsx`): Beschriftung, Datum, Zeit.
+.zeitzeile {
+  padding-block: var(--db-spacing-fixed-2xs);
+  block-size: auto;
+}
+
+.zeitzeile__label {
+  flex-shrink: 0;
+  inline-size: var(--db-sizing-lg);
+}
+
+.zeitzeile__bis {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  padding-inline-end: var(--db-spacing-fixed-xs);
+}
+
+.zeitzeile__feld,
+.feld-hinweis--waechst {
+  flex-grow: 1;
+}
+
+.feld-hinweis--fest,
+.berechnet-badge {
+  flex-shrink: 0;
+}
+
+// Auswahlfeld mit Luft nach unten (Platz fuer die Ungueltig-Meldung).
+.feld-mit-luft {
+  padding-block-end: var(--db-spacing-fixed-md);
+}
+
+// Kurze Zahlenfelder (`DbFeld feldKlasse`, z. B. Pause in Minuten): Wert mittig.
+.feld-zentriert {
+  text-align: center;
+}
+
+// Arbeitszeit-Editor (`SchichtSection.tsx`).
+.schicht-neu__uebernehmen {
+  margin-inline-start: auto;
+}
+
+.schicht-zeile {
+  padding-block: var(--db-spacing-fixed-2xs);
+}
+
+// Zeile als Knopf: fuellt die Breite, Inhalt umbrechend.
+.schicht-zeile__knopf {
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: var(--db-spacing-fixed-xs);
+  padding-inline: 0;
+}
+
+.schicht-zeile__zeit {
+  white-space: nowrap;
+}
+
+// Anzeige-Dialoge (`MyShowElement`, `showModalHelpers.tsx`): Label-Wert-Zeilen und die zentrierte Tageszeile.
+.anzeige-zeile {
+  margin-block-end: var(--db-spacing-fixed-2xs);
+}
+
+.anzeige-zeile__wert {
+  align-self: center;
+  overflow-wrap: anywhere;
+}
+
+// Abschnittsueberschrift in Anzeige-Dialogen (`createShowModalVE.tsx`).
+.anzeige-abschnitt {
+  padding-block-start: var(--db-spacing-fixed-xs);
+}
+
+// Tab-Kopf der Ressourcen (`BereitschaftTab.tsx` u. a.): zentrierter Abschnitt, Titel mit Hilfeknopf, Knopfreihe mit Luft.
+.tab-abschnitt {
+  text-align: center;
+}
+
+.titel-mit-hilfe {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--db-spacing-fixed-xs);
+}
+
+.knopfreihe-luft {
+  margin-block: var(--db-spacing-fixed-sm);
+}
+
+.knopf-rechts {
+  margin-inline-start: auto;
+}
+
+// Wochentag-Auswahl im Vorgaben-Editor (`createEditorModalVE.tsx`): Kopfzeile und 7-Spalten-Raster.
+.wochentag-kopf {
+  margin-block-end: var(--db-spacing-fixed-xs);
+  block-size: auto;
+}
+
+.wochentag-raster {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--db-spacing-fixed-xs);
+}
+
+.anzeige-tag {
+  margin-block-end: var(--db-spacing-fixed-xs);
+  text-align: center;
+}
+
+.anzeige-tag__label {
+  padding-inline-end: var(--db-spacing-fixed-sm);
+  vertical-align: middle;
+}
+
+.anzeige-tag__wert {
+  vertical-align: middle;
+}
+
+// Rollen-Abzeichen der Benutzerkarte: einzeilig, schrumpft nicht (sonst bricht „Super-Admin“ und wird abgeschnitten).
+.rollen-tag {
+  white-space: nowrap;
 }

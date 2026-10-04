@@ -1,0 +1,256 @@
+import { DBButton, DBStack } from '@db-ux/react-core-components';
+import MyDialog from '@/shared/ui/modal/MyDialog';
+import MyDialogFooter from '@/shared/ui/modal/MyDialogFooter';
+import MyModalHeader from '@/shared/ui/modal/MyModalHeader';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+
+import type { Schriftart } from '@otto-kirchheim/nebengeld-shared';
+import { familieFuerSchnitt, fehlendeVorlagenSchnitte, SCHNITTE, schnitteText, type Schnitt } from './schriftartHelfer';
+import { SchriftartWahl } from './SchriftartWahl';
+import type { VorlageFontFamilie } from './vorlageFonts';
+
+/** Probetext für die Vorschau: Umlaut, Ziffern und die im Formular üblichen Begriffe. */
+const PROBE = 'Nebenbezüge Größe 1234567890 · Zulage/Abschlag';
+
+type Props = {
+  value: Schriftart | undefined;
+  vorlageFonts: VorlageFontFamilie[];
+  unbrauchbareFonts: string[];
+  onChange: (value: Schriftart | undefined) => void;
+  onClose: () => void;
+};
+
+/**
+ * CSS-Familienname für eine eingebettete Vorlagen-Schrift (FontFace-Registrierung).
+ *
+ * @param id - Id der Vorlagen-Familie.
+ * @returns Familienname der Form `vfp-<id>` mit Sonderzeichen als `-`.
+ */
+function faceName(id: string): string {
+  return `vfp-${id.replace(/[^a-z0-9]+/gi, '-')}`;
+}
+
+const CSS_STANDARD: Record<string, string> = {
+  helvetica: 'Helvetica, Arial, sans-serif',
+  times: '"Times New Roman", Times, serif',
+  courier: '"Courier New", Courier, monospace',
+  // DB-Neo-Schnitte: das Theme-CSS hat die @font-face bereits geladen -> die Vorschau nutzt
+  // dieselbe Schrift, die `build.ts` ins PDF einbettet.
+  'db-sans': '"DB Neo Screen Sans", Helvetica, Arial, sans-serif',
+  'db-head': '"DB Neo Screen Head", Helvetica, Arial, sans-serif',
+};
+const HELVETICA = CSS_STANDARD.helvetica!;
+
+/**
+ * Registriert die eingebetteten Vorlagen-Schnitte als `FontFace` (ein Face je vorhandenem Schnitt,
+ * gleicher Familienname mit weight/style-Deskriptor) und gibt die Namen der fertig geladenen Familien
+ * zurück. Die Bytes liegen bereits aus `vorlageFonts.ts` vor -- reine Browser-Registrierung, kein
+ * Netzugriff. Bei fehlendem `FontFace` (alte Engine) bleibt die Vorschau bei Helvetica.
+ *
+ * @param vorlageFonts - Aus der Vorlage gelesene Schriftfamilien.
+ * @returns Namen (`faceName`) der Familien, von denen mindestens ein Schnitt geladen ist.
+ */
+function useVorlagenFaces(vorlageFonts: VorlageFontFamilie[]): Set<string> {
+  const [geladen, setGeladen] = useState<Set<string>>(() => new Set());
+  useEffect(() => {
+    if (typeof FontFace === 'undefined' || !document.fonts) return undefined;
+    const faces: FontFace[] = [];
+    const fertig = new Set<string>();
+    for (const familie of vorlageFonts) {
+      const name = faceName(familie.id);
+      for (const s of SCHNITTE) {
+        const bytes = familie.schnitte[s.key];
+        if (!bytes) continue;
+        try {
+          const face = new FontFace(name, bytes as BufferSource, {
+            weight: s.key === 'fett' || s.key === 'fettKursiv' ? 'bold' : 'normal',
+            style: s.key === 'kursiv' || s.key === 'fettKursiv' ? 'italic' : 'normal',
+          });
+          faces.push(face);
+          void face
+            .load()
+            .then(fertigeFace => {
+              document.fonts.add(fertigeFace);
+              fertig.add(name);
+              setGeladen(new Set(fertig));
+            })
+            .catch(() => {
+              /* Schnitt nicht ladbar -- Vorschau nutzt für ihn Helvetica */
+            });
+        } catch {
+          /* Face-Konstruktor abgelehnt -- Vorschau nutzt Helvetica */
+        }
+      }
+    }
+    return () => {
+      for (const face of faces) {
+        try {
+          document.fonts.delete(face);
+        } catch {
+          /* schon entfernt */
+        }
+      }
+    };
+  }, [vorlageFonts]);
+  return geladen;
+}
+
+/**
+ * Wählt die CSS-Schriftfamilie für die Vorschau eines Schnitts.
+ *
+ * @param familie - Familienwert der Schriftart (Standardfamilie oder `vorlage:<Name>`).
+ * @param ersatz - `true`, wenn der Renderer für diesen Schnitt auf Helvetica ausweicht.
+ * @param geladen - Namen der bereits geladenen Vorlagen-Familien.
+ * @returns CSS-`font-family`-Liste; Helvetica für Ersatz, ungeladene oder unbekannte Familien.
+ */
+function cssFamilie(familie: string, ersatz: boolean, geladen: Set<string>): string {
+  if (ersatz) return HELVETICA;
+  if (familie.startsWith('vorlage:')) {
+    return geladen.has(faceName(familie)) ? `"${faceName(familie)}", ${HELVETICA}` : HELVETICA;
+  }
+  return CSS_STANDARD[familie] ?? HELVETICA;
+}
+
+/**
+ * Eine Vorschauzeile: Probetext im Schnitt (fett/kursiv) der gewählten Familie, mit Hinweis bei Helvetica-Ersatz.
+ *
+ * @param props - Schnitt mit Beschriftung, Familie, Ersatz-Kennzeichen und den geladenen Vorlagen-Familien.
+ */
+function SchnittZeile({
+  schnitt,
+  label,
+  familie,
+  ersatz,
+  geladen,
+}: {
+  schnitt: Schnitt;
+  label: string;
+  familie: string;
+  ersatz: boolean;
+  geladen: Set<string>;
+}) {
+  const fett = schnitt === 'fett' || schnitt === 'fettKursiv';
+  const kursiv = schnitt === 'kursiv' || schnitt === 'fettKursiv';
+  return (
+    <div className="zeile-basis">
+      <span className="farbe-gedaempft zelle-klein nicht-schrumpfen" style={{ width: '6rem' }}>
+        {label}
+      </span>
+      <span
+        className="abschneiden"
+        style={{
+          fontFamily: cssFamilie(familie, ersatz, geladen),
+          fontWeight: fett ? 700 : 400,
+          fontStyle: kursiv ? 'italic' : 'normal',
+          fontSize: '1.15rem',
+          lineHeight: 1.3,
+        }}
+      >
+        {PROBE}
+      </span>
+      {ersatz && <span className="zelle-klein farbe-warnung nicht-schrumpfen">Helvetica-Ersatz</span>}
+    </div>
+  );
+}
+
+/**
+ * Live-Vorschau aller Schnitte der gewählten Schriftart; Schnitte, die die Vorlagen-Schrift nicht mitbringt, erscheinen als Helvetica-Ersatz.
+ *
+ * @param props - Gewählte Schriftart und die Vorlagen-Familien.
+ */
+function Vorschau({ value, vorlageFonts }: { value: Schriftart | undefined; vorlageFonts: VorlageFontFamilie[] }) {
+  const geladen = useVorlagenFaces(vorlageFonts);
+  const fehlt = new Set(fehlendeVorlagenSchnitte(value, vorlageFonts));
+  return (
+    <Gruppe className="hinterlegt-3">
+      {SCHNITTE.map(s => (
+        <SchnittZeile
+          key={s.key}
+          schnitt={s.key}
+          label={s.label}
+          familie={familieFuerSchnitt(value, s.key)}
+          ersatz={fehlt.has(s.key)}
+          geladen={geladen}
+        />
+      ))}
+    </Gruppe>
+  );
+}
+
+/**
+ * Modal für die formularweite Schriftwahl samt Live-Vorschau je Schnitt. Eigenständiges Portal-Modal
+ * (`createPortal` in `document.body`), nicht das geteilte `#modal` aus `showModal`. Änderungen wirken
+ * sofort auf `value`, der Dialog hält keinen eigenen Entwurf.
+ *
+ * @param props - Aktuelle Schriftart, Vorlagen-Familien, nicht nutzbare Schriften sowie `onChange` und `onClose`.
+ */
+export function SchriftartDialog({ value, vorlageFonts, unbrauchbareFonts, onChange, onClose }: Props) {
+  useEffect(() => {
+    /**
+     * Schließt den Dialog bei Escape.
+     *
+     * @param e - Tastaturereignis.
+     */
+    const beiTaste = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', beiTaste);
+    return () => document.removeEventListener('keydown', beiTaste);
+  }, [onClose]);
+
+  const istVorlagenSchrift = SCHNITTE.some(s => familieFuerSchnitt(value, s.key).startsWith('vorlage:'));
+
+  return createPortal(
+    <MyDialog
+      size="lg"
+      onClose={onClose}
+      header={<MyModalHeader title="Schriftart" />}
+      footer={
+        <MyDialogFooter>
+          <DBButton type="button" variant="brand" onClick={onClose}>
+            Fertig
+          </DBButton>
+        </MyDialogFooter>
+      }
+    >
+      <DBStack direction="column" gap="small" className="dialog-koerper">
+        <SchriftartWahl value={value} vorlageFonts={vorlageFonts} onChange={onChange} />
+
+        <Vorschau value={value} vorlageFonts={vorlageFonts} />
+
+        {(vorlageFonts.length > 0 || unbrauchbareFonts.length > 0) && (
+          <div className="zelle-klein farbe-gedaempft">
+            Eingebettet:{' '}
+            {[
+              ...vorlageFonts.map(f => (
+                <span key={f.id}>
+                  {f.label.replace(' (Vorlage)', '')} ({schnitteText(f)})
+                </span>
+              )),
+              ...unbrauchbareFonts.map(n => (
+                <span
+                  key={n}
+                  className="farbe-gefahr durchgestrichen"
+                  title="Teilzeichensatz oder kaputte Zeichenzuordnung (z.B. aus PDF24) — nicht als Formularschrift nutzbar"
+                >
+                  {n}
+                </span>
+              )),
+            ].flatMap((el, i) => (i === 0 ? [el] : [', ', el]))}
+            .
+          </div>
+        )}
+
+        {istVorlagenSchrift && (
+          <div className="zelle-klein farbe-warnung">
+            Eingebettete Schrift gewählt — nur die Vorschau nutzt sie, der Download rendert bis auf Weiteres Helvetica.
+            Fehlende Glyphen (Teilzeichensatz) erscheinen als leere Kästchen.
+          </div>
+        )}
+      </DBStack>
+    </MyDialog>,
+    document.body,
+  );
+}

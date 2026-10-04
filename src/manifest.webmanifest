@@ -3,7 +3,7 @@
 	"short_name": "Nebengeld",
 	"start_url": "/",
 	"display": "standalone",
-	"description": "Generiert PDF von Bereitschaft, EWT & Nebenbezüge Zetteln",
+	"description": "Generiert PDF von Bereitschaft, EWT & Erschwerniszulagen Zetteln",
 	"lang": "de_DE",
 	"dir": "auto",
 	"theme_color": "#212529",
@@ -166,9 +166,10 @@
 			"description": "EWT-Zettel"
 		},
 		{
-			"name": "Nebenbezüge",
+			"name": "Erschwerniszulagen",
+			"short_name": "Zulagen",
 			"url": "/#Neben",
-			"description": "Nebenbezüge-Zettel"
+			"description": "Erschwerniszulagen-Zettel"
 		},
 		{
 			"name": "Berechnung",

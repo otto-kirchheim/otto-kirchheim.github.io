@@ -1,0 +1,71 @@
+// App-eigene Rasterhilfen.
+// Zwei Muster decken alles ab, was die App braucht:
+//   `.raster`      12 Spalten, Kinder standardmaessig ueber die volle Breite; `.sp-*`
+//                  verschmaelert einzelne Kinder.
+//   `.raster-auto` so viele gleich breite Spalten, wie bei `--spalte-min` Mindestbreite
+//                  hineinpassen.
+// Es gibt keine negativen Aussenabstaende und kein Innenpolster an den Kindern -- der Abstand
+// kommt aus `gap`, der Inhalt steht buendig am Containerrand.
+
+// Umbruchstufen aus `_breakpoints.scss`.
+@use 'breakpoints' as bp;
+
+$breakpoints: bp.$em;
+
+// Rasterabstaende: Stufe -> DB-UX-Token `--db-spacing-fixed-*` (0 = kein Abstand); der Abstand folgt so
+// automatisch der Density.
+$abstaende: (
+  0: 0,
+  1: '2xs',
+  2: 'xs',
+  3: 'md',
+  4: 'lg',
+  5: '2xl',
+);
+
+.raster {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+
+  > * {
+    grid-column: span 12;
+  }
+}
+
+.raster-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--spalte-min, 14rem), 1fr));
+}
+
+// Abstand von `.raster`/`.raster-auto`; ohne Klasse kein Abstand (Grid-Vorgabe).
+@each $stufe, $token in $abstaende {
+  .abstand-#{$stufe} {
+    @if $token == 0 {
+      gap: 0;
+    } @else {
+      gap: var(--db-spacing-fixed-#{$token});
+    }
+  }
+}
+
+@for $i from 1 through 12 {
+  .sp-#{$i} {
+    grid-column: span #{$i};
+  }
+}
+
+@each $name, $breite in $breakpoints {
+  @media (min-width: #{$breite}) {
+    @for $i from 1 through 12 {
+      .sp-#{$name}-#{$i} {
+        grid-column: span #{$i};
+      }
+    }
+  }
+}
+
+// Randlose Vollbreite mit schmalem Seitenrand.
+.breit {
+  inline-size: 100%;
+  padding-inline: var(--db-spacing-fixed-sm);
+}

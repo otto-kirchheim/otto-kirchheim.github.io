@@ -1,0 +1,377 @@
+import type { Bedingung, Feld, FeldBedingung, Spalte, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
+import { AggregationEditor, Rechnung } from './aggregationUndRechnung';
+import {
+  gruppiere,
+  istBooleanFeld,
+  katalogFelder,
+  werteAuswahl,
+  type FormularCode,
+  type KatalogEintrag,
+} from './datenKatalog';
+import { DBButton, DBCheckbox, DBStack } from '@db-ux/react-core-components';
+import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
+
+/** Form, die sich `Bedingung` (Zeile) und `FeldBedingung` (Dokument) exakt teilen -- nur der
+ * GEPRÜFTE Wert davor unterscheidet sich, der Vergleich danach ist identisch. */
+interface VergleichsTeil {
+  werte?: (string | number | boolean)[];
+  bereich?: { von: string | number; bis: string | number };
+  dann: string;
+}
+
+/**
+ * Vergleich einer Bedingung: Werte-Liste (Mitgliedschaft; Checkboxen, wenn `werteAuswahl()` eine feste
+ * Auswahl kennt) ODER Wertebereich (`von` einschließlich, `bis` ausschließlich, z.B. 8:00 bis vor
+ * 14:00), plus das anzuzeigende Zeichen. Bei `istBoolean` (echtes `boolean`-Feld, z.B. `Wohnung8bis14`)
+ * gibt es stattdessen eine einfache Ja/Nein-Auswahl. Gemeinsam genutzt von `AnkreuzBedingung` (Spalte)
+ * und `FeldAnkreuzBedingung` (Feld).
+ *
+ * @param props - `wenn` (Vergleichsteil), `auswahl` (feste Werte für Checkboxen, sonst leer), `istBoolean` und `onChange`.
+ */
+function VergleichWahl({
+  wenn,
+  auswahl,
+  istBoolean,
+  onChange,
+}: {
+  wenn: VergleichsTeil;
+  auswahl: string[];
+  istBoolean?: boolean;
+  onChange: (next: Partial<VergleichsTeil>) => void;
+}) {
+  /**
+   * Nimmt einen Wert in die Werte-Liste auf bzw. entfernt ihn.
+   *
+   * @param wert - Wert der Checkbox.
+   * @param an - `true` zum Hinzufügen, `false` zum Entfernen.
+   */
+  function schalte(wert: string, an: boolean) {
+    const werte = an ? [...(wenn.werte ?? []), wert] : (wenn.werte ?? []).filter(w => w !== wert);
+    onChange({ werte });
+  }
+
+  if (istBoolean) {
+    const aktuell = wenn.werte?.[0] !== false;
+    return (
+      <div className="raster luft-unten-2xs abstand-1">
+        <div className="sp-8">
+          <DbAuswahl
+            beschriftung="Bedingung"
+            dicht
+            value={String(aktuell)}
+            onChange={e => onChange({ werte: [e.target.value === 'true'], bereich: undefined })}
+          >
+            <option value="true">Ja (zutreffend)</option>
+            <option value="false">Nein (nicht zutreffend)</option>
+          </DbAuswahl>
+        </div>
+        <div className="sp-4">
+          <DbFeld
+            beschriftung="Zeichen"
+            dicht
+            placeholder="Zeichen"
+            value={wenn.dann}
+            onChange={e => onChange({ dann: (e.target as HTMLInputElement).value })}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="raster luft-unten-2xs abstand-1">
+        <div className="sp-8">
+          <DBStack direction="row" wrap gap="2x-small" className="volle-breite">
+            <DBButton
+              type="button"
+              variant={!wenn.bereich ? 'brand' : 'outlined'}
+              onClick={() => onChange({ bereich: undefined, werte: wenn.werte ?? [] })}
+            >
+              Werte-Liste
+            </DBButton>
+            <DBButton
+              type="button"
+              variant={wenn.bereich ? 'brand' : 'outlined'}
+              title="Kreuz nur, wenn der Wert in diesem Bereich liegt (von einschließlich, bis ausschließlich) -- Zahl, Uhrzeit oder Datum, je nachdem was das Feld liefert"
+              onClick={() => onChange({ bereich: wenn.bereich ?? { von: '', bis: '' }, werte: undefined })}
+            >
+              Wertebereich
+            </DBButton>
+          </DBStack>
+        </div>
+        <div className="sp-4">
+          <DbFeld
+            beschriftung="Zeichen"
+            dicht
+            placeholder="Zeichen"
+            value={wenn.dann}
+            onChange={e => onChange({ dann: (e.target as HTMLInputElement).value })}
+          />
+        </div>
+      </div>
+
+      {wenn.bereich ? (
+        <DBStack direction="row" alignment="end" gap="x-small" className="feldgruppe">
+          <DbFeld
+            beschriftung="ab"
+            beschriftungZeigen
+            dicht
+            placeholder="z.B. 8:00 oder 5"
+            value={wenn.bereich.von}
+            onChange={e => onChange({ bereich: { ...wenn.bereich!, von: e.target.value } })}
+          />
+          <DbFeld
+            beschriftung="bis vor"
+            beschriftungZeigen
+            dicht
+            placeholder="z.B. 14:00 oder 20"
+            value={wenn.bereich.bis}
+            onChange={e => onChange({ bereich: { ...wenn.bereich!, bis: e.target.value } })}
+          />
+        </DBStack>
+      ) : auswahl.length > 0 ? (
+        <DBStack direction="row" wrap gap="x-small">
+          {auswahl.map(wert => (
+            <DBCheckbox
+              key={wert}
+              size="small"
+              label={String(wert)}
+              checked={(wenn.werte ?? []).includes(wert)}
+              onChange={e => schalte(wert, e.target.checked)}
+            />
+          ))}
+        </DBStack>
+      ) : (
+        <DbFeld
+          beschriftung="Werte, durch Komma getrennt"
+          dicht
+          feldKlasse="schrift-mono"
+          placeholder="Werte, durch Komma getrennt"
+          value={(wenn.werte ?? []).join(', ')}
+          onChange={e =>
+            onChange({
+              werte: (e.target as HTMLInputElement).value
+                .split(',')
+                .map(t => t.trim())
+                .filter(Boolean),
+            })
+          }
+        />
+      )}
+    </>
+  );
+}
+
+/**
+ * Ankreuz-Spalte: trägt `dann` nur ein, wenn das Feld einen der gewählten Werte hat. Bei
+ * Bereitschaft je eine Spalte pro LRE-Stufe — Zeilen mit einer anderen (oder gar keiner) Stufe
+ * bleiben in dieser Spalte leer.
+ *
+ * Geprüfter Wert kommt aus einem Feld ODER einer Rechnung (z.B. eine Dauer aus zwei Uhrzeiten
+ * derselben Zeile) -- der Vergleich danach (`VergleichWahl`) ist identisch zu `FeldAnkreuzBedingung`.
+ * Das Feld darf auch eine bereits in dieser Tabelle angelegte berechnete Spalte sein
+ * (`andereBerechnete`) — der Renderer trägt deren Wert schon in die Zeile ein, eine zweite Rechnung
+ * ist dann unnötig.
+ *
+ * @param props - `spalte` (mit gesetztem `wenn`), `zeilenFelder`, `andereBerechnete` und `onChange`.
+ */
+export function AnkreuzBedingung({
+  spalte,
+  zeilenFelder,
+  andereBerechnete,
+  onChange,
+}: {
+  spalte: Spalte;
+  zeilenFelder: KatalogEintrag[];
+  andereBerechnete: KatalogEintrag[];
+  onChange: (spalte: Spalte) => void;
+}) {
+  const wenn = spalte.wenn!;
+  const auswahl = wenn.feld ? werteAuswahl(wenn.feld) : [];
+  const istBoolean = wenn.feld !== undefined && istBooleanFeld(wenn.feld);
+  const feldOptionen = [...zeilenFelder, ...andereBerechnete];
+
+  /**
+   * Übernimmt Änderungen in die Bedingung der Spalte.
+   *
+   * @param next - Zu überschreibende Bedingungsfelder.
+   */
+  function setzeWenn(next: Partial<Bedingung>) {
+    onChange({ ...spalte, wenn: { ...wenn, ...next } });
+  }
+
+  return (
+    <div className="luft-unten-2xs">
+      <DBStack direction="row" wrap gap="2x-small" className="volle-breite luft-unten-2xs">
+        <DBButton
+          type="button"
+          variant={!wenn.berechnet ? 'brand' : 'outlined'}
+          onClick={() => setzeWenn({ feld: wenn.feld ?? zeilenFelder[0]?.pfad ?? '', berechnet: undefined })}
+        >
+          Feld
+        </DBButton>
+        <DBButton
+          type="button"
+          variant={wenn.berechnet ? 'brand' : 'outlined'}
+          title="Prüft einen berechneten Wert dieser Zeile, z.B. eine Dauer aus Beginn/Ende"
+          onClick={() =>
+            setzeWenn({
+              berechnet: wenn.berechnet ?? { op: 'zeitdifferenz', operanden: [] },
+              feld: undefined,
+              bereich: wenn.bereich ?? { von: '', bis: '' },
+              werte: undefined,
+            })
+          }
+        >
+          Berechnung
+        </DBButton>
+      </DBStack>
+
+      {wenn.berechnet ? (
+        <Gruppe className="luft-unten-2xs">
+          <Rechnung
+            wert={wenn.berechnet}
+            zeilenFelder={zeilenFelder}
+            onChange={berechnet => setzeWenn({ berechnet })}
+          />
+        </Gruppe>
+      ) : (
+        <DbAuswahl
+          beschriftung="Geprüftes Feld"
+          dicht
+          className="luft-unten-2xs"
+          value={wenn.feld ?? ''}
+          onChange={e => {
+            const feld = (e.target as HTMLSelectElement).value;
+            // Der Titel folgt immer dem geprüften Feld (anders als der Format-Vorschlag, der eine
+            // bewusste Wahl nie überschreibt): ein stehen gelassener alter Titel würde nach einem
+            // Feldwechsel die falsche Bedingung beschreiben. Abweichende Titel werden danach im
+            // Anzeigename-Feld eingetragen.
+            const vorschlag = feldOptionen.find(o => o.pfad === feld)?.label;
+            onChange({
+              ...spalte,
+              label: vorschlag ?? spalte.label,
+              wenn: { ...wenn, feld, werte: istBooleanFeld(feld) ? [true] : [] },
+            });
+          }}
+        >
+          {gruppiere(feldOptionen).map(([gruppe, felder]) => (
+            <optgroup key={gruppe} label={gruppe}>
+              {felder.map(f => (
+                <option key={f.pfad} value={f.pfad}>
+                  {f.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </DbAuswahl>
+      )}
+
+      <VergleichWahl wenn={wenn} auswahl={auswahl} istBoolean={istBoolean} onChange={setzeWenn} />
+    </div>
+  );
+}
+
+/**
+ * Bedingter Feld-Inhalt (`FeldBedingung`): das Gegenstück zu `AnkreuzBedingung` auf Dokument- statt
+ * Zeilenebene. Geprüfter Wert kommt aus einem Datenpfad (`katalogFelder`, z.B. ein Personenfeld)
+ * ODER einer Aggregation über Zeilen (`AggregationEditor`, z.B. die Gesamtsumme).
+ *
+ * @param props - `feld` (mit gesetztem `wenn`), `formular`, `tabellen` und `onChange`.
+ */
+export function FeldAnkreuzBedingung({
+  feld,
+  formular,
+  tabellen,
+  onChange,
+}: {
+  feld: Feld;
+  formular: FormularCode;
+  tabellen: Record<string, TabellenDef>;
+  onChange: (feld: Feld) => void;
+}) {
+  const wenn = feld.wenn!;
+  const feldOptionen = katalogFelder(formular);
+  const auswahl = wenn.feld ? werteAuswahl(wenn.feld) : [];
+  const istBoolean = wenn.feld !== undefined && istBooleanFeld(wenn.feld);
+
+  /**
+   * Übernimmt Änderungen in die Bedingung des Felds.
+   *
+   * @param next - Zu überschreibende Bedingungsfelder.
+   */
+  function setzeWenn(next: Partial<FeldBedingung>) {
+    onChange({ ...feld, wenn: { ...wenn, ...next } });
+  }
+
+  return (
+    <div className="luft-unten-2xs">
+      <DBStack direction="row" wrap gap="2x-small" className="volle-breite luft-unten-2xs">
+        <DBButton
+          type="button"
+          variant={!wenn.berechnet ? 'brand' : 'outlined'}
+          onClick={() => setzeWenn({ feld: wenn.feld ?? feldOptionen[0]?.pfad ?? '', berechnet: undefined })}
+        >
+          Feld
+        </DBButton>
+        <DBButton
+          type="button"
+          variant={wenn.berechnet ? 'brand' : 'outlined'}
+          title="Prüft eine Aggregation über Zeilen, z.B. die Gesamtsumme"
+          onClick={() =>
+            setzeWenn({
+              berechnet: wenn.berechnet ?? { op: 'summe', ueber: '$alle' },
+              feld: undefined,
+              bereich: wenn.bereich ?? { von: '', bis: '' },
+              werte: undefined,
+            })
+          }
+        >
+          Berechnung
+        </DBButton>
+      </DBStack>
+
+      {wenn.berechnet ? (
+        <Gruppe className="luft-unten-2xs">
+          <AggregationEditor
+            wert={wenn.berechnet}
+            formular={formular}
+            tabellen={tabellen}
+            onChange={berechnet => setzeWenn({ berechnet })}
+          />
+        </Gruppe>
+      ) : (
+        <DbAuswahl
+          beschriftung="Geprüftes Feld"
+          dicht
+          className="luft-unten-2xs"
+          value={wenn.feld ?? ''}
+          onChange={e => {
+            const pfad = (e.target as HTMLSelectElement).value;
+            // Titel folgt dem geprüften Feld, Begründung siehe `AnkreuzBedingung`.
+            const vorschlag = feldOptionen.find(o => o.pfad === pfad)?.label;
+            onChange({
+              ...feld,
+              label: vorschlag ?? feld.label,
+              wenn: { ...wenn, feld: pfad, werte: istBooleanFeld(pfad) ? [true] : [] },
+            });
+          }}
+        >
+          {gruppiere(feldOptionen).map(([gruppe, felder]) => (
+            <optgroup key={gruppe} label={gruppe}>
+              {felder.map(f => (
+                <option key={f.pfad} value={f.pfad}>
+                  {f.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </DbAuswahl>
+      )}
+
+      <VergleichWahl wenn={wenn} auswahl={auswahl} istBoolean={istBoolean} onChange={setzeWenn} />
+    </div>
+  );
+}

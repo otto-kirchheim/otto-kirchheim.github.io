@@ -1,0 +1,398 @@
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
+
+const viCompat = vi as typeof vi & {
+  hoisted: <T>(factory: () => T) => T;
+};
+
+// --- Hoisted mocks ---
+const {
+  mockSetLoading,
+  mockClearLoading,
+  mockButtonDisable,
+  mockCreateSnackBar,
+  mockFlushAll,
+  mockGetResourceStatus,
+  mockMarkResourcesIdle,
+  mockMarkResourceSaved,
+  mockHasPendingTableChanges,
+  mockUpdateMyProfile,
+  mockSaveEinstellungen,
+  mockSyncFeatureTabs,
+} = viCompat.hoisted(() => ({
+  mockSetLoading: vi.fn(),
+  mockClearLoading: vi.fn(),
+  mockButtonDisable: vi.fn(),
+  mockCreateSnackBar: vi.fn(),
+  mockFlushAll: vi.fn(),
+  mockGetResourceStatus: vi.fn(),
+  mockMarkResourcesIdle: vi.fn(),
+  mockMarkResourceSaved: vi.fn(),
+  mockHasPendingTableChanges: vi.fn(),
+  mockUpdateMyProfile: vi.fn(),
+  mockSaveEinstellungen: vi.fn(),
+  mockSyncFeatureTabs: vi.fn(),
+}));
+
+// --- Mocks ---
+vi.mock('@/shared/ui/button-loading/setLoading', () => ({ default: mockSetLoading }));
+vi.mock('@/shared/ui/button-loading/clearLoading', () => ({ default: mockClearLoading }));
+vi.mock('@/shared/ui/button-loading/buttonDisable', () => ({ default: mockButtonDisable }));
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
+vi.mock('@/shared/lib/autosave/autoSave', () => ({
+  flushAll: mockFlushAll,
+  getResourceStatus: mockGetResourceStatus,
+  markResourcesIdle: mockMarkResourcesIdle,
+  markResourceSaved: mockMarkResourceSaved,
+  hasPendingTableChanges: mockHasPendingTableChanges,
+}));
+vi.mock('@/shared/api/apiService', () => ({
+  profileApi: { updateMyProfile: mockUpdateMyProfile },
+}));
+vi.mock('@/shared/lib/feature/syncFeatureTabs', () => ({ syncFeatureTabs: mockSyncFeatureTabs }));
+
+import '@/app/features';
+import Storage from '@/shared/lib/storage/Storage';
+import saveDaten from '@/shared/lib/ressource/saveDaten';
+import { onEvent, clearAllEventListeners } from '@/shared/lib/events/appEvents';
+import { registerHook, clearAllHooks } from '@/shared/lib/feature';
+
+describe('saveDaten', () => {
+  let button: HTMLButtonElement;
+  const mockUserData = { Pers: { Vorname: 'Test' } };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    clearAllHooks();
+    clearAllEventListeners();
+    registerHook('pre-save:settings', mockSaveEinstellungen);
+
+    document.body.innerHTML = '<button id="btnSave"></button>';
+    button = document.getElementById('btnSave') as HTMLButtonElement;
+    Storage.set('VorgabenU', { Pers: { Vorname: 'Alt' } });
+
+    mockSaveEinstellungen.mockReturnValue(mockUserData);
+    mockUpdateMyProfile.mockResolvedValue({ data: mockUserData, updatedAt: '2026-03-07T12:00:00.000Z' });
+    mockFlushAll.mockResolvedValue(undefined);
+    mockGetResourceStatus.mockReturnValue({ status: 'idle', timer: null, lastSaved: null, lastError: null });
+    mockHasPendingTableChanges.mockReturnValue(false);
+    mockSyncFeatureTabs.mockResolvedValue(undefined);
+
+    // navigator.onLine standardmäßig auf true
+    Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
+  });
+
+  it('bricht ab wenn Button null ist', async () => {
+    await saveDaten(null);
+    expect(mockSetLoading).not.toHaveBeenCalled();
+  });
+
+  it('bricht offline ohne eigenen Snackbar ab (globale Offline-Banner reicht, siehe setOffline.ts)', async () => {
+    Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
+    try {
+      await saveDaten(button);
+      expect(mockCreateSnackBar).not.toHaveBeenCalled();
+      expect(mockSetLoading).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
+    }
+  });
+
+  it('setzt Loading und deaktiviert Buttons', async () => {
+    await saveDaten(button);
+    expect(mockSetLoading).toHaveBeenCalledWith('btnSave');
+    expect(mockButtonDisable).toHaveBeenCalledWith(true);
+  });
+
+  it('speichert Einstellungen und flusht alle Änderungen', async () => {
+    await saveDaten(button);
+    expect(mockSaveEinstellungen).toHaveBeenCalled();
+    expect(mockUpdateMyProfile).toHaveBeenCalledWith(mockUserData);
+    expect(mockFlushAll).toHaveBeenCalled();
+    expect(mockMarkResourceSaved).toHaveBeenCalledWith('settings');
+  });
+
+  it('setzt Ressourcenstatus beim manuellen Save auf idle zurück', async () => {
+    await saveDaten(button);
+
+    // markResourcesIdle darf nicht mehr aufgerufen werden (war der ursprüngliche Bug).
+    expect(mockMarkResourcesIdle).not.toHaveBeenCalled();
+  });
+
+  it('sendet Settings nicht erneut wenn lokal unverändert', async () => {
+    Storage.set('VorgabenU', mockUserData);
+    await saveDaten(button);
+    expect(mockFlushAll).toHaveBeenCalled();
+    expect(mockUpdateMyProfile).not.toHaveBeenCalled();
+    expect(mockMarkResourceSaved).not.toHaveBeenCalled();
+  });
+
+  it('synchronisiert Settings bei pending AutoSave auch ohne lokale Differenz', async () => {
+    Storage.set('VorgabenU', mockUserData);
+    mockGetResourceStatus.mockReturnValue({ status: 'pending', timer: null, lastSaved: null, lastError: null });
+
+    await saveDaten(button);
+
+    expect(mockUpdateMyProfile).toHaveBeenCalledWith(mockUserData);
+    expect(mockMarkResourceSaved).toHaveBeenCalledWith('settings');
+  });
+
+  it('synchronisiert Settings bei error AutoSave auch ohne lokale Differenz', async () => {
+    Storage.set('VorgabenU', mockUserData);
+    mockGetResourceStatus.mockReturnValue({ status: 'error', timer: null, lastSaved: null, lastError: 'x' });
+
+    await saveDaten(button);
+
+    expect(mockUpdateMyProfile).toHaveBeenCalledWith(mockUserData);
+    expect(mockMarkResourceSaved).toHaveBeenCalledWith('settings');
+  });
+
+  it('speichert UserData in Storage', async () => {
+    await saveDaten(button);
+    expect(Storage.get<typeof mockUserData>('VorgabenU')).toEqual(mockUserData);
+  });
+
+  it('übernimmt serverseitig normalisierte Profilwerte', async () => {
+    const normalizedProfile = {
+      Pers: { Vorname: 'Test', Nachname: 'Normalisiert' },
+    };
+    mockUpdateMyProfile.mockResolvedValue({ data: normalizedProfile, updatedAt: '2026-03-07T12:00:00.000Z' });
+
+    await saveDaten(button);
+
+    expect(Storage.get<typeof normalizedProfile>('VorgabenU')).toEqual(normalizedProfile);
+  });
+
+  it('zeigt Erfolgs-Snackbar bei Erfolg', async () => {
+    await saveDaten(button);
+    expect(mockCreateSnackBar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('Daten gespeichert'),
+        status: 'success',
+      }),
+    );
+  });
+
+  it('zeigt Fehler-Snackbar bei API-Fehler', async () => {
+    mockUpdateMyProfile.mockRejectedValue(new Error('Network error'));
+    await saveDaten(button);
+    expect(mockCreateSnackBar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('Network error'),
+        status: 'error',
+      }),
+    );
+  });
+
+  it('zeigt Fehler-Snackbar bei flushAll-Fehler', async () => {
+    mockFlushAll.mockRejectedValue(new Error('Flush failed'));
+    await saveDaten(button);
+    expect(mockCreateSnackBar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('Flush failed'),
+        status: 'error',
+      }),
+    );
+  });
+
+  it('räumt Loading in finally auf', async () => {
+    mockUpdateMyProfile.mockRejectedValue(new Error('fail'));
+    await saveDaten(button);
+    expect(mockClearLoading).toHaveBeenCalledWith('btnSave');
+    expect(mockButtonDisable).toHaveBeenCalledWith(false);
+  });
+
+  it('konvertiert nicht-Error-Objekte in Fehlermeldung', async () => {
+    mockFlushAll.mockRejectedValue('string error');
+    await saveDaten(button);
+    expect(mockCreateSnackBar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('string error'),
+        status: 'error',
+      }),
+    );
+  });
+
+  it('btnSaveB nutzt nur BZ und BE als Ressourcen', async () => {
+    document.body.innerHTML = '<button id="btnSaveB"></button>';
+    const btnSaveB = document.getElementById('btnSaveB') as HTMLButtonElement;
+
+    await saveDaten(btnSaveB);
+
+    // btnSaveB schließt EWT, N, settings aus → kein EWT/N-hasPendingTableChanges
+    expect(mockHasPendingTableChanges).toHaveBeenCalledWith('BZ', true);
+    expect(mockHasPendingTableChanges).toHaveBeenCalledWith('BE', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('EWT', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('N', true);
+  });
+
+  it('btnSaveE nutzt nur EWT als Ressource', async () => {
+    document.body.innerHTML = '<button id="btnSaveE"></button>';
+    const btnSaveE = document.getElementById('btnSaveE') as HTMLButtonElement;
+
+    await saveDaten(btnSaveE);
+
+    expect(mockHasPendingTableChanges).toHaveBeenCalledWith('EWT', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('BZ', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('N', true);
+  });
+
+  it('btnSaveN nutzt nur N als Ressource', async () => {
+    document.body.innerHTML = '<button id="btnSaveN"></button>';
+    const btnSaveN = document.getElementById('btnSaveN') as HTMLButtonElement;
+
+    await saveDaten(btnSaveN);
+
+    expect(mockHasPendingTableChanges).toHaveBeenCalledWith('N', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('BZ', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('EWT', true);
+  });
+
+  it('btnSaveEinstellungen nutzt nur settings als Ressource', async () => {
+    document.body.innerHTML = '<button id="btnSaveEinstellungen"></button>';
+    const btnSaveEinstellungen = document.getElementById('btnSaveEinstellungen') as HTMLButtonElement;
+
+    await saveDaten(btnSaveEinstellungen);
+
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('BZ', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('EWT', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('N', true);
+  });
+
+  it('flusht Tabellendaten auch wenn Einstellungen-Validierung fehlschlägt', async () => {
+    mockSaveEinstellungen.mockImplementation(() => {
+      throw new Error('Persönliche Daten fehlerhaft');
+    });
+    mockHasPendingTableChanges.mockReturnValue(true);
+
+    await saveDaten(button);
+
+    expect(mockFlushAll).toHaveBeenCalled();
+    expect(mockUpdateMyProfile).not.toHaveBeenCalled();
+    expect(mockMarkResourceSaved).not.toHaveBeenCalledWith('settings');
+    // Button betrifft auch Tabellen-Ressourcen (Default-Button) – die wurden erfolgreich
+    // geflusht, daher trotzdem Erfolgs-Snackbar (die feldgenaue Fehler-Snackbar zu den
+    // Einstellungen kommt separat aus saveEinstellungen).
+    expect(mockCreateSnackBar).toHaveBeenCalledWith(expect.objectContaining({ status: 'success' }));
+    // Kein partieller Settings-Write in Storage
+    expect(Storage.get<typeof mockUserData>('VorgabenU')).toEqual({ Pers: { Vorname: 'Alt' } });
+  });
+
+  it('btnSaveEinstellungen: Einstellungen-Fehler zeigt keine Zusatz-Snackbar', async () => {
+    document.body.innerHTML = '<button id="btnSaveEinstellungen"></button>';
+    const btnSaveEinstellungen = document.getElementById('btnSaveEinstellungen') as HTMLButtonElement;
+    mockSaveEinstellungen.mockImplementation(() => {
+      throw new Error('Adressformat ungültig');
+    });
+
+    await saveDaten(btnSaveEinstellungen);
+
+    expect(mockFlushAll).toHaveBeenCalled();
+    expect(mockUpdateMyProfile).not.toHaveBeenCalled();
+    expect(mockCreateSnackBar).not.toHaveBeenCalled();
+  });
+
+  it('räumt Loading auf wenn Einstellungen-Validierung fehlschlägt', async () => {
+    mockSaveEinstellungen.mockImplementation(() => {
+      throw new Error('Persönliche Daten fehlerhaft');
+    });
+
+    await saveDaten(button);
+
+    expect(mockClearLoading).toHaveBeenCalledWith('btnSave');
+    expect(mockButtonDisable).toHaveBeenCalledWith(false);
+  });
+
+  it('flusht Tabellendaten auch wenn pre-save:settings Hook nicht registriert ist', async () => {
+    clearAllHooks();
+
+    await saveDaten(button);
+
+    expect(mockFlushAll).toHaveBeenCalled();
+    expect(mockUpdateMyProfile).not.toHaveBeenCalled();
+    // Default-Button betrifft auch Tabellen-Ressourcen – Erfolgs-Snackbar bleibt sichtbar.
+    expect(mockCreateSnackBar).toHaveBeenCalledWith(expect.objectContaining({ status: 'success' }));
+  });
+
+  it('race-condition: markResourceSaved wird für idle BZ nach flush aufgerufen', async () => {
+    document.body.innerHTML = '<button id="btnSaveB"></button>';
+    const btnSaveB = document.getElementById('btnSaveB') as HTMLButtonElement;
+
+    // hasPendingTableChanges gibt true zurück (vor flush gab es Änderungen)
+    mockHasPendingTableChanges.mockReturnValue(true);
+    // Nach flush ist der Status idle (Race-Condition: AutoSave hat sich selbst gesaved)
+    mockGetResourceStatus.mockReturnValue({ status: 'idle', timer: null, lastSaved: null, lastError: null });
+
+    await saveDaten(btnSaveB);
+
+    expect(mockMarkResourceSaved).toHaveBeenCalledWith('BZ');
+    expect(mockMarkResourceSaved).toHaveBeenCalledWith('BE');
+  });
+
+  it('ruft syncFeatureTabs mit den frisch gesammelten aktivierteTabs auf', async () => {
+    mockSaveEinstellungen.mockReturnValue({
+      Pers: { Vorname: 'Test' },
+      Einstellungen: { aktivierteTabs: ['ewt'] },
+    });
+
+    await saveDaten(button);
+
+    expect(mockSyncFeatureTabs).toHaveBeenCalledWith(['ewt']);
+  });
+
+  it('meldet data:changed (settings), wenn sich die Tab-Auswahl aendert, damit die Berechnung neu rendert', async () => {
+    Storage.set('VorgabenU', {
+      Pers: { Vorname: 'Alt' },
+      Einstellungen: { aktivierteTabs: ['bereitschaft', 'neben'] },
+    });
+    mockSaveEinstellungen.mockReturnValue({
+      Pers: { Vorname: 'Test' },
+      Einstellungen: { aktivierteTabs: ['neben', 'bereitschaft', 'ewt'] },
+    });
+    const gemeldet: unknown[] = [];
+    onEvent('data:changed', payload => gemeldet.push(payload));
+
+    await saveDaten(button);
+
+    expect(gemeldet).toContainEqual({ resource: 'settings', action: 'update' });
+  });
+
+  it('meldet kein data:changed, wenn die Tab-Auswahl gleich bleibt (auch bei anderer Reihenfolge)', async () => {
+    Storage.set('VorgabenU', { Pers: { Vorname: 'Alt' }, Einstellungen: { aktivierteTabs: ['ewt', 'neben'] } });
+    mockSaveEinstellungen.mockReturnValue({
+      Pers: { Vorname: 'Test' },
+      Einstellungen: { aktivierteTabs: ['neben', 'ewt'] },
+    });
+    const gemeldet: unknown[] = [];
+    onEvent('data:changed', payload => gemeldet.push(payload));
+
+    await saveDaten(button);
+
+    expect(gemeldet).toHaveLength(0);
+  });
+
+  it('ruft syncFeatureTabs mit den alten aktivierteTabs auf, wenn das Einstellungen-Sammeln fehlschlägt', async () => {
+    Storage.set('VorgabenU', { Pers: { Vorname: 'Alt' }, Einstellungen: { aktivierteTabs: ['neben'] } });
+    mockSaveEinstellungen.mockImplementation(() => {
+      throw new Error('Persönliche Daten fehlerhaft');
+    });
+
+    await saveDaten(button);
+
+    expect(mockSyncFeatureTabs).toHaveBeenCalledWith(['neben']);
+  });
+
+  it('ruft syncFeatureTabs erst nach flushAll auf (Daten müssen vor dem Unmount geflusht sein)', async () => {
+    const callOrder: string[] = [];
+    mockFlushAll.mockImplementation(async () => {
+      callOrder.push('flushAll');
+    });
+    mockSyncFeatureTabs.mockImplementation(async () => {
+      callOrder.push('syncFeatureTabs');
+    });
+
+    await saveDaten(button);
+
+    expect(callOrder).toEqual(['flushAll', 'syncFeatureTabs']);
+  });
+});

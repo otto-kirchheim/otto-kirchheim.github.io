@@ -1,0 +1,394 @@
+import type { Dayjs } from 'dayjs';
+import { v4 as uuidv4 } from 'uuid';
+import { calculateBereitschaftsZeiten } from '.';
+import { publishEvent } from '@/shared/lib/events/appEvents';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
+import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IMonatsDaten, IVorgabenU } from '@/types';
+import mergeSchichtenOverrides from './mergeSchichtenOverrides';
+import { getBereitschaftRuntimeOverrides } from './bereitschaftRuntimeOverrides';
+import { default as normalizeResourceRows } from '@/shared/lib/ressource/normalizeResourceRows';
+import { default as Storage } from '@/shared/lib/storage/Storage';
+import { default as clearLoading } from '@/shared/ui/button-loading/clearLoading';
+import { default as setLoading } from '@/shared/ui/button-loading/setLoading';
+import { default as tableToArray } from '@/shared/lib/ressource/tableToArray';
+import { bereitschaftszeitraumApi } from './backend';
+import dayjs from '@/shared/lib/date/configDayjs';
+import { getMonatFromBZ } from './monat';
+
+/**
+ * Berechnet aus dem Modal neue Bereitschaftszeiträume und schreibt sie in Storage und Tabelle. Bei Monatswechsel wird der Folgemonat mitberechnet; bei Jahreswechsel wird er sofort per Bulk-API gespeichert (offline nur ohne Wechsel möglich).
+ * Validierungsfehler und "bereits vorhanden" zeigen eine Snackbar und brechen ohne Änderung ab.
+ *
+ * @param modal - Modal mit den Eingabefeldern (`#bA`/`#bAT`/`#bE`/`#bET`, Nacht-, Spät-, Sonder- und Vorgabe-Felder).
+ * @param tableBZ - BZ-Tabellenelement, das nach dem Speichern neu geladen wird.
+ * @throws {Error} Wenn ein Pflichtfeld fehlt oder die Nacht-/Bereitschaftszeiten unplausibel sind.
+ */
+export default async function submitBereitschaftsZeiten(
+  modal: CustomHTMLDivElement<IDatenBZ>,
+  tableBZ: CustomHTMLTableElement<IDatenBZ>,
+): Promise<void> {
+  setLoading('btnESZ');
+
+  const bAInput = modal.querySelector<HTMLInputElement>('#bA');
+  const bATInput = modal.querySelector<HTMLInputElement>('#bAT');
+  const bEInput = modal.querySelector<HTMLInputElement>('#bE');
+  const bETInput = modal.querySelector<HTMLInputElement>('#bET');
+  const nachtInput = modal.querySelector<HTMLInputElement>('#nacht');
+  const nAInput = modal.querySelector<HTMLInputElement>('#nA');
+  const nATInput = modal.querySelector<HTMLInputElement>('#nAT');
+  const nEInput = modal.querySelector<HTMLInputElement>('#nE');
+  const nETInput = modal.querySelector<HTMLInputElement>('#nET');
+  const spaetInput = modal.querySelector<HTMLInputElement>('#spaet');
+  const sonderInput = modal.querySelector<HTMLInputElement>('#sonder');
+  const sonderVonInput = modal.querySelector<HTMLInputElement>('#sonderVon');
+  const sonderBisInput = modal.querySelector<HTMLInputElement>('#sonderBis');
+  const vorgabeSelect = modal.querySelector<HTMLSelectElement>('#vorgabeB');
+  const vorgabenU = Storage.get<Partial<IVorgabenU>>('VorgabenU', { default: {} });
+  const az = vorgabenU.Arbeitszeit;
+  const activeSchichtenOverrides = vorgabeSelect
+    ? vorgabenU.VorgabenB?.[vorgabeSelect.value]?.schichtenOverrides
+    : undefined;
+
+  /**
+   * Lädt alle Zeilen (inkl. gelöschter) in die Tabelle, filtert auf den Monat und zeichnet neu; die Sortierung läuft wie gewohnt.
+   *
+   * @param table - BZ-Tabellenelement.
+   * @param reloadedRows - Alle Zeilen inkl. gelöschter.
+   * @param monatToSet - Monat (1-12) für den Tabellenfilter.
+   */
+  const preserveDeletedRows = (
+    table: CustomHTMLTableElement<IDatenBZ>,
+    reloadedRows: IDatenBZ[],
+    monatToSet: number,
+  ): void => {
+    // Lade alle Zeilen (inkl. gelöschter) und lasse die Sortierung wie gewohnt laufen
+    table.instance.rows.load(reloadedRows);
+    table.instance.rows.setFilter(row => getMonatFromBZ(row) === monatToSet);
+    table.instance.drawRows();
+  };
+
+  // Nur BZ-Kernfelder sind zwingend; Nacht/Spät-Felder existieren nur wenn az.nacht/az.spaet konfiguriert.
+  if (!bAInput || !bATInput || !bEInput || !bETInput || !nachtInput) throw new Error('Input Element nicht gefunden');
+
+  const bereitschaftsAnfang: Dayjs = dayjs(`${bAInput.value}T${bATInput.value}`);
+  const bereitschaftsEnde: Dayjs = dayjs(`${bEInput.value}T${bETInput.value}`);
+  let nacht: boolean = nachtInput.checked ?? false;
+  const spaet: boolean = spaetInput?.checked ?? false;
+  const sonder: boolean = sonderInput?.checked ?? false;
+  const sonderRange =
+    sonder && sonderVonInput?.value && sonderBisInput?.value
+      ? { von: dayjs(sonderVonInput.value), bis: dayjs(sonderBisInput.value) }
+      : undefined;
+
+  // Nacht: Datum+Zeit nur auslesen wenn aktiv; sonst leer lassen.
+  const nachtAnfangZeit = nacht ? nATInput?.value || az?.nacht?.default.beginn || '' : '';
+  const nachtEndeZeit = nacht ? nETInput?.value || az?.nacht?.default.ende || '' : '';
+  const nachtAnfang: Dayjs =
+    nacht && nachtAnfangZeit
+      ? dayjs(`${nAInput?.value || bereitschaftsAnfang.format('YYYY-MM-DD')}T${nachtAnfangZeit}`)
+      : bereitschaftsEnde;
+  const nachtEnde: Dayjs =
+    nacht && nachtEndeZeit
+      ? dayjs(`${nEInput?.value || bereitschaftsEnde.format('YYYY-MM-DD')}T${nachtEndeZeit}`)
+      : bereitschaftsEnde;
+
+  const runtimeOverrides = getBereitschaftRuntimeOverrides();
+  const effectiveSchichtenOverrides = mergeSchichtenOverrides(activeSchichtenOverrides, runtimeOverrides);
+  const effectiveSonder = runtimeOverrides?.sonderOverride ?? az?.sonder;
+
+  if (nachtAnfang.isBefore(bereitschaftsAnfang)) {
+    clearLoading('btnESZ');
+    createSnackBar({
+      message: 'Nacht Anfang darf nicht vor Bereitschafts Anfang liegen',
+      status: 'error',
+      timeout: 3000,
+      fixed: true,
+    });
+    return;
+  }
+  if (nachtEnde.isAfter(bereitschaftsEnde)) {
+    clearLoading('btnESZ');
+    createSnackBar({
+      message: 'Nacht Ende darf nicht nach Bereitschafts Ende liegen',
+      status: 'error',
+      timeout: 3000,
+      fixed: true,
+    });
+    return;
+  }
+  if (sonderRange && sonderRange.bis.isBefore(sonderRange.von, 'day')) {
+    clearLoading('btnESZ');
+    createSnackBar({
+      message: 'Sonderschicht Ende darf nicht vor Sonderschicht Beginn liegen',
+      status: 'error',
+      timeout: 3000,
+      fixed: true,
+    });
+    return;
+  }
+
+  const monat: number = Storage.get<number>('Monat', { check: true });
+  const jahr: number = Storage.get<number>('Jahr', { check: true });
+
+  /**
+   * Ersetzt die Zeilen eines Monats durch neue.
+   *
+   * @param allRows - Alle BZ-Zeilen.
+   * @param monthRows - Neue Zeilen des Monats.
+   * @param month - Monat (1-12), dessen alte Zeilen ersetzt werden.
+   * @returns Zeilen aller anderen Monate plus `monthRows`.
+   */
+  const mergeMonatRows = (allRows: IDatenBZ[], monthRows: IDatenBZ[], month: number): IDatenBZ[] => {
+    const otherMonths = allRows.filter(item => getMonatFromBZ(item) !== month);
+    return [...otherMonths, ...monthRows];
+  };
+
+  /**
+   * Filtert BZ-Zeilen auf einen Monat.
+   *
+   * @param rows - Alle BZ-Zeilen.
+   * @param month - Monat (1-12).
+   * @returns Nur die Zeilen dieses Monats.
+   */
+  const getMonatRows = (rows: IDatenBZ[], month: number): IDatenBZ[] => {
+    return rows.filter(item => getMonatFromBZ(item) === month);
+  };
+
+  let monatData: IMonatsDaten['BZ'] | false = false;
+  const currentMonatRows: IMonatsDaten['BZ'] = getMonatRows(tableToArray('tableBZ'), monat);
+  let folgeMonatData: IMonatsDaten['BZ'] | false;
+  if (!currentMonatRows) throw new Error('Fehler bei Datenermittlung');
+
+  if (
+    bereitschaftsAnfang.isSame(bereitschaftsEnde, 'month') ||
+    (!bereitschaftsAnfang.isSame(bereitschaftsEnde, 'month') &&
+      bereitschaftsEnde.isSameOrBefore(dayjs([jahr, bereitschaftsEnde.month(), 1, 0, 0])))
+  ) {
+    const nachtEnde2: Dayjs = bereitschaftsEnde.isSameOrBefore(nachtEnde, 'month')
+      ? nachtEnde
+      : bereitschaftsEnde.hour(nachtEnde.hour()).minute(nachtEnde.minute());
+
+    monatData = calculateBereitschaftsZeiten(
+      bereitschaftsAnfang,
+      bereitschaftsEnde,
+      nachtAnfang,
+      nachtEnde2,
+      nacht,
+      spaet,
+      sonder,
+      sonderRange,
+      currentMonatRows,
+      effectiveSchichtenOverrides,
+      effectiveSonder,
+    );
+  } else if (!bereitschaftsAnfang.isSame(bereitschaftsEnde, 'y') && !navigator.onLine) {
+    createSnackBar({
+      message: 'Bereitschaft<br/>Du bist Offline: <br/>Kein Jahreswechsel möglich!',
+      icon: 'question',
+      status: 'error',
+      dismissible: false,
+      timeout: false,
+      actions: [
+        {
+          text: 'ohne wechsel fortsetzten?',
+          /** Berechnet nur bis zum Monatswechsel (ohne Folgemonat) und übernimmt das Ergebnis in Storage und Tabelle. */
+          function: () => {
+            if (!currentMonatRows) throw new Error('Fehler bei Datenermittlung');
+            monatData = calculateBereitschaftsZeiten(
+              bereitschaftsAnfang,
+              dayjs([bereitschaftsEnde.year(), bereitschaftsEnde.month()]),
+              nachtAnfang,
+              nachtEnde,
+              nacht,
+              spaet,
+              sonder,
+              sonderRange,
+              currentMonatRows,
+              effectiveSchichtenOverrides,
+              effectiveSonder,
+            );
+            if (!monatData) {
+              clearLoading('btnESZ');
+              createSnackBar({
+                message: 'Bereitschaft<br/>Bereitschaftszeitraum Bereits vorhanden!',
+                icon: '!',
+                status: 'warning',
+                timeout: 3000,
+                fixed: true,
+              });
+              return;
+            }
+
+            const mergedRows = mergeMonatRows(
+              normalizeResourceRows<IDatenBZ>(Storage.get<unknown>('dataBZ', { default: [] })),
+              monatData,
+              monat,
+            );
+            Storage.set('dataBZ', mergedRows);
+            preserveDeletedRows(
+              tableBZ,
+              normalizeResourceRows<IDatenBZ>(Storage.get<unknown>('dataBZ', { default: [] })),
+              monat,
+            );
+
+            clearLoading('btnESZ');
+            createSnackBar({
+              message:
+                'Bereitschaft<br/>Neuer Zeitraum hinzugefügt</br>Speichern nicht vergessen!</br></br>Berechnung wird erst nach Speichern aktualisiert.',
+              status: 'success',
+              timeout: 3000,
+              fixed: true,
+            });
+          },
+          dismiss: true,
+        },
+        {
+          text: 'Abbrechen',
+          /** Beendet den Lade-Zustand des Buttons, ohne etwas zu ändern. */
+          function: () => {
+            clearLoading('btnESZ');
+          },
+          dismiss: true,
+        },
+      ],
+      fixed: true,
+    });
+    return;
+  } else {
+    const monat2: number = bereitschaftsEnde.month();
+    const jahr2: number = bereitschaftsEnde.year();
+
+    const bereitschaftsEndeWechsel: Dayjs = dayjs([jahr2, monat2]);
+    let nacht2: boolean = false;
+    let nachtEnde1: Dayjs;
+    const nachtEnde2: Dayjs = nachtEnde.clone();
+    let nachtAnfang2: Dayjs;
+    if (bereitschaftsEndeWechsel.isBefore(nachtAnfang)) {
+      [nacht, nacht2] = [nacht2, nacht];
+      nachtEnde1 = nachtEnde.clone();
+      nachtAnfang2 = nachtAnfang.clone();
+    } else if (bereitschaftsEndeWechsel.isAfter(nachtEnde)) {
+      nachtEnde1 = nachtEnde.clone();
+      nachtAnfang2 = bereitschaftsEnde.clone();
+    } else if (bereitschaftsEndeWechsel.isAfter(nachtAnfang) && bereitschaftsEndeWechsel.isBefore(nachtEnde)) {
+      nacht2 = nacht;
+      nachtEnde1 = dayjs([jahr2, monat2, 1, nachtEnde.hour(), nachtEnde.minute()]);
+      nachtAnfang2 = dayjs([jahr2, monat2, 1, nachtAnfang.hour(), nachtAnfang.minute()]).subtract(1, 'day');
+    } else throw new Error('Fehler bei Nacht und Bereitschaft');
+
+    if (jahr !== jahr2) {
+      try {
+        const { data: respondedBzRows } = await bereitschaftszeitraumApi.loadYear(jahr2);
+
+        folgeMonatData = calculateBereitschaftsZeiten(
+          bereitschaftsEndeWechsel,
+          bereitschaftsEnde,
+          nachtAnfang2,
+          nachtEnde2,
+          nacht2,
+          spaet,
+          sonder,
+          sonderRange,
+          respondedBzRows.filter(item => getMonatFromBZ(item) === monat2 + 1),
+          effectiveSchichtenOverrides,
+          effectiveSonder,
+        );
+
+        if (!folgeMonatData) return;
+
+        const createItems = folgeMonatData.map(row => ({ ...row, clientRequestId: uuidv4() }));
+        const bulkResult = await bereitschaftszeitraumApi.bulk(
+          { create: createItems, update: [], delete: [] },
+          monat2 + 1,
+          jahr2,
+        );
+
+        if (bulkResult.errors.length > 0) {
+          createSnackBar({
+            message: 'Bereitschaft<br/>Es ist ein Fehler beim Jahreswechsel aufgetreten',
+            status: 'error',
+            timeout: 3000,
+            fixed: true,
+          });
+          return;
+        }
+
+        createSnackBar({
+          message: `Bereitschaft<br/>Daten für 01/${jahr2} gespeichert`,
+          status: 'success',
+          timeout: 3000,
+          fixed: true,
+        });
+      } catch (err: unknown) {
+        console.error(err);
+        return;
+      }
+    } else {
+      folgeMonatData = getMonatRows(Storage.get<IDatenBZ[]>('dataBZ', { default: [] }), monat2 + 1);
+      folgeMonatData = calculateBereitschaftsZeiten(
+        bereitschaftsEndeWechsel,
+        bereitschaftsEnde,
+        nachtAnfang2,
+        nachtEnde2,
+        nacht2,
+        spaet,
+        sonder,
+        sonderRange,
+        folgeMonatData,
+        effectiveSchichtenOverrides,
+        effectiveSonder,
+      );
+      if (folgeMonatData) {
+        const mergedRows = mergeMonatRows(
+          normalizeResourceRows<IDatenBZ>(Storage.get<unknown>('dataBZ', { default: [] })),
+          folgeMonatData,
+          monat2 + 1,
+        );
+        Storage.set('dataBZ', mergedRows);
+      }
+    }
+
+    monatData = calculateBereitschaftsZeiten(
+      bereitschaftsAnfang,
+      bereitschaftsEndeWechsel,
+      nachtAnfang,
+      nachtEnde1,
+      nacht,
+      spaet,
+      sonder,
+      sonderRange,
+      currentMonatRows,
+      effectiveSchichtenOverrides,
+      effectiveSonder,
+    );
+  }
+
+  if (!monatData) {
+    clearLoading('btnESZ');
+    createSnackBar({
+      message: 'Bereitschaft<br/>Bereitschaftszeitraum Bereits vorhanden!',
+      status: 'warning',
+      timeout: 3000,
+      fixed: true,
+    });
+    return;
+  }
+
+  const mergedRows = mergeMonatRows(
+    normalizeResourceRows<IDatenBZ>(Storage.get<unknown>('dataBZ', { default: [] })),
+    monatData,
+    monat,
+  );
+  Storage.set('dataBZ', mergedRows);
+  preserveDeletedRows(tableBZ, normalizeResourceRows<IDatenBZ>(Storage.get<unknown>('dataBZ', { default: [] })), monat);
+
+  publishEvent('data:changed', { resource: 'all', action: 'sync' });
+
+  clearLoading('btnESZ');
+  createSnackBar({
+    message: 'Bereitschaft<br/>Neuer Zeitraum hinzugefügt</br>Speichern nicht vergessen!',
+    status: 'success',
+    timeout: 3000,
+    fixed: true,
+  });
+}

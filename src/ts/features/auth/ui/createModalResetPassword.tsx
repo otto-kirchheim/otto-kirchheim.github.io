@@ -1,0 +1,123 @@
+import { createRef, type SubmitEvent } from 'react';
+
+import MyFormModal from '@/shared/ui/modal/MyFormModal';
+import MyInput from '@/shared/ui/form/MyInput';
+import MyModalBody from '@/shared/ui/modal/MyModalBody';
+import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
+import PasswordStrengthMeter from '@/shared/ui/form/PasswordStrengthMeter';
+import showModal, { schliesseModal } from '@/shared/ui/modal/showModal';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
+import { authApi } from '@/shared/api/apiService';
+import { getPasswordValidationMessage, PASSWORD_MIN_LENGTH } from '@/shared/lib/validation/passwordValidation';
+
+/**
+ * Öffnet den Dialog zum Setzen eines neuen Passworts nach dem Reset-Link.
+ *
+ * @param token - Reset-Token aus dem Link der Reset-Mail.
+ */
+export default function createModalResetPassword(token: string): void {
+  const ref = createRef<HTMLFormElement>();
+  const passwortRef = createRef<HTMLInputElement>();
+
+  const modal = showModal(
+    <MyFormModal myRef={ref} title="Passwort zurücksetzen" submitText="Passwort speichern" onSubmit={onSubmit()}>
+      <MyModalBody>
+        <Gruppe titel="Neues Passwort">
+          <div className="raster abstand-2">
+            <MyInput
+              myRef={passwortRef}
+              divClass="sp-12"
+              required
+              type="password"
+              id="PasswortNeuReset"
+              name="Neues Passwort"
+              minLength={PASSWORD_MIN_LENGTH}
+              autoComplete="new-password"
+              invalidFeedbackId="reset-password-new-feedback"
+              invalidFeedbackText="Das neue Passwort muss mindestens 8 Zeichen lang sein."
+              popover={{
+                content: '-Mindestens 8 Zeichen <br/>',
+                placement: 'right',
+                html: true,
+                title: 'Hinweis',
+                trigger: 'focus',
+              }}
+            >
+              Neues Passwort
+            </MyInput>
+            <PasswordStrengthMeter passwordInputRef={passwortRef} />
+            <MyInput
+              divClass="sp-12"
+              required
+              type="password"
+              id="PasswortNeuReset2"
+              name="Neues Passwort wiederholen"
+              minLength={PASSWORD_MIN_LENGTH}
+              autoComplete="new-password"
+              invalidFeedbackId="reset-password-repeat-feedback"
+              invalidFeedbackText="Bitte wiederhole das neue Passwort mit mindestens 8 Zeichen."
+            >
+              Neues Passwort wiederholen
+            </MyInput>
+          </div>
+        </Gruppe>
+      </MyModalBody>
+    </MyFormModal>,
+  );
+
+  if (ref.current === null) throw new Error('referenz nicht gesetzt');
+  const form = ref.current;
+
+  /**
+   * Baut den Submit-Handler: prüft Übereinstimmung, Passwortregeln und Online-Status, setzt das Passwort über die API zurück, schließt den Dialog und zeigt eine Snackbar.
+   * Fehlertexte landen in `#errorMessage`.
+   */
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => Promise<void> {
+    return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
+      if (!(form instanceof HTMLFormElement)) return;
+      event.preventDefault();
+      if (form.checkValidity && !form.checkValidity()) return;
+
+      const errorMessage = document.querySelector<HTMLDivElement>('#errorMessage');
+      if (!errorMessage) throw new Error('Error Nachrichtenfeld nicht gefunden');
+      errorMessage.textContent = '';
+
+      const passwordInput = modal.querySelector<HTMLInputElement>('#PasswortNeuReset');
+      const passwordRepeatInput = modal.querySelector<HTMLInputElement>('#PasswortNeuReset2');
+      if (!passwordInput || !passwordRepeatInput) throw new Error('Passwort Inputs nicht gefunden');
+
+      const newPassword = passwordInput.value;
+      const repeatedPassword = passwordRepeatInput.value;
+
+      if (newPassword !== repeatedPassword) {
+        errorMessage.textContent = 'Passwörter stimmen nicht überein';
+        return;
+      }
+
+      const passwordError = getPasswordValidationMessage(newPassword, 'Das neue Passwort');
+      if (passwordError) {
+        errorMessage.textContent = passwordError;
+        return;
+      }
+
+      if (!navigator.onLine) {
+        errorMessage.textContent = 'Keine Internetverbindung';
+        return;
+      }
+
+      try {
+        await authApi.resetPassword(token, newPassword);
+        schliesseModal();
+        createSnackBar({
+          message: 'Passwort wurde erfolgreich zurückgesetzt. Bitte melde dich erneut an.',
+          status: 'success',
+          timeout: 5000,
+          fixed: true,
+        });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errorMessage.textContent = msg;
+      }
+    };
+  }
+}
