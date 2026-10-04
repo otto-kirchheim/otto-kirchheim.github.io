@@ -5,6 +5,8 @@
 interface ImportMetaEnv {
   readonly APP_VERSION: string;
   readonly PROD: boolean;
+  /** Schalter DB-Markenassets (`vite.base-config.ts`). */
+  readonly DB_ASSETS: boolean;
 }
 
 interface ImportMeta {

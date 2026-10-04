@@ -16,10 +16,21 @@ const dropDbSubBrandLogos = {
   },
 };
 
+/**
+ * DER Schalter fuer die DB-Markenassets: `DB_ASSETS=1` (Prozess-Env oder `.env`, Bun laedt sie automatisch).
+ * - an:  DB-Schriften und DB-Icon-Schrift aus `@db-ux/db-theme*` (nur mit `ASSET_*` installiert, DB-Designs-Lizenz),
+ *        DB-Neo-Schriften im PDF waehlbar.
+ * - aus (Standard): freie Alternativen -- Systemschrift, Material Symbols (Apache 2.0, `src/fonts/material-symbols-db.woff2`),
+ *        PDF nur Standard-Schriften. Die DB-Teile bleiben im Code, sie werden nur nicht genutzt.
+ * Wirkt ueber den Alias `@asset-satz` (CSS, `src/scss/db-ux.css`) und `import.meta.env.DB_ASSETS` (TS, `shared/lib/dbAssets.ts`).
+ */
+export const DB_ASSETS = ['1', 'true'].includes(process.env.DB_ASSETS ?? '');
+
 const baseConfig: UserConfig = {
   root: path.resolve(import.meta.dirname, 'src'),
   resolve: {
     alias: {
+      '@asset-satz': path.resolve(import.meta.dirname, `src/scss/asset-satz.${DB_ASSETS ? 'db' : 'frei'}.css`),
       '@/types': path.resolve(import.meta.dirname, 'src/ts/shared/types'),
       '@/features': path.resolve(import.meta.dirname, 'src/ts/features'),
       '@/shared': path.resolve(import.meta.dirname, 'src/ts/shared'),
@@ -30,6 +41,7 @@ const baseConfig: UserConfig = {
   base: '/',
   define: {
     'import.meta.env.APP_VERSION': JSON.stringify(pkg.version),
+    'import.meta.env.DB_ASSETS': JSON.stringify(DB_ASSETS),
   },
   build: {
     outDir: '../dist',

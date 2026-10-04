@@ -9,6 +9,7 @@ import { sonderZeileZelleWert, wert, zeilenFuerUeber, type Kontext, type Tabelle
 import { spaltenWert } from './spaltenWert';
 import { dreheTabellenZelle } from './tabellenDrehung';
 import { verteile } from './verteile';
+import { DB_ASSETS } from '@/shared/lib/dbAssets';
 import { dbFontBytes, istDbFamilie } from './dbFonts';
 
 /** Standard-14-Schnitte (normal, fett, kursiv, fettKursiv) je Familie von `Layout.schriftart`. Einbetten
@@ -73,7 +74,8 @@ async function ladeSchnitt(
   eingebettet: EingebetteteFonts | undefined,
 ): Promise<PDFFont> {
   const index = SCHNITTE.indexOf(schnitt);
-  if (istDbFamilie(familie)) {
+  // Ohne DB-Assets (`DB_ASSETS` aus) gelten `db-sans`/`db-head` als Helvetica (Standardzweig unten).
+  if (DB_ASSETS && istDbFamilie(familie)) {
     // DB-Schriften (in `dbFonts.ts` nach TrueType entpackt) VOLLSTAENDIG einbetten -- `@pdf-lib/fontkit`
     // 1.1.1 kann sie nicht subsetten (bricht bei `pdf.save()` mit `reading 'pos'` ab). Fehlt das Asset
     // (Build ohne ASSET-Secrets) oder scheitert das Entpacken, gilt Helvetica im passenden Schnitt.
@@ -126,7 +128,7 @@ async function ladeFontSet(
   >;
   // fontkit nur laden, wenn wirklich eine einzubettende Familie im Spiel ist (Vorlagen- oder
   // DB-Schrift) -- bleibt sonst aus dem Haupt-Bundle des Download-Pfads.
-  if (Object.values(familien).some(f => f.startsWith('vorlage:') || istDbFamilie(f))) {
+  if (Object.values(familien).some(f => f.startsWith('vorlage:') || (DB_ASSETS && istDbFamilie(f)))) {
     pdf.registerFontkit((await import('@pdf-lib/fontkit')).default);
   }
   return {

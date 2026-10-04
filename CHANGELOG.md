@@ -2,6 +2,14 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-04 (217)
+
+### feat (Schalter `DB_ASSETS`: DB-Markenassets oder freie Alternativen)
+
+- Ein Schalter `DB_ASSETS=1` (Prozess-Env/`.env`, im CI Repo-Variable `vars.DB_ASSETS`) in `vite.base-config.ts`. Aus (Standard): keine DB-Designs genutzt -- Icons ueber Material Symbols (Apache 2.0, `src/fonts/material-symbols-db.woff2`, erzeugt von `scripts/gen-icon-font.py` / `bun run icons:font`; die Schrift kennt jeden DB-Icon-Namen als Ligatur, `data-icon` und Komponenten-CSS bleiben unveraendert), Systemschrift statt DB Neo, im PDF keine DB-Neo-Schriften (gespeicherte `db-sans`/`db-head` -> Helvetica, Auswahl im Editor ausgeblendet). An: unveraendertes DB-Theme.
+- Nichts geloescht, nur deaktiviert: `dbFonts.ts`, DB-Schriftwahl, Font-Preload und `install.sh` bleiben, gesteuert ueber `DB_ASSETS` (CSS-Alias `@asset-satz` -> `asset-satz.db.css`/`asset-satz.frei.css`, TS `shared/lib/dbAssets.ts`). `install.sh` und `deploy.yml` geben `ASSET_*` nur bei `DB_ASSETS=1` weiter.
+- Ungenutzte `DB_Schwelle`-SVGs entfernt (eigener Commit).
+
 ## 2026-10-04 (216)
 
 ### fix (Unterschrift: weniger dick und wellig, Pad im Hochformat mittig)

@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import base from './vite.base-config.ts';
+import base, { DB_ASSETS } from './vite.base-config.ts';
 import react from '@vitejs/plugin-react';
 import UnpluginInjectPreload from 'unplugin-inject-preload/vite';
 import { compression } from 'vite-plugin-compression2';
@@ -27,6 +27,8 @@ export default defineConfig(() => ({
       exclude: /\.(woff|woff2|map|nojekyll|png)$/i,
       skipIfLargerOrEqual: true,
     }),
+    // Nur mit DB-Assets: ohne sie gibt es keine DB-Schrift vorzuladen.
+    DB_ASSETS &&
     UnpluginInjectPreload({
       files: [
         {

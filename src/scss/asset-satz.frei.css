@@ -1,0 +1,19 @@
+/* Freie Variante (`DB_ASSETS` aus, `vite.base-config.ts`): ersetzt die DB-Markenassets, ohne den DB-Code zu entfernen.
+   - Icons: Material Symbols Outlined (Apache 2.0) als Ligatur-Schrift, die zusaetzlich jeden DB-Icon-Namen kennt
+     (`scripts/gen-icon-font.py`, Zuordnung aus `iconRegistry.ts`) -- `data-icon` und die Komponenten-CSS bleiben unveraendert.
+   - Text: Systemschrift statt DB Neo Screen Sans/Head. */
+@font-face {
+  font-family: 'Material Symbols DB';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('../fonts/material-symbols-db.woff2') format('woff2');
+}
+
+@layer app {
+  :root {
+    --db-icon-font-family: 'Material Symbols DB';
+    --db-font-family-sans: system-ui, -apple-system, 'Segoe UI', roboto, helvetica, arial, sans-serif;
+    --db-font-family-head: system-ui, -apple-system, 'Segoe UI', roboto, helvetica, arial, sans-serif;
+  }
+}

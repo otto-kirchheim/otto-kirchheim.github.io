@@ -16,6 +16,13 @@ if [[ -f .env ]]; then
   set +a
 fi
 
+# Schalter DB_ASSETS (siehe vite.base-config.ts): nur mit DB_ASSETS=1 werden die Markenassets entschluesselt.
+if [[ "${DB_ASSETS:-}" != "1" && "${DB_ASSETS:-}" != "true" ]]; then
+  echo "DB_ASSETS aus -- freie Variante, DB-Markenassets werden nicht entschluesselt."
+  unset ASSET_PASSWORD ASSET_INIT_VECTOR
+  exec bun install "$@"
+fi
+
 for var in ASSET_PASSWORD ASSET_INIT_VECTOR; do
   if [[ -z "${!var:-}" ]]; then
     echo "Warnung: $var fehlt -- DB-UX-Markenassets werden nicht entschluesselt." >&2

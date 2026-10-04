@@ -13,3 +13,7 @@
    ohne umgestellte --db-icon-font-family in styles.scss aendert das nichts Sichtbares. */
 
 /* @import './iconset.material.css'; */
+
+/* Schalter DB-Markenassets: `@asset-satz` zeigt je nach `DB_ASSETS` auf `asset-satz.db.css` oder `asset-satz.frei.css`
+   (`vite.base-config.ts`). Die freie Variante loest die DB-Icon-Namen in ihrer eigenen Schrift auf, der Remap oben bleibt aus. */
+@import '@asset-satz';

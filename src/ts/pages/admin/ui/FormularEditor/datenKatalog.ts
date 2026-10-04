@@ -1,3 +1,4 @@
+import { DB_ASSETS } from '@/shared/lib/dbAssets';
 import { ZULAGEN_CATALOG } from '@otto-kirchheim/nebengeld-shared';
 import type { FormatName, Schriftfamilie, ZulageCategory } from '@otto-kirchheim/nebengeld-shared';
 import type { FeatureKatalog, FormularCode, KatalogEintrag, ListenVorlage } from './katalogTypen';
@@ -15,8 +16,13 @@ export const SCHRIFTARTEN: { wert: Schriftfamilie; label: string }[] = [
   { wert: 'helvetica', label: 'Helvetica (Standard)' },
   { wert: 'times', label: 'Times' },
   { wert: 'courier', label: 'Courier' },
-  { wert: 'db-sans', label: 'DB Neo Screen Sans' },
-  { wert: 'db-head', label: 'DB Neo Screen Head' },
+  // Nur mit DB-Assets (`DB_ASSETS`); sonst faellt eine gespeicherte DB-Familie im PDF auf Helvetica zurueck.
+  ...(DB_ASSETS
+    ? [
+        { wert: 'db-sans', label: 'DB Neo Screen Sans' },
+        { wert: 'db-head', label: 'DB Neo Screen Head' },
+      ]
+    : []),
 ];
 
 /** Format-Auswahl für Feld/Spalte/Sonderzeilen-Zelle -- `''` steht für "kein eigenes Format". */
