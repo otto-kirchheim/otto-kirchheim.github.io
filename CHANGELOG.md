@@ -2,6 +2,15 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-04 (214)
+
+### refactor (`DBDialog` auch fuer Schriftart-, Admin-Bearbeiten-, Bestaetigungs-, Unterschrift- und Speicherfehler-Dialog)
+
+- Schriftart-Dialog, Admin-Dialoge Ressource/Profil bearbeiten nutzen `MyDialog` (`DBDialog` ab `sm`, Vollbild-`DBDrawer` auf dem Handy; Kopf `MyModalHeader` mit optionaler Kennung `zusatz`, Fuss `MyDialogFooter`). `MyDialog` nimmt `onClose` fuer selbst gemountete Dialoge, `useVollbild()` entscheidet ohne `DialogKontext` einmalig beim ersten Rendern. `size="xl"` = 64rem (`--db-dialog-max-width`), `lg` = `large` (48rem).
+- Die Vanilla-Dialoge (`confirmDialog`, Speicherfehler, Unterschrift-Entscheidung und -Pad) bauen ueber `erzeugeDbDialog` jetzt DB-Dialog- bzw. Drawer-Markup (Kopf `titel`, Inhalt, Fusszeile `fuss`); Fokus geht an den Dialog selbst. Das Unterschriftenfeld rechnet seine Groesse aus dem Dialog (`berechneCanvasGroesse(dialog, inhalt, fuss, ...)`), `.signatur-drawer` entfaellt.
+- Bleibt wie es ist: Hilfe, Impressum, Platzhalter-Hilfe.
+- Sichtvergleich-Ansicht `admin-profil-bearbeiten` neu.
+
 ## 2026-10-04 (213)
 
 ### refactor (Pull-to-Refresh mit `DBLoadingIndicator`)

@@ -584,9 +584,14 @@ td:has(.SchichtBereitschaft) {
   }
 }
 
-/* Randloser Modus (`signaturDialog.ts`, wenn die Hoehe bindet, z. B. Querformat-Handy): kompaktere Fusszeile gibt dem Canvas Vertikalraum zurueck. */
-.signatur-kompakt .dialog-koerper {
+/* Kompakter Modus (`signaturDialog.ts`, wenn die Hoehe bindet, z. B. Querformat-Handy): knapper Inhaltsrand und Fusszeile geben dem Canvas Vertikalraum zurueck. */
+.signatur-kompakt :is(.db-dialog-content, .db-drawer-content) {
   padding: var(--db-spacing-fixed-2xs);
+}
+
+.signatur-dialog :is(.db-dialog-content, .db-drawer-content) {
+  display: flex;
+  justify-content: center;
 }
 
 .signatur-kompakt .signatur-fusszeile {
@@ -1240,30 +1245,6 @@ body,
 // (auch mit klassischem Scrollbalken) vollstaendig im Bild -- sonst lief seine linke Kante ins Negative und schnitt Text ab.
 .db-drawer-container:not(.db-control-panel-mobile-drawer) {
   max-inline-size: min(var(--db-drawer-max-width), 100%);
-}
-
-// Das Unterschriftenfeld nutzt den ganzen Bildschirm -- im Querformat bleibt sonst nur ein
-// schmaler Streifen zum Schreiben (`signaturDialog.ts` rechnet die Canvas-Groesse daraus).
-.db-drawer:has(> .signatur-drawer) {
-  --db-drawer-max-width: 100vw;
-}
-
-.signatur-drawer {
-  inline-size: 100vw;
-  max-inline-size: 100vw;
-  border-radius: 0;
-
-  /* Im Hochformat bindet die Breite: Feld und Fusszeile stehen mittig statt oben angeklebt. */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  > .db-drawer-content {
-    flex: 0 0 auto;
-
-    /* Der Drawer-Innenabstand ginge sonst von der Schreibflaeche ab, ohne dass `berechneCanvasGroesse()` ihn sieht. */
-    --db-drawer-content-padding: 0;
-  }
 }
 
 // Breitenstufen: die Vorgabe steht am `<dialog>`, der Rumpf liegt darin -- `:has()` hebt sie hoch, damit der Dialog-Inhalt seine

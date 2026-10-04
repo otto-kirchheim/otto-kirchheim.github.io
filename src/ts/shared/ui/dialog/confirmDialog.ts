@@ -15,7 +15,7 @@ export interface ConfirmDialogOptions {
 }
 
 /**
- * Async-Ersatz für `window.confirm()` als DB-Drawer über einem nativen `<dialog>`. `message`, `title`
+ * Async-Ersatz für `window.confirm()` als DB-Dialog (Handy: Vollbild-Drawer) über einem nativen `<dialog>`. `message`, `title`
  * und Labels werden HTML-maskiert (Nutzereingaben wie Benutzernamen sind damit sicher); `\n` wird zu `<br>`.
  *
  * @param message - Dialogtext.
@@ -35,23 +35,20 @@ export function confirmDialog(message: string, options: ConfirmDialogOptions = {
     const escapedMessage = escapeHtml(message).replace(/\n/g, '<br>');
 
     let ergebnis = false;
-    const { inhalt, schliessen } = erzeugeDbDialog(() => resolve(ergebnis));
+    const { inhalt, fuss, schliessen } = erzeugeDbDialog(() => resolve(ergebnis), {
+      titel: title,
+      containerSize: 'small',
+    });
 
-    inhalt.innerHTML = `
-      <div class="db-drawer-header">
-        <h5>${escapeHtml(title)}</h5>
-        <button type="button" class="db-button" data-icon="cross" data-variant="ghost" data-no-text="true" data-dialog-dismiss="modal">Schließen</button>
-      </div>
-      <div class="dialog-koerper"><p>${escapedMessage}</p></div>
-      <div class="dialog-fuss">
-        <button type="button" class="db-button" data-variant="filled" data-dialog-dismiss="modal">${escapeHtml(cancelLabel)}</button>
-        <button type="button" class="db-button" data-variant="${confirmVariant}"${
-          confirmColor ? ` data-color="${confirmColor}"` : ''
-        } data-confirm="true">${escapeHtml(confirmLabel)}</button>
-      </div>
+    inhalt.innerHTML = `<p>${escapedMessage}</p>`;
+    fuss.innerHTML = `
+      <button type="button" class="db-button" data-variant="filled" data-dialog-dismiss="modal">${escapeHtml(cancelLabel)}</button>
+      <button type="button" class="db-button" data-variant="${confirmVariant}"${
+        confirmColor ? ` data-color="${confirmColor}"` : ''
+      } data-confirm="true">${escapeHtml(confirmLabel)}</button>
     `;
 
-    inhalt.querySelector('[data-confirm="true"]')?.addEventListener('click', () => {
+    fuss.querySelector('[data-confirm="true"]')?.addEventListener('click', () => {
       ergebnis = true;
       schliessen();
     });

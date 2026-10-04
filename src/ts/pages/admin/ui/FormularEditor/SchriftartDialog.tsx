@@ -1,9 +1,10 @@
-import { DBButton, DBDrawer, DBDrawerHeader, DBStack } from '@db-ux/react-core-components';
+import { DBButton, DBStack } from '@db-ux/react-core-components';
+import MyDialog from '@/shared/ui/modal/MyDialog';
+import MyDialogFooter from '@/shared/ui/modal/MyDialogFooter';
+import MyModalHeader from '@/shared/ui/modal/MyModalHeader';
 import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-
-import { DIALOG_RICHTUNG } from '@/shared/ui/modal/showModal';
 
 import type { Schriftart } from '@otto-kirchheim/nebengeld-shared';
 import { familieFuerSchnitt, fehlendeVorlagenSchnitte, SCHNITTE, schnitteText, type Schnitt } from './schriftartHelfer';
@@ -202,58 +203,54 @@ export function SchriftartDialog({ value, vorlageFonts, unbrauchbareFonts, onCha
   const istVorlagenSchrift = SCHNITTE.some(s => familieFuerSchnitt(value, s.key).startsWith('vorlage:'));
 
   return createPortal(
-    <DBDrawer
-      open
-      direction={DIALOG_RICHTUNG}
-      showSpacing={false}
-      rounded
+    <MyDialog
+      size="lg"
       onClose={onClose}
-      header={<DBDrawerHeader text="Schriftart" closeButtonText="Schließen" />}
-    >
-      <div className="dialog-rumpf" data-breite="lg">
-        <DBStack direction="column" gap="small" className="dialog-koerper">
-          <SchriftartWahl value={value} vorlageFonts={vorlageFonts} onChange={onChange} />
-
-          <Vorschau value={value} vorlageFonts={vorlageFonts} />
-
-          {(vorlageFonts.length > 0 || unbrauchbareFonts.length > 0) && (
-            <div className="zelle-klein farbe-gedaempft">
-              Eingebettet:{' '}
-              {[
-                ...vorlageFonts.map(f => (
-                  <span key={f.id}>
-                    {f.label.replace(' (Vorlage)', '')} ({schnitteText(f)})
-                  </span>
-                )),
-                ...unbrauchbareFonts.map(n => (
-                  <span
-                    key={n}
-                    className="farbe-gefahr durchgestrichen"
-                    title="Teilzeichensatz oder kaputte Zeichenzuordnung (z.B. aus PDF24) — nicht als Formularschrift nutzbar"
-                  >
-                    {n}
-                  </span>
-                )),
-              ].flatMap((el, i) => (i === 0 ? [el] : [', ', el]))}
-              .
-            </div>
-          )}
-
-          {istVorlagenSchrift && (
-            <div className="zelle-klein farbe-warnung">
-              Eingebettete Schrift gewählt — nur die Vorschau nutzt sie, der Download rendert bis auf Weiteres
-              Helvetica. Fehlende Glyphen (Teilzeichensatz) erscheinen als leere Kästchen.
-            </div>
-          )}
-        </DBStack>
-
-        <div className="dialog-fuss">
+      header={<MyModalHeader title="Schriftart" />}
+      footer={
+        <MyDialogFooter>
           <DBButton type="button" variant="brand" onClick={onClose}>
             Fertig
           </DBButton>
-        </div>
-      </div>
-    </DBDrawer>,
+        </MyDialogFooter>
+      }
+    >
+      <DBStack direction="column" gap="small" className="dialog-koerper">
+        <SchriftartWahl value={value} vorlageFonts={vorlageFonts} onChange={onChange} />
+
+        <Vorschau value={value} vorlageFonts={vorlageFonts} />
+
+        {(vorlageFonts.length > 0 || unbrauchbareFonts.length > 0) && (
+          <div className="zelle-klein farbe-gedaempft">
+            Eingebettet:{' '}
+            {[
+              ...vorlageFonts.map(f => (
+                <span key={f.id}>
+                  {f.label.replace(' (Vorlage)', '')} ({schnitteText(f)})
+                </span>
+              )),
+              ...unbrauchbareFonts.map(n => (
+                <span
+                  key={n}
+                  className="farbe-gefahr durchgestrichen"
+                  title="Teilzeichensatz oder kaputte Zeichenzuordnung (z.B. aus PDF24) — nicht als Formularschrift nutzbar"
+                >
+                  {n}
+                </span>
+              )),
+            ].flatMap((el, i) => (i === 0 ? [el] : [', ', el]))}
+            .
+          </div>
+        )}
+
+        {istVorlagenSchrift && (
+          <div className="zelle-klein farbe-warnung">
+            Eingebettete Schrift gewählt — nur die Vorschau nutzt sie, der Download rendert bis auf Weiteres Helvetica.
+            Fehlende Glyphen (Teilzeichensatz) erscheinen als leere Kästchen.
+          </div>
+        )}
+      </DBStack>
+    </MyDialog>,
     document.body,
   );
 }

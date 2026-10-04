@@ -231,6 +231,18 @@ const ANSICHTEN: Ansicht[] = [
   { name: 'bereitschaft-anzeige', ...dialog('Bereitschaft', '#tableBE tbody tr:first-child td:nth-child(2)') },
   { name: 'laedt-knopf', ...ladezustand('Bereitschaft', 'btnSaveB') },
   { name: 'laedt-einstellungen', ...ladezustand('Einstellungen', 'btnAuswaehlen') },
+  {
+    name: 'admin-profil-bearbeiten',
+    async oeffnen(page) {
+      await adminTab('profiles')(page);
+      await klick(page, '#admin-pane-profiles tbody tr button');
+      await page.waitForSelector('dialog[open]', { timeout: 5000 }).catch(() => undefined);
+    },
+    async schliessen(page) {
+      await page.keyboard.press('Escape');
+      await warteBis(page, () => !document.querySelector('dialog[open]'), '', 3000);
+    },
+  },
   { name: 'pull-halb', ...ziehen(80) },
   { name: 'pull-bereit', ...ziehen(200) },
   { name: 'laedt-start', ...ladezustand('start', 'btnLadeAnzeigeDummy') },

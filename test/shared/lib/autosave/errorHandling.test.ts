@@ -86,7 +86,7 @@ describe('errorHandling', () => {
 
       const modal = document.querySelector('[data-error-dialog]');
       expect(modal).toBeTruthy();
-      expect(modal?.innerHTML).toContain('Fehler beim Speichern');
+      expect(modal?.closest('dialog')?.textContent).toContain('Fehler beim Speichern');
       expect(modal?.innerHTML).toContain('Failed to create');
       expect(modal?.closest('dialog')?.hasAttribute('open')).toBe(true);
 
@@ -118,7 +118,10 @@ describe('errorHandling', () => {
       focusable.focus();
       const blurSpy = vi.spyOn(focusable, 'blur');
 
-      modal.querySelector<HTMLButtonElement>('.dialog-fuss [data-dialog-dismiss="modal"]')!.click();
+      modal
+        .closest('dialog')!
+        .querySelector<HTMLButtonElement>('.db-dialog-footer [data-dialog-dismiss="modal"]')!
+        .click();
 
       expect(blurSpy).toHaveBeenCalledTimes(1);
       expect(document.querySelector('[data-error-dialog]')).toBeNull();

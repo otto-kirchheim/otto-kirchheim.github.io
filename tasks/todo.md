@@ -284,7 +284,7 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
       Baseline, Spike).
 - [x] Als Naechstes (User 2026-10-03): Updates von `@db-ux/*` pruefen (5.6.1, CHANGELOG 210) (neue Versionen, Changelog/Migration, danach Gate + Sichtpruefung)
 - [ ] DB UX 5.6 neue Komponenten einbauen (Hinweis User 2026-09-26, nach Update auf 5.6.0, CHANGELOG 191):
-  - [~] (Add/Editor/Show/Login/Hilfe erledigt 2026-10-03, CHANGELOG 212; offen: Impressum, Schriftart, Admin-Editoren, HTML-Dialoge, Pull-to-Refresh-Optik) `DBDialog`/`DBDialogHeader`/`DBDialogFooter` (nativer, zentrierter `<dialog>`, `backdrop`, `containerSize`,
+  - [~] (Add/Editor/Show/Login/Hilfe erledigt 2026-10-03, CHANGELOG 212; Pull-to-Refresh auf `DBLoadingIndicator` 2026-10-04, CHANGELOG 213; Schriftart, Admin-Bearbeiten-Dialoge, confirmDialog, Unterschrift, Speicherfehler 2026-10-04, CHANGELOG 214; Hilfe/Impressum/Platzhalter-Hilfe bleiben) `DBDialog`/`DBDialogHeader`/`DBDialogFooter` (nativer, zentrierter `<dialog>`, `backdrop`, `containerSize`,
         Invoker Commands) statt `DBDrawer` in `shared/ui/modal/showModal.tsx` + `MyModalHeader` (nachgebautes Kopf-Markup
         entfaellt, `aria-labelledby` macht der Header selbst); pruefen: `data-dialog-dismiss`-Delegation, gestapelte
         Dialoge, `confirmDialog`/`signaturDialog`/`errorHandling` (HTML-Markup), `DIALOG_RICHTUNG`, `data-breite`-Breiten

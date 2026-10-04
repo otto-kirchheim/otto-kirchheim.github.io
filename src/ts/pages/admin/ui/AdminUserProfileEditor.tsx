@@ -1,17 +1,16 @@
 import {
   DBButton,
-  DBDrawer,
-  DBDrawerHeader,
   DBHeadingH6,
   DBLoadingIndicator,
   DBNotification,
   DBStack,
   DBTooltip,
 } from '@db-ux/react-core-components';
+import MyDialog from '@/shared/ui/modal/MyDialog';
+import MyDialogFooter from '@/shared/ui/modal/MyDialogFooter';
+import MyModalHeader from '@/shared/ui/modal/MyModalHeader';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-
-import { DIALOG_RICHTUNG } from '@/shared/ui/modal/showModal';
 
 import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
 import { joinOeLevels, splitOeInput } from '@/shared/lib/ressource/oeLevels';
@@ -512,155 +511,16 @@ export function AdminUserProfileEditor({
       {/* Portal: in einer ausgeblendeten Tab-Pane (display:none) wäre der Dialog sonst unsichtbar */}
       {edit &&
         createPortal(
-          <DBDrawer
-            open
-            direction={DIALOG_RICHTUNG}
-            showSpacing={false}
-            rounded
+          <MyDialog
+            size="xl"
             onClose={closeEdit}
             header={
-              <DBDrawerHeader
-                text={`UserProfile: ${(edit.pers['Vorname'] as string) ?? ''} ${(edit.pers['Nachname'] as string) ?? ''}`}
-                closeButtonText="Schließen"
+              <MyModalHeader
+                title={`UserProfile: ${(edit.pers['Vorname'] as string) ?? ''} ${(edit.pers['Nachname'] as string) ?? ''}`}
               />
             }
-          >
-            <div className="dialog-rumpf" data-breite="xl">
-              <div className="dialog-koerper">
-                {edit.saveError && <DBNotification semantic="critical">{edit.saveError}</DBNotification>}
-
-                <div className="raster abstand-4">
-                  <div className="sp-md-6">
-                    <DBHeadingH6 className="admin-ueberschrift">Persönliche Daten</DBHeadingH6>
-                    {Object.entries(edit.pers).map(([key, val]) => {
-                      const selectOpts = PERS_SELECT_FIELDS[key];
-                      return (
-                        <div key={key} className="luft-unten-xs">
-                          {selectOpts ? (
-                            <DbAuswahl
-                              beschriftung={PERS_FIELD_LABELS[key] ?? key}
-                              beschriftungZeigen
-                              dicht
-                              value={String(val ?? '')}
-                              onChange={e => handlePersChange(key, e.target.value)}
-                            >
-                              <option value="">(keine Auswahl)</option>
-                              {typeof selectOpts[0] === 'string'
-                                ? (selectOpts as string[]).map(opt => (
-                                    <option key={opt} value={opt}>
-                                      {opt}
-                                    </option>
-                                  ))
-                                : (selectOpts as { value: string; label: string }[]).map(opt => (
-                                    <option key={opt.value} value={opt.value}>
-                                      {opt.label} ({opt.value})
-                                    </option>
-                                  ))}
-                            </DbAuswahl>
-                          ) : key === 'OE' ? (
-                            <>
-                              <span className="zelle-klein fett">{PERS_FIELD_LABELS[key] ?? key}</span>
-                              <OeLevelBoxes
-                                value={persFieldToInput(key, val)}
-                                onChange={value => handlePersChange(key, value)}
-                              />
-                            </>
-                          ) : (
-                            <DbFeld
-                              beschriftung={PERS_FIELD_LABELS[key] ?? key}
-                              beschriftungZeigen
-                              dicht
-                              type={PERS_NUMBER_FIELDS.has(key) ? 'number' : 'text'}
-                              value={persFieldToInput(key, val)}
-                              onChange={e => handlePersChange(key, e.target.value)}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="sp-md-6">
-                    <DBHeadingH6 className="admin-ueberschrift">Komplexe Felder (JSON)</DBHeadingH6>
-                    {JSON_SECTIONS.map(section => (
-                      <div key={section} className="luft-unten-sm">
-                        <label className="zelle-klein fett luft-unten-2xs">{section}</label>
-                        <JsonEditor
-                          value={edit.jsonRaw[section] ?? ''}
-                          onChange={raw => handleJsonChange(section, raw)}
-                          error={edit.jsonErrors[section]}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="admin-abschnitt-oben">
-                  <DBHeadingH6 className="fett luft-unten-sm">Benutzer-Aktionen</DBHeadingH6>
-                  <DBStack direction="row" wrap gap="small" alignment="start">
-                    <div>
-                      <div className="zelle-klein farbe-gedaempft luft-unten-2xs">emailVerified</div>
-                      <DBButton
-                        type="button"
-                        variant={edit.emailVerified ? 'filled' : 'outlined'}
-                        data-color={edit.emailVerified ? 'successful' : undefined}
-                        size="small"
-                        onClick={handleToggleEmailVerified}
-                      >
-                        {edit.emailVerified === null
-                          ? 'unbekannt'
-                          : edit.emailVerified
-                            ? 'true ✓'
-                            : 'false – umschalten'}
-                      </DBButton>
-                      {edit.emailVerified === null && (
-                        <div className="zelle-klein farbe-gedaempft luft-oben-2xs">Klicken zum Setzen auf true</div>
-                      )}
-                    </div>
-
-                    <div className="waechst">
-                      <div className="zelle-klein farbe-gedaempft luft-unten-2xs">
-                        Passkeys
-                        {edit.passkeysLoading && (
-                          <DBLoadingIndicator size="small" showLabel={false} className="luft-links-xs">
-                            Passkeys werden geladen
-                          </DBLoadingIndicator>
-                        )}
-                      </div>
-                      {edit.passkeys.length === 0 && !edit.passkeysLoading && (
-                        <div className="zelle-klein farbe-gedaempft">Keine Passkeys</div>
-                      )}
-                      {edit.passkeys.map(pk => (
-                        <DBStack
-                          key={pk.credentialId}
-                          direction="row"
-                          alignment="center"
-                          gap="x-small"
-                          className="luft-unten-2xs"
-                        >
-                          <span className="zelle-klein">
-                            {pk.name ?? 'Passkey'} <code className="farbe-gedaempft">…{pk.credentialId.slice(-8)}</code>
-                          </span>
-                          <DBButton
-                            type="button"
-
-                            variant="outlined"
-                            data-color="critical"
-                            size="small"
-                            icon="bin"
-                            noText
-                            onClick={() => handleDeletePasskey(pk.credentialId)}
-                          >
-                            <DBTooltip>Passkey löschen</DBTooltip>
-                          </DBButton>
-                        </DBStack>
-                      ))}
-                    </div>
-                  </DBStack>
-                </div>
-              </div>
-
-              <div className="dialog-fuss">
+            footer={
+              <MyDialogFooter>
                 <DBButton type="button" variant="filled" onClick={closeEdit} disabled={edit.saving}>
                   Schließen
                 </DBButton>
@@ -670,9 +530,139 @@ export function AdminUserProfileEditor({
                   </DBLoadingIndicator>
                   {edit.saving ? 'Speichern…' : 'Profil speichern'}
                 </DBButton>
+              </MyDialogFooter>
+            }
+          >
+            <div className="dialog-koerper">
+              {edit.saveError && <DBNotification semantic="critical">{edit.saveError}</DBNotification>}
+
+              <div className="raster abstand-4">
+                <div className="sp-md-6">
+                  <DBHeadingH6 className="admin-ueberschrift">Persönliche Daten</DBHeadingH6>
+                  {Object.entries(edit.pers).map(([key, val]) => {
+                    const selectOpts = PERS_SELECT_FIELDS[key];
+                    return (
+                      <div key={key} className="luft-unten-xs">
+                        {selectOpts ? (
+                          <DbAuswahl
+                            beschriftung={PERS_FIELD_LABELS[key] ?? key}
+                            beschriftungZeigen
+                            dicht
+                            value={String(val ?? '')}
+                            onChange={e => handlePersChange(key, e.target.value)}
+                          >
+                            <option value="">(keine Auswahl)</option>
+                            {typeof selectOpts[0] === 'string'
+                              ? (selectOpts as string[]).map(opt => (
+                                  <option key={opt} value={opt}>
+                                    {opt}
+                                  </option>
+                                ))
+                              : (selectOpts as { value: string; label: string }[]).map(opt => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {opt.label} ({opt.value})
+                                  </option>
+                                ))}
+                          </DbAuswahl>
+                        ) : key === 'OE' ? (
+                          <>
+                            <span className="zelle-klein fett">{PERS_FIELD_LABELS[key] ?? key}</span>
+                            <OeLevelBoxes
+                              value={persFieldToInput(key, val)}
+                              onChange={value => handlePersChange(key, value)}
+                            />
+                          </>
+                        ) : (
+                          <DbFeld
+                            beschriftung={PERS_FIELD_LABELS[key] ?? key}
+                            beschriftungZeigen
+                            dicht
+                            type={PERS_NUMBER_FIELDS.has(key) ? 'number' : 'text'}
+                            value={persFieldToInput(key, val)}
+                            onChange={e => handlePersChange(key, e.target.value)}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="sp-md-6">
+                  <DBHeadingH6 className="admin-ueberschrift">Komplexe Felder (JSON)</DBHeadingH6>
+                  {JSON_SECTIONS.map(section => (
+                    <div key={section} className="luft-unten-sm">
+                      <label className="zelle-klein fett luft-unten-2xs">{section}</label>
+                      <JsonEditor
+                        value={edit.jsonRaw[section] ?? ''}
+                        onChange={raw => handleJsonChange(section, raw)}
+                        error={edit.jsonErrors[section]}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="admin-abschnitt-oben">
+                <DBHeadingH6 className="fett luft-unten-sm">Benutzer-Aktionen</DBHeadingH6>
+                <DBStack direction="row" wrap gap="small" alignment="start">
+                  <div>
+                    <div className="zelle-klein farbe-gedaempft luft-unten-2xs">emailVerified</div>
+                    <DBButton
+                      type="button"
+                      variant={edit.emailVerified ? 'filled' : 'outlined'}
+                      data-color={edit.emailVerified ? 'successful' : undefined}
+                      size="small"
+                      onClick={handleToggleEmailVerified}
+                    >
+                      {edit.emailVerified === null ? 'unbekannt' : edit.emailVerified ? 'true ✓' : 'false – umschalten'}
+                    </DBButton>
+                    {edit.emailVerified === null && (
+                      <div className="zelle-klein farbe-gedaempft luft-oben-2xs">Klicken zum Setzen auf true</div>
+                    )}
+                  </div>
+
+                  <div className="waechst">
+                    <div className="zelle-klein farbe-gedaempft luft-unten-2xs">
+                      Passkeys
+                      {edit.passkeysLoading && (
+                        <DBLoadingIndicator size="small" showLabel={false} className="luft-links-xs">
+                          Passkeys werden geladen
+                        </DBLoadingIndicator>
+                      )}
+                    </div>
+                    {edit.passkeys.length === 0 && !edit.passkeysLoading && (
+                      <div className="zelle-klein farbe-gedaempft">Keine Passkeys</div>
+                    )}
+                    {edit.passkeys.map(pk => (
+                      <DBStack
+                        key={pk.credentialId}
+                        direction="row"
+                        alignment="center"
+                        gap="x-small"
+                        className="luft-unten-2xs"
+                      >
+                        <span className="zelle-klein">
+                          {pk.name ?? 'Passkey'} <code className="farbe-gedaempft">…{pk.credentialId.slice(-8)}</code>
+                        </span>
+                        <DBButton
+                          type="button"
+
+                          variant="outlined"
+                          data-color="critical"
+                          size="small"
+                          icon="bin"
+                          noText
+                          onClick={() => handleDeletePasskey(pk.credentialId)}
+                        >
+                          <DBTooltip>Passkey löschen</DBTooltip>
+                        </DBButton>
+                      </DBStack>
+                    ))}
+                  </div>
+                </DBStack>
               </div>
             </div>
-          </DBDrawer>,
+          </MyDialog>,
           document.body,
         )}
     </div>

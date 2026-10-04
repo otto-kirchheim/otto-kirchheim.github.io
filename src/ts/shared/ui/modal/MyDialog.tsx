@@ -1,7 +1,7 @@
 import { DBDialog, DBDrawer } from '@db-ux/react-core-components';
-import { useContext, useEffect, useRef, type FC, type ReactNode } from 'react';
+import { useContext, useEffect, useRef, type CSSProperties, type FC, type ReactNode } from 'react';
 
-import { DialogKontext } from '@/shared/ui/modal/DialogKontext';
+import { DialogKontext, useVollbild } from '@/shared/ui/modal/DialogKontext';
 import type { TMyModal } from '@/types';
 
 /**
@@ -9,7 +9,7 @@ import type { TMyModal } from '@/types';
  * `DBDialog` (Wahl beim Oeffnen, siehe `DialogKontext`). `onClose` kommt aus dem Kontext (`oeffneDialog` in `showModal.tsx`), so
  * raeumt jedes Schliessen -- Escape, Hintergrund, Schliessen-Knopf, `data-dialog-dismiss` -- den Dialog ab.
  *
- * Props: `size` (`TMyModal.size`: `lg` = `large`, `xl` = `full`, sonst `medium`; nur `DBDialog`), `header`
+ * Props: `onClose` (selbst gemountete Dialoge), `size` (`TMyModal.size`: `lg` = `large` (48rem), `xl` = 64rem, sonst `medium` (32rem); nur `DBDialog`), `header`
  *   (`MyModalHeader`), `footer` (`MyDialogFooter`) und der Inhalt.
  */
 const MyDialog: FC<{
@@ -17,9 +17,13 @@ const MyDialog: FC<{
   header: ReactNode;
   footer?: ReactNode;
   children?: ReactNode;
-}> = ({ size, header, footer, children }) => {
+  /** Schliess-Funktion fuer selbst gemountete Dialoge; ohne Angabe die aus dem `DialogKontext`. */
+  onClose?: () => void;
+}> = ({ size, header, footer, children, onClose }) => {
   const kontext = useContext(DialogKontext);
-  const containerSize = size === 'xl' ? 'full' : size === 'lg' ? 'large' : undefined;
+  const vollbild = useVollbild();
+  const schliessen = onClose ?? kontext?.schliessen;
+  const containerSize = size ? 'large' : undefined;
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   // `showModal()` fokussiert das erste bedienbare Element -- das ist im Kopf der Hilfe-/Schliessen-Knopf, dessen Tooltip dann
@@ -32,7 +36,7 @@ const MyDialog: FC<{
     dialog.focus({ preventScroll: true });
   }, []);
 
-  if (kontext?.vollbild) {
+  if (vollbild) {
     return (
       <DBDrawer
         ref={dialogRef}
@@ -40,7 +44,7 @@ const MyDialog: FC<{
         direction="to-left"
         containerSize="full"
         showSpacing={false}
-        onClose={kontext.schliessen}
+        onClose={schliessen}
         header={header}
         footer={footer}
       >
@@ -54,7 +58,9 @@ const MyDialog: FC<{
       ref={dialogRef}
       open
       containerSize={containerSize}
-      onClose={kontext?.schliessen}
+      // `xl` (64rem) liegt zwischen `large` (48rem) und `full`.
+      style={size === 'xl' ? ({ '--db-dialog-max-width': '64rem' } as CSSProperties) : undefined}
+      onClose={schliessen}
       header={header}
       footer={footer}
     >

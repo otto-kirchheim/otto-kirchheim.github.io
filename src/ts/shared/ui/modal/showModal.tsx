@@ -1,8 +1,7 @@
 import { DBDrawer } from '@db-ux/react-core-components';
 import { type ReactNode } from 'react';
 import { mount, unmount } from '@/shared/lib/react-root/reactRoot';
-import { BREAKPOINTS } from '@/shared/ui/custom-table/breakpoints';
-import { DialogKontext } from '@/shared/ui/modal/DialogKontext';
+import { DialogKontext, istHandyBreite } from '@/shared/ui/modal/DialogKontext';
 
 import type { CustomHTMLDivElement } from '@/types';
 import type { CustomTableTypes } from '@/shared/ui/custom-table/CustomTable';
@@ -86,7 +85,7 @@ export function oeffneDialog(container: HTMLElement, inhalt: ReactNode, beimSchl
   schliesser.set(container, beimSchliessen);
   // Den `DBDialog` selbst rendert `MyDialog` (Header-/Footer-Slot); der Kontext liefert ihm das Schliessen.
   // Handy-Breite (unter `sm`): statt des zentrierten Dialogs oeffnet ein Vollbild-Drawer. Einmal beim Oeffnen entschieden.
-  const vollbild = window.matchMedia?.(`(max-width: ${BREAKPOINTS.sm - 0.05}px)`)?.matches ?? false;
+  const vollbild = istHandyBreite();
   mount(
     container,
     <DialogKontext.Provider value={{ schliessen: beimSchliessen, vollbild }}>{inhalt}</DialogKontext.Provider>,

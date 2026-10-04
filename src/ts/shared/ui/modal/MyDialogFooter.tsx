@@ -1,7 +1,7 @@
 import { DBDialogFooter, DBDrawerFooter } from '@db-ux/react-core-components';
-import { useContext, type FC, type ReactNode } from 'react';
+import { type FC, type ReactNode } from 'react';
 
-import { DialogKontext } from '@/shared/ui/modal/DialogKontext';
+import { useVollbild } from '@/shared/ui/modal/DialogKontext';
 
 /**
  * Fusszeile eines Dialogs: `DBDrawerFooter` im Vollbild-Drawer (Handy), sonst `DBDialogFooter` (siehe `DialogKontext`). Die
@@ -11,8 +11,8 @@ import { DialogKontext } from '@/shared/ui/modal/DialogKontext';
  * Props: `children` (Knoepfe) und optional `className`.
  */
 const MyDialogFooter: FC<{ children?: ReactNode; className?: string }> = ({ children, className }) => {
-  const kontext = useContext(DialogKontext);
-  return kontext?.vollbild ? (
+  const vollbild = useVollbild();
+  return vollbild ? (
     <DBDrawerFooter className={className}>{children}</DBDrawerFooter>
   ) : (
     <DBDialogFooter className={className}>{children}</DBDialogFooter>

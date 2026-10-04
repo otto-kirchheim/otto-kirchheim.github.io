@@ -139,33 +139,27 @@ export function showErrorDialog(_resource: Exclude<TResourceKey, 'settings'>, er
 
   const itemsHtml = errors.map((err, i) => buildErrorItemHtml(err, i)).join('');
 
-  const { inhalt, schliessen } = erzeugeDbDialog(() => {
-    /* nichts aufzuraeumen -- `erzeugeDbDialog` entfernt den Dialog selbst */
-  });
+  const { inhalt, fuss, schliessen } = erzeugeDbDialog(
+    () => {
+      /* nichts aufzuraeumen -- `erzeugeDbDialog` entfernt den Dialog selbst */
+    },
+    { titel: 'Fehler beim Speichern', kopfKlassen: ['db-color-critical'], containerSize: 'medium' },
+  );
 
+  inhalt.dataset['errorDialog'] = 'true';
   inhalt.innerHTML = `
-    <div data-error-dialog="true">
-      <div class="db-drawer-header db-color-critical">
-        <h5>Fehler beim Speichern</h5>
-        <button type="button" class="db-button" data-icon="cross" data-variant="ghost" data-no-text="true" data-dialog-dismiss="modal">Schließen</button>
-      </div>
-      <div class="dialog-koerper">
-        <div class="db-stack" data-gap="small">
-          <strong data-error-count>${errors.length} Fehler gefunden:</strong>
-          <ul class="trennliste">${itemsHtml}</ul>
-          <div class="db-notification" data-semantic="informational" data-variant="standalone">
-            <span data-area="content">Die fehlerhaften Zeilen sind in der Tabelle rot markiert und können erneut gespeichert werden.</span>
-          </div>
-        </div>
-      </div>
-      <div class="dialog-fuss">
-        <button type="button" class="db-button" data-variant="filled" data-dialog-dismiss="modal">Schließen</button>
+    <div class="db-stack" data-gap="small">
+      <strong data-error-count>${errors.length} Fehler gefunden:</strong>
+      <ul class="trennliste">${itemsHtml}</ul>
+      <div class="db-notification" data-semantic="informational" data-variant="standalone">
+        <span data-area="content">Die fehlerhaften Zeilen sind in der Tabelle rot markiert und können erneut gespeichert werden.</span>
       </div>
     </div>
   `;
+  fuss.innerHTML = `<button type="button" class="db-button" data-variant="filled" data-dialog-dismiss="modal">Schließen</button>`;
 
   // Der Fokus muss raus, bevor der Dialog verschwindet -- sonst bleibt er am entfernten Knoten.
-  inhalt.addEventListener('click', event => {
+  fuss.addEventListener('click', event => {
     if (!(event.target as HTMLElement | null)?.closest('[data-dialog-dismiss="modal"]')) return;
     (document.activeElement as HTMLElement | null)?.blur();
     schliessen();

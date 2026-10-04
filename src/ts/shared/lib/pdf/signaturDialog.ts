@@ -19,30 +19,30 @@ const DIALOG_RAND = 8;
  * `aufGroesseAnpassen()`). Der Dialog hat keine Kopfzeile; die Fußzeile ist unabhängig von der
  * Canvas-Größe messbar.
  *
- * @param footer - Fußzeile des Dialogs (ihre Höhe geht vom verfügbaren Platz ab).
- * @param body - Körper mit dem Canvas (sein Padding geht ab).
- * @param rumpf - Dialog-Rumpf (sein Rahmen geht ab).
- * @param rand - Außenrand des Dialogs in px, je Seite.
+ * @param dialog - Der `<dialog>` (sein Rahmen geht ab).
+ * @param inhalt - Inhaltsbereich mit dem Canvas (sein Padding geht ab).
+ * @param fuss - Fußzeile des Dialogs (ihre Höhe geht vom verfügbaren Platz ab).
+ * @param rand - Abstand des Dialogs zum Fensterrand in px, je Seite (Vollbild: 0).
  * @param maxBreiteVorgabe - Obergrenze der Canvas-Breite in px.
  * @returns Canvas-Größe in CSS-Pixeln und ob die Höhe bindend war.
  */
 function berechneCanvasGroesse(
-  footer: HTMLElement,
-  body: HTMLElement,
-  rumpf: HTMLElement,
+  dialog: HTMLElement,
+  inhalt: HTMLElement,
+  fuss: HTMLElement,
   rand: number,
   maxBreiteVorgabe: number,
 ): { breite: number; hoehe: number; hoehengebunden: boolean } {
-  const bodyStil = getComputedStyle(body);
-  const paddingX = parseFloat(bodyStil.paddingLeft) + parseFloat(bodyStil.paddingRight);
-  const paddingY = parseFloat(bodyStil.paddingTop) + parseFloat(bodyStil.paddingBottom);
-  // Ein Rahmen am Rumpf liegt außerhalb von Body und Fußzeile -- ohne ihn liefe die Höhen-Rechnung
-  // im Fullscreen-Fall um genau diesen Rahmen über den Viewport hinaus.
-  const rumpfStil = getComputedStyle(rumpf);
-  const rumpfRahmenY = parseFloat(rumpfStil.borderTopWidth) + parseFloat(rumpfStil.borderBottomWidth);
+  const inhaltStil = getComputedStyle(inhalt);
+  const paddingX = parseFloat(inhaltStil.paddingLeft) + parseFloat(inhaltStil.paddingRight);
+  const paddingY = parseFloat(inhaltStil.paddingTop) + parseFloat(inhaltStil.paddingBottom);
+  // Ein Rahmen am Dialog liegt außerhalb von Inhalt und Fußzeile -- ohne ihn liefe die Höhen-Rechnung
+  // im Vollbild um genau diesen Rahmen über den Viewport hinaus.
+  const dialogStil = getComputedStyle(dialog);
+  const dialogRahmenY = parseFloat(dialogStil.borderTopWidth) + parseFloat(dialogStil.borderBottomWidth);
 
   const maxBreite = Math.min(window.innerWidth - rand * 2, maxBreiteVorgabe) - paddingX;
-  const maxHoehe = window.innerHeight - rand * 2 - footer.offsetHeight - paddingY - rumpfRahmenY;
+  const maxHoehe = window.innerHeight - rand * 2 - fuss.offsetHeight - paddingY - dialogRahmenY;
 
   let breite = Math.max(maxBreite, 0);
   let hoehe = breite / CANVAS_RATIO;
@@ -84,63 +84,42 @@ type SignaturWahl = 'verwenden' | 'neu' | 'ohne' | 'digital';
  */
 function signaturEntscheidung(cachedPng: string | null): Promise<SignaturWahl> {
   return new Promise<SignaturWahl>(resolve => {
-    // Der Rahmen kommt vom Drawer; kein `.modal`/`.fade` verwenden -- `.fade` ohne `.show` haelt den
-    // Inhalt auf `opacity: 0`.
-    const modal = document.createElement('div');
-    modal.innerHTML = `
-      <div class="dialog-rumpf">
-        <div class="db-drawer-header">
-          <header class="db-drawer-header-content">
-            <h5>Unterschrift</h5>
-          </header>
-          <button
-            type="button"
-            class="db-button"
-            data-variant="ghost"
-            data-icon="cross"
-            data-no-text="true"
-            data-dialog-dismiss="modal"
-            aria-label="Schließen"
-          >
-            Schließen
-          </button>
-          </div>
-          <div class="dialog-koerper">
-            ${
-              cachedPng
-                ? `<p>Es liegt eine gespeicherte Unterschrift vor. Wie möchten Sie fortfahren?</p>
-                 <ul>
-                   <li><strong>Verwenden:</strong> direkt für dieses PDF übernehmen.</li>
-                   <li><strong>Ändern:</strong> Pad öffnet mit der gespeicherten Unterschrift, zum Anpassen oder Neuzeichnen.</li>
-                   <li><strong>Ohne Unterschrift:</strong> PDF ohne Unterschrift, Unterschriftsdatum bleibt (z.B. für eine Unterschrift auf Papier).</li>
-                   <li><strong>Digital:</strong> PDF ohne Unterschrift UND ohne Datum (für eine spätere digitale Signatur).</li>
-                   </ul>`
-                : `<p>Jetzt unterschreiben?</p>
-                 <ul>
-                   <li><strong>Ja:</strong> Unterschrift wird ins PDF eingefügt.</li>
-                   <li><strong>Ohne Unterschrift:</strong> PDF ohne Unterschrift, Unterschriftsdatum bleibt (z.B. für eine Unterschrift auf Papier).</li>
-                   <li><strong>Digital:</strong> PDF ohne Unterschrift UND ohne Datum (für eine spätere digitale Signatur).</li>
-                   </ul>`
-            }
-          <span class="db-infotext">Die Unterschrift wird nur auf diesem Gerät verarbeitet und zwischengespeichert.</span>
-          </div>
-          <div class="dialog-fuss">
-          <button type="button" class="db-button" data-variant="outlined" data-wahl="digital">Digital</button>
-          <button type="button" class="db-button" data-variant="outlined" data-wahl="ohne">Ohne Unterschrift</button>
-            ${cachedPng ? '<button type="button" class="db-button" data-variant="outlined" data-wahl="neu">Ändern</button>' : ''}
-          <button type="button" class="db-button" data-variant="brand" data-wahl="${cachedPng ? 'verwenden' : 'neu'}">${cachedPng ? 'Verwenden' : 'Ja'}</button>
-          </div>
-      </div>
-    `;
-
     let wahl: SignaturWahl = 'ohne';
-    const { inhalt, schliessen } = erzeugeDbDialog(() => resolve(wahl), {
+    // Hintergrundklick und Escape schliessen NICHT, nur der X-Button (siehe oben).
+    const { inhalt, fuss, schliessen } = erzeugeDbDialog(() => resolve(wahl), {
+      titel: 'Unterschrift',
+      containerSize: 'medium',
       hintergrundSchliesst: false,
       escapeSchliesst: false,
     });
-    inhalt.append(modal);
 
-    inhalt.querySelectorAll<HTMLButtonElement>('[data-wahl]').forEach(btn => {
+    inhalt.innerHTML = `
+      ${
+        cachedPng
+          ? `<p>Es liegt eine gespeicherte Unterschrift vor. Wie möchten Sie fortfahren?</p>
+           <ul>
+             <li><strong>Verwenden:</strong> direkt für dieses PDF übernehmen.</li>
+             <li><strong>Ändern:</strong> Pad öffnet mit der gespeicherten Unterschrift, zum Anpassen oder Neuzeichnen.</li>
+             <li><strong>Ohne Unterschrift:</strong> PDF ohne Unterschrift, Unterschriftsdatum bleibt (z.B. für eine Unterschrift auf Papier).</li>
+             <li><strong>Digital:</strong> PDF ohne Unterschrift UND ohne Datum (für eine spätere digitale Signatur).</li>
+             </ul>`
+          : `<p>Jetzt unterschreiben?</p>
+           <ul>
+             <li><strong>Ja:</strong> Unterschrift wird ins PDF eingefügt.</li>
+             <li><strong>Ohne Unterschrift:</strong> PDF ohne Unterschrift, Unterschriftsdatum bleibt (z.B. für eine Unterschrift auf Papier).</li>
+             <li><strong>Digital:</strong> PDF ohne Unterschrift UND ohne Datum (für eine spätere digitale Signatur).</li>
+             </ul>`
+      }
+      <span class="db-infotext">Die Unterschrift wird nur auf diesem Gerät verarbeitet und zwischengespeichert.</span>
+    `;
+    fuss.innerHTML = `
+      <button type="button" class="db-button" data-variant="outlined" data-wahl="digital">Digital</button>
+      <button type="button" class="db-button" data-variant="outlined" data-wahl="ohne">Ohne Unterschrift</button>
+      ${cachedPng ? '<button type="button" class="db-button" data-variant="outlined" data-wahl="neu">Ändern</button>' : ''}
+      <button type="button" class="db-button" data-variant="brand" data-wahl="${cachedPng ? 'verwenden' : 'neu'}">${cachedPng ? 'Verwenden' : 'Ja'}</button>
+    `;
+
+    fuss.querySelectorAll<HTMLButtonElement>('[data-wahl]').forEach(btn => {
       btn.addEventListener('click', () => {
         wahl = btn.dataset['wahl'] as SignaturWahl;
         schliessen();
@@ -172,44 +151,37 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
   // wahl === 'neu' -- weiter zum Pad, ggf. vorbefüllt mit der bisherigen Unterschrift
 
   return new Promise<SignaturErgebnis>(resolve => {
-    // Ohne Kopfzeile: jeder Pixel gehoert der Schreibflaeche; "Abbrechen" liegt in der Fusszeile.
-    const modal = document.createElement('div');
-    modal.innerHTML = `
-      <div class="dialog-rumpf">
-        <div class="dialog-koerper">
-          <canvas class="signatur-canvas"></canvas>
-        </div>
-        <div class="dialog-fuss signatur-fusszeile">
-          <div class="db-checkbox" data-size="small">
-            <label for="signatur-speichern">
-              <input type="checkbox" id="signatur-speichern" data-speichern="true" ${cachedPng ? 'checked' : ''}>
-              Merken
-            </label>
-          </div>
-          <button type="button" class="db-button" data-variant="outlined" data-size="small" data-dialog-dismiss="modal">Abbrechen</button>
-          <button type="button" class="db-button" data-variant="outlined" data-size="small" data-loeschen="true">Löschen</button>
-          <button type="button" class="db-button" data-variant="brand" data-size="small" data-fertig="true">Fertig</button>
-        </div>
-      </div>
-    `;
-
-    const canvas = modal.querySelector('canvas')!;
-    const body = modal.querySelector<HTMLElement>('.dialog-koerper')!;
-    const footer = modal.querySelector<HTMLElement>('.dialog-fuss')!;
-    const rumpf = modal.querySelector<HTMLElement>('.dialog-rumpf')!;
     let pad: ReturnType<typeof erstelleSignaturPad> | undefined;
     let ergebnis: string | undefined;
 
-    const { inhalt, schliessen } = erzeugeDbDialog(
+    // Ohne Kopfzeile: jeder Pixel gehoert der Schreibflaeche; "Abbrechen" liegt in der Fusszeile.
+    const { dialog, inhalt, fuss, vollbild, schliessen } = erzeugeDbDialog(
       () => {
         window.removeEventListener('resize', aufResizeReagieren);
         resolve({ png: ergebnis, digital: false });
       },
-      // Das Unterschriftenfeld braucht die volle Breite -- die Standardbreite des Drawers (36rem)
-      // liesse im Querformat kaum Platz zum Schreiben.
-      { hintergrundSchliesst: false, escapeSchliesst: false, rahmenKlassen: ['signatur-drawer'] },
+      {
+        containerSize: 'large',
+        hintergrundSchliesst: false,
+        escapeSchliesst: false,
+        dialogKlassen: ['signatur-dialog'],
+      },
     );
-    inhalt.append(modal);
+    inhalt.innerHTML = '<canvas class="signatur-canvas"></canvas>';
+    fuss.classList.add('signatur-fusszeile');
+    fuss.innerHTML = `
+      <div class="db-checkbox" data-size="small">
+        <label for="signatur-speichern">
+          <input type="checkbox" id="signatur-speichern" data-speichern="true" ${cachedPng ? 'checked' : ''}>
+          Merken
+        </label>
+      </div>
+      <button type="button" class="db-button" data-variant="outlined" data-size="small" data-dialog-dismiss="modal">Abbrechen</button>
+      <button type="button" class="db-button" data-variant="outlined" data-size="small" data-loeschen="true">Löschen</button>
+      <button type="button" class="db-button" data-variant="brand" data-size="small" data-fertig="true">Fertig</button>
+    `;
+    const canvas = inhalt.querySelector('canvas')!;
+    const rand = vollbild ? 0 : DIALOG_RAND;
 
     /**
      * Setzt Canvas-CSS-Größe und Dialog-Breite passend zueinander (siehe `berechneCanvasGroesse()`)
@@ -217,29 +189,29 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
      * Platz nur einen dünnen Streifen statt einer proportional größeren Fläche.
      *
      * Erster Durchlauf mit normalem Rand prüft, ob die Höhe bindet (typisch: Querformat-Handy, wenig
-     * Vertikalraum). Falls ja, zweiter Durchlauf randlos (`rand=0`, volle Breite) mit kompakter
-     * Fußzeile (`.signatur-kompakt`, kleineres Padding) -- die Fußzeile wird dafür neu gemessen, ihre
-     * Höhe ändert sich durch die kompaktere Klasse. Im breitengebundenen Fall (meist Hochformat/große
-     * Screens) bleibt es bei der zentrierten Box.
+     * Vertikalraum). Falls ja, zweiter Durchlauf mit kompakter Fußzeile und kompaktem Inhaltsrand
+     * (`.signatur-kompakt`) -- die Fußzeile wird dafür neu gemessen, ihre Höhe ändert sich durch die
+     * kompaktere Klasse. Im breitengebundenen Fall (meist Hochformat/große Screens) bleibt es bei der
+     * zentrierten Box.
      */
     const aufGroesseAnpassen = () => {
-      rumpf.classList.remove('signatur-kompakt');
-      rumpf.style.margin = `${DIALOG_RAND}px auto`;
-      const erster = berechneCanvasGroesse(footer, body, rumpf, DIALOG_RAND, MAX_BREITE);
+      dialog.classList.remove('signatur-kompakt');
+      const erster = berechneCanvasGroesse(dialog, inhalt, fuss, rand, MAX_BREITE);
       let { breite, hoehe } = erster;
-      const hoehengebunden = erster.hoehengebunden;
 
-      if (hoehengebunden) {
-        rumpf.classList.add('signatur-kompakt');
-        rumpf.style.margin = '0';
-        ({ breite, hoehe } = berechneCanvasGroesse(footer, body, rumpf, 0, MAX_BREITE));
+      if (erster.hoehengebunden) {
+        dialog.classList.add('signatur-kompakt');
+        ({ breite, hoehe } = berechneCanvasGroesse(dialog, inhalt, fuss, rand, MAX_BREITE));
       }
 
       canvas.style.width = `${breite}px`;
       canvas.style.height = `${hoehe}px`;
-      const bodyStil = getComputedStyle(body);
-      const paddingX = parseFloat(bodyStil.paddingLeft) + parseFloat(bodyStil.paddingRight);
-      rumpf.style.maxWidth = hoehengebunden ? '100vw' : `${breite + paddingX}px`;
+      if (!vollbild) {
+        // Der zentrierte Dialog ist so breit wie das Feld samt Innenabstand (kein Streifen links und rechts davon).
+        const inhaltStil = getComputedStyle(inhalt);
+        const paddingX = parseFloat(inhaltStil.paddingLeft) + parseFloat(inhaltStil.paddingRight);
+        dialog.style.inlineSize = `${breite + paddingX}px`;
+      }
     };
 
     // Der native `<dialog>` ist nach `showModal()` sofort sichtbar. Die Messung laeuft trotzdem
@@ -269,10 +241,10 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
     };
     window.addEventListener('resize', aufResizeReagieren);
 
-    modal.querySelector('[data-loeschen="true"]')?.addEventListener('click', () => pad?.clear());
-    modal.querySelector('[data-fertig="true"]')?.addEventListener('click', () => {
+    fuss.querySelector('[data-loeschen="true"]')?.addEventListener('click', () => pad?.clear());
+    fuss.querySelector('[data-fertig="true"]')?.addEventListener('click', () => {
       const png = pad ? (holeSignaturPng(pad) ?? undefined) : undefined;
-      const merken = modal.querySelector<HTMLInputElement>('[data-speichern="true"]')?.checked ?? false;
+      const merken = fuss.querySelector<HTMLInputElement>('[data-speichern="true"]')?.checked ?? false;
       if (merken && png) {
         try {
           Storage.set('signaturCache', png);

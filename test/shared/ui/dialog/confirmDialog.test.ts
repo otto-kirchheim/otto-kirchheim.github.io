@@ -3,12 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
 
 function getModalEl() {
-  return document.body.querySelector<HTMLDialogElement>('dialog.db-drawer');
+  return document.body.querySelector<HTMLDialogElement>('dialog.db-dialog');
 }
 
 /** Abbrechen/Schliessen -- der Weg, den auch der Nutzer nimmt. */
 function abbrechen() {
-  document.body.querySelector<HTMLButtonElement>('.dialog-fuss [data-dialog-dismiss="modal"]')!.click();
+  document.body.querySelector<HTMLButtonElement>('.db-dialog-footer [data-dialog-dismiss="modal"]')!.click();
 }
 
 describe('confirmDialog', () => {
@@ -56,9 +56,9 @@ describe('confirmDialog', () => {
 
     const modal = getModalEl()!;
     const bestaetigen = modal.querySelector<HTMLButtonElement>('[data-confirm="true"]')!;
-    expect(modal.querySelector('.db-drawer-header h5')?.textContent).toBe('Mein Titel');
+    expect(modal.querySelector('.db-dialog-header h2')?.textContent).toBe('Mein Titel');
     expect(bestaetigen.textContent).toBe('Ja');
-    expect(modal.querySelector('.dialog-fuss [data-dialog-dismiss="modal"]')?.textContent).toBe('Nein');
+    expect(modal.querySelector('.db-dialog-footer [data-dialog-dismiss="modal"]')?.textContent).toBe('Nein');
     expect(bestaetigen.dataset.variant).toBe('brand');
     expect(bestaetigen.dataset.color).toBe('warning');
 
@@ -67,7 +67,7 @@ describe('confirmDialog', () => {
 
   it('converts newlines in message to <br>', async () => {
     confirmDialog('Zeile1\nZeile2');
-    const body = getModalEl()!.querySelector('.dialog-koerper p')!;
+    const body = getModalEl()!.querySelector('.db-dialog-content p')!;
     expect(body.innerHTML).toContain('Zeile1<br>Zeile2');
     abbrechen();
   });
@@ -81,7 +81,7 @@ describe('confirmDialog', () => {
     const modal = getModalEl()!;
     expect(modal.querySelector('img')).toBeNull();
     expect(modal.querySelector('b, i, u')).toBeNull();
-    expect(modal.querySelector('.dialog-koerper p')!.textContent).toBe(
+    expect(modal.querySelector('.db-dialog-content p')!.textContent).toBe(
       'Benutzer "<img src=x onerror=alert(1)>" loeschen?',
     );
     abbrechen();

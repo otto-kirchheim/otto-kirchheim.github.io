@@ -6,7 +6,7 @@ export type TMyModal<T> = {
   title: string;
   helpContext?: HelpContextKey;
   /**
-   * Breite des Dialogs (`DBDialog` `containerSize`): ohne Angabe `medium`, `lg` = `large`, `xl` = `full`. Auf dem Handy
+   * Breite des Dialogs (`DBDialog` `containerSize`): ohne Angabe `medium` (32rem), `lg` = `large` (48rem), `xl` = 64rem. Auf dem Handy
    * oeffnet statt des Dialogs ein Vollbild-`DBDrawer`.
    */
   size?: 'lg' | 'xl';
