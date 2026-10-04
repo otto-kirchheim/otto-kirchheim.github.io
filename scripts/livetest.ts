@@ -321,6 +321,81 @@ try {
   );
   check('Dialog: Schliessen-Knopf im Kopf schliesst', await dialogZu(), await dialogOffen());
 
+  // 5c. Unterschriftenfeld: Drehen/Verkleinern wechselt zwischen zentriertem Dialog und Vollbild-Drawer
+  console.log('5c. Unterschriftenfeld beim Drehen');
+  await page.evaluate(() => {
+    void (import('/ts/shared/lib/pdf/signaturDialog.ts' as string) as Promise<{ signaturDialog: () => Promise<unknown> }>).then(
+      modul => modul.signaturDialog(),
+    );
+  });
+  await warteBis(page, () => Boolean(document.querySelector('dialog[open] [data-wahl]')), '', 5000);
+  await page.evaluate(() =>
+    (document.querySelector('dialog[open] [data-wahl="neu"], dialog[open] [data-wahl="verwenden"]') as HTMLElement).click(),
+  );
+  const padFenster = (): Promise<{ art: string; passt: boolean }> =>
+    page.evaluate(() => {
+      const canvas = document.querySelector<HTMLCanvasElement>('dialog[open] canvas');
+      const dialog = canvas?.closest('dialog');
+      const box = canvas?.getBoundingClientRect();
+      return {
+        art: dialog?.classList.contains('db-drawer')
+          ? 'drawer'
+          : dialog?.classList.contains('db-dialog')
+            ? 'dialog'
+            : 'keiner',
+        passt: Boolean(
+          box && box.width > 50 && box.left >= 0 && box.right <= window.innerWidth && box.bottom <= window.innerHeight,
+        ),
+      };
+    });
+  await warteBis(page, () => Boolean(document.querySelector('dialog[open] canvas')), '', 5000);
+  await new Promise(resolve => setTimeout(resolve, 300));
+  const desktopPad = await padFenster();
+  check(
+    'Unterschriftenfeld Desktop: zentrierter Dialog, Feld passt ins Fenster',
+    desktopPad.art === 'dialog' && desktopPad.passt,
+    desktopPad,
+  );
+  await page.setViewport({ width: 390, height: 800 });
+  await new Promise(resolve => setTimeout(resolve, 600));
+  const handyPad = await padFenster();
+  check(
+    'Unterschriftenfeld Handy (gedreht): Vollbild-Drawer, Feld passt ins Fenster',
+    handyPad.art === 'drawer' && handyPad.passt,
+    handyPad,
+  );
+  const handyLage = await page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>('dialog[open] canvas')!;
+    const fuss = document.querySelector<HTMLElement>('dialog[open] .signatur-fusszeile')!;
+    const feld = canvas.getBoundingClientRect();
+    const leiste = fuss.getBoundingClientRect();
+    // Das Feld muss in der Hoehe ueber der Fusszeile mittig sitzen, die Fusszeile selbst am unteren Rand.
+    const fussHoehe = leiste.height;
+    return {
+      feldMitte: Math.round(feld.top + feld.height / 2),
+      freiMitte: Math.round((leiste.top + 0) / 2),
+      fussUnten: Math.round(leiste.bottom),
+      fussHoehe: Math.round(fussHoehe),
+      fenster: window.innerHeight,
+    };
+  });
+  check(
+    'Unterschriftenfeld Handy hochkant: Feld vertikal mittig, Fusszeile am unteren Rand',
+    Math.abs(handyLage.feldMitte - handyLage.freiMitte) < 12 && handyLage.fenster - handyLage.fussUnten < 4 &&
+      handyLage.fussHoehe < 120,
+    handyLage,
+  );
+  await page.setViewport({ width: 800, height: 390 });
+  await new Promise(resolve => setTimeout(resolve, 600));
+  const querPad = await padFenster();
+  check('Unterschriftenfeld Querformat (800x390): Dialog, Feld passt ins Fenster', querPad.art === 'dialog' && querPad.passt, querPad);
+  await page.setViewport({ width: 1400, height: 900 });
+  await new Promise(resolve => setTimeout(resolve, 600));
+  const zurueck = await padFenster();
+  check('Unterschriftenfeld zurueck auf Desktop: wieder Dialog, Feld passt', zurueck.art === 'dialog' && zurueck.passt, zurueck);
+  await page.evaluate(() => (document.querySelector('dialog[open] [data-dialog-dismiss="modal"]') as HTMLElement | null)?.click());
+  await dialogZu();
+
   // 6. Admin: Profil-Vorlagen mit Feature-Abschnitten (nur Fake-Backend, dort ist der Benutzer Team-Admin)
   if (backend.gespeicherteVorlage) {
     console.log('6. Admin: Profil-Vorlagen');

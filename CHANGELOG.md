@@ -2,6 +2,23 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-04 (216)
+
+### fix (Unterschrift: weniger dick und wellig, Pad im Hochformat mittig)
+
+- Strichstaerke im PDF 0.8 bis 2pt (vorher 0.6 bis 3), `velocityFilterWeight` 0.4, Startpunkt `dotSize` nur noch `minWidth` (vorher `maxWidth`): hohes Gewicht liess die Breite springen und der dicke Startpunkt wirkte als Klecks, die Unterschrift sah "punktartig" aus.
+- Hochformat: Das Feld sitzt vertikal mittig im Inhaltsbereich des Vollbild-Drawers (`flex: 1`, `align-items: center`), die Fusszeile liegt am unteren Rand. Nach dem Drehen misst der Dialog nach 250ms und bei `orientationchange` erneut (die Browser melden die neue Hoehe oft verspaetet); gleiche Fenstergroesse wie zuletzt loest nichts aus.
+- Hilfslinie als Orientierung: Das Unterschriftenfeld zeigt unten eine duenne Linie (`SIGNATUR_LINIE_ANTEIL` = 0.8 der Hoehe, CSS-Hintergrund, nicht im PNG und nicht im PDF). Der Formular-Editor zeigt dieselbe Linie im Signatur-Rechteck und beim Aufziehen der Flaeche, damit sich die Flaeche so setzen laesst, dass die Linie auf der Formularlinie liegt.
+- Livetest `5c` prueft Feld mittig und Fusszeile unten im Hochformat.
+
+## 2026-10-04 (215)
+
+### fix (Unterschrift im PDF kraeftiger, Pad beim Drehen)
+
+- Das Pad (`signaturePad.ts`) waehlt die Strichbreiten jetzt relativ zur Canvas-Breite (`strichbreiten()`): Das PNG wird beim Einbetten auf die Unterschriftsflaeche geschrumpft, feste Pixelwerte (1 bis 3.5) wurden auf grossen Feldern im PDF haarduenn (~0.5pt). Ziel im PDF jetzt 1.1 bis 2.2pt bei angenommener Flaechenbreite 140pt, unabhaengig von Feldgroesse und `devicePixelRatio`.
+- Tempo wirkt deutlicher auf die Strichstaerke: Zielstaerken 0.6pt (schnell) bis 3pt (langsam) statt 1.1 bis 2.2, `velocityFilterWeight` 0.85 (die erste Fassung mit 0.3 glaettete die Wirkung weg). `signature_pad` rechnet `max(maxWidth / (Tempo + 1), minWidth)`, je groesser der Abstand, desto sichtbarer. Bereits gespeicherte Unterschriften behalten ihre alte Staerke.
+- Unterschrift-Dialog beim Drehen: Der Dialog wechselt jetzt beim Ueberschreiten der Handy-Grenze (`sm`) zwischen zentriertem Dialog und Vollbild-Drawer und uebernimmt die bisherige Zeichnung skaliert (PNG) ins neue Pad; auch ohne Wechsel der Dialogart bleibt die Zeichnung beim Drehen erhalten (vorher ging sie verloren). Livetest `5c` prueft Desktop, Handy, Querformat und zurueck; Unit-Tests fuer Zeichnungsuebernahme und Dialogwechsel.
+
 ## 2026-10-04 (214)
 
 ### refactor (`DBDialog` auch fuer Schriftart-, Admin-Bearbeiten-, Bestaetigungs-, Unterschrift- und Speicherfehler-Dialog)

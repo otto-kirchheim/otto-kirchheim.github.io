@@ -564,6 +564,15 @@ td:has(.SchichtBereitschaft) {
   /* Immer weiss, unabhaengig vom Theme: der Canvas simuliert Papier fuer die schwarze Tinte im PDF (im Dark Mode waere sie unsichtbar).
      Nur die Anzeige; das exportierte PNG bleibt transparent (`erstelleSignaturPad()`). */
   background-color: var(--db-neutral-0-default, #fff);
+
+  /* Hilfslinie fuer die Schreibhoehe (`SIGNATUR_LINIE_ANTEIL`, Lage per `--signatur-linie` aus `signaturDialog.ts`); nur Anzeige, nicht im PNG. */
+  background-image: linear-gradient(
+    to bottom,
+    transparent calc(var(--signatur-linie, 80%) - var(--db-border-width-3xs)),
+    var(--db-adaptive-on-bg-basic-emphasis-60-default) calc(var(--signatur-linie, 80%) - var(--db-border-width-3xs)),
+    var(--db-adaptive-on-bg-basic-emphasis-60-default) var(--signatur-linie, 80%),
+    transparent var(--signatur-linie, 80%)
+  );
 }
 
 /* Der Unterschrift-Dialog hat keine Kopfzeile; die Fusszeile haelt vier Elemente in einer schmalen Reihe -- jede Zeile Hoehe fehlt der Schreibflaeche. */
@@ -591,7 +600,18 @@ td:has(.SchichtBereitschaft) {
 
 .signatur-dialog :is(.db-dialog-content, .db-drawer-content) {
   display: flex;
+  flex: 1;
+  align-items: center;
   justify-content: center;
+}
+
+/* Ohne Kopfzeile belegt der Drawer-Grid (Kopf auto / Inhalt 1fr / Fuss auto) die Zeilen der Reihe nach: der Inhalt landet in der Kopfzeile, die Fusszeile in der 1fr-Zeile und das Feld klebt oben. Explizit platzieren. */
+.signatur-dialog .db-drawer-container > .db-drawer-content {
+  grid-row: 2;
+}
+
+.signatur-dialog .db-drawer-container > .db-drawer-footer {
+  grid-row: 3;
 }
 
 .signatur-kompakt .signatur-fusszeile {

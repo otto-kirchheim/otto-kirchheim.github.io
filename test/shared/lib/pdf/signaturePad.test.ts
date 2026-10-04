@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'bun:test';
-import { setzeSignaturPng, skaliereFuerDisplay } from '@/shared/lib/pdf/signaturePad';
+import { setzeSignaturPng, skaliereFuerDisplay, strichbreiten } from '@/shared/lib/pdf/signaturePad';
 import type SignaturePad from 'signature_pad';
 
 describe('skaliereFuerDisplay', () => {
@@ -25,5 +25,30 @@ describe('setzeSignaturPng', () => {
     await setzeSignaturPng(pad, 'data:image/png;base64,abc');
 
     expect(fromDataURL).toHaveBeenCalledWith('data:image/png;base64,abc');
+  });
+});
+
+describe('strichbreiten', () => {
+  it('waechst proportional zur Canvas-Breite, damit die Linie im PDF immer gleich dick ankommt', () => {
+    const klein = strichbreiten(350);
+    const gross = strichbreiten(700);
+
+    expect(gross.minWidth / klein.minWidth).toBeCloseTo(2, 5);
+    expect(gross.maxWidth / klein.maxWidth).toBeCloseTo(2, 5);
+  });
+
+  it('liefert im PDF (Flaeche 140pt breit) etwa die Zielstaerken von 0.8 bis 2 pt', () => {
+    const canvasBreite = 420; // 3 px je pt
+    const { minWidth, maxWidth } = strichbreiten(canvasBreite);
+
+    expect(minWidth / 3).toBeCloseTo(0.8, 5);
+    expect(maxWidth / 3).toBeCloseTo(2, 5);
+  });
+
+  it('haelt maxWidth ueber minWidth und bleibt bei Breite 0 endlich', () => {
+    const { minWidth, maxWidth } = strichbreiten(0);
+
+    expect(Number.isFinite(minWidth)).toBe(true);
+    expect(maxWidth).toBeGreaterThan(minWidth);
   });
 });

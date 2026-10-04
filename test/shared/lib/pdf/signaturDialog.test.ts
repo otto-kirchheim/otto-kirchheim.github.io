@@ -151,6 +151,12 @@ describe('signaturDialog', () => {
       await promise;
     });
 
+    /** Aendert die Fenstergroesse und meldet `resize` (der Dialog ignoriert ein `resize` ohne neue Groesse). */
+    const dreheFenster = () => {
+      window.innerHeight += 1;
+      window.dispatchEvent(new Event('resize'));
+    };
+
     it('window-resize (z.B. Handydrehung) baut das Pad neu auf statt verzerrt weiterlaufen zu lassen', async () => {
       const promise = signaturDialog();
       const entscheidung = getEntscheidungModalEl()!;
@@ -161,12 +167,69 @@ describe('signaturDialog', () => {
       await naechsterFrame();
       expect(erstelleSignaturPadMock).toHaveBeenCalledTimes(1);
 
-      window.dispatchEvent(new Event('resize'));
+      dreheFenster();
       expect(offMock).toHaveBeenCalledTimes(1); // alte Pointer-Listener zuerst lösen
       expect(erstelleSignaturPadMock).toHaveBeenCalledTimes(2); // Pad neu mit aktueller Canvas-Größe
 
       schliesseUeberX(modal);
       await promise;
+    });
+
+    it('window-resize uebernimmt die bisherige Zeichnung ins neue Pad', async () => {
+      holeSignaturPngMock.mockReturnValue('data:image/png;base64,gezeichnet');
+      const promise = signaturDialog();
+      oeffnePad(getEntscheidungModalEl()!);
+      await Promise.resolve();
+      const modal = getPadModalEl()!;
+      await naechsterFrame();
+      setzeSignaturPngMock.mockClear();
+
+      dreheFenster();
+
+      expect(setzeSignaturPngMock).toHaveBeenCalledWith(expect.anything(), 'data:image/png;base64,gezeichnet');
+
+      schliesseUeberX(modal);
+      await promise;
+    });
+
+    it('Drehen ueber die Handy-Grenze baut den Dialog in der anderen Dialogart neu auf, ohne zu schliessen', async () => {
+      const echteMatchMedia = window.matchMedia;
+      holeSignaturPngMock.mockReturnValue('data:image/png;base64,gezeichnet');
+      let aufgeloest = false;
+      const promise = signaturDialog().then(ergebnis => {
+        aufgeloest = true;
+        return ergebnis;
+      });
+      oeffnePad(getEntscheidungModalEl()!);
+      await Promise.resolve();
+      expect(getPadModalEl()!.classList.contains('db-dialog')).toBe(true);
+      await naechsterFrame();
+      erstelleSignaturPadMock.mockClear();
+      setzeSignaturPngMock.mockClear();
+
+      // Handy-Breite: die Handy-Abfrage (`max-width`) trifft jetzt zu.
+      window.matchMedia = ((abfrage: string) => ({
+        matches: abfrage.includes('max-width'),
+      })) as typeof window.matchMedia;
+      try {
+        dreheFenster();
+        await Promise.resolve();
+
+        const neu = getPadModalEl()!;
+        expect(document.querySelectorAll('dialog canvas').length).toBe(1);
+        expect(neu.classList.contains('db-drawer')).toBe(true);
+        expect(aufgeloest).toBe(false);
+
+        await naechsterFrame();
+        expect(erstelleSignaturPadMock).toHaveBeenCalledTimes(1);
+        expect(setzeSignaturPngMock).toHaveBeenCalledWith(expect.anything(), 'data:image/png;base64,gezeichnet');
+
+        schliesseUeberX(neu);
+        await promise;
+        expect(aufgeloest).toBe(true);
+      } finally {
+        window.matchMedia = echteMatchMedia;
+      }
     });
 
     it('resize vor dem ersten Frame (Pad existiert noch nicht) tut nichts', async () => {
@@ -175,7 +238,7 @@ describe('signaturDialog', () => {
       oeffnePad(entscheidung);
       await Promise.resolve();
 
-      window.dispatchEvent(new Event('resize'));
+      dreheFenster();
       expect(erstelleSignaturPadMock).not.toHaveBeenCalled();
       expect(offMock).not.toHaveBeenCalled();
 
@@ -195,7 +258,7 @@ describe('signaturDialog', () => {
       await promise;
 
       erstelleSignaturPadMock.mockClear();
-      window.dispatchEvent(new Event('resize'));
+      dreheFenster();
       expect(erstelleSignaturPadMock).not.toHaveBeenCalled();
     });
 

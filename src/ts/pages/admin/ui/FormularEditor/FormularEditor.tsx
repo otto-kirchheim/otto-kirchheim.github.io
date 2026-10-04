@@ -1,3 +1,4 @@
+import { SIGNATUR_LINIE_ANTEIL } from '@/shared/lib/pdf/signaturePad';
 import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 
 import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
@@ -201,6 +202,7 @@ function sammleRechtecke(
       y2: s.y + s.h,
       label: 'Signatur',
       aktiv: Boolean(armed?.bereich === 'signaturBild'),
+      linieAnteil: SIGNATUR_LINIE_ANTEIL,
     });
   }
 
@@ -824,6 +826,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
                   ? 'Band über die LETZTE Datenzeile ziehen — die Zeilenhöhe wird daraus über alle Zeilen gemittelt.'
                   : undefined
               }
+              ziehLinieAnteil={armed?.bereich === 'signaturBild' ? SIGNATUR_LINIE_ANTEIL : undefined}
               onRechteck={handleRechteck}
               onQuelleWaehlen={pageIndex => setzeAktiveSeite({ ...aktiveSeite, quelle: pageIndex })}
               aktiveSeiteLabel={`Seite ${seitenIndex + 1}`}

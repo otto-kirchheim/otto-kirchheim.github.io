@@ -25,6 +25,8 @@ export interface Rechteck {
   /** Beschriftung an der rechten statt linken Kante — für breite Rahmen, die eng anliegende
    * Rechtecke umschließen (z.B. das Zeilenraster über der ersten Spalte). */
   labelRechts?: boolean;
+  /** Hilfslinie als Anteil der Hoehe von oben (0 bis 1), z.B. die Schreiblinie der Unterschrift. */
+  linieAnteil?: number;
 }
 
 /**
@@ -77,6 +79,8 @@ type Props = {
   /** Schriftgrößen-Messmodus: Klick auf ein Textstück der PDF liefert dessen Schriftgröße. */
   messModus?: boolean;
   onGemessen?: (m: Messung) => void;
+  /** Hilfslinie (Anteil der Hoehe von oben) im aufgezogenen Rechteck, z.B. fuer die Unterschriftsflaeche. */
+  ziehLinieAnteil?: number;
 };
 
 const ZOOM_STUFEN = [0.1, 0.5, 0.7, 1, 1.3, 1.6, 2, 2.5, 3, 4];
@@ -113,6 +117,34 @@ function freieLabelPosition(
 }
 
 /**
+ * Zeichnet eine duenne waagerechte Hilfslinie in ein Rechteck (in der aktuellen Strichfarbe).
+ *
+ * @param ctx - Zeichenkontext des Overlay-Canvas.
+ * @param links - Linke Kante des Rechtecks in Canvas-Pixeln.
+ * @param oben - Obere Kante in Canvas-Pixeln.
+ * @param breite - Breite in Canvas-Pixeln.
+ * @param hoehe - Hoehe in Canvas-Pixeln.
+ * @param anteil - Lage als Anteil der Hoehe von oben.
+ */
+function zeichneLinie(
+  ctx: CanvasRenderingContext2D,
+  links: number,
+  oben: number,
+  breite: number,
+  hoehe: number,
+  anteil: number,
+): void {
+  const y = oben + hoehe * anteil;
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(links, y);
+  ctx.lineTo(links + breite, y);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
  * Zeichnet die Rechtecke samt Beschriftung aufs Overlay; überlappende Beschriftungen werden nach oben versetzt.
  *
  * @param ctx - Zeichenkontext des Overlay-Canvas.
@@ -141,6 +173,7 @@ function zeichneRechtecke(ctx: CanvasRenderingContext2D, viewport: Viewport, rec
     ctx.fillStyle = r.aktiv ? 'rgba(220,53,69,0.12)' : 'rgba(13,110,253,0.10)';
     ctx.fillRect(links, oben, breite, hoehe);
     ctx.strokeRect(links, oben, breite, hoehe);
+    if (r.linieAnteil !== undefined) zeichneLinie(ctx, links, oben, breite, hoehe, r.linieAnteil);
 
     const textBreite = ctx.measureText(r.label).width;
     const textX = r.labelRechts ? links + breite - textBreite : links;
@@ -213,6 +246,7 @@ export function PdfCanvas({
   aktiveSeiteLabel,
   messModus = false,
   onGemessen,
+  ziehLinieAnteil,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
@@ -376,7 +410,9 @@ export function PdfCanvas({
     ctx.fillRect(links, oben, breite, hoehe);
     ctx.strokeRect(links, oben, breite, hoehe);
     ctx.setLineDash([]);
-  }, [rechtecke, raster, ziehen, gerendert, achse, messModus, messBoxen]);
+    if (ziehLinieAnteil !== undefined && achse === 'beide')
+      zeichneLinie(ctx, links, oben, breite, hoehe, ziehLinieAnteil);
+  }, [rechtecke, raster, ziehen, gerendert, achse, messModus, messBoxen, ziehLinieAnteil]);
 
   /**
    * Rechnet Mauskoordinaten des Fensters in Canvas-Pixel um.
