@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-04 (222)
+
+### fix (Update-Hinweis: Lage am Handy, Knopf ohne Wirkung)
+
+- `CustomSnackbar.css`: Unter 576px stand die Meldung oben mittig um die halbe Breite nach links verschoben (volle Breite, aber `translateX(-50%)` der `*-center`-Position blieb). Mobil jetzt `transform: none`.
+- "Jetzt aktualisieren" tat oft nichts: Der Hinweis kommt meist vom Backend (`426`), bevor der Service Worker die neue Version kennt; mit `registerType: 'autoUpdate'` gibt es dann keinen wartenden Worker und `updateSW(true)` ist wirkungslos. `aktualisiereApp()` (`setVersionOutdated.ts`) stoesst das Update an, wartet kurz auf einen neuen Worker und laedt in jedem Fall neu. Geprueft im Browser (Klick -> Seite neu geladen), Test `test/app/shell/setVersionOutdated.test.ts`.
+
 ## 2026-10-04 (221)
 
 ### fix (Icons Serverstart/Herunterfahren in der freien Variante)
