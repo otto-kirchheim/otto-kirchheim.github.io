@@ -29,6 +29,36 @@ const dropDbSubBrandLogos = {
 const DB_ASSETS_ROH = loadEnv('', import.meta.dirname, 'DB_ASSETS').DB_ASSETS ?? '';
 export const DB_ASSETS = ['1', 'true'].includes(DB_ASSETS_ROH.trim().toLowerCase());
 
+/** Ersatz fuer die DB-Neo-Familien in der freien Variante (Systemschrift; die DB-Fallbacks Helvetica/Arial folgen dahinter). */
+const SYSTEMSCHRIFT = 'system-ui, -apple-system, "Segoe UI", Roboto';
+
+/**
+ * Freie Variante (`DB_ASSETS` aus): entfernt die DB-Markenassets schon beim Bauen aus dem Theme-CSS, statt sie nur zu
+ * ueberdecken. Die Typografie-Tokens von `@db-ux/db-theme` tragen "DB Neo Screen Sans/Head" fest in ihren Werten
+ * (`@property ... initial-value: bolder 1.5rem/... "DB Neo Screen Head", ...`), eine Variable allein reicht nicht.
+ * - `@font-face` der DB-Schriften und der DB-Icon-Schriften (`db-default`, `db-filled`) faellt weg -- nichts wird geladen
+ *   oder in `dist/` kopiert.
+ * - "DB Neo Screen Sans/Head" in allen Werten wird zur Systemschrift.
+ * - `--db-logo-url` (DB-Logo) wird `none`.
+ * Die Icons kommen dann aus `asset-satz.frei.css` (Material Symbols mit DB-Namen).
+ */
+const freieAssets = {
+  postcssPlugin: 'db-assets-frei',
+  AtRule: {
+    'font-face'(regel: { nodes?: { type: string; prop?: string; value?: string }[]; remove: () => void }): void {
+      const familie = regel.nodes?.find(n => n.type === 'decl' && n.prop === 'font-family')?.value ?? '';
+      if (/DB Neo Screen|db-default|db-filled/i.test(familie)) regel.remove();
+    },
+  },
+  Declaration(dekl: { prop: string; value: string }): void {
+    if (dekl.prop === '--db-logo-url') {
+      if (dekl.value !== 'none') dekl.value = 'none';
+      return;
+    }
+    if (dekl.value.includes('DB Neo Screen')) dekl.value = dekl.value.replace(/"DB Neo Screen (?:Sans|Head)"/g, SYSTEMSCHRIFT);
+  },
+};
+
 const baseConfig: UserConfig = {
   root: path.resolve(import.meta.dirname, 'src'),
   // `.env` liegt im Frontend-Ordner, nicht in `root` (src): so beobachtet Vite sie und startet den Dev-Server bei einer
@@ -95,7 +125,7 @@ const baseConfig: UserConfig = {
       },
     },
     postcss: {
-      plugins: [dropDbSubBrandLogos],
+      plugins: DB_ASSETS ? [dropDbSubBrandLogos] : [dropDbSubBrandLogos, freieAssets],
     },
   },
 };
