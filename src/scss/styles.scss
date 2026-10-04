@@ -62,13 +62,13 @@
   color: var(--db-brand-origin-default);
 }
 
-// Illustrationen (`Illustration.tsx`, nur mit DB-Assets): feste Groesse, sitzen wie ein Icon in der Zeile.
+// Illustrationen (`Illustration.tsx`, nur mit DB-Assets): 4rem = Originalgroesse der SVGs (64px), sitzen wie ein Icon in der Zeile.
 .illustration {
   display: inline-block;
   vertical-align: middle;
   flex-shrink: 0;
-  inline-size: var(--db-sizing-md);
-  block-size: var(--db-sizing-md);
+  inline-size: var(--db-sizing-lg);
+  block-size: var(--db-sizing-lg);
 }
 
 .start-schnell-knopf {
