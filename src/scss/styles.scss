@@ -662,6 +662,12 @@ td > .db-switch {
   pointer-events: all;
 }
 
+// Datenschutzerklaerung (`DatenschutzInhalt.tsx`): Abschnitte mit Liste sollen wie die Text-Abschnitte (Titel, `<br>`, Text)
+// direkt unter dem Titel beginnen -- ohne das Browser-Standard-`margin` der `<ul>` stand dort eine Leerzeile.
+.datenschutz strong + ul {
+  margin-block-start: 0;
+}
+
 // Die Fusszeilen-Reservierung gehoert an `.db-shell-content`, nicht auf `body`: `.db-shell` ist schon exakt `100dvh` hoch, ein
 // `padding-block-end` auf `body` machte zusaetzlich das Dokument scrollbar (zwei gestapelte Scrollbalken). Als Aussenabstand
 // (nicht Innenabstand) endet der Scrollbalken des Inhalts ueber der fixierten Fusszeile statt dahinter.

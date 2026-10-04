@@ -255,6 +255,19 @@ const ANSICHTEN: Ansicht[] = [
   { name: 'ea-dialog', ...dialog('EA', '#btnESEA') },
   { name: 'berechnung', oeffnen: tab('Berechnung') },
   { name: 'impressum', ...dialog('start', '.app-footer .impressum') },
+  {
+    name: 'impressum-datenschutz',
+    ...dialog('start', '.app-footer .impressum'),
+    async oeffnen(page) {
+      await dialog('start', '.app-footer .impressum').oeffnen(page);
+      // Den Datenschutz-Teil ab Abschnitt 3 in den Blick holen (der Drawer-Inhalt scrollt, nicht die Seite).
+      await page.evaluate(() =>
+        [...document.querySelectorAll('.datenschutz strong')]
+          .find(s => s.textContent?.startsWith('3.'))
+          ?.scrollIntoView({ block: 'start' }),
+      );
+    },
+  },
   { name: 'dialog-speicherfehler', ...modulDialog(SPEICHERFEHLER) },
   {
     name: 'dialog-registrieren',
