@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { act, useState } from 'react';
+import { useState } from 'react';
+import { flushSync } from 'react-dom';
 import { render } from '@test/reactRender';
 
 import { vorgabenBAbschnitt } from '@/pages/admin/features/ber/profilVorlage';
@@ -20,7 +21,9 @@ function zeichne() {
   const knopf = (text: string) => {
     const treffer = [...container.querySelectorAll('button')].find(b => b.textContent?.trim() === text);
     if (!treffer) throw new Error(`Knopf "${text}" nicht gefunden`);
-    act(() => treffer.click());
+    // `flushSync` statt `act()`: ohne `IS_REACT_ACT_ENVIRONMENT` warnt `act()` bei jedem Aufruf
+    // ("not configured to support act"), siehe `test/reactRender.ts` (kein `act()` im Projekt).
+    flushSync(() => treffer.click());
   };
   return { container, stand, knopf };
 }
