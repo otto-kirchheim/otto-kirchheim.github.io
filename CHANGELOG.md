@@ -2,6 +2,12 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-04 (224)
+
+### feat (EWT-Zettel nur mit Zeilen, die ein Zeitband ankreuzen)
+
+- `features/ewt/model/pdfDaten.ts`: `ewtZeileDruckbar()` -- eine Zeile kommt nur aufs PDF, wenn mindestens ein Zeitband-Feld `true` ist (`Wohnung8bis14`, `Wohnung14bis24`, `WohnungUeber24`, `BeamterUeber8Wohnung`, `TkgSt8bis24`, `TkgStUeber24`). Abwesenheiten bis einschliesslich 8h (ab/an Wohnung) bringen keinen Anspruch und fallen weg; `berechnen` zaehlt nicht. Tests in `pdfDaten.test.ts`, `generatePDF.test.ts` (7h-Zeile wird verworfen).
+
 ## 2026-10-04 (223)
 
 ### fix (Entgeltausgleich: Pause genau an der 6h-/9h-Grenze)

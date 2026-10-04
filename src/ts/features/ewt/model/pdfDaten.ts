@@ -99,6 +99,27 @@ export function ewtAbgeleiteteWerte(
   };
 }
 
+/** Ankreuzfelder der Zeitbaender -- mindestens eines muss gesetzt sein, damit eine Zeile gedruckt wird. */
+const ZEITBAENDER = [
+  'Wohnung8bis14',
+  'Wohnung14bis24',
+  'WohnungUeber24',
+  'BeamterUeber8Wohnung',
+  'TkgSt8bis24',
+  'TkgStUeber24',
+] as const satisfies readonly (keyof EwtAbgeleiteteWerte)[];
+
+/**
+ * Darf die Zeile auf den Zettel? Nur, wenn mindestens ein Zeitband angekreuzt ist. Eine Abwesenheit bis einschliesslich 8h
+ * (ab/an Wohnung, ebenso erste Taetigkeitsstaette) kreuzt nichts an und bringt keinen Anspruch -- sie wird nicht gedruckt.
+ *
+ * @param werte - Abgeleitete Werte der Zeile (`ewtAbgeleiteteWerte`).
+ * @returns `true`, wenn mindestens ein Zeitband-Feld `true` ist.
+ */
+export function ewtZeileDruckbar(werte: Pick<EwtAbgeleiteteWerte, (typeof ZEITBAENDER)[number]>): boolean {
+  return ZEITBAENDER.some(feld => werte[feld]);
+}
+
 /**
  * Bildet die Schichtkuerzel `SP` und `BN` auf `T` bzw. `N` ab (Kuerzel der PDF-Vorlage).
  *
@@ -113,6 +134,7 @@ function normalizeEwtSchichtForDownload(schicht: string): string {
 
 /**
  * Baut die PDF-Daten der EWT aus der Tabelle des Exportmonats (nach Buchungstag) inklusive vorberechneter Dauern und Zeitband-Haekchen.
+ * Zeilen ohne angekreuztes Zeitband (Abwesenheit bis 8h) fallen weg, siehe `ewtZeileDruckbar`.
  *
  * @param context - Exportmonat, persoenliche Vorgaben u. a. (`FeaturePdfContext`).
  * @returns `Daten.EWT` in der Form der Vorlagen-Pipeline.
@@ -127,25 +149,27 @@ export function baueEwtPdfDaten({ monat, vorgabenU }: FeaturePdfContext): { Date
   const einsatzortBeschreibung = new Map(vorgabenU.Fahrzeit.map(fz => [fz.key, fz.text]));
   return {
     Daten: {
-      EWT: ewtRaw.map(e => {
-        const basis = {
-          Buchungstag: dayjs(e.Buchungstag || calculateBuchungstagEwt(e)).format('DD'),
-          Einsatzort: [e.Einsatzort, einsatzortBeschreibung.get(e.Einsatzort)].filter(Boolean).join(' | '),
-          Schicht: normalizeEwtSchichtForDownload(e.Schicht),
-          abWE: e.abWE ? dayjs(e.abWE, 'HH:mm').format('HH:mm') : undefined,
-          ab1E: e.ab1E ? dayjs(e.ab1E, 'HH:mm').format('HH:mm') : undefined,
-          anEE: e.anEE ? dayjs(e.anEE, 'HH:mm').format('HH:mm') : undefined,
-          beginE: e.beginE ? dayjs(e.beginE, 'HH:mm').format('HH:mm') : undefined,
-          endeE: e.endeE ? dayjs(e.endeE, 'HH:mm').format('HH:mm') : undefined,
-          abEE: e.abEE ? dayjs(e.abEE, 'HH:mm').format('HH:mm') : undefined,
-          an1E: e.an1E ? dayjs(e.an1E, 'HH:mm').format('HH:mm') : undefined,
-          anWE: e.anWE ? dayjs(e.anWE, 'HH:mm').format('HH:mm') : undefined,
-          berechnen: e.berechnen,
-        };
-        // Vorberechnete Dauer-/Zeitband-Felder stehen mit im Zeilenobjekt, `build()` liest sie als
-        // normale Datenpfade (Daten.EWT[].DauerWohnung etc.).
-        return { ...basis, ...ewtAbgeleiteteWerte(basis, beamter) };
-      }),
+      EWT: ewtRaw
+        .map(e => {
+          const basis = {
+            Buchungstag: dayjs(e.Buchungstag || calculateBuchungstagEwt(e)).format('DD'),
+            Einsatzort: [e.Einsatzort, einsatzortBeschreibung.get(e.Einsatzort)].filter(Boolean).join(' | '),
+            Schicht: normalizeEwtSchichtForDownload(e.Schicht),
+            abWE: e.abWE ? dayjs(e.abWE, 'HH:mm').format('HH:mm') : undefined,
+            ab1E: e.ab1E ? dayjs(e.ab1E, 'HH:mm').format('HH:mm') : undefined,
+            anEE: e.anEE ? dayjs(e.anEE, 'HH:mm').format('HH:mm') : undefined,
+            beginE: e.beginE ? dayjs(e.beginE, 'HH:mm').format('HH:mm') : undefined,
+            endeE: e.endeE ? dayjs(e.endeE, 'HH:mm').format('HH:mm') : undefined,
+            abEE: e.abEE ? dayjs(e.abEE, 'HH:mm').format('HH:mm') : undefined,
+            an1E: e.an1E ? dayjs(e.an1E, 'HH:mm').format('HH:mm') : undefined,
+            anWE: e.anWE ? dayjs(e.anWE, 'HH:mm').format('HH:mm') : undefined,
+            berechnen: e.berechnen,
+          };
+          // Vorberechnete Dauer-/Zeitband-Felder stehen mit im Zeilenobjekt, `build()` liest sie als
+          // normale Datenpfade (Daten.EWT[].DauerWohnung etc.).
+          return { ...basis, ...ewtAbgeleiteteWerte(basis, beamter) };
+        })
+        .filter(ewtZeileDruckbar),
     },
   };
 }
