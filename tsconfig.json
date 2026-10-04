@@ -29,7 +29,8 @@
       "@/types/*": ["./src/ts/shared/types/*"],
       "@/shared/*": ["./src/ts/shared/*"],
       "@/*": ["./src/ts/*"],
-      "@test/*": ["./test/*"]
+      "@test/*": ["./test/*"],
+      "@illustrationen": ["./src/ts/shared/ui/icons/illustrationen.frei.ts"]
     }
   },
   "include": ["src", "test", "scripts"],

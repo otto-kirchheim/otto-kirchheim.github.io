@@ -67,8 +67,8 @@ describe('Icon-Registry', () => {
         ...readFileSync('node_modules/@db-ux/db-theme-icons/build/ts/all-icons.ts', 'utf8').matchAll(/"([a-z0-9_]+)"/g),
       ].map(t => t[1] as string),
     );
-    // Gleichlautende Strings, die keine Icons sind (CSS-Werte, Log-Ereignisse, Alt-Tabelle `dbIcons.ts`).
-    const KEINE_ICONS = new Set(['block', 'brand', 'start', 'stop', 'light_bulb']);
+    // Gleichlautende Strings, die keine Icons sind (CSS-Werte, Log-Ereignisse, Alt-Tabelle `dbIcons.ts`, Illustrationen).
+    const KEINE_ICONS = new Set(['block', 'brand', 'start', 'stop', 'light_bulb', 'alarm_clock']); // alarm_clock: Name einer Illustration (`Illustration.tsx`)
     const unbekannt = new Set<string>();
     for (const datei of sammleDateien('src', ['.ts', '.tsx', '.html'])) {
       for (const treffer of readFileSync(datei, 'utf8').matchAll(/['"`]([a-z][a-z0-9_]+)['"`]/g)) {

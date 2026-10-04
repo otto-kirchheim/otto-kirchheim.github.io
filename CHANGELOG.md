@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-04 (219)
+
+### feat (Illustrationen auf Startseite und Admin-Dashboard)
+
+- Neue Komponente `shared/ui/icons/Illustration.tsx`: mehrfarbige 64x64-Illustrationen aus `@db-ux/db-theme-illustrative-icons` an grossen, dekorativen Stellen -- Startseiten-Karten (`account`, `calendar`, `pdf`) und Kennzahl-Kacheln im Admin-Dashboard (`account`/`error`, `user_manual`, `cyber_security`, `alarm_clock`). Knoepfe, Kopfzeile und Tabellen behalten die einfarbigen Icons; leere Tabellen bewusst ohne Illustration.
+- Schalter `DB_ASSETS`: Alias `@illustrationen` -> `illustrationen.db.ts` (bindet die SVGs) bzw. `illustrationen.frei.ts` (leer, auch fuer Typecheck/Tests). Aus erscheint das bisherige Icon als Ersatz; im Build landet dann keine Illustration (geprueft: an 5 SVG-Dateien + 2 inline, aus keine).
+
 ## 2026-10-04 (218)
 
 ### feat (Impressum aktualisiert, Datenschutzerklaerung)

@@ -1,3 +1,4 @@
+import Illustration, { type IllustrationName } from '@/shared/ui/icons/Illustration';
 import { useEffect, useState } from 'react';
 
 import { Role } from '@otto-kirchheim/nebengeld-shared';
@@ -35,6 +36,7 @@ function StatCard({
   unit,
   sub,
   icon,
+  illustration,
   colorClass,
 }: {
   title: string;
@@ -43,6 +45,8 @@ function StatCard({
   unit?: string;
   sub?: string;
   icon: string;
+  /** Illustration bei aktiven DB-Assets; `icon` ist dann nur der Ersatz (freie Variante). */
+  illustration: IllustrationName;
   colorClass: string;
 }) {
   const display = label ?? value?.toLocaleString() ?? '–';
@@ -50,7 +54,7 @@ function StatCard({
     <div className="sp-sm-6 sp-xl-3">
       <DBCard className="admin-karte">
         <DBStack direction="row" gap="small" alignment="start">
-          <span className={`db-icon ${colorClass} db-font-size-lg`} data-icon={icon} />
+          <Illustration name={illustration} ersatz={icon} className={`${colorClass} db-font-size-lg`} />
           <div style={{ minWidth: '0' }}>
             <DBInfotext showIcon={false} className="infotext-block">
               {title}
@@ -188,6 +192,7 @@ export function AdminDashboard() {
               value={stats.users.total}
               sub={sub}
               icon={gap === 0 ? 'persons' : 'exclamation_mark_triangle'}
+              illustration={gap === 0 ? 'account' : 'error'}
               colorClass={gap === 0 ? 'farbe-primary' : 'farbe-gefahr'}
             />
           );
@@ -197,6 +202,7 @@ export function AdminDashboard() {
           value={stats.templates.total}
           sub={`Aktiv: ${stats.templates.active} · Inaktiv: ${stats.templates.inactive}`}
           icon="copy"
+          illustration="user_manual"
           colorClass="farbe-info"
         />
         <StatCard
@@ -204,6 +210,7 @@ export function AdminDashboard() {
           value={stats.adminActivity.logsLast7d}
           sub="Logs (letzte 7 Tage)"
           icon="counter_clockwise_clock"
+          illustration="cyber_security"
           colorClass="farbe-warnung"
         />
         {cur &&
@@ -216,6 +223,7 @@ export function AdminDashboard() {
                 unit={unit}
                 sub="seit letztem Start"
                 icon="clock"
+                illustration="alarm_clock"
                 colorClass="farbe-erfolg"
               />
             );

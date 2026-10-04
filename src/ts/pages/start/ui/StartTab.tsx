@@ -1,3 +1,4 @@
+import Illustration from '@/shared/ui/icons/Illustration';
 import type { ComponentProps } from 'react';
 import {
   DBButton,
@@ -61,21 +62,21 @@ export default function StartTab() {
             Fliesstext in allen Karten auf gleicher Hoehe beginnt, auch wenn ein Titel umbricht. */}
         <DBCard className="start-karte">
           <DBHeadingH5 paragraphSpacing className="karten-titel">
-            <span className="db-icon start-icon" data-icon="sliders_horizontal" />
+            <Illustration name="account" ersatz="sliders_horizontal" className="start-icon" />
             1. Einstellungen prüfen
           </DBHeadingH5>
           <p>Persönliche Daten, Arbeitszeiten und Vorgaben aktuell halten.</p>
         </DBCard>
         <DBCard className="start-karte">
           <DBHeadingH5 paragraphSpacing className="karten-titel">
-            <span className="db-icon start-icon" data-icon="pen" />
+            <Illustration name="calendar" ersatz="pen" className="start-icon" />
             2. Monate erfassen
           </DBHeadingH5>
           <p>{featureListe} eintragen und speichern.</p>
         </DBCard>
         <DBCard className="start-karte">
           <DBHeadingH5 paragraphSpacing className="karten-titel">
-            <span className="db-icon start-icon" data-icon="document" />
+            <Illustration name="pdf" ersatz="document" className="start-icon" />
             3. Ergebnis exportieren
           </DBHeadingH5>
           <p>Berechnung prüfen und die Formulare als PDF erzeugen.</p>

@@ -62,6 +62,15 @@
   color: var(--db-brand-origin-default);
 }
 
+// Illustrationen (`Illustration.tsx`, nur mit DB-Assets): feste Groesse, sitzen wie ein Icon in der Zeile.
+.illustration {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  inline-size: var(--db-sizing-md);
+  block-size: var(--db-sizing-md);
+}
+
 .start-schnell-knopf {
   flex-direction: column;
   gap: var(--db-spacing-fixed-2xs);

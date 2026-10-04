@@ -68,6 +68,10 @@ const baseConfig: UserConfig = {
   envDir: import.meta.dirname,
   resolve: {
     alias: {
+      '@illustrationen': path.resolve(
+        import.meta.dirname,
+        `src/ts/shared/ui/icons/illustrationen.${DB_ASSETS ? 'db' : 'frei'}.ts`,
+      ),
       '@asset-satz': path.resolve(import.meta.dirname, `src/scss/asset-satz.${DB_ASSETS ? 'db' : 'frei'}.css`),
       '@/types': path.resolve(import.meta.dirname, 'src/ts/shared/types'),
       '@/features': path.resolve(import.meta.dirname, 'src/ts/features'),
