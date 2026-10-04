@@ -287,8 +287,8 @@ export function AdminDashboard() {
             <DBHeadingH6 paragraphSpacing>Auth-Aktivität</DBHeadingH6>
             {(
               [
-                ['Neue Benutzer (7T)', stats.auth.newUsersLast7d, 'person_add', 'farbe-erfolg'],
-                ['E-Mail verifiziert', stats.auth.emailVerified, 'verified', 'farbe-primary'],
+                ['Neue Benutzer (7T)', stats.auth.newUsersLast7d, 'person', 'farbe-erfolg'],
+                ['E-Mail verifiziert', stats.auth.emailVerified, 'envelope', 'farbe-primary'],
                 ['Passkey-Nutzer', stats.auth.passkeyUsers, 'fingerprint', 'farbe-info'],
               ] as [string, number, string, string][]
             ).map(([label, count, icon, color]) => (
