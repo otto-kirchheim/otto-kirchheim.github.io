@@ -41,8 +41,10 @@ export default function DatenschutzInhalt() {
             Fehlersuche – Art. 6 Abs. 1 lit. f DSGVO.
           </li>
         </ul>
-        Die Nutzung ist freiwillig; ohne die Angaben lassen sich die Formulare nicht erstellen. Es gibt keine
-        automatisierte Entscheidungsfindung, keine Profilbildung, keine Werbung und kein Tracking.
+        <p>
+          Die Nutzung ist freiwillig; ohne die Angaben lassen sich die Formulare nicht erstellen. Es gibt keine
+          automatisierte Entscheidungsfindung, keine Profilbildung, keine Werbung und kein Tracking.
+        </p>
       </div>
 
       <p>
@@ -83,8 +85,10 @@ export default function DatenschutzInhalt() {
             IP-Adresse und die Postleitzahl.
           </li>
         </ul>
-        Eine Weitergabe an andere Dritte, insbesondere an den Arbeitgeber, findet nicht statt. Administratoren der App
-        sehen die Daten der Konten ihres Teams, soweit sie dafür freigeschaltet sind.
+        <p>
+          Eine Weitergabe an andere Dritte, insbesondere an den Arbeitgeber, findet nicht statt. Administratoren der App
+          sehen die Daten der Konten ihres Teams, soweit sie dafür freigeschaltet sind.
+        </p>
       </div>
 
       <div>
