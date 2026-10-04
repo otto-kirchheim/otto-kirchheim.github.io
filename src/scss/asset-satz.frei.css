@@ -16,4 +16,14 @@
   :root {
     --db-icon-font-family: 'Material Symbols DB';
   }
+
+  /* Hinweise (`.db-notification`), Infotexte ohne eigenes Icon und Lade-Status nehmen die "gefuellte" DB-Icon-Schrift
+     ueber `--db-icon-filled-font-family`. Die Variable ist per `@property` als nicht vererbbar registriert -- `:root`
+     reicht deshalb nicht, sie muss an jedem Element und Pseudo-Element stehen. */
+  *,
+  ::before,
+  ::after {
+    --db-icon-filled-font-family: 'Material Symbols DB';
+    --db-icon-default-font-family: 'Material Symbols DB';
+  }
 }

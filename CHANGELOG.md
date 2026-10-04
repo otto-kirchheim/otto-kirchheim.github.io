@@ -2,6 +2,14 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-04 (221)
+
+### fix (Icons Serverstart/Herunterfahren in der freien Variante)
+
+- Hinweise (`DBNotification`, z. B. "Fremde Benutzerdaten aktiv"), Infotexte ohne eigenes Icon und Lade-Status blieben in der freien Variante ohne Icon: sie nutzen `--db-icon-filled-font-family` (DB-"filled"-Schrift, entfernt). Die Variable ist per `@property` nicht vererbbar, `asset-satz.frei.css` setzt sie (und `--db-icon-default-font-family`) deshalb an `*, ::before, ::after` auf die Material-Schrift. Geprueft im Browser: Auge im Act-As-Hinweis sichtbar.
+
+- Admin-Dashboard, Ereignisliste: `start`/`stop` fehlten in `iconRegistry.ts` (der Registry-Test hatte beide faelschlich als Nicht-Icon-Strings ausgenommen) -> die freie Icon-Schrift zeigte den Buchstaben "S". Jetzt `start` -> `play_arrow`, `stop` -> `stop`; Ausnahme im Test entfernt, `iconset.material.css` und `material-symbols-db.woff2` neu erzeugt.
+
 ## 2026-10-04 (220)
 
 ### fix (Update haengt mit Alt-Daten; Release ohne doppeltes Gate)
