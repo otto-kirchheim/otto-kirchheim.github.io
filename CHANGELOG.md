@@ -2,6 +2,25 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-04 (224)
+
+### feat (EWT-Zettel nur mit Zeilen, die ein Zeitband ankreuzen)
+
+- `features/ewt/model/pdfDaten.ts`: `ewtZeileDruckbar()` -- eine Zeile kommt nur aufs PDF, wenn mindestens ein Zeitband-Feld `true` ist (`Wohnung8bis14`, `Wohnung14bis24`, `WohnungUeber24`, `BeamterUeber8Wohnung`, `TkgSt8bis24`, `TkgStUeber24`). Abwesenheiten bis einschliesslich 8h (ab/an Wohnung) bringen keinen Anspruch und fallen weg; `berechnen` zaehlt nicht. Tests in `pdfDaten.test.ts`, `generatePDF.test.ts` (7h-Zeile wird verworfen).
+
+## 2026-10-04 (223)
+
+### fix (Entgeltausgleich: Pause genau an der 6h-/9h-Grenze)
+
+- `calculateEaDauerFromEwt.ts`: §4 ArbZG verlangt die Pause erst bei MEHR als 6h (30 min) bzw. mehr als 9h (45 min). Vorher galt `>=` -- ein EWT-Freitag mit genau 6h ergab 05:30 statt 06:00. Jetzt `>`: 6:00 -> 06:00, 6:01 -> 05:31, 9:00 -> 08:30, 9:01 -> 08:16. Tests angepasst.
+
+## 2026-10-04 (222)
+
+### fix (Update-Hinweis: Lage am Handy, Knopf ohne Wirkung)
+
+- `CustomSnackbar.css`: Unter 576px stand die Meldung oben mittig um die halbe Breite nach links verschoben (volle Breite, aber `translateX(-50%)` der `*-center`-Position blieb). Mobil jetzt `transform: none`.
+- "Jetzt aktualisieren" tat oft nichts: Der Hinweis kommt meist vom Backend (`426`), bevor der Service Worker die neue Version kennt; mit `registerType: 'autoUpdate'` gibt es dann keinen wartenden Worker und `updateSW(true)` ist wirkungslos. `aktualisiereApp()` (`setVersionOutdated.ts`) stoesst das Update an, wartet kurz auf einen neuen Worker und laedt in jedem Fall neu. Geprueft im Browser (Klick -> Seite neu geladen), Test `test/app/shell/setVersionOutdated.test.ts`.
+
 ## 2026-10-04 (221)
 
 ### fix (Icons Serverstart/Herunterfahren in der freien Variante)

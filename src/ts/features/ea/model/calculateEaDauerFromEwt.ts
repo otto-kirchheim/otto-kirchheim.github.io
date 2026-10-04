@@ -4,8 +4,9 @@ import dayjs from '@/shared/lib/date/configDayjs';
 /**
  * Berechnet die Dauer eines EA-Eintrags (geleistete höherwertige Arbeit) aus den Arbeitszeiten
  * (`beginE`/`endeE`) eines verknüpften EWT-Eintrags, abzüglich der gesetzlichen Ruhepause nach
- * §4 ArbZG: ab 6h Arbeitszeit 30 Minuten Pause, ab 9h 45 Minuten (die 45 ersetzen die 30, sie
- * addieren sich nicht). Bewusst unabhängig von den persönlichen Arbeitszeit-/Schicht-Pause-
+ * §4 ArbZG: bei MEHR als 6h Arbeitszeit 30 Minuten Pause, bei mehr als 9h 45 Minuten (die 45 ersetzen
+ * die 30, sie addieren sich nicht). Genau 6h bzw. 9h loesen die naechste Stufe noch nicht aus -- ein Freitag mit
+ * 6h ohne Pause ergibt 06:00, nicht 05:30. Bewusst unabhängig von den persönlichen Arbeitszeit-/Schicht-Pause-
  * Einstellungen des Nutzers — reine Funktion der rohen Arbeitsdauer, kein Nutzer-Setting.
  *
  * @param entry - EWT-Eintrag mit Beginn und Ende (`HH:mm`); Ende <= Beginn gilt als Folgetag.
@@ -17,7 +18,7 @@ export default function calculateEaDauerFromEwt(entry: Pick<IDatenEWT, 'beginE' 
   if (ende.isSameOrBefore(beginn)) ende = ende.add(1, 'day');
 
   const rohMinuten = ende.diff(beginn, 'minute');
-  const pause = rohMinuten >= 540 ? 45 : rohMinuten >= 360 ? 30 : 0;
+  const pause = rohMinuten > 540 ? 45 : rohMinuten > 360 ? 30 : 0;
   const dauerMinuten = Math.max(0, rohMinuten - pause);
 
   const stunden = Math.floor(dauerMinuten / 60);

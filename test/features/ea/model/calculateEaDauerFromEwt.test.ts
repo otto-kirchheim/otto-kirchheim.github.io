@@ -11,8 +11,12 @@ describe('#calculateEaDauerFromEwt', () => {
     expect(calculateEaDauerFromEwt({ beginE: '07:00', endeE: '12:59' })).toBe('05:59');
   });
 
-  it('zieht 30 Minuten Pause ab genau an der 6h-Grenze (360 Minuten)', () => {
-    expect(calculateEaDauerFromEwt({ beginE: '07:00', endeE: '13:00' })).toBe('05:30');
+  it('zieht genau an der 6h-Grenze (360 Minuten) noch keine Pause ab -- §4 ArbZG: "mehr als sechs Stunden"', () => {
+    expect(calculateEaDauerFromEwt({ beginE: '07:00', endeE: '13:00' })).toBe('06:00');
+  });
+
+  it('zieht 30 Minuten Pause ab knapp ueber der 6h-Grenze (361 Minuten)', () => {
+    expect(calculateEaDauerFromEwt({ beginE: '07:00', endeE: '13:01' })).toBe('05:31');
   });
 
   it('zieht 30 Minuten Pause ab im 6-9h-Band', () => {
@@ -24,9 +28,13 @@ describe('#calculateEaDauerFromEwt', () => {
     expect(calculateEaDauerFromEwt({ beginE: '06:00', endeE: '14:59' })).toBe('08:29');
   });
 
-  it('zieht 45 Minuten Pause ab genau an der 9h-Grenze (540 Minuten) — ersetzt die 30, addiert sich nicht', () => {
-    // 9h = 540 Minuten roh, 45 Minuten Pause → 495 Minuten
-    expect(calculateEaDauerFromEwt({ beginE: '06:00', endeE: '15:00' })).toBe('08:15');
+  it('zieht genau an der 9h-Grenze (540 Minuten) weiterhin 30 Minuten ab', () => {
+    expect(calculateEaDauerFromEwt({ beginE: '06:00', endeE: '15:00' })).toBe('08:30');
+  });
+
+  it('zieht 45 Minuten Pause ab knapp ueber der 9h-Grenze (541 Minuten) — ersetzt die 30, addiert sich nicht', () => {
+    // 541 Minuten roh, 45 Minuten Pause → 496 Minuten
+    expect(calculateEaDauerFromEwt({ beginE: '06:00', endeE: '15:01' })).toBe('08:16');
   });
 
   it('zieht 45 Minuten Pause ab im 9h+-Band', () => {

@@ -89,10 +89,13 @@
 }
 
 @media (max-width: 576px) {
+  /* Volle Breite: die Zentrier-Verschiebung der `*-center`-Positionen muss mit weg, sonst ragt die Meldung um die
+     halbe Breite links aus dem Bild (z. B. "Neue App-Version verfuegbar" oben mittig). */
   .CustomSnackbar-container {
     left: 0;
     right: 0;
     align-items: stretch;
+    transform: none;
   }
 
   .CustomSnackbar__wrapper {

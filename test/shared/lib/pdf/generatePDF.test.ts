@@ -255,6 +255,22 @@ describe('generatePDF utility', () => {
         endeE: '11:00',
         abEE: '12:00',
         an1E: '13:00',
+        anWE: '16:00',
+        berechnen: true,
+      },
+      // Abwesenheit nur 7h -- kein Zeitband angekreuzt, darf nicht auf den Zettel (`ewtZeileDruckbar`).
+      {
+        Tag: '2026-04-21',
+        Buchungstag: '2026-04-21',
+        Einsatzort: 'Fulda',
+        Schicht: 'T',
+        abWE: '07:00',
+        ab1E: '08:00',
+        anEE: '09:00',
+        beginE: '10:00',
+        endeE: '11:00',
+        abEE: '12:00',
+        an1E: '13:00',
         anWE: '14:00',
         berechnen: true,
       },
@@ -281,13 +297,13 @@ describe('generatePDF utility', () => {
               endeE: '11:00',
               abEE: '12:00',
               an1E: '13:00',
-              anWE: '14:00',
+              anWE: '16:00',
               berechnen: true,
-              // abWE 07:00 -> anWE 14:00 = 7h, ab1E 08:00 -> an1E 13:00 = 5h -- beide unter der
-              // 8h-Schwelle, also alle Zeitband-Booleans false (mockVorgabenU.Pers.TB = 'Tarifkraft').
-              DauerWohnung: '7:00',
+              // abWE 07:00 -> anWE 16:00 = 9h (Band 8-14h), ab1E 08:00 -> an1E 13:00 = 5h (kein TkgSt-Band);
+              // mockVorgabenU.Pers.TB = 'Tarifkraft', also kein Beamten-Band. Die 7h-Zeile oben fehlt hier.
+              DauerWohnung: '9:00',
               DauerErsteTkgSt: '5:00',
-              Wohnung8bis14: false,
+              Wohnung8bis14: true,
               Wohnung14bis24: false,
               WohnungUeber24: false,
               BeamterUeber8Wohnung: false,

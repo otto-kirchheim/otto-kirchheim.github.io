@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { ewtAbgeleiteteWerte } from '@/features/ewt/model/pdfDaten';
+import { ewtAbgeleiteteWerte, ewtZeileDruckbar } from '@/features/ewt/model/pdfDaten';
 
 describe('ewtAbgeleiteteWerte', () => {
   it('berechnet DauerWohnung/DauerErsteTkgSt als HH:mm-Zeitspanne', () => {
@@ -84,5 +84,32 @@ describe('ewtAbgeleiteteWerte', () => {
     it('8h01 liegt im 8-24h-Band', () => {
       expect(werteFuer('08:01').TkgSt8bis24).toBe(true);
     });
+  });
+});
+
+describe('ewtZeileDruckbar', () => {
+  const keins = {
+    Wohnung8bis14: false,
+    Wohnung14bis24: false,
+    WohnungUeber24: false,
+    BeamterUeber8Wohnung: false,
+    TkgSt8bis24: false,
+    TkgStUeber24: false,
+  };
+
+  it('verwirft eine Zeile ohne angekreuztes Zeitband (Abwesenheit bis 8h)', () => {
+    expect(ewtZeileDruckbar(keins)).toBe(false);
+    expect(
+      ewtZeileDruckbar(ewtAbgeleiteteWerte({ abWE: '06:00', anWE: '14:00', ab1E: '06:30', an1E: '13:30' }, false)),
+    ).toBe(false);
+  });
+
+  it('behaelt eine Zeile, sobald ein Zeitband angekreuzt ist', () => {
+    for (const feld of Object.keys(keins) as (keyof typeof keins)[]) {
+      expect(ewtZeileDruckbar({ ...keins, [feld]: true })).toBe(true);
+    }
+    expect(
+      ewtZeileDruckbar(ewtAbgeleiteteWerte({ abWE: '06:00', anWE: '14:01', ab1E: '06:30', an1E: '13:30' }, false)),
+    ).toBe(true);
   });
 });
