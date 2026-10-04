@@ -39,7 +39,7 @@ const SYSTEMSCHRIFT = 'system-ui, -apple-system, "Segoe UI", Roboto';
  * - `@font-face` der DB-Schriften und der DB-Icon-Schriften (`db-default`, `db-filled`) faellt weg -- nichts wird geladen
  *   oder in `dist/` kopiert.
  * - "DB Neo Screen Sans/Head" in allen Werten wird zur Systemschrift.
- * - `--db-logo-url` (DB-Logo) wird `none`.
+ * - Das DB-Logo des Themes (`--db-logo-url*` mit Verweis auf `@db-ux/db-theme`) wird `none`; das eigene App-Icon bleibt.
  * Die Icons kommen dann aus `asset-satz.frei.css` (Material Symbols mit DB-Namen).
  */
 const freieAssets = {
@@ -51,8 +51,10 @@ const freieAssets = {
     },
   },
   Declaration(dekl: { prop: string; value: string }): void {
-    if (dekl.prop === '--db-logo-url') {
-      if (dekl.value !== 'none') dekl.value = 'none';
+    // Nur das DB-Logo aus dem Theme (`--db-logo-url`/`--db-logo-url-short` -> `@db-ux/db-theme/.../logo.svg`); das eigene
+    // App-Icon (`styles.scss`, `--db-logo-url: url('/icons/...')`) bleibt.
+    if (dekl.prop.startsWith('--db-logo-url') && dekl.value.includes('db-theme')) {
+      dekl.value = 'none';
       return;
     }
     if (dekl.value.includes('DB Neo Screen')) dekl.value = dekl.value.replace(/"DB Neo Screen (?:Sans|Head)"/g, SYSTEMSCHRIFT);
