@@ -1,6 +1,6 @@
 import path from 'path';
 import pkg from './package.json' with { type: 'json' };
-import type { UserConfig } from 'vite';
+import { loadEnv, type UserConfig } from 'vite';
 
 /**
  * `@db-ux/db-theme` deklariert fuer jede DB-Sub-Marke einen eigenen `[data-logo=db-*]`-Block
@@ -24,10 +24,16 @@ const dropDbSubBrandLogos = {
  *        PDF nur Standard-Schriften. Die DB-Teile bleiben im Code, sie werden nur nicht genutzt.
  * Wirkt ueber den Alias `@asset-satz` (CSS, `src/scss/db-ux.css`) und `import.meta.env.DB_ASSETS` (TS, `shared/lib/dbAssets.ts`).
  */
-export const DB_ASSETS = ['1', 'true'].includes(process.env.DB_ASSETS ?? '');
+// `loadEnv` liest `.env`/`.env.local` im Frontend-Ordner selbst (Prozess-Env hat Vorrang) -- nicht darauf verlassen, dass
+// der Startweg (`bun run dev`, IDE-Task, anderes Arbeitsverzeichnis) die `.env` in `process.env` laedt.
+const DB_ASSETS_ROH = loadEnv('', import.meta.dirname, 'DB_ASSETS').DB_ASSETS ?? '';
+export const DB_ASSETS = ['1', 'true'].includes(DB_ASSETS_ROH.trim().toLowerCase());
 
 const baseConfig: UserConfig = {
   root: path.resolve(import.meta.dirname, 'src'),
+  // `.env` liegt im Frontend-Ordner, nicht in `root` (src): so beobachtet Vite sie und startet den Dev-Server bei einer
+  // Aenderung (z. B. `DB_ASSETS`) selbst neu. Nur `VITE_`-Variablen gelangen in den Client.
+  envDir: import.meta.dirname,
   resolve: {
     alias: {
       '@asset-satz': path.resolve(import.meta.dirname, `src/scss/asset-satz.${DB_ASSETS ? 'db' : 'frei'}.css`),
