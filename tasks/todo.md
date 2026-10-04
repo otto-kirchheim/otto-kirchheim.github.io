@@ -1,3 +1,19 @@
+# Offene Punkte (Stand 2026-10-04)
+
+Alle Punkte sind erledigt (Stand 2026-10-04); die `[ ]` weiter unten sind nicht offen: alle anderen `[ ]` weiter unten (ab `# Vorheriger Plan`) stammen aus abgeschlossenen oder
+ueberholten Phasen und werden nicht mehr gepflegt (Archiv, Ergebnisse stehen im `CHANGELOG.md`).
+
+- [x] Browser-Check (User, 2026-10-04): Module steckbar -- funktioniert
+- [x] Sichtpruefung (User, 2026-10-04): nach dem stylelint-Umbau -- sieht gut aus
+- [x] Geraetetest (User 2026-10-04: i.o.): Unterschrift-Pad -- Strichstaerke/Tempo-Wirkung (`MIN_STRICH_PT`, `MAX_STRICH_PT`, `velocityFilterWeight` in `signaturePad.ts`), Drehen, Hilfslinie; Ressourcen-Bearbeiten- und Schriftart-Dialog am Handy
+- [x] Echter Stylus-Druck im Signaturpad: nicht noetig (User 2026-10-04)
+- [x] react-hooks-Warnungen: geprueft 2026-10-04, `bun run lint` meldet 0 Warnungen (I.9 erledigt)
+- [x] Phase-I-Reste geprueft 2026-10-04: I.4 (Precache ignoriert Head/Italic/Black/Digital/db-*, nur Regular/Medium/Semibold/Bold vorab), I.10 (siehe unten, doppelt gefuehrt), I.11/I.14 (`CLAUDE.md` nennt `dev`/`dev:local`, `skills/bootstrap` gibt es nicht mehr, Graph aktualisiert) erledigt
+- [x] I.6 Bundle-Zahlen (Build 2026-10-04): Entry `index-*.js` 42,7 KB gz (Baseline 43,0), `react` 67,5 KB gz (Spike ~60), CSS 102 KB gz (Spike ~84, +18 KB durch DB-UX-5.6 und App-Styles), Precache 156 Eintraege / 4978 KiB (Baseline P-1: 48 / 4691). Kein Budget-Verstoss festgelegt; bei Bedarf CSS-Anteil pruefen
+- [x] Dark-Mode-QA end-to-end (I.8, User 2026-10-04: i.o.): alle Tabs + je ein Dialog, Hell/Dunkel/Auto, Mobil, Deep-Link
+
+---
+
 # Aktueller Plan: FSD-Umbau + steckbare Feature-Module - 2026-09-20
 
 Vollständiger Plan: `tasks/plan-fsd-feature-module.md` (Branch `feat/fsd-feature-module`, Basis `feat/react-umbau`). Phasen mit grünem Gate je Phase;
@@ -96,7 +112,7 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
   - [x] Gate: typecheck 0, lint 0, `lint:fsd` 18 (= Ratsche des Users; neu `components/MyHelpModal` → `features/onboarding`,
         löst sich in P6), test 2289/2289, build i.o. (Precache 113), `format`
   - [x] Browser-Check durch den User: i.o. (2026-09-23)
-  - [ ] Offen für eigenen Commit (Event-Inversion, nicht Teil des Moves): `features/auth` → `app/session`/`app/init`
+  - [x] (erledigt, Hooks über `invokeHook`/`registerHook`, siehe `CLAUDE.md`) Event-Inversion, nicht Teil des Moves: `features/auth` → `app/session`/`app/init`
         (`loginUser`/`checkNeuerBenutzer` → `userLoginSuccess`, `logoutUser` → `syncFeatureTabs`), `checkNeuerBenutzer` → `features/onboarding`
 - [x] P6 Widgets (2026-09-23). **Abweichungen vom Plan (User-Entscheid):** `ThemeSwitcher` (+ `useColorMode`,
       `useMediaQuery`) in `widgets/app-header` statt eigenem `widgets/theme-switcher` (einziger Konsument `AppHeader`,
@@ -113,7 +129,7 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
         bis P10); `openHelpModal`/`MyHelpModal` ohne Barrel-Selbstimport; leerer Ordner `core/help` entfernt
   - [x] Gate: typecheck 0, lint 0, `lint:fsd` 16 (Ratsche 18 → 16), test 2289/2289, build i.o. (Precache 113), `format`
   - [x] Browser-Check visuell durch den User: i.o. (2026-09-23)
-  - [ ] Offen für eigenen Commit (Inversion): `openHelpModal` wird von `shared/ui/modal/MyModalHeader` und über das
+  - [x] (erledigt, `invokeHook('help:open')` in `MyModalHeader`) Inversion: `openHelpModal` wird von `shared/ui/modal/MyModalHeader` und über das
         `@/core`-Barrel von den Modul-Tabs (ber/ewt/ea/ez), `Einstellungen` und `BerechnungTab` aufgerufen → Öffner-
         Registrierung in `shared/lib/help`, Widget meldet sich beim Start an
 - [x] P7 Module verschieben (2026-09-23): `features/{EA,Neben,EWT,Bereitschaft}` → `features/{ea,ez,ewt,ber}`,
@@ -156,7 +172,7 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
         build i.o. (Precache 115: neue kleine gemeinsame Chunks `SchichtSection`, `SchichtOverrideEditor`,
         `berechnungBausteine`), `format`
   - [x] Browser-Check durch den User: i.o. (2026-09-23)
-  - [ ] Bekannt: `lint:fsd` prüft `app`/`pages`/`widgets` noch nicht (P10). Aufwärts-Importe, die er deshalb nicht
+  - [x] (erledigt: Schichtgrenzen laufen als `no-restricted-imports` im normalen `bun run lint`, siehe `CLAUDE.md`) Bekannt: `lint:fsd` prüft `app`/`pages`/`widgets` noch nicht (P10). Aufwärts-Importe, die er deshalb nicht
         zählt: `features/ber/ui/VorgabenBTable` → `pages/einstellungen/model` (`saveEinstellungen`),
         `pages/einstellungen` → `app/session/selectYear`, `features/Admin` → `pages/{berechnung,einstellungen}` (P9)
 - [x] P9 Admin (2026-09-23, bei 97 % Weekly auf User-Wunsch): `features/Admin` → `pages/admin`, darin
@@ -188,7 +204,7 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
   - [x] Doku: `CLAUDE.md`, Skills `architektur`/`coding-konventionen`/`tests`, Root-`.claude/CLAUDE.md` (Hauptrepo)
   - [x] Gate: typecheck 0, lint 0 (inkl. Schichtgrenzen), test 2289/2289, `lint:css` i.o., build i.o. (Precache 136), `format`
   - [x] Browser-Check durch den User: i.o. (2026-09-23)
-- [ ] Module 100 % steckbar (User-Wunsch 2026-09-23): Fehlt eines der Module `ber`/`ewt`/`ez`/`ea` (Ordner + Manifest-
+- [~] Module 100 % steckbar (User-Wunsch 2026-09-23; umgesetzt, nur der Browser-Check des Users steht aus): Fehlt eines der Module `ber`/`ewt`/`ez`/`ea` (Ordner + Manifest-
       Zeile entfernt), laufen die übrigen vollständig weiter oder zeigen einen klaren Hinweis, dass ein anderes Modul
       nötig ist. Zu prüfen u. a.: `ea`/`ez` lesen EWT-Zeilen (`getEwtDaten`, `syncEwtToEa`, `syncEwtToNeben`,
       `syncFieldsFromEwtRows`, `unlinkEwtRefs` in `shared/lib/ressource`), BE/BZ-Verknüpfung, Berechnung/PDF/Admin-
@@ -220,7 +236,7 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
     danach wieder leer. Konsole: `Einstellungen sammeln fehlgeschlagen: Persoenliche Daten fehlerhaft` beim Speichern --
     Vorlage `kirchheim` liefert 7-stellige PNummer, Feld verlangt 8 (vorbestehend, nicht Teil von A).
   Folgeschritte (getrennt, je eigener Commit):
-  - [ ] B Admin-Profilvorlagen (Audit Punkt 6): fest verdrahtete Abschnitte in `AdminProfileTemplateContentEditor.tsx`/`profileTemplates.shared.ts`/`adminProfileTemplatesManagerGemeinsam.ts` (`VorgabenB`+Bereitschaft/Nachtschicht=ber, `Fahrzeit`=ewt, `benoetigteZulagen`=ez, Taetigkeit/Entgeltgruppe=ea) als Slot in `pages/admin/features/<id>/` (war in P1g vorgesehen, nicht umgesetzt)
+  - [x] B Admin-Profilvorlagen (Audit Punkt 6; alle Teilschritte unten erledigt, CHANGELOG 192): fest verdrahtete Abschnitte in `AdminProfileTemplateContentEditor.tsx`/`profileTemplates.shared.ts`/`adminProfileTemplatesManagerGemeinsam.ts` (`VorgabenB`+Bereitschaft/Nachtschicht=ber, `Fahrzeit`=ewt, `benoetigteZulagen`=ez, Taetigkeit/Entgeltgruppe=ea) als Slot in `pages/admin/features/<id>/` (war in P1g vorgesehen, nicht umgesetzt)
     Plan (2026-09-26, Budget L): `AdminFeature.profilVorlage` = `{ abschnitte?: AdminVorlagenAbschnitt[], persFelder? }`;
     Abschnitt = `id`, `label`, `ausVorlage(template)`, `inVorlage(result, entwurf)`, `hatDaten`, `Editor`. Entwurf
     `TemplateContentDraft` = Pers + Arbeitszeit + `Einstellungen.aktivierteTabs` (global) + `abschnitte[id]`.
@@ -275,7 +291,7 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
         Stand 2026-10-03: Tests 2324/2324 (+1 Entfernbarkeit ber/ewt), typecheck/lint/build 0, format; CHANGELOG 197.
         Browser-Check offen (Dev-Server lief nicht): Formular-Editor, Bedingung auf `LRE` (Checkboxen) und `Wohnung8bis14` (Ja/Nein).
   - Bewusst in shared (Audit): `resolveSchichtDay`/`arbeitszeit-editor`, `zulagenCatalog`, `berechnungWerte`/`-Bausteine`, `confirmDeleteAllRows`, `resourceApi`, `createDatenGetter`, ewt-Zugriff fuer ez/ea (`getEwtDaten`, `getEwtDatenFuerZuordnung`, `syncFieldsFromEwtRows`, `unlinkEwtRefs`, Events `ewt:*`)
-- [ ] Bootstrap-Rueckstaende entfernen (User 2026-10-03). Bestand: eigene Utility-Schicht `src/scss/utilities.scss` mit
+- [x] Bootstrap-Rueckstaende entfernen (User 2026-10-03; R0-R10 erledigt und committet, CHANGELOG 199-209). Bestand: eigene Utility-Schicht `src/scss/utilities.scss` mit
       Bootstrap-Namen, 163 Klassen / ca. 2000 Vorkommen in 100 Dateien (`small` 181, `d-flex` 147, `mb-1` 105,
       `align-items-center` 94, `gap-2` 93, `text-body-secondary` 87, `text-muted` 66 ...); Bootstrap-Zustandsklassen
       `tab-pane fade show active`/`tab-content`; Bootstrap-Farbnamen (`text-bg-*`, `bg-body-*`, `*-emphasis`, `border-*-subtle`);
@@ -283,8 +299,8 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
       Plan + Ersatz-Tabelle + Batches R0-R10: `tasks/plan-bootstrap-rueckbau.md`. Naechster Schritt: R0 (Sichtvergleich-Skript,
       Baseline, Spike).
 - [x] Als Naechstes (User 2026-10-03): Updates von `@db-ux/*` pruefen (5.6.1, CHANGELOG 210) (neue Versionen, Changelog/Migration, danach Gate + Sichtpruefung)
-- [ ] DB UX 5.6 neue Komponenten einbauen (Hinweis User 2026-09-26, nach Update auf 5.6.0, CHANGELOG 191):
-  - [~] (Add/Editor/Show/Login/Hilfe erledigt 2026-10-03, CHANGELOG 212; Pull-to-Refresh auf `DBLoadingIndicator` 2026-10-04, CHANGELOG 213; Schriftart, Admin-Bearbeiten-Dialoge, confirmDialog, Unterschrift, Speicherfehler 2026-10-04, CHANGELOG 214; Hilfe/Impressum/Platzhalter-Hilfe bleiben) `DBDialog`/`DBDialogHeader`/`DBDialogFooter` (nativer, zentrierter `<dialog>`, `backdrop`, `containerSize`,
+- [x] DB UX 5.6 neue Komponenten einbauen (erledigt 2026-10-04: DBLoadingIndicator, DBDialog; Hilfe/Impressum/Platzhalter-Hilfe bleiben bewusst Drawer) (Hinweis User 2026-09-26, nach Update auf 5.6.0, CHANGELOG 191):
+  - [x] (Add/Editor/Show/Login/Hilfe erledigt 2026-10-03, CHANGELOG 212; Pull-to-Refresh auf `DBLoadingIndicator` 2026-10-04, CHANGELOG 213; Schriftart, Admin-Bearbeiten-Dialoge, confirmDialog, Unterschrift, Speicherfehler 2026-10-04, CHANGELOG 214; Hilfe/Impressum/Platzhalter-Hilfe bleiben) `DBDialog`/`DBDialogHeader`/`DBDialogFooter` (nativer, zentrierter `<dialog>`, `backdrop`, `containerSize`,
         Invoker Commands) statt `DBDrawer` in `shared/ui/modal/showModal.tsx` + `MyModalHeader` (nachgebautes Kopf-Markup
         entfaellt, `aria-labelledby` macht der Header selbst); pruefen: `data-dialog-dismiss`-Delegation, gestapelte
         Dialoge, `confirmDialog`/`signaturDialog`/`errorHandling` (HTML-Markup), `DIALOG_RICHTUNG`, `data-breite`-Breiten
@@ -292,7 +308,7 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
   - [x] `DBLoadingIndicator` (Spinner/Fortschritt) (2026-10-03, CHANGELOG 211) statt eigener Ladeanzeigen: `DBLoadingButton`/`button-loading`
         (`setLoading`/`clearLoading`), AutoSave-Puls, Laden nach Login, PDF-Erzeugung; vorher Props/Varianten per
         `mcp__db-ux__get_component_props` pruefen.
-- [ ] stylelint-Warnungen beheben (User 2026-09-27; `lint:css` laeuft lokal schon ohne `--max-warnings 93`): Stand 87
+- [x] stylelint-Warnungen beheben (erledigt 2026-10-03, `--max-warnings 0`, CHANGELOG 198) (User 2026-09-27; `lint:css` laeuft lokal schon ohne `--max-warnings 93`): Stand 87
       Warnungen (`db-ux/use-spacings` 48, `use-sizing` 28, `use-border-width` 8, `use-border-color` 2,
       `use-border-radius` 1) in `styles.scss`, `utilities.scss`, `raster.scss`, `CustomSnackbar.css`, `customtable.scss`.
       Feste `rem`/`px`-Werte auf `db-spacing-*`/`db-sizing-*`/`db-border-width-*`-Tokens; Fehlalarme des Plugins
@@ -752,7 +768,7 @@ Barrierefreiheits-Rotton fuer UI.
       bevor Vite die `url()` aufloest. Ergebnis: `dist/assets/logo-*.svg` 13 -> 0
       (Default-Logo wird jetzt als data-URI inlined), Precache 59 -> 47 Eintraege,
       4526 -> 4436 KiB. `light-dark(` weiter 870 (esbuild-Minifier intakt). Build gruen.
-- [ ] **I.4 Ungenutzte Icon-/Font-Gewichte.** Precache-globIgnores stehen schon (italic,
+- [x] **I.4 Ungenutzte Icon-/Font-Gewichte.** Precache-globIgnores stehen schon (italic,
       black, digital, head, db-*.woff2). Gegenpruefen welche woff2 real im Build sind und ob
       weitere Schnitte raus koennen; Build-seitig (nicht nur Precache) ungenutzte Schnitte
       ausschliessen wenn moeglich.
@@ -760,22 +776,22 @@ Barrierefreiheits-Rotton fuer UI.
       `src/index.html`: eine `<meta name="theme-color">` -> zwei mediengescopte
       (`light` = `#ffffff`, `dark` = `#16181b`, der Cold-Black-Ton des DB-Themes). DB erlaubt
       kein rotes Fill -> Browserleiste folgt dem App-Grund. Manifest im Build verifiziert.
-- [ ] **I.6 Bundle-Budget** gegen die Spike-Zahlen (React-Runtime ~60 KB gz, DB-UX-CSS
+- [x] **I.6 Bundle-Budget** gegen die Spike-Zahlen (React-Runtime ~60 KB gz, DB-UX-CSS
       ~84 KB gz) im Bundle-Report/CHANGELOG festhalten; `globPatterns` final pruefen.
 - [x] **I.7 data-density / data-color final.** User-Freigabe: `functional`, kein globales
       `data-color`. `src/index.html` `<html data-density="regular">` -> `"functional"`.
       (Global `data-color="red"` haette die ganze Flaeche/Text rot gefaerbt -> DB-Regelbruch;
       Rot bleibt Akzent ueber `--db-brand-*`.) Kein Test asserted `regular`.
-- [ ] **I.8 Dark-Mode-QA end-to-end.** Alle Tabs + je ein Modal, Hell/Dunkel/Auto, Mobile,
+- [x] **I.8 Dark-Mode-QA end-to-end.** Alle Tabs + je ein Modal, Hell/Dunkel/Auto, Mobile,
       Deep-Link. `verify`-Skill + manuelle Sichtpruefung.
-- [ ] **I.9 ESLint-Config aufraeumen + 28 Warnungen.** React-19-`react-hooks/refs`-Hinweise
+- [x] **I.9 ESLint-Config aufraeumen + 28 Warnungen.** React-19-`react-hooks/refs`-Hinweise
       (Preact-Muster: `ref.current = x` im Render) in den Admin-/Einstellungen-Komponenten
       sauber auf `useEffect`/`useLatestRef` ziehen. `@db-ux/core-eslint-plugin` /
       `@db-ux/core-stylelint` optional pruefen.
-- [ ] **I.10 `@db-ux/agent-cli`** final neu ausfuehren, `.github/copilot-instructions.md`
+- [x] **I.10 `@db-ux/agent-cli`** final neu ausfuehren, `.github/copilot-instructions.md`
       committen (Token liegt evtl. ohne `workflows`-Permission -> nicht an `.github/workflows/`
       pushen, aber `copilot-instructions.md` ist ok).
-- [ ] **I.11 Doku (Done-Kriterium).** `frontend/CLAUDE.md`, `.claude/skills/architektur`,
+- [x] **I.11 Doku (Done-Kriterium).** `frontend/CLAUDE.md`, `.claude/skills/architektur`,
       `.claude/skills/verify`, `.claude/skills/bootstrap` (entfernen/umschreiben), Root
       `../CLAUDE.md` + `../WORKSPACE.md` + `frontend/.claude/README.md`,
       `frontend/CHANGELOG.md` (69), `graphify update .`.
@@ -797,7 +813,7 @@ Barrierefreiheits-Rotton fuer UI.
       Sub-Tabs = korrektes ARIA-APG-Muster) -- die `styles.scss`-Regel
       `.db-navigation-item > button:not(.db-navigation-item-expand-button)` bleibt fuer die
       Admin-Unternavigation noetig.
-- [ ] **I.14 CLAUDE.md-Drift.** `frontend/CLAUDE.md` "Starten" nennt `bun run start` /
+- [x] **I.14 CLAUDE.md-Drift.** `frontend/CLAUDE.md` "Starten" nennt `bun run start` /
       `bun run preview` (Port 8082) -- Scripts heissen `dev` / `dev:local`, `preview` schreibt
       nach `../public/public`. Bei I.11 mitziehen.
 
