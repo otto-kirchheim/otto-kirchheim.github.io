@@ -1,4 +1,5 @@
 import { DBButton, DBDrawer, DBDrawerFooter, DBDrawerHeader, DBLink } from '@db-ux/react-core-components';
+import DatenschutzInhalt from './DatenschutzInhalt';
 
 /**
  * Telefonnummer, aus Zeichen zusammengesetzt: kein zusammenhaengender String im Bundle, den
@@ -35,7 +36,7 @@ function kontaktMail(): string {
 }
 
 /**
- * Impressum als `DBDrawer` mit `DBDrawerHeader`/`DBDrawerFooter`. Ausloeser ist der Impressum-Knopf in
+ * Impressum und Datenschutzerklaerung (`DatenschutzInhalt.tsx`) als `DBDrawer` mit `DBDrawerHeader`/`DBDrawerFooter`. Ausloeser ist der Impressum-Knopf in
  * `AppFooter.tsx`, der `open`/`onClose` haelt.
  *
  * @param props - `open` steuert die Sichtbarkeit, `onClose` wird beim Schliessen (Header-X, Footer-Knopf) aufgerufen.
@@ -50,7 +51,7 @@ export default function ImpressumDialog({ open, onClose }: { open: boolean; onCl
       showSpacing={false}
       rounded
       onClose={onClose}
-      header={<DBDrawerHeader text="Impressum" closeButtonText="Schließen" />}
+      header={<DBDrawerHeader text="Impressum & Datenschutz" closeButtonText="Schließen" />}
       footer={
         <DBDrawerFooter>
           {/* Der Footer-Knopf braucht einen eigenen `onClick`: nur `DBDrawerHeader`s eingebauter X-Knopf
@@ -62,7 +63,8 @@ export default function ImpressumDialog({ open, onClose }: { open: boolean; onCl
       }
     >
       <div className="impressum">
-        <p>Angaben gemäß § 5 TMG</p>
+        <h2>Impressum</h2>
+        <p>Angaben gemäß § 5 DDG und § 18 Abs. 1 MStV</p>
         <p>
           Jan Otto
           <br />
@@ -84,19 +86,15 @@ export default function ImpressumDialog({ open, onClose }: { open: boolean; onCl
           </DBLink>
         </p>
         <p>
-          <strong>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV:</strong>
-          <br />
-          Jan Otto
-        </p>
-        <p>
           <strong>Hinweis zur Anwendung</strong>
           <br />
-          Diese Anwendung dient der digitalen Erfassung und Berechnung von Nebengeld-Daten.
+          Diese Anwendung dient der digitalen Erfassung und Berechnung von Nebengeld-Daten. Sie ist ein privates,
+          unentgeltliches Angebot und kein Angebot der Deutschen Bahn AG.
         </p>
         <p>
           <strong>Haftung für Inhalte und Links</strong>
           <br />
-          Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Gewähr für die Aktualität, Richtigkeit und
+          Trotz sorgfältiger inhaltlicher Kontrolle übernehme ich keine Gewähr für die Aktualität, Richtigkeit und
           Vollständigkeit der bereitgestellten Informationen. Für Inhalte externer Links sind ausschließlich deren
           Betreiber verantwortlich.
         </p>
@@ -106,6 +104,8 @@ export default function ImpressumDialog({ open, onClose }: { open: boolean; onCl
           Die durch den Betreiber erstellten Inhalte unterliegen dem deutschen Urheberrecht. Eine Nutzung außerhalb der
           Grenzen des Urheberrechts bedarf der vorherigen Zustimmung.
         </p>
+
+        <DatenschutzInhalt />
       </div>
     </DBDrawer>
   );

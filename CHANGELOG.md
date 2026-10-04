@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-04 (218)
+
+### feat (Impressum aktualisiert, Datenschutzerklaerung)
+
+- Impressum: `§ 5 TMG` -> `§ 5 DDG und § 18 Abs. 1 MStV` (TMG seit 14.05.2024 abgeloest; die App dient nicht nur privaten Zwecken). Zeile `§ 18 Abs. 2 MStV` entfernt (nur fuer journalistisch-redaktionelle Inhalte). Hinweis "privates, unentgeltliches Angebot, kein Angebot der Deutschen Bahn AG".
+- Neue Datenschutzerklaerung (Art. 13 DSGVO) als zweiter Abschnitt im Drawer (`DatenschutzInhalt.tsx`): Daten und Zwecke, Rechtsgrundlagen, `localStorage` (§ 25 TDDDG), Dienstleister (GitHub Pages, Homeserver/Cloud Run Frankfurt, MongoDB Atlas Belgien, Resend, OpenPLZ API), Speicherdauern (Admin-Protokoll 12 Monate per Backend-TTL, Logs 14/31/30 Tage), Betroffenenrechte, Aufsichtsbehoerde Hessen. Knopf und Kopf heissen "Impressum & Datenschutz".
+
 ## 2026-10-04 (217)
 
 ### feat (Schalter `DB_ASSETS`: DB-Markenassets oder freie Alternativen)

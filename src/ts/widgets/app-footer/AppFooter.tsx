@@ -43,7 +43,7 @@ export default function AppFooter({ startYear = 2021 }: { startYear?: number }) 
             size="small"
             onClick={() => setImpressumOffen(true)}
           >
-            Impressum
+            Impressum & Datenschutz
           </DBButton>
         </DBFooterMeta>
       </DBFooter>
