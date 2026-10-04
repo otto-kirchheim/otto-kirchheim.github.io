@@ -63,7 +63,9 @@ async function renderList(isSuperAdmin: boolean): Promise<HTMLDivElement> {
   const container = document.createElement('div');
   document.body.appendChild(container);
   render(<AdminUserList isSuperAdmin={isSuperAdmin} />, container);
-  await flush();
+  // Bis die geladenen Benutzer gerendert sind, nicht nur eine feste Zeit: unter Last (Gate mit
+  // parallelem Typecheck/Build) reichten 10 ms nicht und der Test schlug sporadisch fehl.
+  for (let versuch = 0; versuch < 100 && !container.textContent?.includes('User Zwei'); versuch++) await flush();
   return container;
 }
 

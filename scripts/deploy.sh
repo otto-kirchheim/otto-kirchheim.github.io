@@ -46,6 +46,10 @@ Options:
 EOF
 }
 
+# Die Pushes unten ohne Husky-Gate: entweder lief `release:check` hier (RUN_CHECKS) oder direkt davor im
+# Release-Script (`--skip-checks`). Das pre-push-Gate wuerde sonst je gepushtem Branch erneut testen und bauen.
+export HUSKY=0
+
 run_cmd() {
   echo "+ $*"
   if [[ "$DRY_RUN" != true ]]; then
