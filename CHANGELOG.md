@@ -2,6 +2,12 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-04 (223)
+
+### fix (Entgeltausgleich: Pause genau an der 6h-/9h-Grenze)
+
+- `calculateEaDauerFromEwt.ts`: §4 ArbZG verlangt die Pause erst bei MEHR als 6h (30 min) bzw. mehr als 9h (45 min). Vorher galt `>=` -- ein EWT-Freitag mit genau 6h ergab 05:30 statt 06:00. Jetzt `>`: 6:00 -> 06:00, 6:01 -> 05:31, 9:00 -> 08:30, 9:01 -> 08:16. Tests angepasst.
+
 ## 2026-10-04 (222)
 
 ### fix (Update-Hinweis: Lage am Handy, Knopf ohne Wirkung)
