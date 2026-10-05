@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-05 (227)
+
+### docs (GitHub Community Standards)
+
+- Neu: `README.md`, `.github/SECURITY.md` (Meldung ueber GitHub Private Vulnerability Reporting, im Repo aktiviert), `.github/CONTRIBUTING.md` (PRs gegen `dev`, Pruefbefehle, Changelog-Pflicht), `.github/CODE_OF_CONDUCT.md` (Contributor Covenant 2.1, Kurzfassung). Repo-Beschreibung gesetzt.
+- Lizenz: `LICENSE` mit AGPL-3.0 (Originaltext von gnu.org, unveraendert), `package.json` `license` `ISC` -> `AGPL-3.0-only`, Lizenzabschnitt im README mit Copyright-Zeile (Jan Otto, 2022–2026; DB-Markenassets ausgenommen). `nebengeld-shared` steht separat unter MIT.
+
 ## 2026-10-05 (226)
 
 ### fix (CodeQL-Alerts #25-#30: XSS und unvollstaendige HTML-Bereinigung)
