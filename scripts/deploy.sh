@@ -147,26 +147,15 @@ if ! git diff --quiet -- bun.lock; then
   fi
 fi
 
-# Produktion darf nur shared-Staende nutzen, die auf shared/main liegen (dort per shared/scripts/deploy.sh).
-# Geprueft wird nur, wenn sich der Pin gegenueber ${REMOTE}/${TARGET_BRANCH} aendert.
+# Produktion darf nur shared-Staende nutzen, die auf shared/main liegen (scripts/check-shared-pin.sh,
+# laeuft zusaetzlich in den Produktions-Workflows). Hier nur, wenn sich der Pin gegenueber
+# ${REMOTE}/${TARGET_BRANCH} aendert -- ein unveraenderter Pin wurde beim letzten Release schon geprueft.
 shared_pin() { { grep -oE 'nebengeld-shared@github:otto-kirchheim/nebengeld-shared#[0-9a-f]+' || true; } | head -1 | sed 's/.*#//'; }
 PIN_NEU="$(shared_pin < bun.lock)"
 PIN_PROD="$(git show "${REMOTE}/${TARGET_BRANCH}:bun.lock" | shared_pin)"
-if [[ -z "$PIN_NEU" ]]; then
-  echo "❌ Kein shared-Pin in bun.lock gefunden." >&2
-  exit 1
-fi
 if [[ "$PIN_NEU" != "$PIN_PROD" ]]; then
-  PIN_STATUS="$(gh api "repos/otto-kirchheim/nebengeld-shared/compare/main...${PIN_NEU}" --jq .status)" || {
-    echo "❌ shared-Pin ${PIN_NEU} konnte nicht gegen shared/main geprueft werden (gh installiert und angemeldet?)." >&2
-    exit 1
-  }
-  if [[ "$PIN_STATUS" != identical && "$PIN_STATUS" != behind ]]; then
-    echo "❌ shared ${PIN_NEU} liegt nicht auf shared/main (${PIN_STATUS}). Zuerst shared releasen:" >&2
-    echo "   (cd ../shared && bun run release:patch), danach dieses Skript erneut starten." >&2
-    exit 1
-  fi
-  echo "✅ shared-Pin ${PIN_PROD} -> ${PIN_NEU} liegt auf shared/main."
+  echo "ℹ️ shared-Pin aendert sich: ${PIN_PROD:-<keiner>} -> ${PIN_NEU:-<keiner>}"
+  bash "$(dirname "$0")/check-shared-pin.sh" bun.lock
 fi
 
 if [[ "$RUN_CHECKS" == true ]]; then
