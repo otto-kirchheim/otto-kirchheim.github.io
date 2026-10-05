@@ -2,6 +2,12 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-05 (229)
+
+### chore (GitHub-Packages-Registry abgeschafft)
+
+- `.npmrc` entfernt: shared kommt seit der Git-Branch-Dependency ohne Registry und ohne Token (`bun install --frozen-lockfile` ohne `.npmrc` geprueft). Das alte Registry-Paket (bis 0.7.0) wird nicht mehr veroeffentlicht.
+
 ## 2026-10-05 (228)
 
 ### chore (deploy.sh: main nur per Release und nur mit shared/main)
