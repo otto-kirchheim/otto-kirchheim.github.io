@@ -2,6 +2,12 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-05 (230)
+
+### chore (Sicherheits-Updates von Dev-Abhaengigkeiten)
+
+- `bun.lock`: `browserslist` 4.28.6 -> 4.28.7, `baseline-browser-mapping` -> 2.11.0, `brace-expansion` -> 5.0.12/2.1.7/1.1.21, `fast-uri` 3.1.5 -> 3.1.8 (alles Build-/Lint-Werkzeug, nichts im Bundle). Offen bleibt `braces@3.0.3` (via stylelint > globby > fast-glob > micromatch): keine gefixte Version veroeffentlicht.
+
 ## 2026-10-05 (229)
 
 ### chore (GitHub-Packages-Registry abgeschafft)
