@@ -61,7 +61,7 @@ type TModalBodyInputElementOption = Omit<
 function hinweisZeilen(content: string): string[] {
   return content
     .split(/<br\s*\/?>/i)
-    .map(zeile => zeile.replace(/<[^>]+>/g, '').trim())
+    .map(zeile => (new DOMParser().parseFromString(zeile, 'text/html').body.textContent ?? '').trim())
     .filter(Boolean);
 }
 

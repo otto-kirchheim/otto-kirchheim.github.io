@@ -56,10 +56,10 @@ export default async function loginUser(
   } catch (err: unknown) {
     if (err instanceof Error) {
       console.log(err.message);
-      errorMessage.innerHTML = err.message;
+      errorMessage.textContent = err.message;
     } else {
       console.log(err);
-      errorMessage.innerHTML = String(err);
+      errorMessage.textContent = String(err);
     }
   } finally {
     clearLoading('btnLogin', false);

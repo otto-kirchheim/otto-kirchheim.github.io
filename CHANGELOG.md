@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-05 (226)
+
+### fix (CodeQL-Alerts #25-#30: XSS und unvollstaendige HTML-Bereinigung)
+
+- `features/auth/model/loginUser.ts`: Login-Fehlermeldungen werden per `textContent` statt `innerHTML` gesetzt; eine HTML-haltige Server- oder Fehlermeldung wird nicht mehr als Markup interpretiert (#25-#28). Regressionstest in `loginUser.test.ts`.
+- `shared/ui/form/MyInput.tsx` (`hinweisZeilen`) und `shared/lib/autosave/errorHandling.ts` (`buildRowLabel`): Tags werden ueber `DOMParser` + `textContent` statt per Regex `/<[^>]*>/g` entfernt; die Regex liess verschachtelte Konstrukte wie `<scr<script>ipt>` durch (#29, #30). HTML-Entities werden dabei dekodiert (`&amp;` -> `&`); `buildRowLabel`-Ausgaben maskiert `escapeHtml` weiterhin.
+
 ## 2026-10-04 (224)
 
 ### feat (EWT-Zettel nur mit Zeilen, die ein Zeitband ankreuzen)
