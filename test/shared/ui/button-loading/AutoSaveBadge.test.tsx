@@ -123,13 +123,28 @@ describe('AutoSaveBadge', () => {
     const { container } = setup(['N']);
     const listener = mockOnAutoSaveStatus.mock.calls[0][0];
 
-    listener('N', 'saved');
-    await flush();
-    expect(iconOf(container).dataset['icon']).toBe('check_circle');
-    expect(badgeOf(container).style.opacity).toBe('1');
+    // Fake-Timer vor dem Status-Wechsel, damit der Fade-out-Timer der Komponente virtuell ablaeuft
+    vi.useFakeTimers();
+    try {
+      listener('N', 'saved');
+      await flush();
+      expect(iconOf(container).dataset['icon']).toBe('check_circle');
+      expect(badgeOf(container).style.opacity).toBe('1');
 
-    await new Promise(resolve => setTimeout(resolve, 2100));
-    expect(badgeOf(container).style.opacity).toBe('0');
+      // In Schritten vorspulen: der Fade-out-Timer entsteht erst im useEffect nach dem Render
+      for (let elapsed = 0; elapsed < 2100; elapsed += 100) {
+        await (vi as typeof vi & { advanceTimersByTimeAsync: (ms: number) => Promise<void> }).advanceTimersByTimeAsync(
+          100,
+        );
+        await flush();
+      }
+      // Der Re-Render nach dem Timer laeuft ueber den echten Scheduler -> einen echten Tick abwarten
+      vi.useRealTimers();
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(badgeOf(container).style.opacity).toBe('0');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('gibt dem Icon einen Text-Kind-Knoten, damit `.db-icon` nicht `:empty` ist', async () => {
