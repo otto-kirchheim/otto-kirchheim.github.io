@@ -44,6 +44,20 @@ vi.mock('@/shared/api/abortController', () => ({
 const MOCK_DATE_NOW = 1678886400000; // Example timestamp
 vi.spyOn(Date, 'now').mockImplementation(() => MOCK_DATE_NOW);
 
+const advanceTimers = (ms: number) =>
+  (vi as typeof vi & { advanceTimersByTimeAsync: (ms: number) => Promise<void> }).advanceTimersByTimeAsync(ms);
+
+/** Treibt die Fake-Timer in kleinen Schritten voran, bis das Promise erledigt ist (Timer entstehen erst nach Microtasks). */
+async function settleWithTimers<T>(promise: Promise<T>, stepMs = 250, maxMs = 30_000): Promise<T> {
+  let done = false;
+  promise.then(
+    () => (done = true),
+    () => (done = true),
+  );
+  for (let elapsed = 0; !done && elapsed < maxMs; elapsed += stepMs) await advanceTimers(stepMs);
+  return promise;
+}
+
 // --- Test Suites ---
 
 describe('FetchRetry.ts', () => {
@@ -82,7 +96,9 @@ describe('FetchRetry.ts', () => {
       const url = await getServerUrl();
 
       expect(url).toBe(secondaryServerUrl);
-      expect(globalThis.fetch).not.toHaveBeenCalled(); // Should not check connection
+      // Einziger Netzaufruf: stille Hintergrundprüfung des Hauptservers (siehe FetchRetry.failback.test.ts)
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+      expect(globalThis.fetch).toHaveBeenCalledWith(`${primaryServerUrl}/`, expect.anything());
       expect(createSnackBar).not.toHaveBeenCalled();
     });
 
@@ -132,10 +148,17 @@ describe('FetchRetry.ts', () => {
         throw new Error('Unexpected URL');
       });
 
-      const url = await getServerUrl();
+      vi.useFakeTimers();
+      let url: string;
+      try {
+        url = await settleWithTimers(getServerUrl());
+      } finally {
+        vi.useRealTimers();
+      }
 
       expect(url).toBe(secondaryServerUrl);
-      expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+      // Hauptserver wird zweimal geprüft, bevor auf den Ausweichserver gewechselt wird
+      expect(globalThis.fetch).toHaveBeenCalledTimes(3);
       expect(globalThis.fetch).toHaveBeenCalledWith(`${primaryServerUrl}/`, expect.objectContaining({ method: 'GET' }));
       expect(globalThis.fetch).toHaveBeenCalledWith(
         `${secondaryServerUrl}/`,
@@ -152,9 +175,14 @@ describe('FetchRetry.ts', () => {
       // Mock fetch to fail for all server checks
       (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network Error'));
 
-      await expect(getServerUrl()).rejects.toThrow('Server nicht Erreichbar');
+      vi.useFakeTimers();
+      try {
+        await expect(settleWithTimers(getServerUrl())).rejects.toThrow('Server nicht Erreichbar');
+      } finally {
+        vi.useRealTimers();
+      }
 
-      expect(globalThis.fetch).toHaveBeenCalledTimes(mockServerConfigs.length); // Called for each server
+      expect(globalThis.fetch).toHaveBeenCalledTimes(mockServerConfigs.length + 1); // Hauptserver 2x, jeder weitere 1x
       expect(sessionStorage.getItem('currentServerUrl')).toBeNull();
       expect(sessionStorage.getItem('lastServerContact')).toBe('0'); // Should not be updated
       expect(createSnackBar).toHaveBeenCalledTimes(2); // Once for "connecting", once for "error"
@@ -194,17 +222,16 @@ describe('FetchRetry.ts', () => {
         },
       );
 
-      const promise = getServerUrl();
-      await (vi as typeof vi & { advanceTimersByTimeAsync: (ms: number) => Promise<void> }).advanceTimersByTimeAsync(
-        mockServerConfigs[0].timeout + 50,
-      ); // Advance time past the first timeout
-      const url = await promise; // Let the second fetch complete
+      try {
+        // Beide Hauptserver-Versuche laufen in den Timeout, dazwischen liegt die Wartezeit
+        const url = await settleWithTimers(getServerUrl());
 
-      expect(url).toBe(secondaryServerUrl);
-      expect(globalThis.fetch).toHaveBeenCalledTimes(2);
-      expect(sessionStorage.getItem('currentServerUrl')).toBe(secondaryServerUrl);
-
-      vi.useRealTimers();
+        expect(url).toBe(secondaryServerUrl);
+        expect(globalThis.fetch).toHaveBeenCalledTimes(3);
+        expect(sessionStorage.getItem('currentServerUrl')).toBe(secondaryServerUrl);
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 
@@ -387,7 +414,13 @@ describe('FetchRetry.ts', () => {
         .mockRejectedValueOnce(new Error('Network Failed')); // serverRetry 2 → invalidate
       // remaining default mock: probe primary succeeds, then api request succeeds
 
-      const result = await FetchRetry(testPath, undefined, 'GET');
+      vi.useFakeTimers();
+      let result: Awaited<ReturnType<typeof FetchRetry>>;
+      try {
+        result = await settleWithTimers(FetchRetry(testPath, undefined, 'GET'));
+      } finally {
+        vi.useRealTimers();
+      }
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
       // 3 failed api calls + 1 probe call (primary responds) + 1 successful api retry
@@ -398,9 +431,16 @@ describe('FetchRetry.ts', () => {
       // All fetch calls fail: 3 api retries + probe for each configured server → throw
       (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network Failed'));
 
-      await expect(FetchRetry(testPath, undefined, 'GET')).rejects.toThrow('Fetch-Fehler: Server nicht Erreichbar');
-      // 3 same-server api attempts + probe for each configured server
-      expect(globalThis.fetch).toHaveBeenCalledTimes(3 + mockServerConfigs.length);
+      vi.useFakeTimers();
+      try {
+        await expect(settleWithTimers(FetchRetry(testPath, undefined, 'GET'))).rejects.toThrow(
+          'Fetch-Fehler: Server nicht Erreichbar',
+        );
+      } finally {
+        vi.useRealTimers();
+      }
+      // 3 same-server api attempts + probe for each configured server (Hauptserver 2x)
+      expect(globalThis.fetch).toHaveBeenCalledTimes(3 + mockServerConfigs.length + 1);
     });
 
     it('should handle non-ok response', async () => {

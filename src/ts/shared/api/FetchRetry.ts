@@ -16,7 +16,7 @@ interface ServerConfig {
 export const API_URL: ServerConfig[] = import.meta.env.PROD
   ? [
       { url: 'https://lst.otto.home64.de/api/v2', timeout: 3000 },
-      { url: 'https://web-app-rn6h2lgzma-ey.a.run.app/api/v2', timeout: 8000 },
+      { url: 'https://web-app-rn6h2lgzma-ey.a.run.app/api/v2', timeout: 15000 },
     ]
   : [
       { url: 'https://api-dev.otto.home64.de/api/v2', timeout: 3000 },
@@ -24,7 +24,16 @@ export const API_URL: ServerConfig[] = import.meta.env.PROD
       { url: 'http://192.168.178.56:8081/api/v2', timeout: 2000 },
     ];
 
+/** Der Hauptserver wird vor dem Ausweichen auf GCP zweimal geprüft (kurze Aussetzer lösen sonst einen GCP-Kaltstart aus). */
+const PRIMARY_PROBE_ATTEMPTS = 2;
+const PRIMARY_PROBE_RETRY_DELAY_MS = 1000;
+
+/** Auf einem Ausweichserver wird der Hauptserver höchstens so oft im Hintergrund erneut geprüft. */
+const PRIMARY_RECHECK_INTERVAL_MS = 60_000;
+
 let serverCheckCounter = 0;
+let lastPrimaryCheck = 0;
+let primaryRecheckRunning = false;
 let serverProbePromise: Promise<string> | null = null;
 let serverStatusSnackBar: ReturnType<typeof createSnackBar> | null = null;
 let offlineSnackBarShown = false;
@@ -299,7 +308,25 @@ async function checkServerConnection(serverUrl: string, timeout: number): Promis
 }
 
 /**
- * Liefert die Basis-URL des erreichbaren Servers. Innerhalb von 5 Minuten nach dem letzten Kontakt gilt die gemerkte URL, sonst werden die Server aus `API_URL` der Reihe nach geprüft; dabei zeigt eine Snackbar den Verbindungsaufbau.
+ * Prüft im Hintergrund, ob der Hauptserver (erster Eintrag in `API_URL`) wieder antwortet, und wechselt dann zurück. Läuft höchstens einmal je `PRIMARY_RECHECK_INTERVAL_MS`, ohne Snackbar und ohne den Aufrufer zu blockieren.
+ *
+ * @param primary - Konfiguration des Hauptservers.
+ */
+function recheckPrimaryInBackground(primary: ServerConfig): void {
+  if (primaryRecheckRunning || Date.now() - lastPrimaryCheck < PRIMARY_RECHECK_INTERVAL_MS) return;
+  primaryRecheckRunning = true;
+  lastPrimaryCheck = Date.now();
+  void checkServerConnection(primary.url, primary.timeout)
+    .then(reachable => {
+      if (reachable) sessionStorage.setItem('currentServerUrl', primary.url);
+    })
+    .finally(() => {
+      primaryRecheckRunning = false;
+    });
+}
+
+/**
+ * Liefert die Basis-URL des erreichbaren Servers. Innerhalb von 5 Minuten nach dem letzten Kontakt gilt die gemerkte URL (läuft sie auf einem Ausweichserver, wird der Hauptserver im Hintergrund erneut geprüft, damit die App nach dessen Rückkehr zurückwechselt), sonst werden die Server aus `API_URL` der Reihe nach geprüft (der Hauptserver zweimal, bevor auf den nächsten gewechselt wird); dabei zeigt eine Snackbar den Verbindungsaufbau.
  *
  * @returns URL des ersten erreichbaren Servers.
  * @throws {Error} Wenn kein Server erreichbar ist.
@@ -314,6 +341,7 @@ export async function getServerUrl(): Promise<string> {
   const defaultServerUrl = serverConfigs[0].url;
 
   if (lastServerContact && +lastServerContact - Date.now() + 5 * 60 * 1000 >= 0) {
+    if (currentServerUrl && currentServerUrl !== defaultServerUrl) recheckPrimaryInBackground(serverConfigs[0]);
     return currentServerUrl ?? defaultServerUrl;
   }
 
@@ -331,7 +359,13 @@ export async function getServerUrl(): Promise<string> {
       });
 
     for (const config of serverConfigs) {
-      if (await checkServerConnection(config.url, config.timeout)) {
+      const attempts = config === serverConfigs[0] ? PRIMARY_PROBE_ATTEMPTS : 1;
+      let reachable = false;
+      for (let attempt = 1; attempt <= attempts && !reachable; attempt++) {
+        if (attempt > 1) await new Promise(resolve => setTimeout(resolve, PRIMARY_PROBE_RETRY_DELAY_MS));
+        reachable = await checkServerConnection(config.url, config.timeout);
+      }
+      if (reachable) {
         sessionStorage.setItem('currentServerUrl', config.url);
         sessionStorage.setItem('lastServerContact', Date.now().toString());
         offlineSnackBarShown = false;
