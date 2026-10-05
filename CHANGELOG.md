@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-05 (228)
+
+### chore (deploy.sh: main nur per Release und nur mit shared/main)
+
+- `scripts/deploy.sh` bricht ab, wenn die Version auf `dev` gleich der auf `origin/main` ist (nach `main` nur per Release, `release:deploy:*`).
+- Aendert sich der shared-Pin in `bun.lock` gegenueber `origin/main`, prueft das Skript per `gh api .../compare/main...<sha>`, ob der Commit auf shared `main` liegt; sonst Abbruch vor dem Merge ("zuerst shared releasen"). Vorher pinnte `bun update` einfach den neuesten shared-`dev`-Commit -- Produktion lief so auf `91d5d1f`, der nie auf shared `main` war.
+
 ## 2026-10-05 (227)
 
 ### docs (GitHub Community Standards)

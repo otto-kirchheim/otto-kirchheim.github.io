@@ -126,16 +126,47 @@ run_cmd git fetch "$REMOTE"
 run_cmd git checkout "$SOURCE_BRANCH"
 run_cmd git pull --ff-only "$REMOTE" "$SOURCE_BRANCH"
 
+# Nach ${TARGET_BRANCH} nur per Release: die Version muss gegenueber ${REMOTE}/${TARGET_BRANCH} angehoben sein.
+pkg_version() { { grep -m1 -oE '"version": *"[^"]+"' || true; } | sed -E 's/.*"([^"]+)"$/\1/'; }
+VERSION_NEU="$(pkg_version < package.json)"
+VERSION_PROD="$(git show "${REMOTE}/${TARGET_BRANCH}:package.json" | pkg_version)"
+if [[ "$VERSION_NEU" == "$VERSION_PROD" ]]; then
+  echo "❌ Version ${VERSION_NEU} liegt schon auf ${TARGET_BRANCH}. Nach ${TARGET_BRANCH} nur per Release:" >&2
+  echo "   bun run release:deploy:patch | release:deploy:minor | release:deploy:major" >&2
+  exit 1
+fi
+
 # shared (@otto-kirchheim/nebengeld-shared) haengt als Git-Branch-Dependency an #dev.
 # Vor dem Merge nach main den aktuellen shared-Commit in bun.lock einfrieren, damit
-# der Pages-Build reproduzierbar gegen exakt diesen Stand baut (Reihenfolge-Regel:
-# shared wird immer zuerst nach main deployt, ist zu diesem Zeitpunkt also == freigegeben).
+# der Pages-Build reproduzierbar gegen exakt diesen Stand baut.
 run_cmd bun update @otto-kirchheim/nebengeld-shared
 if ! git diff --quiet -- bun.lock; then
   run_cmd git commit -am "chore: pin shared auf aktuellen ${SOURCE_BRANCH}-Stand"
   if [[ "$PUSH_CHANGES" == true ]]; then
     run_cmd git push "$REMOTE" "$SOURCE_BRANCH"
   fi
+fi
+
+# Produktion darf nur shared-Staende nutzen, die auf shared/main liegen (dort per shared/scripts/deploy.sh).
+# Geprueft wird nur, wenn sich der Pin gegenueber ${REMOTE}/${TARGET_BRANCH} aendert.
+shared_pin() { { grep -oE 'nebengeld-shared@github:otto-kirchheim/nebengeld-shared#[0-9a-f]+' || true; } | head -1 | sed 's/.*#//'; }
+PIN_NEU="$(shared_pin < bun.lock)"
+PIN_PROD="$(git show "${REMOTE}/${TARGET_BRANCH}:bun.lock" | shared_pin)"
+if [[ -z "$PIN_NEU" ]]; then
+  echo "❌ Kein shared-Pin in bun.lock gefunden." >&2
+  exit 1
+fi
+if [[ "$PIN_NEU" != "$PIN_PROD" ]]; then
+  PIN_STATUS="$(gh api "repos/otto-kirchheim/nebengeld-shared/compare/main...${PIN_NEU}" --jq .status)" || {
+    echo "❌ shared-Pin ${PIN_NEU} konnte nicht gegen shared/main geprueft werden (gh installiert und angemeldet?)." >&2
+    exit 1
+  }
+  if [[ "$PIN_STATUS" != identical && "$PIN_STATUS" != behind ]]; then
+    echo "❌ shared ${PIN_NEU} liegt nicht auf shared/main (${PIN_STATUS}). Zuerst shared releasen:" >&2
+    echo "   (cd ../shared && bun run release:patch), danach dieses Skript erneut starten." >&2
+    exit 1
+  fi
+  echo "✅ shared-Pin ${PIN_PROD} -> ${PIN_NEU} liegt auf shared/main."
 fi
 
 if [[ "$RUN_CHECKS" == true ]]; then
