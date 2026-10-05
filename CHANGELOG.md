@@ -2,6 +2,22 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-05 (226)
+
+### fix (CodeQL-Alerts #25-#30: XSS und unvollstaendige HTML-Bereinigung)
+
+- `features/auth/model/loginUser.ts`: Login-Fehlermeldungen werden per `textContent` statt `innerHTML` gesetzt; eine HTML-haltige Server- oder Fehlermeldung wird nicht mehr als Markup interpretiert (#25-#28). Regressionstest in `loginUser.test.ts`.
+- `shared/ui/form/MyInput.tsx` (`hinweisZeilen`) und `shared/lib/autosave/errorHandling.ts` (`buildRowLabel`): Tags werden ueber `DOMParser` + `textContent` statt per Regex `/<[^>]*>/g` entfernt; die Regex liess verschachtelte Konstrukte wie `<scr<script>ipt>` durch (#29, #30). HTML-Entities werden dabei dekodiert (`&amp;` -> `&`); `buildRowLabel`-Ausgaben maskiert `escapeHtml` weiterhin.
+
+## 2026-10-04 (225)
+
+### fix (Rueckwechsel zum Heimserver nach GCP-Ausweichen)
+
+- `shared/api/FetchRetry.ts`: Laeuft die App auf dem Ausweichserver, prueft `getServerUrl()` den Hauptserver hoechstens einmal pro Minute still im Hintergrund (ohne Snackbar, ohne Verzoegerung) und wechselt bei Antwort zurueck. Vorher blieb der Tab auf GCP, solange Requests liefen, weil jeder Erfolg den 5-Minuten-Cache verlaengerte.
+- Die Serversuche prueft den Hauptserver zweimal (1 s Pause), bevor auf GCP ausgewichen wird: kurze Aussetzer des Heimservers loesen keinen GCP-Kaltstart mehr aus. Faellt der Heimserver wirklich aus, dauert der Wechsel entsprechend laenger (bei Timeout ca. 7 s statt 3 s). Die stille Hintergrundpruefung bleibt bei einem Versuch.
+- Probe-Timeout des GCP-Servers 8 s -> 15 s (Cloud-Run-Kaltstart inkl. Atlas-Verbindung).
+- Tests: neue `test/shared/api/FetchRetry.failback.test.ts` (Rueckwechsel, Drosselung, Aussetzer-Test); `FetchRetry.test.ts` erwartet im Cache-Fall auf Ausweichserver die eine Hintergrundpruefung und den zweiten Hauptserver-Versuch, die Failover-Tests treiben Fake-Timer schrittweise (`settleWithTimers`).
+
 ## 2026-10-04 (224)
 
 ### feat (EWT-Zettel nur mit Zeilen, die ein Zeitband ankreuzen)

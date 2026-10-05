@@ -99,7 +99,7 @@ describe('loginUser', () => {
 
     await loginUser(modal as never);
 
-    expect(document.querySelector<HTMLDivElement>('#errorMessage')?.innerHTML).toBe('kaputt');
+    expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe('kaputt');
     expect(clearLoadingMock).toHaveBeenCalledWith('btnLogin', false);
     expect(userLoginSuccessMock).not.toHaveBeenCalled();
   });
@@ -110,8 +110,19 @@ describe('loginUser', () => {
 
     await loginUser(modal as never);
 
-    expect(document.querySelector<HTMLDivElement>('#errorMessage')?.innerHTML).toBe('kaputt-string');
+    expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe('kaputt-string');
     expect(clearLoadingMock).toHaveBeenCalledWith('btnLogin', false);
     expect(userLoginSuccessMock).not.toHaveBeenCalled();
+  });
+
+  it('zeigt HTML in der Fehlermeldung als Text statt es zu interpretieren', async () => {
+    const modal = setupDom();
+    loginMock.mockRejectedValue(new Error('<img src=x onerror=alert(1)>'));
+
+    await loginUser(modal as never);
+
+    const errorMessage = document.querySelector<HTMLDivElement>('#errorMessage');
+    expect(errorMessage?.textContent).toBe('<img src=x onerror=alert(1)>');
+    expect(errorMessage?.querySelector('img')).toBeNull();
   });
 });

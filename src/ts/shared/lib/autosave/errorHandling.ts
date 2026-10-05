@@ -70,14 +70,10 @@ export function buildRowLabel(row: Row<CustomTableTypes>): string {
   if (!row.columns?.array) return '';
   const parts = row.columns.array
     .filter(col => col.visible && col.name !== 'editing')
-    .map(col =>
-      col
-        .parser(row.cells[col.name] as CustomTableTypes[string])
-        .toString()
-        .trim()
-        .replace(/<[^>]*>/g, '')
-        .trim(),
-    )
+    .map(col => {
+      const html = col.parser(row.cells[col.name] as CustomTableTypes[string]).toString();
+      return (new DOMParser().parseFromString(html, 'text/html').body.textContent ?? '').trim();
+    })
     .filter(s => s.length > 0);
   return [...new Set(parts)].slice(0, 4).join(' · ');
 }
