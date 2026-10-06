@@ -2,6 +2,12 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-06 (233)
+
+### fix (check-shared-pin.sh: dev-Pin mit identischem src/ zulassen)
+
+- `scripts/check-shared-pin.sh` akzeptiert jetzt auch einen shared-Pin, der nicht auf shared/main liegt, dessen `src/` aber mit shared/main identisch ist. Nur `src/` kommt hier an; shared released Commits ohne `src/`-Aenderung (CI, Doku, Skripte) nicht mehr eigens (vorher: Versionssprung 0.9.1 nur fuer das Entfernen von `publish.yml`). Ohne diese Lockerung wuerde `deploy.sh` am dann nicht freigegebenen dev-Pin abbrechen. Laeuft unveraendert auch in den Produktions-Workflows.
+
 ## 2026-10-06 (232)
 
 ### fix (Release-Skripte: Checks gegen neuen shared-Pin, Versions-Commit nur auf `dev`)

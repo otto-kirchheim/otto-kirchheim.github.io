@@ -161,7 +161,7 @@ if ! git diff --quiet -- bun.lock; then
   fi
 fi
 
-# Produktion darf nur shared-Staende nutzen, die auf shared/main liegen (scripts/check-shared-pin.sh,
+# Produktion darf nur shared-Staende nutzen, die auf shared/main liegen oder dasselbe src/ haben (scripts/check-shared-pin.sh,
 # laeuft zusaetzlich in den Produktions-Workflows). Hier nur, wenn sich der Pin gegenueber
 # ${REMOTE}/${TARGET_BRANCH} aendert -- ein unveraenderter Pin wurde beim letzten Release schon geprueft.
 shared_pin() { { grep -oE 'nebengeld-shared@github:otto-kirchheim/nebengeld-shared#[0-9a-f]+' || true; } | head -1 | sed 's/.*#//'; }
