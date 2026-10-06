@@ -4,7 +4,10 @@ import { readFileSync, writeFileSync } from 'node:fs';
 const args = process.argv.slice(2);
 const bumpType = (args.find(arg => !arg.startsWith('--')) ?? 'patch').toLowerCase();
 const dryRun = args.includes('--dry-run');
-const shouldCommit = args.includes('--commit') || args.includes('--push');
+// --preflight: nur Vorbedingungen fuer --commit/--push pruefen (sauberer Tree, Branch `dev`) und ohne Aenderung
+// beenden -- in `release:deploy:*` vor `release:check`, damit ein falscher Branch nicht erst nach dem Gate auffaellt.
+const preflight = args.includes('--preflight');
+const shouldCommit = args.includes('--commit') || args.includes('--push') || preflight;
 const shouldPush = args.includes('--push');
 const remoteFlagIndex = args.indexOf('--remote');
 const remote = remoteFlagIndex >= 0 ? args[remoteFlagIndex + 1] : 'origin';
@@ -17,7 +20,7 @@ if (remoteFlagIndex >= 0 && !remote) {
 
 if (!validBumpTypes.has(bumpType)) {
   console.error(
-    'Usage: bun ./scripts/release.ts <patch|minor|major> [--dry-run] [--commit] [--push] [--remote <name>]',
+    'Usage: bun ./scripts/release.ts <patch|minor|major> [--dry-run] [--preflight] [--commit] [--push] [--remote <name>]',
   );
   process.exit(1);
 }
@@ -57,6 +60,25 @@ if (shouldCommit && !dryRun) {
   ensureCleanWorkingTree();
 }
 
+/**
+ * Versions-Commits nur auf `dev`: von dort uebernimmt `scripts/deploy.sh` nach `main` (mit Versions- und
+ * shared-Pin-Pruefung). Auf `main` wuerde der Push direkt den Produktions-Workflow ausloesen, auf einem
+ * Feature-Branch laege der Versions-Commit neben dem Release.
+ */
+const RELEASE_BRANCH = 'dev';
+const branch = shouldCommit ? getCurrentBranch() : '';
+if (shouldCommit && branch !== RELEASE_BRANCH) {
+  console.error(
+    `Release-Commits nur auf '${RELEASE_BRANCH}' (aktuell: '${branch}'). Erst 'git checkout ${RELEASE_BRANCH}'.`,
+  );
+  process.exit(1);
+}
+
+if (preflight) {
+  console.log(`Release-Vorbedingungen ok (Branch '${branch}').`);
+  process.exit(0);
+}
+
 const packageJsonPath = new URL('../package.json', import.meta.url);
 const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as { version?: string };
 const currentVersion = pkg.version ?? '0.0.0';
@@ -91,8 +113,6 @@ console.log(`${dryRun ? 'Preview' : 'Version bumped'} (${bumpType}): ${currentVe
 if (!shouldCommit) {
   process.exit(0);
 }
-
-const branch = getCurrentBranch();
 
 if (dryRun) {
   console.log(`[dry-run] Would create commit: ${releaseCommitMessage}`);

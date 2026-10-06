@@ -102,27 +102,39 @@ if [[ "$SOURCE_BRANCH" == "$TARGET_BRANCH" ]]; then
   exit 1
 fi
 
-if ! git rev-parse --verify "$SOURCE_BRANCH" >/dev/null 2>&1; then
-  echo "❌ Source branch '$SOURCE_BRANCH' does not exist locally." >&2
-  exit 1
-fi
-
-if ! git rev-parse --verify "$TARGET_BRANCH" >/dev/null 2>&1; then
-  echo "❌ Target branch '$TARGET_BRANCH' does not exist locally." >&2
-  exit 1
-fi
-
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "❌ Working tree is not clean. Please commit or stash your changes first." >&2
   echo "   Tipp: Nach einem Release-Bump muss der Versions-Commit zuerst auf '${SOURCE_BRANCH}' erstellt/gepusht werden." >&2
   exit 1
 fi
 
+ensure_branch_available() {
+  local branch="$1"
+
+  if git rev-parse --verify "$branch" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if ! git show-ref --verify --quiet "refs/remotes/${REMOTE}/${branch}"; then
+    echo "❌ Branch '$branch' existiert weder lokal noch als ${REMOTE}/${branch}." >&2
+    exit 1
+  fi
+
+  if [[ "$DRY_RUN" == true ]]; then
+    echo "+ git branch --track ${branch} ${REMOTE}/${branch}"
+    return 0
+  fi
+
+  git branch --track "$branch" "${REMOTE}/${branch}" >/dev/null 2>&1
+}
+
 ORIGINAL_BRANCH="$(git branch --show-current)"
 
 echo "🚀 Deploying frontend from '$SOURCE_BRANCH' to '$TARGET_BRANCH' via '$REMOTE'"
 
 run_cmd git fetch "$REMOTE"
+ensure_branch_available "$SOURCE_BRANCH"
+ensure_branch_available "$TARGET_BRANCH"
 run_cmd git checkout "$SOURCE_BRANCH"
 run_cmd git pull --ff-only "$REMOTE" "$SOURCE_BRANCH"
 
@@ -140,7 +152,9 @@ fi
 # Vor dem Merge nach main den aktuellen shared-Commit in bun.lock einfrieren, damit
 # der Pages-Build reproduzierbar gegen exakt diesen Stand baut.
 run_cmd bun update @otto-kirchheim/nebengeld-shared
+SHARED_PIN_AKTUALISIERT=false
 if ! git diff --quiet -- bun.lock; then
+  SHARED_PIN_AKTUALISIERT=true
   run_cmd git commit -am "chore: pin shared auf aktuellen ${SOURCE_BRANCH}-Stand"
   if [[ "$PUSH_CHANGES" == true ]]; then
     run_cmd git push "$REMOTE" "$SOURCE_BRANCH"
@@ -158,7 +172,12 @@ if [[ "$PIN_NEU" != "$PIN_PROD" ]]; then
   bash "$(dirname "$0")/check-shared-pin.sh" bun.lock
 fi
 
-if [[ "$RUN_CHECKS" == true ]]; then
+# Auch bei --skip-checks: ein vorheriges release:check (z. B. in release:deploy:*) lief noch gegen den
+# alten shared-Pin -- der neu gepinnte Stand muss vor dem Merge nach ${TARGET_BRANCH} selbst geprueft werden.
+if [[ "$RUN_CHECKS" == true || "$SHARED_PIN_AKTUALISIERT" == true ]]; then
+  if [[ "$RUN_CHECKS" != true ]]; then
+    echo "ℹ️ shared-Pin wurde aktualisiert -- release:check laeuft trotz --skip-checks"
+  fi
   run_cmd bun run release:check
 fi
 
