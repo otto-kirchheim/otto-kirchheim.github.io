@@ -425,7 +425,7 @@
 
     "@nodelib/fs.walk": ["@nodelib/fs.walk@1.2.8", "", { "dependencies": { "@nodelib/fs.scandir": "2.1.5", "fastq": "^1.6.0" } }, "sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg=="],
 
-    "@otto-kirchheim/nebengeld-shared": ["@otto-kirchheim/nebengeld-shared@github:otto-kirchheim/nebengeld-shared#91d5d1f", {}, "otto-kirchheim-nebengeld-shared-91d5d1f", "sha512-jrH1te2dddoLUkyw+IRew9ZfBIiwHbEBDKvd0J6IFBwVIXTshR2UhBH3LYb46D8YGusjnFn+njwWDttJgvGb2w=="],
+    "@otto-kirchheim/nebengeld-shared": ["@otto-kirchheim/nebengeld-shared@github:otto-kirchheim/nebengeld-shared#efda4fb", {}, "otto-kirchheim-nebengeld-shared-efda4fb", "sha512-AjvJKrQQG6xF9pQaWAMU70GRp43O/U2m/zjqqr2DqDUXD6KGBLRD/+x3zG0EumaxJkrQXMTj8Dy+aBV1/onMXA=="],
 
     "@oxc-project/types": ["@oxc-project/types@0.151.0", "", {}, "sha512-J1yXrIlNDZVzE3ada310xeAw7nH8yCAyLPuUIsjKatFPmfn5bS1oW+cM+QsGOtVWd5nhSpbwZWx/rue+r5Z+PA=="],
 
