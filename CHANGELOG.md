@@ -2,6 +2,12 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-06 (231)
+
+### docs (deploy.sh: Kopfkommentar und Hilfe auf `dev`)
+
+- `scripts/deploy.sh`: Kopfkommentar, Beispiel und `--help` nannten noch `test` als Quell-Branch; der Default ist seit der Umstellung auf `dev` -> `main` laengst `dev`. Nur Text, Logik unveraendert.
+
 ## 2026-10-05 (230)
 
 ### chore (Sicherheits-Updates von Dev-Abhaengigkeiten)

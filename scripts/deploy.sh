@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 # =============================================================================
-# deploy.sh – Frontend von `test` nach `main` deployen (GitHub Pages)
+# deploy.sh – Frontend von `dev` nach `main` deployen (GitHub Pages)
 #
 # Standardablauf:
-#   1. `test` aktualisieren und Checks ausführen
-#   2. `test` nach `main` mergen
+#   1. `dev` aktualisieren und Checks ausführen
+#   2. `dev` nach `main` mergen
 #   3. `main` pushen -> GitHub Pages Workflow deployed automatisch
-#   4. zurück auf `test` wechseln und auf den neuen Stand fast-forwarden
+#   4. zurück auf `dev` wechseln und auf den neuen Stand fast-forwarden
 #
 # Verwendung:
 #   ./scripts/deploy.sh
 #   ./scripts/deploy.sh --dry-run
 #   ./scripts/deploy.sh --skip-checks
-#   ./scripts/deploy.sh --source test --target main
+#   ./scripts/deploy.sh --source dev --target main
 # =============================================================================
 
 set -euo pipefail
@@ -39,7 +39,7 @@ Options:
   --no-push           Prepare merge locally without pushing branches
   --dry-run           Show commands only, do not change anything
   --keep-on-main      Stay on ${TARGET_BRANCH} instead of switching back to ${SOURCE_BRANCH}
-  --source <branch>   Source branch to deploy from (default: test)
+  --source <branch>   Source branch to deploy from (default: dev)
   --target <branch>   Target branch to deploy to (default: main)
   --remote <name>     Git remote (default: origin)
   -h, --help          Show this help
