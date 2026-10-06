@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 # =============================================================================
-# deploy.sh – Frontend von `test` nach `main` deployen (GitHub Pages)
+# deploy.sh – Frontend von `dev` nach `main` deployen (GitHub Pages)
 #
 # Standardablauf:
-#   1. `test` aktualisieren und Checks ausführen
-#   2. `test` nach `main` mergen
+#   1. `dev` aktualisieren und Checks ausführen
+#   2. `dev` nach `main` mergen
 #   3. `main` pushen -> GitHub Pages Workflow deployed automatisch
-#   4. zurück auf `test` wechseln und auf den neuen Stand fast-forwarden
+#   4. zurück auf `dev` wechseln und auf den neuen Stand fast-forwarden
 #
 # Verwendung:
 #   ./scripts/deploy.sh
 #   ./scripts/deploy.sh --dry-run
 #   ./scripts/deploy.sh --skip-checks
-#   ./scripts/deploy.sh --source test --target main
+#   ./scripts/deploy.sh --source dev --target main
 # =============================================================================
 
 set -euo pipefail
@@ -39,7 +39,7 @@ Options:
   --no-push           Prepare merge locally without pushing branches
   --dry-run           Show commands only, do not change anything
   --keep-on-main      Stay on ${TARGET_BRANCH} instead of switching back to ${SOURCE_BRANCH}
-  --source <branch>   Source branch to deploy from (default: test)
+  --source <branch>   Source branch to deploy from (default: dev)
   --target <branch>   Target branch to deploy to (default: main)
   --remote <name>     Git remote (default: origin)
   -h, --help          Show this help
@@ -102,43 +102,82 @@ if [[ "$SOURCE_BRANCH" == "$TARGET_BRANCH" ]]; then
   exit 1
 fi
 
-if ! git rev-parse --verify "$SOURCE_BRANCH" >/dev/null 2>&1; then
-  echo "❌ Source branch '$SOURCE_BRANCH' does not exist locally." >&2
-  exit 1
-fi
-
-if ! git rev-parse --verify "$TARGET_BRANCH" >/dev/null 2>&1; then
-  echo "❌ Target branch '$TARGET_BRANCH' does not exist locally." >&2
-  exit 1
-fi
-
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "❌ Working tree is not clean. Please commit or stash your changes first." >&2
   echo "   Tipp: Nach einem Release-Bump muss der Versions-Commit zuerst auf '${SOURCE_BRANCH}' erstellt/gepusht werden." >&2
   exit 1
 fi
 
+ensure_branch_available() {
+  local branch="$1"
+
+  if git rev-parse --verify "$branch" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if ! git show-ref --verify --quiet "refs/remotes/${REMOTE}/${branch}"; then
+    echo "❌ Branch '$branch' existiert weder lokal noch als ${REMOTE}/${branch}." >&2
+    exit 1
+  fi
+
+  if [[ "$DRY_RUN" == true ]]; then
+    echo "+ git branch --track ${branch} ${REMOTE}/${branch}"
+    return 0
+  fi
+
+  git branch --track "$branch" "${REMOTE}/${branch}" >/dev/null 2>&1
+}
+
 ORIGINAL_BRANCH="$(git branch --show-current)"
 
 echo "🚀 Deploying frontend from '$SOURCE_BRANCH' to '$TARGET_BRANCH' via '$REMOTE'"
 
 run_cmd git fetch "$REMOTE"
+ensure_branch_available "$SOURCE_BRANCH"
+ensure_branch_available "$TARGET_BRANCH"
 run_cmd git checkout "$SOURCE_BRANCH"
 run_cmd git pull --ff-only "$REMOTE" "$SOURCE_BRANCH"
 
+# Nach ${TARGET_BRANCH} nur per Release: die Version muss gegenueber ${REMOTE}/${TARGET_BRANCH} angehoben sein.
+pkg_version() { { grep -m1 -oE '"version": *"[^"]+"' || true; } | sed -E 's/.*"([^"]+)"$/\1/'; }
+VERSION_NEU="$(pkg_version < package.json)"
+VERSION_PROD="$(git show "${REMOTE}/${TARGET_BRANCH}:package.json" | pkg_version)"
+if [[ "$VERSION_NEU" == "$VERSION_PROD" ]]; then
+  echo "❌ Version ${VERSION_NEU} liegt schon auf ${TARGET_BRANCH}. Nach ${TARGET_BRANCH} nur per Release:" >&2
+  echo "   bun run release:deploy:patch | release:deploy:minor | release:deploy:major" >&2
+  exit 1
+fi
+
 # shared (@otto-kirchheim/nebengeld-shared) haengt als Git-Branch-Dependency an #dev.
 # Vor dem Merge nach main den aktuellen shared-Commit in bun.lock einfrieren, damit
-# der Pages-Build reproduzierbar gegen exakt diesen Stand baut (Reihenfolge-Regel:
-# shared wird immer zuerst nach main deployt, ist zu diesem Zeitpunkt also == freigegeben).
+# der Pages-Build reproduzierbar gegen exakt diesen Stand baut.
 run_cmd bun update @otto-kirchheim/nebengeld-shared
+SHARED_PIN_AKTUALISIERT=false
 if ! git diff --quiet -- bun.lock; then
+  SHARED_PIN_AKTUALISIERT=true
   run_cmd git commit -am "chore: pin shared auf aktuellen ${SOURCE_BRANCH}-Stand"
   if [[ "$PUSH_CHANGES" == true ]]; then
     run_cmd git push "$REMOTE" "$SOURCE_BRANCH"
   fi
 fi
 
-if [[ "$RUN_CHECKS" == true ]]; then
+# Produktion darf nur shared-Staende nutzen, die auf shared/main liegen (scripts/check-shared-pin.sh,
+# laeuft zusaetzlich in den Produktions-Workflows). Hier nur, wenn sich der Pin gegenueber
+# ${REMOTE}/${TARGET_BRANCH} aendert -- ein unveraenderter Pin wurde beim letzten Release schon geprueft.
+shared_pin() { { grep -oE 'nebengeld-shared@github:otto-kirchheim/nebengeld-shared#[0-9a-f]+' || true; } | head -1 | sed 's/.*#//'; }
+PIN_NEU="$(shared_pin < bun.lock)"
+PIN_PROD="$(git show "${REMOTE}/${TARGET_BRANCH}:bun.lock" | shared_pin)"
+if [[ "$PIN_NEU" != "$PIN_PROD" ]]; then
+  echo "ℹ️ shared-Pin aendert sich: ${PIN_PROD:-<keiner>} -> ${PIN_NEU:-<keiner>}"
+  bash "$(dirname "$0")/check-shared-pin.sh" bun.lock
+fi
+
+# Auch bei --skip-checks: ein vorheriges release:check (z. B. in release:deploy:*) lief noch gegen den
+# alten shared-Pin -- der neu gepinnte Stand muss vor dem Merge nach ${TARGET_BRANCH} selbst geprueft werden.
+if [[ "$RUN_CHECKS" == true || "$SHARED_PIN_AKTUALISIERT" == true ]]; then
+  if [[ "$RUN_CHECKS" != true ]]; then
+    echo "ℹ️ shared-Pin wurde aktualisiert -- release:check laeuft trotz --skip-checks"
+  fi
   run_cmd bun run release:check
 fi
 

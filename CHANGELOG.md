@@ -2,6 +2,41 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-06 (232)
+
+### fix (Release-Skripte: Checks gegen neuen shared-Pin, Versions-Commit nur auf `dev`)
+
+- `scripts/deploy.sh`: Aendert `bun update @otto-kirchheim/nebengeld-shared` den Pin in `bun.lock`, laeuft `release:check` jetzt auch bei `--skip-checks`. Vorher pruefte `release:deploy:*` (bzw. `release.sh`) gegen den alten Pin, der neue Stand ging ungeprueft nach `main`.
+- `scripts/release.ts`: `--commit`/`--push` nur auf `dev` (Abbruch vor dem Anheben der Version). Vorher pushte es den aktuellen Branch -- auf `main` haette das den Produktions-Workflow an `deploy.sh` vorbei ausgeloest.
+- `deploy.sh`: fehlende lokale `dev`/`main` werden wie im Backend aus `origin` angelegt (`ensure_branch_available`) statt Abbruch vor dem `fetch`.
+- `scripts/release.ts --preflight`: prueft nur sauberen Tree + Branch `dev` und beendet sich ohne Aenderung. `release:deploy:*` ruft es jetzt vor `release:check` auf, ein falscher Branch faellt damit sofort auf statt nach dem kompletten Gate.
+
+## 2026-10-06 (231)
+
+### docs (deploy.sh: Kopfkommentar und Hilfe auf `dev`)
+
+- `scripts/deploy.sh`: Kopfkommentar, Beispiel und `--help` nannten noch `test` als Quell-Branch; der Default ist seit der Umstellung auf `dev` -> `main` laengst `dev`. Nur Text, Logik unveraendert.
+
+## 2026-10-05 (230)
+
+### chore (Sicherheits-Updates von Dev-Abhaengigkeiten)
+
+- `bun.lock`: `browserslist` 4.28.6 -> 4.28.7, `baseline-browser-mapping` -> 2.11.0, `brace-expansion` -> 5.0.12/2.1.7/1.1.21, `fast-uri` 3.1.5 -> 3.1.8 (alles Build-/Lint-Werkzeug, nichts im Bundle). Offen bleibt `braces@3.0.3` (via stylelint > globby > fast-glob > micromatch): keine gefixte Version veroeffentlicht.
+
+## 2026-10-05 (229)
+
+### chore (GitHub-Packages-Registry abgeschafft)
+
+- `.npmrc` entfernt: shared kommt seit der Git-Branch-Dependency ohne Registry und ohne Token (`bun install --frozen-lockfile` ohne `.npmrc` geprueft). Das alte Registry-Paket (bis 0.7.0) wird nicht mehr veroeffentlicht.
+
+## 2026-10-05 (228)
+
+### chore (deploy.sh: main nur per Release und nur mit shared/main)
+
+- `scripts/deploy.sh` bricht ab, wenn die Version auf `dev` gleich der auf `origin/main` ist (nach `main` nur per Release, `release:deploy:*`).
+- Neues `scripts/check-shared-pin.sh`: prueft per schlankem Bare-Clone (`--filter=blob:none`, kein Token) mit `git merge-base --is-ancestor`, ob der in `bun.lock` gepinnte shared-Commit auf shared `main` liegt. Laeuft als erster Schritt nach dem Checkout in `.github/workflows/deploy.yml` -- greift damit auch bei Merges nach `main`, die an `deploy.sh` vorbeigehen.
+- `scripts/deploy.sh` ruft dasselbe Skript auf, wenn sich der shared-Pin gegenueber `origin/main` aendert; sonst Abbruch vor dem Merge ("zuerst shared releasen"). Vorher pinnte `bun update` einfach den neuesten shared-`dev`-Commit -- Produktion lief so auf `91d5d1f`, der nie auf shared `main` war.
+
 ## 2026-10-05 (227)
 
 ### docs (GitHub Community Standards)

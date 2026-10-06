@@ -1,6 +1,6 @@
 {
   "name": "db_nebengeld_frontend",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "description": "",
   "private": "true",
   "scripts": {
@@ -34,9 +34,9 @@
     "deploy:main:dry": "bash ./scripts/deploy.sh --dry-run",
     "deploy:main:skip-checks": "bash ./scripts/deploy.sh --skip-checks",
     "release:deploy": "bun run release:deploy:patch",
-    "release:deploy:patch": "bun run release:check && bun ./scripts/release.ts patch --commit --push && bun run deploy:main:skip-checks",
-    "release:deploy:minor": "bun run release:check && bun ./scripts/release.ts minor --commit --push && bun run deploy:main:skip-checks",
-    "release:deploy:major": "bun run release:check && bun ./scripts/release.ts major --commit --push && bun run deploy:main:skip-checks",
+    "release:deploy:patch": "bun ./scripts/release.ts patch --preflight && bun run release:check && bun ./scripts/release.ts patch --commit --push && bun run deploy:main:skip-checks",
+    "release:deploy:minor": "bun ./scripts/release.ts minor --preflight && bun run release:check && bun ./scripts/release.ts minor --commit --push && bun run deploy:main:skip-checks",
+    "release:deploy:major": "bun ./scripts/release.ts major --preflight && bun run release:check && bun ./scripts/release.ts major --commit --push && bun run deploy:main:skip-checks",
     "prepare": "husky"
   },
   "lint-staged": {

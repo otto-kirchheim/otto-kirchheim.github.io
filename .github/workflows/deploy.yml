@@ -26,6 +26,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+      - name: Check shared pin is on shared/main
+        # Produktion nur mit freigegebenem shared -- greift auch bei Merges an scripts/deploy.sh vorbei.
+        run: bash scripts/check-shared-pin.sh
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2.2.0
         with:
