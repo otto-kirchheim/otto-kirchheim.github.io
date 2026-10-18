@@ -21,6 +21,7 @@ import {
   updateAdminDoc,
   deleteAdminDoc,
   fetchAdminUserNameMap,
+  fetchAdminUserLoginMap,
   type AdminPage,
 } from '../api/api';
 import {
@@ -49,6 +50,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [edit, setEdit] = useState<EditState | null>(null);
   const [userNameMap, setUserNameMap] = useState<Record<string, string>>({});
+  const [loginNameMap, setLoginNameMap] = useState<Record<string, string>>({});
   const [availableYears, setAvailableYears] = useState<number[]>([]);
 
   // Filter-Inputs
@@ -67,6 +69,9 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
   useEffect(() => {
     fetchAdminUserNameMap()
       .then(setUserNameMap)
+      .catch(() => {});
+    fetchAdminUserLoginMap()
+      .then(setLoginNameMap)
       .catch(() => {});
   }, []);
 
@@ -296,7 +301,13 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
 
   const totalPages = page ? Math.ceil(page.total / ITEMS_PER_PAGE) : 1;
   const totalCols = 2 + resource.tableFields.length + (resource.extraFields?.length ?? 0);
-  const sortedUsers = Object.entries(userNameMap).sort((a, b) => a[1].localeCompare(b[1]));
+  const sortedUsers = Object.entries(userNameMap)
+    .map((eintrag): [string, string] => {
+      const [id, name] = eintrag;
+      const login = loginNameMap[id];
+      return [id, login ? `${name} (${login})` : name];
+    })
+    .sort((a, b) => a[1].localeCompare(b[1]));
   const hasActiveFilter = Boolean(activeFilter.userId || activeFilter.jahr || activeFilter.monat);
 
   return (
@@ -327,16 +338,16 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
               <label className="zelle-klein luft-unten-2xs">Benutzer</label>
               <div className="feld-mit-knopf">
                 <DbFeld
-                  beschriftung="Alle Benutzer (Name eingeben…)"
+                  beschriftung="Alle Benutzer (Name oder Benutzername eingeben…)"
                   dicht
                   type="text"
-                  list={`user-datalist-${activeIdx}`}
-                  placeholder="Alle Benutzer (Name eingeben…)"
+                  dataList={sortedUsers.map(([, label]) => label)}
+                  placeholder="Alle Benutzer (Name oder Benutzername eingeben…)"
                   value={userSearchText}
                   onChange={e => {
                     const text = (e.target as HTMLInputElement).value;
                     setUserSearchText(text);
-                    const match = sortedUsers.find(([, name]) => name === text);
+                    const match = sortedUsers.find(([, label]) => label === text);
                     setFilterUserId(match?.[0] ?? '');
                   }}
                 />
@@ -357,11 +368,6 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                   </DBButton>
                 )}
               </div>
-              <datalist id={`user-datalist-${activeIdx}`}>
-                {sortedUsers.map(([id, name]) => (
-                  <option key={id} value={name} />
-                ))}
-              </datalist>
             </div>
 
             {/* Jahr: nur vorhandene Jahre aus Backend */}
@@ -460,7 +466,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
               ))}
               {resource.extraFields?.map(f => (
                 <th key={f} className="spalte-ab-lg">
-                  {f === 'createdAt' ? 'Erstellt' : f}
+                  {f === 'createdAt' ? 'Erstellt' : f === 'updatedAt' ? 'Geändert' : f}
                 </th>
               ))}
               <th style={{ width: '7rem' }} className="zelle-rechts">

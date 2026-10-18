@@ -11,7 +11,7 @@ const adminFeature: AdminFeature = {
       shortLabel: 'NG',
       endpoint: 'nebengeld',
       tableFields: ['User', 'Jahr', 'Monat', 'Tag'],
-      extraFields: ['EWT', 'createdAt'],
+      extraFields: ['EWT', 'createdAt', 'updatedAt'],
       schemaFields: ['User', 'EWT', 'Jahr', 'Monat', 'Tag', 'Beginn', 'Ende', 'Auftragsnummer', 'Zulagen'],
       nurDatumFelder: ['Tag'],
       zeitFelder: ['Beginn', 'Ende'],

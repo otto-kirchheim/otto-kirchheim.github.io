@@ -688,6 +688,21 @@ export async function fetchAdminUserNameMap(): Promise<Record<string, string>> {
   return map;
 }
 
+/**
+ * Baut eine Map userId→Benutzername (Login) über die Benutzerliste (`GET users`, unpaginiert).
+ *
+ * @returns Map von Benutzer-Id auf `userName`; Nutzer ohne Treffer fehlen in der Map.
+ */
+export async function fetchAdminUserLoginMap(): Promise<Record<string, string>> {
+  const response = await FetchRetry<undefined, BackendUser[]>('users', undefined, 'GET');
+  const users = unwrapResponse<BackendUser[]>(response);
+  const map: Record<string, string> = {};
+  for (const user of users) {
+    if (user.userName) map[user._id] = user.userName;
+  }
+  return map;
+}
+
 export type AdminLogEntry = {
   _id: string;
   adminId: string;

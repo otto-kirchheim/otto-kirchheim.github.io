@@ -10,7 +10,7 @@ const adminFeature: AdminFeature = {
       shortLabel: 'EA',
       endpoint: 'entgeltausgleich',
       tableFields: ['User', 'Jahr', 'Monat', 'Tag', 'Dauer'],
-      extraFields: ['EWT', 'Taetigkeit', 'Entgeltgruppe', 'createdAt'],
+      extraFields: ['EWT', 'Taetigkeit', 'Entgeltgruppe', 'createdAt', 'updatedAt'],
       schemaFields: ['User', 'EWT', 'Jahr', 'Monat', 'Tag', 'Dauer', 'Taetigkeit', 'Entgeltgruppe'],
       nurDatumFelder: ['Tag'],
       zeitFelder: ['Dauer'],

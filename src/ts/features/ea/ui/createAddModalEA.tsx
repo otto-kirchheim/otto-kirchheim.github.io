@@ -200,14 +200,16 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
           Dauer
         </MyInput>
 
-        <MyInput divClass="sp-12" required type="text" id="Taetigkeit" name="Taetigkeit" list="taetigkeitVorschlaege">
+        <MyInput
+          divClass="sp-12"
+          required
+          type="text"
+          id="Taetigkeit"
+          name="Taetigkeit"
+          dataList={TAETIGKEIT_VORSCHLAEGE}
+        >
           Tätigkeit
         </MyInput>
-        <datalist id="taetigkeitVorschlaege">
-          {TAETIGKEIT_VORSCHLAEGE.map(vorschlag => (
-            <option key={vorschlag} value={vorschlag} />
-          ))}
-        </datalist>
 
         <MyInput
           divClass="sp-12"

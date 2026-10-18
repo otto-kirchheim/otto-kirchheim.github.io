@@ -2,6 +2,16 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-18 (235)
+
+### fix (DbFeld/MyInput-Datalist kaputt; Admin-Ressourcenbrowser: Spalte "Geaendert", Benutzer-Filter nach Username)
+
+- `DBInput` (`@db-ux/react-core-components`) ueberschreibt das native `list`-Attribut immer mit seinem eigenen `dataList`-Mechanismus -- ein von aussen gesetztes `list`-Attribut plus manuell danebengerendertes `<datalist>` wurde dadurch nie mit dem Input verknuepft, die Vorschlagsliste erschien nie (bestaetigt: in `createAddModalEA.tsx`/`createEditorModalEA.tsx` zeigte der Browser stattdessen Chrome-Autofill-Verlauf, keine echte Datalist-Vorschlaege).
+- `DbFeld`/`DbAuswahl` (`shared/ui/form/DbFeld.tsx`): Prop-Typ von `Omit<InputHTMLAttributes<HTMLInputElement>, ...>` auf `Omit<ComponentProps<typeof DBInput>, ...>` umgestellt (gleiche Konvention wie `MyInput`/lokales `Feld` in `PersoenlicheDatenPanel.tsx`) -- macht `dataList` und weitere `DBInput`-Faehigkeiten an jeder `DbFeld`-Aufrufstelle verfuegbar.
+- `createAddModalEA.tsx`/`createEditorModalEA.tsx`: Taetigkeit-Vorschlagsliste auf `dataList={TAETIGKEIT_VORSCHLAEGE}` statt kaputtem `list`+manuellem `<datalist>` umgestellt.
+- `test/reactRender.ts`s `inputMock` (Ersatz fuer `MyInput` in Komponententests) filtert `dataList` jetzt heraus, sonst React-Warnung "does not recognize the `dataList` prop".
+- Admin-Ressourcenbrowser (`AdminResourceBrowser.tsx`): neue Spalte "Geaendert" (`updatedAt`, alle 5 Ressourcen-Configs); Benutzer-Filter zeigt/sucht jetzt zusaetzlich nach Benutzername (Login), nicht nur vollem Namen -- neue `fetchAdminUserLoginMap()` in `api.ts`, Datalist-Label `"Vorname Nachname (username)"`, Datalist jetzt ueber den oben reparierten `dataList`-Weg statt dem bisher wirkungslosen `list`-Attribut.
+
 ## 2026-10-18 (234)
 
 ### chore (DB UX Design System: core-Pakete auf 6.0.0, `db-theme` auf 7.0.0)
