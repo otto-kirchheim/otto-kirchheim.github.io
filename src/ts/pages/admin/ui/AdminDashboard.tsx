@@ -233,7 +233,7 @@ export function AdminDashboard() {
       <div className="raster admin-block abstand-3">
         <div className="sp-md-4">
           <DBCard className="admin-karte">
-            <DBHeadingH6 paragraphSpacing>Rollenverteilung</DBHeadingH6>
+            <DBHeadingH6 data-text-spacing="true">Rollenverteilung</DBHeadingH6>
             {Object.entries(stats.users.byRole).map(([role, count]) => (
               <DBStack
                 key={role}
@@ -253,7 +253,7 @@ export function AdminDashboard() {
 
         <div className="sp-md-4">
           <DBCard className="admin-karte">
-            <DBHeadingH6 paragraphSpacing>Ressourcenbestand</DBHeadingH6>
+            <DBHeadingH6 data-text-spacing="true">Ressourcenbestand</DBHeadingH6>
             {(
               adminFeatures
                 .flatMap(feature => feature.statsRows)
@@ -292,7 +292,7 @@ export function AdminDashboard() {
 
         <div className="sp-md-4">
           <DBCard className="admin-karte">
-            <DBHeadingH6 paragraphSpacing>Auth-Aktivität</DBHeadingH6>
+            <DBHeadingH6 data-text-spacing="true">Auth-Aktivität</DBHeadingH6>
             {(
               [
                 ['Neue Benutzer (7T)', stats.auth.newUsersLast7d, 'person', 'farbe-erfolg'],

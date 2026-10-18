@@ -374,7 +374,7 @@ export function BereitschaftTab() {
         </DBStack>
       </div>
       <DBDivider width="full" />
-      <DBHeadingH4 paragraphSpacing id="titelBZ">
+      <DBHeadingH4 data-text-spacing="true" id="titelBZ">
         Bereitschaftszeitraum
       </DBHeadingH4>
       <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
@@ -389,7 +389,7 @@ export function BereitschaftTab() {
         </table>
       </div>
       <DBDivider width="full" />
-      <DBHeadingH4 paragraphSpacing id="titelBE">
+      <DBHeadingH4 data-text-spacing="true" id="titelBE">
         Bereitschaftseinsätze
       </DBHeadingH4>
       <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">

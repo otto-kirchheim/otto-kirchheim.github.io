@@ -23,13 +23,13 @@ export default function ShowModalEA(row: Row<IDatenEA>, titel: string): void {
       <MyModalBody className="anzeige-koerper">
         {createTagElement(row)}
 
-        <DBHeadingH4 alignment="center">Dauer</DBHeadingH4>
+        <DBHeadingH4>Dauer</DBHeadingH4>
         {createShowElement3(row, ['Dauer'])}
 
-        <DBHeadingH4 alignment="center">Tätigkeit</DBHeadingH4>
+        <DBHeadingH4>Tätigkeit</DBHeadingH4>
         {createShowElement3(row, ['Taetigkeit'])}
 
-        <DBHeadingH4 alignment="center">Entgeltgruppe</DBHeadingH4>
+        <DBHeadingH4>Entgeltgruppe</DBHeadingH4>
         {createShowElement3(row, ['Entgeltgruppe'])}
       </MyModalBody>
     </MyDivModal>,

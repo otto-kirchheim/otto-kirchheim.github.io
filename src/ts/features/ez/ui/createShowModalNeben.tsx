@@ -76,13 +76,13 @@ export default function ShowModalNeben(row: Row<IDatenN>, titel: string): void {
       <MyModalBody className="anzeige-koerper">
         {createTagElement(row)}
 
-        <DBHeadingH4 alignment="center">Auftragsnummer</DBHeadingH4>
+        <DBHeadingH4>Auftragsnummer</DBHeadingH4>
         {createShowElement3(row, ['Auftragsnummer'])}
 
-        <DBHeadingH4 alignment="center">Arbeitszeit</DBHeadingH4>
+        <DBHeadingH4>Arbeitszeit</DBHeadingH4>
         {createShowElement(row, ['Beginn'], ['Ende'])}
 
-        <DBHeadingH4 alignment="center">Zulagen</DBHeadingH4>
+        <DBHeadingH4>Zulagen</DBHeadingH4>
         {createZulagenElement(row)}
       </MyModalBody>
     </MyDivModal>,

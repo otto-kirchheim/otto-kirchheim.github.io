@@ -19,7 +19,7 @@ export default function MonatUeberschrift({ id, art = 'monat' }: { id: string; a
         : dayjs([+stand.jahr, stand.monat - 1]).format('MM / YY');
 
   return (
-    <DBHeadingH4 paragraphSpacing id={id}>
+    <DBHeadingH4 data-text-spacing="true" id={id}>
       {text}
     </DBHeadingH4>
   );

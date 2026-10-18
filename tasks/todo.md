@@ -4298,3 +4298,47 @@ nicht angefasst (groesserer Eingriff, eigener Task). Commit nur `EaTab.tsx`;
 Funktionen (38 ohne JSDoc = erlaubte Daten-/Inline-Lambdas, 1 Falschmeldung `getEmptyText`), `tsc`, `lint`, `lint:css`
 (87 Warnungen, Grenze 93), `bun run test` (2172 pass), `bun run build` gruen. Ablauf: 15 parallele Subagenten, 13 durch
 Session-Limit abgebrochen, Rest neu verteilt (`rest_01..08`).
+
+---
+
+## DB UX Design System: Update auf core 6.0.0 + db-theme 7.0.0 - 2026-10-18
+
+### Plan
+
+- [x] Release-Notes von `db-ux-design-system/core-web` (v6.0.0, 2026-10-15) und `db-theme`
+      (7.0.0, per `unpkg`-CHANGELOG) gegen den eigenen Code geprueft: `DBHeading*`
+      `paragraphSpacing`/`alignment` entfernt, `size`->`visualSize` (keine Fundstelle), `DBStack`
+      ohne `block-size:100%`/`overflow:auto` default, `DBDrawer`s `rounded` deprecated,
+      `db-theme` 7.0.0 setzt `--db-border-radius-*` auf `0` (User: gewollt, "soll so, ist jetzt
+      offiziell").
+- [x] `package.json`: `core-components`/`react-core-components`/`core-foundations`/`agent-cli`/
+      `core-eslint-plugin`/`core-stylelint` 5.7.0 -> 6.0.0, `db-theme` 6.3.0 -> 7.0.0; `bun install`.
+- [x] `paragraphSpacing` (21 Stellen, 10 Dateien) -> `data-text-spacing="true"` (sed je Datei).
+- [x] `alignment="center"` (6 Stellen, `createShowModalEA.tsx`/`createShowModalNeben.tsx`) entfernt;
+      Zentrierung per neuer Regel `.anzeige-koerper .db-heading { text-align: center; }` in
+      `styles.scss` (beide Dateien einzige Nutzer dieser `MyModalBody`-Klasse, keine JSX-Klasse
+      noetig).
+- [x] Deprecated `rounded`-Prop von `DBDrawer` in `showModal.tsx`/`ImpressumDialog.tsx` entfernt
+      (ESLint `@typescript-eslint/no-deprecated` schlug hier an).
+- [x] `DBStack`-Hoehen-/Overflow-Default-Aenderung gegen 443 Fundstellen geprueft: keine
+      Column-Layouts mit `justifyContent`/`alignment` gefunden, die auf dem alten
+      `block-size:100%` beruhen -- kein weiterer Code-Fix.
+- [x] `CHANGELOG.md` (234) ergaenzt.
+
+### Verifikationskriterien
+
+- `bun run typecheck` clean (vorher 27 Fehler durch die entfernten Props).
+- `bun run lint` 0 Fehler (vorher 2 durch `rounded`).
+- `bun run lint:css` 0 Fehler/Warnungen.
+- `bun run test` 2352 pass / 0 fail.
+- `bun run build` exit 0 (Chunk-Size-Warnung vorbestehend, kein neuer Fehler).
+- Browser-Check (eckige Ecken, zentrierte EA-/Neben-Anzeige-Titel) steht noch aus.
+
+### Review
+
+Kein Breaking Change blieb unentdeckt: `tsc` hat nach dem Versionssprung alle entfernten Props
+(`paragraphSpacing`, `alignment`) als Compile-Fehler markiert, ESLint den deprecated `rounded`.
+Einzige echte Design-Entscheidung war die Zentrierung der EA-/Neben-Anzeige-Titel ohne
+`alignment`-Prop -- geloest ueber eine auf die beiden einzigen Nutzer von `.anzeige-koerper`
+scoped CSS-Regel statt einer neuen Klasse an sechs JSX-Stellen. Die eckigen Ecken aus
+`db-theme` 7.0.0 sind laut User gewollt, daher keine Gegenregel in `db-gegenregeln.scss`.

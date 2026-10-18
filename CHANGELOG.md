@@ -2,6 +2,15 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-18 (234)
+
+### chore (DB UX Design System: core-Pakete auf 6.0.0, `db-theme` auf 7.0.0)
+
+- `@db-ux/core-components`, `react-core-components`, `core-foundations`, `agent-cli`, `core-eslint-plugin`, `core-stylelint`: 5.7.0 -> 6.0.0. `@db-ux/db-theme`: 6.3.0 -> 7.0.0 (separater Versionszyklus).
+- Breaking Changes nachgezogen: `DBHeading*`s `paragraphSpacing`-Prop entfernt (Ersatz `data-text-spacing="true"`, 21 Stellen) und `alignment`-Prop entfernt (6 Stellen in `createShowModalEA.tsx`/`createShowModalNeben.tsx`; Zentrierung jetzt ueber neue CSS-Regel `.anzeige-koerper .db-heading { text-align: center; }` in `styles.scss`, da beide Dateien die einzigen Nutzer dieser `MyModalBody`-Klasse sind). `DBDrawer`s deprecated `rounded`-Prop aus `showModal.tsx` und `ImpressumDialog.tsx` entfernt (Eck-Radius kommt jetzt aus den `db-border-radius`-Tokens).
+- `db-theme` 7.0.0 setzt `--db-border-radius-*` auf `0` (eckige Komponenten statt rund, nur `--db-border-radius-full` bleibt fuer Pills/Avatare) -- gewolltes visuelles Ergebnis, keine Gegenmassnahme noetig.
+- `DBStack`s neuer Default (`block-size` nicht mehr `100%`, kein `overflow: auto` mehr) gegen die 443 Fundstellen im Code gepruefte keine betroffenen Column-Layouts gefunden, die auf dem alten Verhalten beruhen.
+
 ## 2026-10-06 (233)
 
 ### fix (check-shared-pin.sh: dev-Pin mit identischem src/ zulassen)

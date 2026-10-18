@@ -18,7 +18,7 @@ export function openPlatzhalterHilfe(): void {
     container,
     <div className="dialog-rumpf" data-breite="lg">
       <div className="db-drawer-header">
-        <DBHeadingH5 paragraphSpacing>Platzhalter &amp; Formate</DBHeadingH5>
+        <DBHeadingH5 data-text-spacing="true">Platzhalter &amp; Formate</DBHeadingH5>
         <DBButton type="button" icon="cross" variant="ghost" noText data-dialog-dismiss="modal">
           <DBTooltip>Schließen</DBTooltip>
         </DBButton>
