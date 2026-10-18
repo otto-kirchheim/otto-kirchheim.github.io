@@ -144,7 +144,7 @@ export function SchichtSection({
 
   return (
     <div>
-      {title && <DBHeadingH5 paragraphSpacing>{title}</DBHeadingH5>}
+      {title && <DBHeadingH5 data-text-spacing="true">{title}</DBHeadingH5>}
       <DBStack gap="x-small">
         <WeekdayChips regelarbeitstage={regelarbeitstage} onToggle={toggleDay} />
         <div>

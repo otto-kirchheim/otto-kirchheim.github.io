@@ -22,6 +22,7 @@ export function inputMock(props: Record<string, unknown>): ReactNode {
     popover: _popover,
     invalidFeedbackId: _invalidFeedbackId,
     invalidFeedbackText: _invalidFeedbackText,
+    dataList: _dataList,
     dataZulageInputCode,
     myRef,
     value,

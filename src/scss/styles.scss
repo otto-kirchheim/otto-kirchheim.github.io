@@ -886,9 +886,14 @@ body,
   white-space: nowrap;
 }
 
-// Anzeige-Dialog mit Innenabstand (`MyModalBody className`), z. B. EA/Neben.
+// Anzeige-Dialog mit Innenabstand (`MyModalBody className`), z. B. EA/Neben. Die Feld-Titel
+// darin waren bis DB UX 6.0 ueber `alignment="center"` zentriert (entfernte Heading-Prop).
 .anzeige-koerper {
   padding: var(--db-spacing-fixed-md);
+
+  .db-heading {
+    text-align: center;
+  }
 }
 
 // Aktionen-Spalte der Fahrzeiten-Tabelle: so schmal wie ihre Buttons.

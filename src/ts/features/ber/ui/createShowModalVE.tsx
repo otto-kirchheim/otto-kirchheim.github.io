@@ -38,7 +38,7 @@ const createShowElement = (row: Row<IVorgabenUvorgabenB>, columnName: string, fa
 const createBereitschaftBlock = (row: Row<IVorgabenUvorgabenB>) => {
   return (
     <>
-      <DBHeadingH6 paragraphSpacing className="anzeige-abschnitt">
+      <DBHeadingH6 data-text-spacing="true" className="anzeige-abschnitt">
         Bereitschaft
       </DBHeadingH6>
       {createShowElement(row, 'beginnB', false)}
@@ -58,7 +58,7 @@ const createNachtschichtBlock = (row: Row<IVorgabenUvorgabenB>) => {
 
   return (
     <>
-      <DBHeadingH6 paragraphSpacing className="anzeige-abschnitt">
+      <DBHeadingH6 data-text-spacing="true" className="anzeige-abschnitt">
         Nachtschicht
       </DBHeadingH6>
       {createShowElement(row, 'nacht')}

@@ -61,21 +61,21 @@ export default function StartTab() {
         {/* `.karten-titel` (`min-block-size: 3.5rem`) reserviert zwei Titelzeilen, damit der
             Fliesstext in allen Karten auf gleicher Hoehe beginnt, auch wenn ein Titel umbricht. */}
         <DBCard className="start-karte">
-          <DBHeadingH5 paragraphSpacing className="karten-titel">
+          <DBHeadingH5 data-text-spacing="true" className="karten-titel">
             <Illustration name="account" ersatz="sliders_horizontal" className="start-icon" />
             1. Einstellungen prüfen
           </DBHeadingH5>
           <p>Persönliche Daten, Arbeitszeiten und Vorgaben aktuell halten.</p>
         </DBCard>
         <DBCard className="start-karte">
-          <DBHeadingH5 paragraphSpacing className="karten-titel">
+          <DBHeadingH5 data-text-spacing="true" className="karten-titel">
             <Illustration name="calendar" ersatz="pen" className="start-icon" />
             2. Monate erfassen
           </DBHeadingH5>
           <p>{featureListe} eintragen und speichern.</p>
         </DBCard>
         <DBCard className="start-karte">
-          <DBHeadingH5 paragraphSpacing className="karten-titel">
+          <DBHeadingH5 data-text-spacing="true" className="karten-titel">
             <Illustration name="pdf" ersatz="document" className="start-icon" />
             3. Ergebnis exportieren
           </DBHeadingH5>

@@ -294,7 +294,7 @@ export function FormularUpload() {
       </p>
 
       <Gruppe>
-        <DBHeadingH6 paragraphSpacing className="zelle-klein fett">
+        <DBHeadingH6 data-text-spacing="true" className="zelle-klein fett">
           Vorhandene Versionen ({formular})
         </DBHeadingH6>
         <FormularVersionenListe

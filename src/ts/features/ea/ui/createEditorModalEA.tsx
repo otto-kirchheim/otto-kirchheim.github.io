@@ -196,17 +196,12 @@ export default function EditorModalEA(row: CustomTable<IDatenEA> | Row<IDatenEA>
           type="text"
           id="Taetigkeit"
           name="Tätigkeit"
-          list="taetigkeitVorschlaege"
+          dataList={TAETIGKEIT_VORSCHLAEGE}
           value={row instanceof Row ? String(row.cells.Taetigkeit ?? '') : undefined}
           required
         >
           Tätigkeit
         </MyInput>
-        <datalist id="taetigkeitVorschlaege">
-          {TAETIGKEIT_VORSCHLAEGE.map(vorschlag => (
-            <option key={vorschlag} value={vorschlag} />
-          ))}
-        </datalist>
 
         {createTextElement(row, 'Entgeltgruppe')}
       </MyModalBody>

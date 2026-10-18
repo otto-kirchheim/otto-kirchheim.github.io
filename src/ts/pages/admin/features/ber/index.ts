@@ -12,7 +12,7 @@ const adminFeature: AdminFeature = {
       shortLabel: 'BE',
       endpoint: 'bereitschaftseinsaetze',
       tableFields: ['User', 'Jahr', 'Monat', 'LRE', 'Auftragsnummer'],
-      extraFields: ['Tag', 'createdAt'],
+      extraFields: ['Tag', 'createdAt', 'updatedAt'],
       schemaFields: [
         'User',
         'Bereitschaftszeitraum',
@@ -33,7 +33,7 @@ const adminFeature: AdminFeature = {
       shortLabel: 'BZ',
       endpoint: 'bereitschaftszeitraeume',
       tableFields: ['User', 'Jahr', 'Monat', 'Beginn', 'Ende'],
-      extraFields: ['createdAt'],
+      extraFields: ['createdAt', 'updatedAt'],
       schemaFields: ['User', 'Jahr', 'Monat', 'Beginn', 'Ende', 'Pause'],
     },
   ],

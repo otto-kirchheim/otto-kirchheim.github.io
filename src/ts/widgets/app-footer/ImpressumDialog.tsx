@@ -49,7 +49,6 @@ export default function ImpressumDialog({ open, onClose }: { open: boolean; onCl
       open={open}
       direction="to-left"
       showSpacing={false}
-      rounded
       onClose={onClose}
       header={<DBDrawerHeader text="Impressum & Datenschutz" closeButtonText="Schließen" />}
       footer={

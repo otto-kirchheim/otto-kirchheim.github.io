@@ -29,7 +29,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
         <p>{content.kurzbeschreibung}</p>
 
         <div>
-          <DBHeadingH6 paragraphSpacing>Was kann ich hier machen?</DBHeadingH6>
+          <DBHeadingH6 data-text-spacing="true">Was kann ich hier machen?</DBHeadingH6>
           <ul>
             {content.wasKannIchHierMachen.map(item => (
               <li key={item}>{item}</li>
@@ -39,7 +39,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
 
         {content.buttons && (
           <div>
-            <DBHeadingH6 paragraphSpacing>Wofür sind die Buttons?</DBHeadingH6>
+            <DBHeadingH6 data-text-spacing="true">Wofür sind die Buttons?</DBHeadingH6>
             <ul>
               {content.buttons.map(button => (
                 <li key={button.label}>
@@ -52,7 +52,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
 
         {content.felder && (
           <div>
-            <DBHeadingH6 paragraphSpacing>Eingabehilfe</DBHeadingH6>
+            <DBHeadingH6 data-text-spacing="true">Eingabehilfe</DBHeadingH6>
             <ul>
               {content.felder.map(feld => (
                 <li key={feld.label}>
@@ -65,7 +65,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
 
         {content.schritte && (
           <div>
-            <DBHeadingH6 paragraphSpacing>Schritte</DBHeadingH6>
+            <DBHeadingH6 data-text-spacing="true">Schritte</DBHeadingH6>
             <ol>
               {content.schritte.map(schritt => (
                 <li key={schritt}>{schritt}</li>
@@ -76,7 +76,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
 
         {content.eingaberegeln && (
           <div>
-            <DBHeadingH6 paragraphSpacing>Eingaberegeln</DBHeadingH6>
+            <DBHeadingH6 data-text-spacing="true">Eingaberegeln</DBHeadingH6>
             <ul>
               {content.eingaberegeln.map(regel => (
                 <li key={regel}>{regel}</li>
@@ -87,7 +87,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
 
         {content.haeufigeFehler && (
           <div>
-            <DBHeadingH6 paragraphSpacing>Häufige Fehler</DBHeadingH6>
+            <DBHeadingH6 data-text-spacing="true">Häufige Fehler</DBHeadingH6>
             <ul>
               {content.haeufigeFehler.map(fehler => (
                 <li key={fehler}>{fehler}</li>

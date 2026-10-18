@@ -2,6 +2,31 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-18 (235)
+
+### fix (DbFeld/MyInput-Datalist kaputt; Admin-Ressourcenbrowser: Spalte "Geaendert", Benutzer-Filter nach Username)
+
+- `DBInput` (`@db-ux/react-core-components`) ueberschreibt das native `list`-Attribut immer mit seinem eigenen `dataList`-Mechanismus -- ein von aussen gesetztes `list`-Attribut plus manuell danebengerendertes `<datalist>` wurde dadurch nie mit dem Input verknuepft, die Vorschlagsliste erschien nie (bestaetigt: in `createAddModalEA.tsx`/`createEditorModalEA.tsx` zeigte der Browser stattdessen Chrome-Autofill-Verlauf, keine echte Datalist-Vorschlaege).
+- `DbFeld`/`DbAuswahl` (`shared/ui/form/DbFeld.tsx`): Prop-Typ von `Omit<InputHTMLAttributes<HTMLInputElement>, ...>` auf `Omit<ComponentProps<typeof DBInput>, ...>` umgestellt (gleiche Konvention wie `MyInput`/lokales `Feld` in `PersoenlicheDatenPanel.tsx`) -- macht `dataList` und weitere `DBInput`-Faehigkeiten an jeder `DbFeld`-Aufrufstelle verfuegbar.
+- `createAddModalEA.tsx`/`createEditorModalEA.tsx`: Taetigkeit-Vorschlagsliste auf `dataList={TAETIGKEIT_VORSCHLAEGE}` statt kaputtem `list`+manuellem `<datalist>` umgestellt.
+- `test/reactRender.ts`s `inputMock` (Ersatz fuer `MyInput` in Komponententests) filtert `dataList` jetzt heraus, sonst React-Warnung "does not recognize the `dataList` prop".
+- Admin-Ressourcenbrowser (`AdminResourceBrowser.tsx`): neue Spalte "Geaendert" (`updatedAt`, alle 5 Ressourcen-Configs); Benutzer-Filter zeigt/sucht jetzt zusaetzlich nach Benutzername (Login), nicht nur vollem Namen -- neue `fetchAdminUserLoginMap()` in `api.ts`, Datalist-Label `"Vorname Nachname (username)"`, Datalist jetzt ueber den oben reparierten `dataList`-Weg statt dem bisher wirkungslosen `list`-Attribut.
+
+## 2026-10-18 (234)
+
+### chore (DB UX Design System: core-Pakete auf 6.0.0, `db-theme` auf 7.0.0)
+
+- `@db-ux/core-components`, `react-core-components`, `core-foundations`, `agent-cli`, `core-eslint-plugin`, `core-stylelint`: 5.7.0 -> 6.0.0. `@db-ux/db-theme`: 6.3.0 -> 7.0.0 (separater Versionszyklus).
+- Breaking Changes nachgezogen: `DBHeading*`s `paragraphSpacing`-Prop entfernt (Ersatz `data-text-spacing="true"`, 21 Stellen) und `alignment`-Prop entfernt (6 Stellen in `createShowModalEA.tsx`/`createShowModalNeben.tsx`; Zentrierung jetzt ueber neue CSS-Regel `.anzeige-koerper .db-heading { text-align: center; }` in `styles.scss`, da beide Dateien die einzigen Nutzer dieser `MyModalBody`-Klasse sind). `DBDrawer`s deprecated `rounded`-Prop aus `showModal.tsx` und `ImpressumDialog.tsx` entfernt (Eck-Radius kommt jetzt aus den `db-border-radius`-Tokens).
+- `db-theme` 7.0.0 setzt `--db-border-radius-*` auf `0` (eckige Komponenten statt rund, nur `--db-border-radius-full` bleibt fuer Pills/Avatare) -- gewolltes visuelles Ergebnis, keine Gegenmassnahme noetig.
+- `DBStack`s neuer Default (`block-size` nicht mehr `100%`, kein `overflow: auto` mehr) gegen die 443 Fundstellen im Code gepruefte keine betroffenen Column-Layouts gefunden, die auf dem alten Verhalten beruhen.
+
+## 2026-10-06 (233)
+
+### fix (check-shared-pin.sh: dev-Pin mit identischem src/ zulassen)
+
+- `scripts/check-shared-pin.sh` akzeptiert jetzt auch einen shared-Pin, der nicht auf shared/main liegt, dessen `src/` aber mit shared/main identisch ist. Nur `src/` kommt hier an; shared released Commits ohne `src/`-Aenderung (CI, Doku, Skripte) nicht mehr eigens (vorher: Versionssprung 0.9.1 nur fuer das Entfernen von `publish.yml`). Ohne diese Lockerung wuerde `deploy.sh` am dann nicht freigegebenen dev-Pin abbrechen. Laeuft unveraendert auch in den Produktions-Workflows.
+
 ## 2026-10-06 (232)
 
 ### fix (Release-Skripte: Checks gegen neuen shared-Pin, Versions-Commit nur auf `dev`)

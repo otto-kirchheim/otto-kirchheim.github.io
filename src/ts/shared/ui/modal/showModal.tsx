@@ -67,7 +67,7 @@ export function oeffneDrawer(container: HTMLElement, inhalt: ReactNode, beimSchl
     // generisch -- den Titel bringt erst der `children`-Inhalt mit (`MyModalHeader`, der den
     // `<dialog>` selbst per `aria-labelledby` verknuepft).
     // eslint-disable-next-line db-ux/drawer-header-required
-    <DBDrawer open direction={DIALOG_RICHTUNG} showSpacing={false} rounded onClose={beimSchliessen}>
+    <DBDrawer open direction={DIALOG_RICHTUNG} showSpacing={false} onClose={beimSchliessen}>
       {inhalt}
     </DBDrawer>,
   );

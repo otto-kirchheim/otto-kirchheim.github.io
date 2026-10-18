@@ -11,7 +11,7 @@ const adminFeature: AdminFeature = {
       shortLabel: 'EWT',
       endpoint: 'einsatzwechseltaetigkeiten',
       tableFields: ['User', 'Jahr', 'Monat', 'Schicht', 'Tag'],
-      extraFields: ['createdAt'],
+      extraFields: ['createdAt', 'updatedAt'],
       schemaFields: [
         'User',
         'Jahr',

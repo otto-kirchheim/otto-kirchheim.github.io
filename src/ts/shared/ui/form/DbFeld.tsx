@@ -2,8 +2,8 @@ import { DBInput, DBSelect } from '@db-ux/react-core-components';
 import {
   useId,
   useRef,
+  type ComponentProps,
   type CSSProperties,
-  type InputHTMLAttributes,
   type ReactNode,
   type Ref,
   type SelectHTMLAttributes,
@@ -35,7 +35,7 @@ type GemeinsameProps = {
 };
 
 type DbFeldProps = GemeinsameProps &
-  Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'id' | 'ref' | 'onInput'> & {
+  Omit<ComponentProps<typeof DBInput>, 'className' | 'id' | 'ref' | 'onInput'> & {
     /** Klasse am `<input>` selbst (z.B. `text-center`), nicht an der Huelle. */
     feldKlasse?: string;
     /** Markiert das Feld als ungueltig (DB faerbt ueber `data-custom-validity`). */
