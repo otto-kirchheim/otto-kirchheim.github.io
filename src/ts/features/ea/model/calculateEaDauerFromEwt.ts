@@ -13,8 +13,11 @@ import dayjs from '@/shared/lib/date/configDayjs';
  * @returns Dauer als `HH:mm` (nie negativ).
  */
 export default function calculateEaDauerFromEwt(entry: Pick<IDatenEWT, 'beginE' | 'endeE'>): string {
-  const beginn = dayjs(entry.beginE, 'HH:mm');
-  let ende = dayjs(entry.endeE, 'HH:mm');
+  // dayjs.utc() statt dayjs(): Uhrzeit-Differenz ist reine Uhrzeitangabe, keine Wall-Clock-Elapsed-Time --
+  // lokale Zeitzone wuerde beim Tageswechsel (ende.add(1,'day')) in der Nacht der Zeitumstellung
+  // (Maerz/Oktober) eine Stunde verschieben.
+  const beginn = dayjs.utc(entry.beginE, 'HH:mm');
+  let ende = dayjs.utc(entry.endeE, 'HH:mm');
   if (ende.isSameOrBefore(beginn)) ende = ende.add(1, 'day');
 
   const rohMinuten = ende.diff(beginn, 'minute');

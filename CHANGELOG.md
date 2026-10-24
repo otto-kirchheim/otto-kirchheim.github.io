@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-24 (236)
+
+### fix (calculateEaDauerFromEwt: 1h-Fehler bei Nachtschicht ueber Zeitumstellung)
+
+- `calculateEaDauerFromEwt.ts` parste `beginE`/`endeE` mit `dayjs(str,'HH:mm')` statt `dayjs.utc(...)` -- bei Nachtschichten, die ueber die Nacht der Zeitumstellung (Maerz/Oktober) gehen, verschob `ende.add(1,'day')` das Ergebnis um eine Stunde, weil lokale Zeitzone/DST statt reiner Uhrzeitdifferenz einging. Jetzt `dayjs.utc()`, keine Zeitzonen-/DST-Abhaengigkeit mehr.
+- `test/setupBun.ts`: globales `afterEach` resettet jetzt zusaetzlich `setSystemTime()` -- `Utilities.test.ts` setzte eine gemockte Systemzeit, ohne sie zurueckzusetzen, und konnte dadurch nachfolgende Testdateien in derselben Bun-Testlauf-Prozess verseuchen.
+
 ## 2026-10-18 (235)
 
 ### fix (DbFeld/MyInput-Datalist kaputt; Admin-Ressourcenbrowser: Spalte "Geaendert", Benutzer-Filter nach Username)
