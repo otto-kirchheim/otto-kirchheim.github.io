@@ -57,7 +57,8 @@ const freieAssets = {
       dekl.value = 'none';
       return;
     }
-    if (dekl.value.includes('DB Neo Screen')) dekl.value = dekl.value.replace(/"DB Neo Screen (?:Sans|Head)"/g, SYSTEMSCHRIFT);
+    if (dekl.value.includes('DB Neo Screen'))
+      dekl.value = dekl.value.replace(/"DB Neo Screen (?:Sans|Head)"/g, SYSTEMSCHRIFT);
   },
 };
 
@@ -89,6 +90,9 @@ const baseConfig: UserConfig = {
     outDir: '../dist',
     emptyOutDir: true,
     sourcemap: 'hidden',
+    // fontkit/build-Chunk (PDF-Font-Toolchain) liegen ueber dem Default-Limit, sind aber lazy
+    // geladen (nur beim PDF-Export/Formular-Editor) -- die generische Warnung waere hier irrefuehrend.
+    chunkSizeWarningLimit: 800,
     // Rolldown (Vite 8) bringt lightningcss nicht mit; esbuild ist der unterstuetzte Minifier.
     cssMinify: 'esbuild',
     rollupOptions: {
@@ -119,9 +123,7 @@ const baseConfig: UserConfig = {
     // TLS terminiert der Zoraxy-Proxy (dev.otto.home64.de → :8080); der HMR-Client muss
     // daher wss über Port 443 sprechen. VITE_LOCAL_HMR=1 (bun run dev) für
     // Proxy-losen Betrieb direkt über http://localhost:8080.
-    hmr: process.env.VITE_LOCAL_HMR
-      ? true
-      : { protocol: 'wss', host: 'dev.otto.home64.de', clientPort: 443 },
+    hmr: process.env.VITE_LOCAL_HMR ? true : { protocol: 'wss', host: 'dev.otto.home64.de', clientPort: 443 },
   },
   css: {
     preprocessorOptions: {

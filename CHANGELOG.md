@@ -2,6 +2,12 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-25 (249)
+
+### chore (Chunk-Size-Warnung fuer lazy PDF-Font-Toolchain stummgeschaltet)
+
+- `vite.base-config.ts`: `chunkSizeWarningLimit` auf 800 angehoben. `fontkit`/`build`-Chunk (PDF-Font-Toolchain, ~740K/660K) liegen ueber dem Rolldown-Default von 500K, sind aber lazy geladen (nur beim PDF-Export/Formular-Editor, siehe #238) -- die generische Warnung war irrefuehrend.
+
 ## 2026-10-29 (248)
 
 ### feat (PDF-Formate als Muster statt fester Namen)
@@ -141,7 +147,6 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 - `SnackbarHost.tsx`: Body-Snackbars rendern jetzt in eine eigene Ebene (`.CustomSnackbar-ebene`, `popover="manual"`), die ein `MutationObserver` in den zuletzt geoeffneten `dialog[open]` haengt (sonst `document.body`). Im Dialog bleibt die Meldung bedienbar (nicht inert), das Popover hebt sie ueber den Dialog-Inhalt. Schliesst der Dialog, wandert die Ebene ohne Remount zurueck in den Body -- Meldungen laufen normal weiter.
 - `CustomSnackbar.css`: UA-Popover-Stil der Ebene neutralisiert (volle Viewport-Flaeche, transparent, klickdurchlaessig).
 - Verifiziert: 2 neue Tests in `CustomSnackbar.test.ts` (Ebene im offenen Dialog, Rueckkehr in den Body, oberster von zwei Dialogen); in Chrome headless gegen `showModal()`-Dialog im `<form>`: Meldung per Hit-Test sichtbar, Schliessen-Knopf klickbar, nach Dialog-Schliessen weiter sichtbar im Body.
-
 ## 2026-10-25 (239)
 
 ### perf (eigener Build-Chunk fuer @db-ux/*-Komponenten)
