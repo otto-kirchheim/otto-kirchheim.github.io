@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-25 (239)
+
+### perf (eigener Build-Chunk fuer @db-ux/*-Komponenten)
+
+- `vite.base-config.ts`s `manualChunks` splittet `@db-ux/*` jetzt in einen eigenen Chunk (`db-ux-*.js`, ~116K), analog zum bestehenden `react`-Chunk. Aendert sich seltener als der Feature-Code, bleibt dadurch ueber App-Deploys hinweg laenger aus dem Browser-Cache wiederverwendbar.
+- Verifiziert per Lighthouse (Desktop-Preset) gegen `bun run build` + `vite preview`: Performance-Score 0.98, LCP 0,9s, keine Regression gegenueber dem Stand vor dem Split.
+
 ## 2026-10-25 (238)
 
 ### perf (Startscreen statt leerer Flaeche; Modulepreload-Leck der PDF-Toolchain geschlossen)
