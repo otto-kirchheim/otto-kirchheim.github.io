@@ -2,6 +2,14 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-25 (237)
+
+### chore (Bun-native Tooling statt Prettier/tsc; Script-Namen an Backend angeglichen)
+
+- `format`/`format:check` laufen jetzt ueber `bun fmt` statt `prettier` (Bun 1.4.4, Prettier-kompatibler nativer Formatter); `prettier.config.mjs` bleibt Konfigquelle, `prettier`-Paket entfernt.
+- `typecheck` laeuft jetzt ueber `bun check` statt `tsc --noEmit` (gleiche Fehlermeldungen, ca. 30x schneller).
+- Script `dev-test` zu `test:watch` umbenannt (Konvention an Backends `test:watch` angeglichen); Referenzen in `CLAUDE.md`, `.claude/skills/tests/SKILL.md` und Workspace-Root-`package.json` mitgezogen.
+
 ## 2026-10-24 (236)
 
 ### fix (calculateEaDauerFromEwt: 1h-Fehler bei Nachtschicht ueber Zeitumstellung)

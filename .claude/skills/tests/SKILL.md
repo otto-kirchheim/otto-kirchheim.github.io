@@ -21,7 +21,7 @@ gemeinsam rot" zuerst an dieses Isolations-Problem denken, nicht an einen echten
 
 ```bash
 bun run test           # TZ=Europe/Berlin bun test --isolate
-bun run dev-test       # Bun Watch-Mode (--isolate --watch)
+bun run test:watch     # Bun Watch-Mode (--isolate --watch)
 bun run coverage       # Bun-Coverage-Lauf (--isolate --coverage)
 ```
 

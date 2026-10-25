@@ -40,7 +40,8 @@ bun run dev            # Entwicklung mit Vite Dev-Server (--host, Proxy-HMR uebe
 bun run dev:local      # dito ohne Proxy (VITE_LOCAL_HMR=1, direkt http://localhost:8080)
 bun run build          # Produktion Build (nach ./dist)
 bun run test           # Bun-Testlauf (sequentiell pro Datei)
-bun run dev-test       # Bun Watch-Mode
+bun run test:watch     # Bun Watch-Mode
+bun run typecheck      # bun check (nativer Typchecker statt tsc)
 bun run lint           # ESLint prüfen
 bun run lint:fix       # ESLint auto-fix
 bun run lint:css       # Stylelint prüfen (--max-warnings 0, DB-Tokens statt fester Werte, siehe stylelint.config.mjs)

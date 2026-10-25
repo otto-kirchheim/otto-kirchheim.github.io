@@ -22,7 +22,7 @@
     "lint:css": "bunx --bun stylelint \"src/**/*.{css,scss}\" --max-warnings 0",
     "lint:css:fix": "bunx --bun stylelint \"src/**/*.{css,scss}\" --fix",
     "preview": "bunx --bun vite preview --outDir=../public/public",
-    "dev-test": "TZ=Europe/Berlin bun test --isolate --watch",
+    "test:watch": "TZ=Europe/Berlin bun test --isolate --watch",
     "coverage": "TZ=Europe/Berlin bun test --isolate --coverage",
     "release:check": "bun run typecheck && bun run lint && bun run lint:css && bun run test && bun run build",
     "release": "bun run release:patch",
