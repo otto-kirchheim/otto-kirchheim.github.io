@@ -15,7 +15,6 @@ import { createOnChangeHandler } from '@/shared/lib/autosave/autoSave';
 import { default as saveDaten } from '@/shared/lib/ressource/saveDaten';
 import { bindClickHandlers } from '@/shared/lib/dom/bindClickHandlers';
 import dayjs from '@/shared/lib/date/configDayjs';
-import generatePDF from '@/shared/lib/pdf/generatePDF';
 import { EditorModalEA, ShowModalEA, createAddModalEA } from '.';
 import { getEaDaten, persistEaTableData } from '../model';
 
@@ -133,7 +132,8 @@ export function EaTab() {
       [
         'btnDownloadEA',
         btn => {
-          if (checkIfGreater2025(Jahr, true)) generatePDF(btn, 'EA');
+          if (checkIfGreater2025(Jahr, true))
+            import('@/shared/lib/pdf/generatePDF').then(({ default: generatePDF }) => generatePDF(btn, 'EA'));
         },
       ],
       ['btnHelpEA', () => invokeHook('help:open', 'tab.ea')],

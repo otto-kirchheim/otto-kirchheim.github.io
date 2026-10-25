@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-25 (238)
+
+### perf (Startscreen statt leerer Flaeche; Modulepreload-Leck der PDF-Toolchain geschlossen)
+
+- `index.html`: `#app` zeigt bis zum ersten React-Mount einen statischen Lade-Platzhalter (reines HTML/CSS, kein JS-/DB-UX-Bezug noetig) statt einer leeren Flaeche; React ersetzt ihn automatisch beim ersten `mount()`. `main.tsx`s Root-Mount faengt jetzt zusaetzlich Exceptions ab und zeigt einen Fehlertext in `#app`, statt die Flaeche dauerhaft leer zu lassen.
+- Groesster Ladezeit-Fund: der Produktions-Build preloadete ueber `<link rel="modulepreload">` fuer jeden Nutzer die komplette PDF-Toolchain (`fontkit` 740K, `pdf-lib` 424K, `woff2`-Decompress 292K) sowie den Admin-Tab (232K) und die Formular-Vorlagen-Pipeline (`ladeFormular`/`build` zusammen ca. 1,3M), weil `generatePDF` in den vier Feature-Tabs (`BereitschaftTab`/`EwtTab`/`NebenTab`/`EaTab`), `FormularUpload.tsx`s `FormularEditor`-Import und `warmeFormularCaches.ts`s Cache-Vorwaermer statisch statt per `import()` eingebunden waren -- die vorgesehene Lazy-Grenze (`features.ts`s `pdf`-Teile) griff dadurch nicht. Alle fuenf Stellen jetzt auf dynamischen `import()` umgestellt (FormularEditor zusaetzlich per `React.lazy`+`Suspense`); Eager-JS/CSS im `<head>` sinkt dadurch von ueber 4 MB auf ca. 2 MB, keiner der genannten Chunks erscheint mehr in den Preload-Hints.
+
 ## 2026-10-25 (237)
 
 ### chore (Bun-native Tooling statt Prettier/tsc; Script-Namen an Backend angeglichen)

@@ -1,10 +1,14 @@
-import { useCallback, useEffect, useState, type SubmitEvent } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState, type SubmitEvent } from 'react';
 
 import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
-import { FormularEditor, type Konfig } from './FormularEditor/FormularEditor';
+import type { Konfig } from './FormularEditor/FormularEditor';
 import { leereSeite } from './FormularEditor/seitenHelfer';
+
+// Lazy: zieht pdfjs/Canvas/Font-/Signatur-Tooling nach sich, nur beim tatsaechlichen Oeffnen der
+// Formular-Upload-Maske noetig (nicht fuer jeden Admin-Tab-Besuch).
+const FormularEditor = lazy(() => import('./FormularEditor/FormularEditor').then(m => ({ default: m.FormularEditor })));
 import { zeilenQuellen, type FormularCode } from './FormularEditor/datenKatalog';
 import { FormularVersionenListe } from './FormularVersionenListe';
 import {
@@ -491,7 +495,9 @@ export function FormularUpload() {
       </details>
 
       {datei ? (
-        <FormularEditor formular={formular} datei={datei} value={konfig} onChange={setKonfig} />
+        <Suspense fallback={<p className="farbe-gedaempft zelle-klein">Editor wird geladen…</p>}>
+          <FormularEditor formular={formular} datei={datei} value={konfig} onChange={setKonfig} />
+        </Suspense>
       ) : (
         <p className="farbe-gedaempft zelle-klein">PDF-Vorlage zuerst auswählen, um Koordinaten setzen zu können.</p>
       )}
