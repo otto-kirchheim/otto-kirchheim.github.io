@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-27 (241)
+
+### chore (Dependency-Updates)
+
+- `typescript-eslint` 8.72.0 -> 8.72.1, `vite-plugin-compression2` 2.5.3 -> 2.5.4, `@material-symbols/font-400` 0.48.1 -> 0.48.2 (Patch-Releases, `bun.lock` inkl. transitiver Updates).
+- Verifiziert: `typecheck`, `lint`, `lint:css`, `format:check`, `test` (2354 pass) und `build` gruen.
+
 ## 2026-10-27 (240)
 
 ### fix (Snackbars bei offenem Dialog unsichtbar -- Bereitschaftseinsatz "haengt")
