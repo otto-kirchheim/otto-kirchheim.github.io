@@ -2,6 +2,12 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-27 (242)
+
+### fix (Pages-Deploy: Bun 1.4.4 in CI)
+
+- `.github/workflows/deploy.yml` pinnte Bun 1.4.0, das `bun check` noch nicht kennt -- der Typecheck-Schritt (seit (237) `bun check`) brach im 3.0.7-Deploy mit `Script not found "check"` ab. CI jetzt auf 1.4.4 wie lokal und in den Backend-Dockerfiles.
+
 ## 2026-10-27 (241)
 
 ### chore (Dependency-Updates)

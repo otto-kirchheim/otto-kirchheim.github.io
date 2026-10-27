@@ -32,7 +32,7 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2.2.0
         with:
-          bun-version: 1.4.0
+          bun-version: 1.4.4
       - name: Install dependencies
         # @otto-kirchheim/nebengeld-shared ist eine public Git-Branch-Dependency -- kein Token noetig.
         # ASSET_* entschluesseln im Postinstall von @db-ux/db-theme die Markenassets (Schriften,
