@@ -23,7 +23,7 @@ import useActiveTab from '@/shared/model/navigation/useActiveTab';
  * UND `<DBShellContent>`, weil sein CSS-Grid beide als direkte Geschwister braucht.
  * `AppFooter`/`SnackbarHost` stehen bewusst AUSSERHALB von `DBShellContent` (eigene fixed/absolute
  * Overlays, unabhaengig vom Content-Scroll); `SnackbarHost` rendert per `createPortal` in
- * `document.body`, die Position im Baum ist nur Konvention.
+ * eine eigene Ebene (Body bzw. offener Dialog), die Position im Baum ist nur Konvention.
  */
 export default function App() {
   const aktiverTab = useActiveTab() ?? 'start';

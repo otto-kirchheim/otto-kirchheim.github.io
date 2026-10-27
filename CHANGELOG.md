@@ -2,6 +2,16 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-27 (240)
+
+### fix (Snackbars bei offenem Dialog unsichtbar -- Bereitschaftseinsatz "haengt")
+
+- Symptom: Bereitschaftseinsatz ohne passenden Bereitschaftszeitraum und ohne Haken "Bereitschaftszeitraum fuer diesen Einsatz anlegen?" speichern -> scheinbar passiert nichts, die Seite wirkt haengend; beim Schliessen des Modals blitzt kurz die Meldung "Kein passender Bereitschaftszeitraum gefunden" auf.
+- Ursache: Dialoge sind native `<dialog>`s per `showModal()` -- sie liegen in der Top-Layer und machen alles ausserhalb inert. `SnackbarHost` portalte Meldungen nach `document.body`, also hinter den Dialog. Betraf jede Snackbar, die bei offenem Dialog erscheint (Validierungs-/Fehlermeldungen aller Modals).
+- `SnackbarHost.tsx`: Body-Snackbars rendern jetzt in eine eigene Ebene (`.CustomSnackbar-ebene`, `popover="manual"`), die ein `MutationObserver` in den zuletzt geoeffneten `dialog[open]` haengt (sonst `document.body`). Im Dialog bleibt die Meldung bedienbar (nicht inert), das Popover hebt sie ueber den Dialog-Inhalt. Schliesst der Dialog, wandert die Ebene ohne Remount zurueck in den Body -- Meldungen laufen normal weiter.
+- `CustomSnackbar.css`: UA-Popover-Stil der Ebene neutralisiert (volle Viewport-Flaeche, transparent, klickdurchlaessig).
+- Verifiziert: 2 neue Tests in `CustomSnackbar.test.ts` (Ebene im offenen Dialog, Rueckkehr in den Body, oberster von zwei Dialogen); in Chrome headless gegen `showModal()`-Dialog im `<form>`: Meldung per Hit-Test sichtbar, Schliessen-Knopf klickbar, nach Dialog-Schliessen weiter sichtbar im Body.
+
 ## 2026-10-25 (239)
 
 ### perf (eigener Build-Chunk fuer @db-ux/*-Komponenten)
