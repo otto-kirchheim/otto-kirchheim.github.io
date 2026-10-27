@@ -2,6 +2,12 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-27 (243)
+
+### test (`vorlageFontFamilien` ohne System-Schriften)
+
+- Zwei Tests in `vorlageFonts.test.ts` liefen per `skipIf` nie: sie erwarteten System-Schriften unter Arch-Pfaden (`/usr/share/fonts/liberation/...`, `awesome-terminal-fonts`), die weder im Codespace noch in CI liegen. Latein-Schrift jetzt aus `pdfjs-dist/standard_fonts` (Abhaengigkeit); der "unbrauchbar"-Fall nutzt dieselbe Schrift mit umbenannter `cmap`-Tabelle (keine Buchstaben-/Ziffern-Zuordnung, wie Icon- und kaputte Subset-Fonts). Beide laufen jetzt immer (7 pass, 0 skip).
+
 ## 2026-10-27 (242)
 
 ### fix (Pages-Deploy: Bun 1.4.4 in CI)
