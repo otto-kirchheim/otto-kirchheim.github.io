@@ -96,6 +96,9 @@ const baseConfig: UserConfig = {
         // Rolldown akzeptiert manualChunks nur als Funktion, nicht als Objekt-Map.
         manualChunks(id: string) {
           if (/node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'react';
+          // Eigener Chunk fuer die DB-UX-Komponenten: aendert sich seltener als der Feature-Code,
+          // bleibt dadurch bei App-Deploys laenger aus dem Browser-Cache wiederverwendbar.
+          if (/node_modules[\\/]@db-ux[\\/]/.test(id)) return 'db-ux';
         },
       },
     },

@@ -1,6 +1,5 @@
 import { featureRegistry } from '@/shared/lib/feature';
 import dayjs from '@/shared/lib/date/configDayjs';
-import { warmeVorlagenCache } from './ladeFormular';
 
 /**
  * Formular-Code (`meta.pdf.formular`) zu einem `aktivierteTabs`-Wert (`meta.legacy.tabKey`).
@@ -54,9 +53,16 @@ export function warmeFormularCaches(aktivierteTabs: string[] | undefined, monat:
   plane(() => {
     // Sequentiell, damit nicht alle vier Vorlagen-PDFs gleichzeitig ziehen. `warmeVorlagenCache`
     // ist best-effort und wirft nicht -- das `.catch` ist nur der Gurt, damit ein unerwarteter
-    // Fehler die restlichen Formulare nicht ueberspringt.
+    // Fehler die restlichen Formulare nicht ueberspringt. Lazy-Import: `ladeFormular.ts` zieht
+    // ueber `build.ts` die PDF-Toolchain nach sich, die hier erst beim tatsaechlichen Vorwaermen
+    // (Idle-Zeit) gebraucht wird, nicht beim App-Start.
     void formulare.reduce(
-      (kette, formular) => kette.then(() => warmeVorlagenCache(formular, stichtag).catch(() => undefined)),
+      (kette, formular) =>
+        kette.then(() =>
+          import('./ladeFormular')
+            .then(({ warmeVorlagenCache }) => warmeVorlagenCache(formular, stichtag))
+            .catch(() => undefined),
+        ),
       Promise.resolve(),
     );
   });

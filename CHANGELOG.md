@@ -2,6 +2,52 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-27 (241)
+
+### chore (Dependency-Updates)
+
+- `typescript-eslint` 8.72.0 -> 8.72.1, `vite-plugin-compression2` 2.5.3 -> 2.5.4, `@material-symbols/font-400` 0.48.1 -> 0.48.2 (Patch-Releases, `bun.lock` inkl. transitiver Updates).
+- Verifiziert: `typecheck`, `lint`, `lint:css`, `format:check`, `test` (2354 pass) und `build` gruen.
+
+## 2026-10-27 (240)
+
+### fix (Snackbars bei offenem Dialog unsichtbar -- Bereitschaftseinsatz "haengt")
+
+- Symptom: Bereitschaftseinsatz ohne passenden Bereitschaftszeitraum und ohne Haken "Bereitschaftszeitraum fuer diesen Einsatz anlegen?" speichern -> scheinbar passiert nichts, die Seite wirkt haengend; beim Schliessen des Modals blitzt kurz die Meldung "Kein passender Bereitschaftszeitraum gefunden" auf.
+- Ursache: Dialoge sind native `<dialog>`s per `showModal()` -- sie liegen in der Top-Layer und machen alles ausserhalb inert. `SnackbarHost` portalte Meldungen nach `document.body`, also hinter den Dialog. Betraf jede Snackbar, die bei offenem Dialog erscheint (Validierungs-/Fehlermeldungen aller Modals).
+- `SnackbarHost.tsx`: Body-Snackbars rendern jetzt in eine eigene Ebene (`.CustomSnackbar-ebene`, `popover="manual"`), die ein `MutationObserver` in den zuletzt geoeffneten `dialog[open]` haengt (sonst `document.body`). Im Dialog bleibt die Meldung bedienbar (nicht inert), das Popover hebt sie ueber den Dialog-Inhalt. Schliesst der Dialog, wandert die Ebene ohne Remount zurueck in den Body -- Meldungen laufen normal weiter.
+- `CustomSnackbar.css`: UA-Popover-Stil der Ebene neutralisiert (volle Viewport-Flaeche, transparent, klickdurchlaessig).
+- Verifiziert: 2 neue Tests in `CustomSnackbar.test.ts` (Ebene im offenen Dialog, Rueckkehr in den Body, oberster von zwei Dialogen); in Chrome headless gegen `showModal()`-Dialog im `<form>`: Meldung per Hit-Test sichtbar, Schliessen-Knopf klickbar, nach Dialog-Schliessen weiter sichtbar im Body.
+
+## 2026-10-25 (239)
+
+### perf (eigener Build-Chunk fuer @db-ux/*-Komponenten)
+
+- `vite.base-config.ts`s `manualChunks` splittet `@db-ux/*` jetzt in einen eigenen Chunk (`db-ux-*.js`, ~116K), analog zum bestehenden `react`-Chunk. Aendert sich seltener als der Feature-Code, bleibt dadurch ueber App-Deploys hinweg laenger aus dem Browser-Cache wiederverwendbar.
+- Verifiziert per Lighthouse (Desktop-Preset) gegen `bun run build` + `vite preview`: Performance-Score 0.98, LCP 0,9s, keine Regression gegenueber dem Stand vor dem Split.
+
+## 2026-10-25 (238)
+
+### perf (Startscreen statt leerer Flaeche; Modulepreload-Leck der PDF-Toolchain geschlossen)
+
+- `index.html`: `#app` zeigt bis zum ersten React-Mount einen statischen Lade-Platzhalter (reines HTML/CSS, kein JS-/DB-UX-Bezug noetig) statt einer leeren Flaeche; React ersetzt ihn automatisch beim ersten `mount()`. `main.tsx`s Root-Mount faengt jetzt zusaetzlich Exceptions ab und zeigt einen Fehlertext in `#app`, statt die Flaeche dauerhaft leer zu lassen.
+- Groesster Ladezeit-Fund: der Produktions-Build preloadete ueber `<link rel="modulepreload">` fuer jeden Nutzer die komplette PDF-Toolchain (`fontkit` 740K, `pdf-lib` 424K, `woff2`-Decompress 292K) sowie den Admin-Tab (232K) und die Formular-Vorlagen-Pipeline (`ladeFormular`/`build` zusammen ca. 1,3M), weil `generatePDF` in den vier Feature-Tabs (`BereitschaftTab`/`EwtTab`/`NebenTab`/`EaTab`), `FormularUpload.tsx`s `FormularEditor`-Import und `warmeFormularCaches.ts`s Cache-Vorwaermer statisch statt per `import()` eingebunden waren -- die vorgesehene Lazy-Grenze (`features.ts`s `pdf`-Teile) griff dadurch nicht. Alle fuenf Stellen jetzt auf dynamischen `import()` umgestellt (FormularEditor zusaetzlich per `React.lazy`+`Suspense`); Eager-JS/CSS im `<head>` sinkt dadurch von ueber 4 MB auf ca. 2 MB, keiner der genannten Chunks erscheint mehr in den Preload-Hints.
+
+## 2026-10-25 (237)
+
+### chore (Bun-native Tooling statt Prettier/tsc; Script-Namen an Backend angeglichen)
+
+- `format`/`format:check` laufen jetzt ueber `bun fmt` statt `prettier` (Bun 1.4.4, Prettier-kompatibler nativer Formatter); `prettier.config.mjs` bleibt Konfigquelle, `prettier`-Paket entfernt.
+- `typecheck` laeuft jetzt ueber `bun check` statt `tsc --noEmit` (gleiche Fehlermeldungen, ca. 30x schneller).
+- Script `dev-test` zu `test:watch` umbenannt (Konvention an Backends `test:watch` angeglichen); Referenzen in `CLAUDE.md`, `.claude/skills/tests/SKILL.md` und Workspace-Root-`package.json` mitgezogen.
+
+## 2026-10-24 (236)
+
+### fix (calculateEaDauerFromEwt: 1h-Fehler bei Nachtschicht ueber Zeitumstellung)
+
+- `calculateEaDauerFromEwt.ts` parste `beginE`/`endeE` mit `dayjs(str,'HH:mm')` statt `dayjs.utc(...)` -- bei Nachtschichten, die ueber die Nacht der Zeitumstellung (Maerz/Oktober) gehen, verschob `ende.add(1,'day')` das Ergebnis um eine Stunde, weil lokale Zeitzone/DST statt reiner Uhrzeitdifferenz einging. Jetzt `dayjs.utc()`, keine Zeitzonen-/DST-Abhaengigkeit mehr.
+- `test/setupBun.ts`: globales `afterEach` resettet jetzt zusaetzlich `setSystemTime()` -- `Utilities.test.ts` setzte eine gemockte Systemzeit, ohne sie zurueckzusetzen, und konnte dadurch nachfolgende Testdateien in derselben Bun-Testlauf-Prozess verseuchen.
+
 ## 2026-10-18 (235)
 
 ### fix (DbFeld/MyInput-Datalist kaputt; Admin-Ressourcenbrowser: Spalte "Geaendert", Benutzer-Filter nach Username)

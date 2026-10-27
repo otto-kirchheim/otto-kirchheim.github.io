@@ -127,7 +127,14 @@ console.log('Version:', import.meta.env.APP_VERSION);
 await ladeEinstellungenTeile();
 
 const appRoot = document.getElementById('app');
-if (appRoot) mount(appRoot, createElement(App));
+if (appRoot) {
+  try {
+    mount(appRoot, createElement(App));
+  } catch (fehler) {
+    console.error('Mount fehlgeschlagen:', fehler);
+    appRoot.textContent = 'Die App konnte nicht geladen werden. Bitte Seite neu laden.';
+  }
+}
 
 // Die mobile Navigations-Schublade bringt `DBHeader` (AppHeader.tsx) eingebaut mit.
 initTabController();

@@ -74,6 +74,7 @@ HTMLDialogElement.prototype.close ??= function close(this: HTMLDialogElement) {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  setSystemTime();
 });
 
 afterAll(() => {

@@ -24,7 +24,6 @@ import { default as saveDaten } from '@/shared/lib/ressource/saveDaten';
 import { bindClickHandlers } from '@/shared/lib/dom/bindClickHandlers';
 import Storage from '@/shared/lib/storage/Storage';
 import dayjs from '@/shared/lib/date/configDayjs';
-import generatePDF from '@/shared/lib/pdf/generatePDF';
 import {
   EditorModalBE,
   EditorModalBereitschaftsZeit,
@@ -316,7 +315,10 @@ export function BereitschaftTab() {
       ['btnESZ', createAddModalBereitschaftsZeit],
       ['btnESE', createAddModalBereitschaftsEinsatz],
       ['btnSaveB', btn => saveDaten(btn)],
-      ['btnDownloadB', btn => generatePDF(btn, 'B')],
+      [
+        'btnDownloadB',
+        btn => import('@/shared/lib/pdf/generatePDF').then(({ default: generatePDF }) => generatePDF(btn, 'B')),
+      ],
       ['btnHelpBereitschaft', () => invokeHook('help:open', 'tab.bereitschaft')],
     ]);
 

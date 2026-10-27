@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useLayoutEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import useSnackbars from './useSnackbars';
@@ -36,9 +36,24 @@ function targetKey(target: HTMLElement): string {
 }
 
 /**
+ * Haengt die Ebene in den zuletzt geoeffneten `<dialog>` (sonst `document.body`) und zeigt sie als Popover.
+ * Ein modaler Dialog liegt in der Top-Layer und macht alles ausserhalb inert: Meldungen in `document.body`
+ * waeren dahinter unsichtbar. Im Dialog bleiben sie bedienbar, das Popover hebt sie ueber dessen Inhalt.
+ *
+ * @param ebene - Ebene der Body-Snackbars.
+ */
+function platziereEbene(ebene: HTMLElement): void {
+  const dialoge = document.querySelectorAll<HTMLDialogElement>('dialog[open]');
+  const ziel = dialoge[dialoge.length - 1] ?? document.body;
+  if (ebene.parentElement !== ziel) ziel.append(ebene);
+  if (typeof ebene.showPopover === 'function' && !ebene.matches(':popover-open')) ebene.showPopover();
+}
+
+/**
  * Rendert alle aktiven Snackbars gruppiert nach (Ziel-Element, Position): ein
- * `CustomSnackbar-container`-Div pro Gruppe, per `createPortal` in das jeweilige Ziel
- * (Default: `document.body`) gehaengt. Dieselbe Kombination nutzt immer denselben Container.
+ * `CustomSnackbar-container`-Div pro Gruppe, per `createPortal` in das jeweilige Ziel gehaengt.
+ * Dieselbe Kombination nutzt immer denselben Container. Default-Ziel `document.body` landet in
+ * einer eigenen Ebene, die ueber offenen Dialogen liegt (`platziereEbene`).
  *
  * Einmal in `App.tsx` neben `<AppFooter />` gemountet; die Positionierung kommt vollstaendig aus
  * `CustomSnackbar.css` (`position: absolute/fixed`), der Platz im Baum ist unerheblich.
@@ -47,6 +62,24 @@ function targetKey(target: HTMLElement): string {
  */
 export default function SnackbarHost(): ReactNode {
   const entries = useSnackbars();
+  const [ebene] = useState(() => {
+    const el = document.createElement('div');
+    el.className = 'CustomSnackbar-ebene';
+    el.setAttribute('popover', 'manual');
+    return el;
+  });
+
+  // Die Ebene muss schon vor dem Mounten einer Meldung am Ziel haengen: `SnackbarItem` misst im
+  // Layout-Effekt seine Hoehe, und Kind-Effekte laufen vor diesem hier.
+  useLayoutEffect(() => {
+    platziereEbene(ebene);
+    const beobachter = new MutationObserver(() => platziereEbene(ebene));
+    beobachter.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['open'] });
+    return () => {
+      beobachter.disconnect();
+      ebene.remove();
+    };
+  }, [ebene]);
 
   const groups = useMemo(() => {
     const map = new Map<
@@ -84,7 +117,7 @@ export default function SnackbarHost(): ReactNode {
               <SnackbarItem key={entry.id} entry={entry} />
             ))}
           </div>,
-          group.target,
+          group.target === document.body ? ebene : group.target,
           key,
         ),
       )}

@@ -16,6 +16,40 @@
     <link rel="shortcut icon" type="image/png" href="icons/48x48-icon.png" sizes="48x48" />
     <link rel="icon" type="image/png" href="icons/96x96-icon.png" sizes="96x96" />
     <link rel="apple-touch-icon" href="icons/192x192-icon.png" sizes="192x192" />
+    <style>
+      /* Bootstrap-Platzhalter, bevor main.tsx geladen/ausgefuehrt ist -- React ersetzt den Inhalt
+         von #app beim ersten mount() automatisch. Kein Bezug auf DB-UX-Tokens (die stehen erst nach
+         dem CSS-Import in main.tsx zur Verfuegung); Farben an die theme-color-Metas oben angelehnt. */
+      #app-boot {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #ffffff;
+      }
+      #app-boot svg {
+        width: 2.5rem;
+        height: 2.5rem;
+        animation: app-boot-spin 0.9s linear infinite;
+      }
+      #app-boot circle {
+        fill: none;
+        stroke: #ec0016;
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-dasharray: 80 200;
+      }
+      @keyframes app-boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-color-scheme: dark) {
+        #app-boot {
+          background: #16181b;
+        }
+      }
+    </style>
     <script type="module" src="ts/app/main.tsx"></script>
   </head>
 
@@ -35,6 +69,10 @@
       </div>
     </noscript>
 
-    <div id="app"></div>
+    <div id="app">
+      <div id="app-boot" aria-label="Lädt …" role="status">
+        <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20"></circle></svg>
+      </div>
+    </div>
   </body>
 </html>

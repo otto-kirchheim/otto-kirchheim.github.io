@@ -15,7 +15,6 @@ import { createOnChangeHandler } from '@/shared/lib/autosave/autoSave';
 import { default as saveDaten } from '@/shared/lib/ressource/saveDaten';
 import { bindClickHandlers } from '@/shared/lib/dom/bindClickHandlers';
 import dayjs from '@/shared/lib/date/configDayjs';
-import generatePDF from '@/shared/lib/pdf/generatePDF';
 import { EditorModalNeben, ShowModalNeben, createAddModalNeben } from '.';
 import { getNebengeldDaten, persistNebengeldTableData } from '../model';
 
@@ -175,7 +174,8 @@ export function NebenTab() {
       [
         'btnDownloadN',
         btn => {
-          if (checkIfGreater2024(Jahr, true)) generatePDF(btn, 'N');
+          if (checkIfGreater2024(Jahr, true))
+            import('@/shared/lib/pdf/generatePDF').then(({ default: generatePDF }) => generatePDF(btn, 'N'));
         },
       ],
       ['btnHelpNeben', () => invokeHook('help:open', 'tab.neben')],

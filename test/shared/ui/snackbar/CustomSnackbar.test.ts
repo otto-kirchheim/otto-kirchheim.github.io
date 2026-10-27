@@ -409,4 +409,43 @@ describe('CustomSnackbar', () => {
       expect(div.querySelector('.CustomSnackbar-container')).not.toBeNull();
     });
   });
+
+  describe('offener Dialog', () => {
+    it('Meldung landet im offenen Dialog und wandert nach dem Schliessen zurueck in den Body', async () => {
+      const dialog = document.createElement('dialog');
+      document.body.appendChild(dialog);
+      dialog.setAttribute('open', '');
+      await flush();
+
+      createSnackBar({ message: 'Im Dialog', timeout: false });
+      await flush();
+      const snackbar = document.querySelector('.CustomSnackbar');
+      expect(dialog.contains(snackbar)).toBe(true);
+
+      dialog.remove();
+      await flush();
+      expect(snackbar?.isConnected).toBe(true);
+      expect(document.body.contains(snackbar)).toBe(true);
+    });
+
+    it('nimmt den zuletzt geoeffneten von zwei Dialogen', async () => {
+      const unten = document.createElement('dialog');
+      const oben = document.createElement('dialog');
+      document.body.append(unten, oben);
+      unten.setAttribute('open', '');
+      oben.setAttribute('open', '');
+      await flush();
+
+      createSnackBar({ message: 'Oben', timeout: false });
+      await flush();
+      expect(oben.querySelector('.CustomSnackbar')).not.toBeNull();
+
+      oben.removeAttribute('open');
+      await flush();
+      expect(unten.querySelector('.CustomSnackbar')).not.toBeNull();
+      unten.remove();
+      oben.remove();
+      await flush();
+    });
+  });
 });

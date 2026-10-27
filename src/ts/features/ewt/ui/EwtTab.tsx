@@ -17,7 +17,6 @@ import { default as saveDaten } from '@/shared/lib/ressource/saveDaten';
 import { bindClickHandlers } from '@/shared/lib/dom/bindClickHandlers';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from '.';
-import generatePDF from '@/shared/lib/pdf/generatePDF';
 import { attachBerechnenToggleListeners, recalculateEwtMonat, getEwtDaten, persistEwtTableData } from '../model';
 
 /**
@@ -244,7 +243,10 @@ export function EwtTab() {
         },
       ],
       ['btnSaveE', btn => saveDaten(btn)],
-      ['btnDownloadE', btn => generatePDF(btn, 'E')],
+      [
+        'btnDownloadE',
+        btn => import('@/shared/lib/pdf/generatePDF').then(({ default: generatePDF }) => generatePDF(btn, 'E')),
+      ],
       ['btnESEE', () => createAddModalEWT(ftE)],
       ['btnHelpEWT', () => invokeHook('help:open', 'tab.ewt')],
     ]);

@@ -1,3 +1,19 @@
+/* Ebene der Body-Snackbars, als `popover` in der Top-Layer (siehe `SnackbarHost.tsx`): UA-Popover-Stil
+   neutralisieren, ganze Viewport-Flaeche, klickdurchlaessig. */
+.CustomSnackbar-ebene {
+  position: fixed;
+  inset: 0;
+  inline-size: auto;
+  block-size: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: visible;
+  background: transparent;
+  color: inherit;
+  pointer-events: none;
+}
+
 .CustomSnackbar-container {
   position: absolute;
   bottom: 0;
