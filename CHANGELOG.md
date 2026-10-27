@@ -2,6 +2,23 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-27 (244)
+
+### fix (Mehrgeräte-Sync: stille Zeilen-Staleness behoben)
+
+- `syncLoadedYearResources()` erkannte Mehrgeräte-Konflikte bisher nur über die Zeilenanzahl pro
+  Monat. Hatte dieses Gerät irgendeine ungesynchte Änderung in der Ressource (blockiert das
+  Komplett-Überschreiben durch den Server) und ein ANDERES Gerät hatte inzwischen den Inhalt einer
+  bestehenden Zeile geändert (gleiche Zeilenanzahl), blieb die lokale, veraltete Version dieser
+  Zeile unbemerkt stehen -- sichtbar nur als falscher Wert in Tabelle/Berechnung, ohne Hinweis.
+- Neue Funktion `loadUserDaten.helpers.ts::healUnchangedRowsAgainstServer()`: Zeilen ohne eigene
+  offene Änderung (`__localState: 'unchanged'`) werden beim Laden anhand ihrer `_id` gegen den
+  Serverinhalt verglichen und bei Abweichung automatisch übernommen (kein Dialog nötig, das Gerät
+  hatte an der Zeile nichts offen). Zeilen mit eigener Änderung bleiben unberührt und fallen
+  weiterhin unter die bestehende Konflikterkennung.
+- Verifiziert: `bun run typecheck`/`lint` sauber, `bun run test` 2363/2363 (8 neue Tests), `bun run
+  build` erfolgreich.
+
 ## 2026-10-27 (243)
 
 ### test (`vorlageFontFamilien` ohne System-Schriften)
