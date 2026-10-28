@@ -54,6 +54,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
       role: entry.role,
       adminForTeamOes: [...entry.adminForTeamOes],
       adminForOrganizationOes: [...entry.adminForOrganizationOes],
+      adminForStuetzpunkte: [...entry.adminForStuetzpunkte],
       canEditVorgabenGeld: entry.canEditVorgabenGeld,
       canEditProfileTemplates: entry.canEditProfileTemplates,
       canEditOwnTeamTemplatesOnly: entry.canEditOwnTeamTemplatesOnly,
@@ -148,6 +149,18 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
   }
 
   /**
+   * Admins verwalten nur nach unten (Backend prüft dasselbe, bei Org-Admins im bloßen Team-Bereich
+   * sogar strenger). Super-Admin darf alle.
+   *
+   * @param zielRolle - Rolle des Benutzers der Zeile.
+   * @returns `true`, wenn der Benutzer niedriger eingestuft ist als der angemeldete Admin.
+   */
+  function istNiedrigerEingestuft(zielRolle: Role) {
+    if (!user) return false;
+    return user.role === Role.SUPER_ADMIN || ROLE_HIERARCHY[zielRolle] < ROLE_HIERARCHY[user.role];
+  }
+
+  /**
    * Ändert den Bearbeitungsstand eines Benutzers.
    *
    * @param userId - Id des Benutzers.
@@ -173,6 +186,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
       edit.role !== row.role ||
       edit.adminForTeamOes.join('|') !== row.adminForTeamOes.join('|') ||
       edit.adminForOrganizationOes.join('|') !== row.adminForOrganizationOes.join('|') ||
+      edit.adminForStuetzpunkte.join('|') !== row.adminForStuetzpunkte.join('|') ||
       edit.canEditVorgabenGeld !== row.canEditVorgabenGeld ||
       edit.canEditProfileTemplates !== row.canEditProfileTemplates ||
       edit.canEditOwnTeamTemplatesOnly !== row.canEditOwnTeamTemplatesOnly ||
@@ -230,6 +244,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
       if (
         edit.adminForTeamOes.join('|') !== row.adminForTeamOes.join('|') ||
         edit.adminForOrganizationOes.join('|') !== row.adminForOrganizationOes.join('|') ||
+        edit.adminForStuetzpunkte.join('|') !== row.adminForStuetzpunkte.join('|') ||
         edit.canEditVorgabenGeld !== row.canEditVorgabenGeld ||
         edit.canEditProfileTemplates !== row.canEditProfileTemplates ||
         edit.canEditOwnTeamTemplatesOnly !== row.canEditOwnTeamTemplatesOnly ||
@@ -239,6 +254,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
         await updateUserScopes(userId, {
           adminForTeamOes: edit.adminForTeamOes,
           adminForOrganizationOes: edit.adminForOrganizationOes,
+          adminForStuetzpunkte: edit.adminForStuetzpunkte,
           canEditVorgabenGeld: edit.canEditVorgabenGeld,
           canEditProfileTemplates: edit.canEditProfileTemplates,
           canEditOwnTeamTemplatesOnly: edit.canEditOwnTeamTemplatesOnly,
@@ -301,7 +317,12 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
       const userNameMatch = currentUser.userName.toLowerCase().includes(nameQuery);
       const matchesName = !nameQuery || fullNameMatch || userNameMatch;
 
-      const oeCandidates = [...currentUser.oe, ...currentUser.adminForTeamOes, ...currentUser.adminForOrganizationOes];
+      const oeCandidates = [
+        ...currentUser.oe,
+        ...currentUser.adminForTeamOes,
+        ...currentUser.adminForOrganizationOes,
+        ...currentUser.adminForStuetzpunkte,
+      ];
       const matchesOe = matchesOeQuery(oeQuery, oeCandidates);
 
       return matchesName && matchesOe;
@@ -389,16 +410,17 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
         <div className="sp-sm-4">
           <div>
             <DbFeld
-              beschriftung="OE"
+              beschriftung="OE / Stützpunkt"
               beschriftungZeigen
               type="text"
               id="adminFilterOe"
-              placeholder="z.B. IL 03, IL04, KSL"
+              placeholder="z.B. IL 03, IL04, KSL, Kirchheim"
               value={filter.oe}
               onChange={e => setFilter(f => ({ ...f, oe: (e.target as HTMLInputElement).value }))}
             />
             <DBInfotext size="small" semantic="informational">
-              IL03 und IL 03 finden dasselbe; mehrere OEs mit Komma trennen
+              IL03 und IL 03 finden dasselbe; mehrere Begriffe mit Komma trennen. Durchsucht auch
+              die Team-/Org-/Stützpunkt-Zuständigkeiten der Admins.
             </DBInfotext>
           </div>
         </div>
@@ -501,7 +523,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
               isExpanded={expandedUserId === currentUser._id}
               isSelected={selectedIds.has(currentUser._id)}
               changed={hasChanges(currentUser._id)}
-              editable={canEdit() && !isSelfRow}
+              editable={canEdit() && !isSelfRow && istNiedrigerEingestuft(currentUser.role)}
               roleEditable={canEditRole()}
               permissionEditable={canEditPermissions() && !isSelfRow}
               onToggleExpand={() => setExpandedUserId(expandedUserId === currentUser._id ? null : currentUser._id)}

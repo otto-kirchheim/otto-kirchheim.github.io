@@ -68,6 +68,7 @@ function makeUser(overrides: Partial<AdminUserRow> = {}): AdminUserRow {
     betrieb: 'DB Test AG',
     adminForTeamOes: [],
     adminForOrganizationOes: [],
+    adminForStuetzpunkte: [],
     canEditVorgabenGeld: false,
     canEditProfileTemplates: false,
     canEditOwnTeamTemplatesOnly: false,

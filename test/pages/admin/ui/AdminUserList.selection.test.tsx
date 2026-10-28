@@ -45,6 +45,7 @@ function makeUser(overrides: Partial<AdminUserRow> = {}): AdminUserRow {
     betrieb: 'DB Test AG',
     adminForTeamOes: [],
     adminForOrganizationOes: [],
+    adminForStuetzpunkte: [],
     canEditVorgabenGeld: false,
     canEditProfileTemplates: false,
     canEditOwnTeamTemplatesOnly: false,
@@ -153,5 +154,33 @@ describe('AdminUserList Mehrfachauswahl', () => {
     await flush();
 
     expect(container.textContent).not.toContain('1 ausgewählt');
+  });
+});
+
+describe('AdminUserList Bearbeitbarkeit nur nach unten', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetUserCookie.mockReturnValue({ userName: 'admin', role: Role.TEAM_ADMIN });
+    mockFetchAdminUsers.mockResolvedValue([
+      makeUser({ _id: 'u1', userName: 'mitglied', fullName: 'User Eins', role: Role.MEMBER }),
+      makeUser({ _id: 'u2', userName: 'kollege', fullName: 'User Zwei', role: Role.TEAM_ADMIN }),
+    ]);
+  });
+
+  async function bearbeitenSichtbarFuer(container: HTMLDivElement, name: string): Promise<boolean> {
+    const kopf = [...container.querySelectorAll<HTMLElement>('.admin-user-card__kopf')].find(k =>
+      k.textContent?.includes(name),
+    );
+    kopf!.click();
+    await flush();
+    const karte = kopf!.closest('.admin-user-card')!;
+    return [...karte.querySelectorAll('button')].some(b => b.textContent?.trim() === 'Bearbeiten');
+  }
+
+  it('Team-Admin: Mitglied bearbeitbar, gleichrangiger Team-Admin nicht', async () => {
+    const container = await renderList(false);
+
+    expect(await bearbeitenSichtbarFuer(container, 'User Eins')).toBe(true);
+    expect(await bearbeitenSichtbarFuer(container, 'User Zwei')).toBe(false);
   });
 });

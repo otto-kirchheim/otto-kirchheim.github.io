@@ -37,15 +37,19 @@ function separatorBefore(levels: string[], index: number): string {
 }
 
 /**
- * Feldbreite passend zur längeren von Wert und Platzhalter (mindestens 2 Zeichen).
+ * Feldbreite passend zur längeren von Wert und Platzhalter (mindestens 2 Zeichen). DB UX' `.db-input`
+ * erzwingt sonst über `--db-form-component-min-inline-size` eine deutlich größere Mindestbreite
+ * (`--db-sizing-lg`) -- die wird hier pro Feld auf die berechnete Breite heruntergesetzt, sonst
+ * bleiben alle Ebenen-Felder gleich breit statt mit dem Inhalt zu schrumpfen.
  *
  * @param value - Aktueller Feldwert.
  * @param placeholder - Platzhaltertext des Feldes.
- * @returns Inline-Style mit `width`.
+ * @returns Inline-Style mit `width` und der heruntergesetzten DB-UX-Mindestbreite.
  */
 function widthFor(value: string, placeholder: string): CSSProperties {
   const chars = Math.max(2, value.length, placeholder.length);
-  return { width: `calc(${chars}ch + 1.5rem)` };
+  const width = `calc(${chars}ch + 1.5rem)`;
+  return { width, '--db-form-component-min-inline-size': width } as CSSProperties;
 }
 
 /**

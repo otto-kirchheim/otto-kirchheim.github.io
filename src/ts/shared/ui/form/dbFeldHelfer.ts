@@ -78,6 +78,18 @@ export function useSofortigeKlasse<T extends HTMLElement>(ref: RefObject<T | nul
 export function useSofortigeHuelleStyle<T extends HTMLElement>(ref: RefObject<T | null>, style?: CSSProperties): void {
   useLayoutEffect(() => {
     const huelle = ref.current?.parentElement;
-    if (huelle && style) Object.assign(huelle.style, style);
+    if (!huelle || !style) return;
+
+    // CSS-Variablen (`--foo`) per Objekt-Zuweisung auf `style` landen NICHT im Inline-Style --
+    // `CSSStyleDeclaration` kennt nur feste IDL-Attribute wie `width`; unbekannte Keys werden
+    // zu einer normalen JS-Eigenschaft auf dem Objekt, ohne Wirkung auf das Rendering. `setProperty()`
+    // wirkt dagegen für beides, braucht aber kebab-case statt camelCase.
+    for (const [eigenschaft, wert] of Object.entries(style)) {
+      if (wert === undefined) continue;
+      const kebabEigenschaft = eigenschaft.startsWith('--')
+        ? eigenschaft
+        : eigenschaft.replace(/[A-Z]/g, buchstabe => `-${buchstabe.toLowerCase()}`);
+      huelle.style.setProperty(kebabEigenschaft, String(wert));
+    }
   }, [ref, style]);
 }

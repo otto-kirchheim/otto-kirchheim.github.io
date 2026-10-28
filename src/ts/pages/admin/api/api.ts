@@ -68,6 +68,7 @@ export type AdminUserRow = {
   betrieb: string;
   adminForTeamOes: string[];
   adminForOrganizationOes: string[];
+  adminForStuetzpunkte: string[];
   canEditVorgabenGeld: boolean;
   canEditProfileTemplates: boolean;
   canEditOwnTeamTemplatesOnly: boolean;
@@ -143,6 +144,7 @@ export async function fetchAdminUsers(filter: { name?: string; role?: string }):
         betrieb: profileSummary.betrieb,
         adminForTeamOes: user.adminForTeamOes ?? [],
         adminForOrganizationOes: user.adminForOrganizationOes ?? [],
+        adminForStuetzpunkte: user.adminForStuetzpunkte ?? [],
         canEditVorgabenGeld: Boolean(user.canEditVorgabenGeld),
         canEditProfileTemplates: Boolean(user.canEditProfileTemplates),
         canEditOwnTeamTemplatesOnly: Boolean(user.canEditOwnTeamTemplatesOnly),
@@ -166,6 +168,7 @@ export async function updateUserScopes(
   data: {
     adminForTeamOes: string[];
     adminForOrganizationOes: string[];
+    adminForStuetzpunkte: string[];
     canEditVorgabenGeld?: boolean;
     canEditProfileTemplates?: boolean;
     canEditOwnTeamTemplatesOnly?: boolean;
@@ -200,8 +203,11 @@ export async function fetchCurrentAdminCapabilities(): Promise<CurrentUserCapabi
     role: user.role,
     canEditVorgabenGeld: user.role === Role.SUPER_ADMIN || (isTeamAdminOrHigher && Boolean(user.canEditVorgabenGeld)),
     canEditProfileTemplates,
+    // Team-Admin ist bei Vorlagen immer auf seinen Scope begrenzt (Backend: `istTemplateScopeBegrenzt`).
     canEditOwnTeamTemplatesOnly:
-      user.role === Role.SUPER_ADMIN ? false : canEditProfileTemplates && Boolean(user.canEditOwnTeamTemplatesOnly),
+      user.role === Role.SUPER_ADMIN
+        ? false
+        : canEditProfileTemplates && (user.role === Role.TEAM_ADMIN || Boolean(user.canEditOwnTeamTemplatesOnly)),
     canCreateFormularVorlagen,
     canEditFormularVorlagen,
   };
