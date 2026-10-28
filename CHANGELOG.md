@@ -2,6 +2,52 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-28 (245)
+
+### fix (ungesendete Zeilen gingen nach dem Neuladen verloren)
+
+- Der `CustomTable`-Konstruktor legte die Startzeilen (`options.rows`) immer als `unchanged` an.
+  Alle Feature-Tabs (BZ, BE, EWT, Nebengeld, EA) erzeugen ihre Tabelle so aus dem Storage --
+  dadurch galten noch nicht gesendete Zeilen (`__localState: 'new'`/`'modified'`, Fehler-Zeilen)
+  nach jedem Neuladen als gespeichert: weder AutoSave noch "Speichern" schickten einen Request,
+  nichts war als neu markiert, und beim naechsten Schreiben ueberschrieb die Tabelle auch den
+  Storage mit `unchanged`. Gefunden an 5 EWT-Tagen, die nie auf dem Server ankamen.
+- Konstruktor nutzt jetzt dieselbe Wiederherstellung wie `Rows.load()`
+  (`tableReducer.ts::restoreRowRecord`): Zustand aus den Meta-Feldern, Meta-Felder aus den Zellen
+  entfernt, offene Aenderungen an `onChange`/AutoSave gemeldet. Zeilen ohne Meta-Felder (Tabellen
+  ohne Storage-Bezug) bleiben `unchanged`.
+- Zweiter Fehler mit gleichem Symptom: nach einem Bulk-Save ordnete `commitCreateAndUpdate` die
+  neuen `_id`s ueber die Position zu, `CustomTableView` sortiert `rows.array` aber in place --
+  bei sortierter Tabelle landeten `_id`s auf falschen Zeilen, und scheiterte ein Create, wurde eine
+  andere Zeile `unchanged` ohne `_id`. Zuordnung jetzt ueber `getRowKey()`; eine neue Zeile ohne
+  Server-`_id` bleibt `new` und wird erneut gesendet.
+- Verifiziert: neue Tests `startzeilenZustand.test.ts`, `commitReihenfolge.test.ts`;
+  `bun run test` 2370/2370, typecheck/lint sauber, `bun run build` ok; im Browser: Tabelle aus
+  Storage mit zwei `new`-Zeilen -> `unchanged, new, new`, 2 Creates, AutoSave angestossen.
+
+## 2026-10-27 (244)
+
+### fix (Mehrgeräte-Sync: stille Zeilen-Staleness behoben)
+
+- `syncLoadedYearResources()` erkannte Mehrgeräte-Konflikte bisher nur über die Zeilenanzahl pro
+  Monat. Hatte dieses Gerät irgendeine ungesynchte Änderung in der Ressource (blockiert das
+  Komplett-Überschreiben durch den Server) und ein ANDERES Gerät hatte inzwischen den Inhalt einer
+  bestehenden Zeile geändert (gleiche Zeilenanzahl), blieb die lokale, veraltete Version dieser
+  Zeile unbemerkt stehen -- sichtbar nur als falscher Wert in Tabelle/Berechnung, ohne Hinweis.
+- Neue Funktion `loadUserDaten.helpers.ts::healUnchangedRowsAgainstServer()`: Zeilen ohne eigene
+  offene Änderung (`__localState: 'unchanged'`) werden beim Laden anhand ihrer `_id` gegen den
+  Serverinhalt verglichen und bei Abweichung automatisch übernommen (kein Dialog nötig, das Gerät
+  hatte an der Zeile nichts offen). Zeilen mit eigener Änderung bleiben unberührt und fallen
+  weiterhin unter die bestehende Konflikterkennung.
+- Verifiziert: `bun run typecheck`/`lint` sauber, `bun run test` 2363/2363 (8 neue Tests), `bun run
+  build` erfolgreich.
+
+## 2026-10-27 (243)
+
+### test (`vorlageFontFamilien` ohne System-Schriften)
+
+- Zwei Tests in `vorlageFonts.test.ts` liefen per `skipIf` nie: sie erwarteten System-Schriften unter Arch-Pfaden (`/usr/share/fonts/liberation/...`, `awesome-terminal-fonts`), die weder im Codespace noch in CI liegen. Latein-Schrift jetzt aus `pdfjs-dist/standard_fonts` (Abhaengigkeit); der "unbrauchbar"-Fall nutzt dieselbe Schrift mit umbenannter `cmap`-Tabelle (keine Buchstaben-/Ziffern-Zuordnung, wie Icon- und kaputte Subset-Fonts). Beide laufen jetzt immer (7 pass, 0 skip).
+
 ## 2026-10-27 (242)
 
 ### fix (Pages-Deploy: Bun 1.4.4 in CI)

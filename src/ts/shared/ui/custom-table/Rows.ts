@@ -211,13 +211,13 @@ export class Rows<T extends CustomTableTypes> {
    * Nach erfolgreichem manuellen Speichern (inkl. Löschungen): setzt die States zurück und
    * entfernt gespeicherte Löschungen.
    *
-   * @param createdIds - Index unter den neuen Zeilen -> vom Backend vergebene `_id`.
+   * @param createdIds - `getRowKey()` der neuen Zeile -> vom Backend vergebene `_id`.
    * @param failedRows - Schlüssel (`getRowKey()`) der Zeilen, deren Save fehlgeschlagen ist.
    * @param includedRows - Schlüssel-Snapshot aus `getChangeRows()` vor dem Request. Nur diese
    *   Zeilen werden committet/entfernt (AutoSave-Commit-Race); ohne Angabe alle.
    */
   commitChanges(
-    createdIds?: Map<number, string>,
+    createdIds?: ReadonlyMap<string, string>,
     failedRows: ReadonlySet<string> = new Set<string>(),
     includedRows?: ReadonlySet<string>,
   ): void {
@@ -234,12 +234,12 @@ export class Rows<T extends CustomTableTypes> {
    * Nach erfolgreichem Auto-Save (OHNE Löschungen): setzt nur new/modified zurück; gelöschte
    * Zeilen bleiben als `'deleted'` sichtbar.
    *
-   * @param createdIds - Index unter den neuen Zeilen -> vom Backend vergebene `_id`.
+   * @param createdIds - `getRowKey()` der neuen Zeile -> vom Backend vergebene `_id`.
    * @param failedRows - Schlüssel (`getRowKey()`) der Zeilen, deren Save fehlgeschlagen ist.
    * @param includedRows - Schlüssel-Snapshot aus `getChangeRows()` vor dem Request; ohne Angabe alle.
    */
   commitAutoSave(
-    createdIds?: Map<number, string>,
+    createdIds?: ReadonlyMap<string, string>,
     failedRows: ReadonlySet<string> = new Set<string>(),
     includedRows?: ReadonlySet<string>,
   ): void {

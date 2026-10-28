@@ -132,4 +132,96 @@ describe('syncLoadedYearResources – Bug 2: kein stale dataServer', () => {
     // Lokale (geänderte) Daten bleiben erhalten statt vom neueren Server-Stand überschrieben zu werden
     expect(((result.rows.BZ as unknown[])[0] as unknown as { bz: string }).bz).toBe('lokal-geaendert');
   });
+
+  it('heilt unveränderte lokale Zeilen gegen neueren Serverinhalt, wenn eine andere Zeile derselben Ressource noch ungesynct ist', () => {
+    const past = Date.now() - 1_000_000;
+    const future = Date.now() + 1_000_000;
+
+    // bz1: keine eigene Änderung, aber auf einem anderen Gerät inzwischen geändert (Server neuer).
+    // bz2: ungesynchte Neuanlage auf diesem Gerät -- verhindert das Komplett-Überschreiben durch den
+    // Server und zwingt den Ablauf in den Heal-Pfad statt in den "Server gewinnt ganz"-Zweig.
+    Storage.setWithTimestamp(
+      'dataBZ',
+      [
+        { _id: 'bz1', bz: 'alt-lokal', __localState: 'unchanged' },
+        { bz: 'neu-lokal', __localState: 'new' },
+      ],
+      past,
+    );
+
+    const result = syncLoadedYearResources({
+      vorgabenU,
+      resources: {
+        BZ: [{ _id: 'bz1', bz: 'neu-server' }] as never,
+        BE: [] as never,
+        EWT: [] as never,
+        N: [] as never,
+        EA: [] as never,
+      },
+      serverTimestamps: {
+        VorgabenU: '2020-01-01T00:00:00.000Z',
+        dataBZ: new Date(future).toISOString(),
+        dataBE: '2020-01-01T00:00:00.000Z',
+        dataE: '2020-01-01T00:00:00.000Z',
+        dataN: '2020-01-01T00:00:00.000Z',
+      } as never,
+    });
+
+    const rows = result.rows.BZ as unknown as { _id?: string; bz: string; __localState: string }[];
+    const healed = rows.find(row => row._id === 'bz1');
+    const pendingNew = rows.find(row => row.bz === 'neu-lokal');
+
+    // bz1 wurde ohne Rückfrage auf den Serverinhalt angehoben -- dieses Gerät hatte an der Zeile
+    // selbst nichts offen.
+    expect(healed?.bz).toBe('neu-server');
+    expect(healed?.__localState).toBe('unchanged');
+    // Die ungesynchte Neuanlage bleibt unberührt und löst keinen falschen Konflikt aus (gleiche
+    // effektive Zeilenanzahl: countByMonth zählt Pending-New-Rows nicht mit).
+    expect(pendingNew).toBeDefined();
+    expect(result.vorhanden).toHaveLength(0);
+
+    // Heilung wird auch im Storage persistiert, nicht nur im Rückgabewert.
+    const stored = Storage.get<{ _id?: string; bz: string }[]>('dataBZ', { check: true });
+    expect(stored.find(row => row._id === 'bz1')?.bz).toBe('neu-server');
+  });
+
+  it('lässt eine lokal geänderte Zeile unberührt, auch wenn eine andere unveränderte Zeile derselben Ressource geheilt wird', () => {
+    const past = Date.now() - 1_000_000;
+    const future = Date.now() + 1_000_000;
+
+    Storage.setWithTimestamp(
+      'dataBZ',
+      [
+        { _id: 'bz1', bz: 'alt-lokal', __localState: 'unchanged' },
+        { _id: 'bz2', bz: 'lokal-geaendert', __localState: 'modified' },
+      ],
+      past,
+    );
+
+    const result = syncLoadedYearResources({
+      vorgabenU,
+      resources: {
+        BZ: [
+          { _id: 'bz1', bz: 'neu-server' },
+          { _id: 'bz2', bz: 'server-stand' },
+        ] as never,
+        BE: [] as never,
+        EWT: [] as never,
+        N: [] as never,
+        EA: [] as never,
+      },
+      serverTimestamps: {
+        VorgabenU: '2020-01-01T00:00:00.000Z',
+        dataBZ: new Date(future).toISOString(),
+        dataBE: '2020-01-01T00:00:00.000Z',
+        dataE: '2020-01-01T00:00:00.000Z',
+        dataN: '2020-01-01T00:00:00.000Z',
+      } as never,
+    });
+
+    const rows = result.rows.BZ as unknown as { _id: string; bz: string }[];
+    expect(rows.find(row => row._id === 'bz1')?.bz).toBe('neu-server');
+    // Eigene offene Änderung bleibt unangetastet -- echter Konflikt, keine automatische Heilung.
+    expect(rows.find(row => row._id === 'bz2')?.bz).toBe('lokal-geaendert');
+  });
 });

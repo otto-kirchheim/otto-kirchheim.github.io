@@ -82,6 +82,36 @@ export function shouldRepairMissingIds(storageName: TStorageData, localData: unk
 }
 
 /**
+ * Aktualisiert lokale Zeilen ohne eigene ungesynchte Änderung (`__localState: 'unchanged'`, kein
+ * `__errorMessage`), deren Inhalt vom Server abweicht, auf den Serverstand -- sicher ohne
+ * Rückfrage, weil dieses Gerät an der Zeile selbst nichts offen hat (nur ein anderes Gerät kann sie
+ * seit dem letzten Abgleich geändert haben). Zeilen mit eigener Änderung bleiben unberührt --
+ * dafür greift die zählungsbasierte Konflikterkennung in `loadUserDaten.sync.ts`.
+ *
+ * @param localRows - Lokale Rohzeilen (Array wird nicht verändert).
+ * @param serverRows - Serverseitige Rohzeilen.
+ * @returns Neues Array; nur Zeilen mit tatsächlicher Abweichung werden ersetzt.
+ */
+export function healUnchangedRowsAgainstServer<T>(localRows: T[], serverRows: unknown[]): T[] {
+  const serverById = new Map<string, unknown>();
+  for (const row of serverRows) {
+    if (hasStringId(row)) serverById.set((row as { _id: string })._id, row);
+  }
+  if (serverById.size === 0) return localRows;
+
+  return localRows.map(row => {
+    if (!row || typeof row !== 'object') return row;
+    const r = row as Record<string, unknown>;
+    if (r.__localState !== 'unchanged' || r.__errorMessage || !hasStringId(r)) return row;
+
+    const serverRow = serverById.get(r._id as string);
+    if (!serverRow || serializeRowWithoutMeta(r) === serializeRowWithoutMeta(serverRow)) return row;
+
+    return { ...(serverRow as Record<string, unknown>), __localState: 'unchanged' } as T;
+  });
+}
+
+/**
  * Zählt die bereits auf dem Server bekannten Zeilen (mit `_id`, ohne Pending-New/-Deleted)
  * je Monat. Monat 0 sammelt Zeilen ohne erkennbaren Monat.
  *

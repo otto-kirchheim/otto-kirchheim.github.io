@@ -22,6 +22,8 @@ Die Einstellungen-/Hauptseite rendert komplett aus localStorage — ein laufende
 
 ## Gotchas
 
+- `puppeteer.launch({ ..., timeout: 120000 })` setzen: der erste Chrome-Start im Codespace dauert oft laenger als die Standard-30-s und bricht dann mit "Timed out after 30000 ms while waiting for the WS endpoint URL" ab, obwohl Chrome selbst laeuft.
+
 - `mount()` rendert per `flushSync` synchron; `useEffect` laeuft danach → nach Interaktionen ~150ms warten.
 - Ohne Backend startet der Auth-Lifecycle nicht, die Feature-Tabs mounten also nicht von selbst. Fuer
   reine UI-Pruefungen die Module im Seitenkontext importieren (`await import('/ts/features/EWT/EwtTab.tsx')`)

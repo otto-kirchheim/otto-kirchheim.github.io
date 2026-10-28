@@ -21,7 +21,7 @@ vi.mock('@/shared/lib/ressource/normalizeResourceRows', () => ({
 }));
 
 import '@/app/features';
-import { rowMatchesMonth, countByMonth } from '@/app/session/loadUserDaten.helpers';
+import { rowMatchesMonth, countByMonth, healUnchangedRowsAgainstServer } from '@/app/session/loadUserDaten.helpers';
 
 const ROW = { _id: 'x' };
 
@@ -158,5 +158,70 @@ describe('countByMonth', () => {
   it('gibt leere Map für leeres Array zurück', () => {
     const result = countByMonth([], 'dataBZ');
     expect(result.size).toBe(0);
+  });
+});
+
+describe('healUnchangedRowsAgainstServer', () => {
+  it('übernimmt den Serverinhalt für eine unveränderte Zeile mit abweichendem Inhalt', () => {
+    const local = [{ _id: 'a', wert: 'alt', __localState: 'unchanged' }];
+    const server = [{ _id: 'a', wert: 'neu' }];
+
+    const result = healUnchangedRowsAgainstServer(local, server);
+
+    expect(result[0]).toMatchObject({ _id: 'a', wert: 'neu', __localState: 'unchanged' });
+  });
+
+  it('lässt eine Zeile mit eigener Änderung unberührt, auch bei abweichendem Serverinhalt', () => {
+    const local = [{ _id: 'a', wert: 'lokal-geaendert', __localState: 'modified' }];
+    const server = [{ _id: 'a', wert: 'server-stand' }];
+
+    const result = healUnchangedRowsAgainstServer(local, server);
+
+    expect(result[0]).toMatchObject({ _id: 'a', wert: 'lokal-geaendert', __localState: 'modified' });
+  });
+
+  it('lässt eine fehlerhafte Zeile (__errorMessage) unberührt, auch wenn __localState unchanged wäre', () => {
+    const local = [{ _id: 'a', wert: 'alt', __localState: 'unchanged', __errorMessage: 'Server 500' }];
+    const server = [{ _id: 'a', wert: 'neu' }];
+
+    const result = healUnchangedRowsAgainstServer(local, server);
+
+    expect(result[0]).toMatchObject({ wert: 'alt', __errorMessage: 'Server 500' });
+  });
+
+  it('lässt eine unveränderte Zeile unberührt, wenn der Inhalt mit dem Server übereinstimmt', () => {
+    const local = [{ _id: 'a', wert: 'gleich', __localState: 'unchanged' }];
+    const server = [{ _id: 'a', wert: 'gleich' }];
+
+    const result = healUnchangedRowsAgainstServer(local, server);
+
+    expect(result[0]).toBe(local[0]);
+  });
+
+  it('lässt eine Zeile ohne Server-Treffer (_id) unberührt', () => {
+    const local = [{ _id: 'a', wert: 'alt', __localState: 'unchanged' }];
+    const server = [{ _id: 'b', wert: 'neu' }];
+
+    const result = healUnchangedRowsAgainstServer(local, server);
+
+    expect(result[0]).toBe(local[0]);
+  });
+
+  it('lässt eine Pending-New-Zeile ohne _id unberührt', () => {
+    const local = [{ wert: 'neu-lokal', __localState: 'new' }];
+    const server = [{ _id: 'a', wert: 'server' }];
+
+    const result = healUnchangedRowsAgainstServer(local, server);
+
+    expect(result[0]).toBe(local[0]);
+  });
+
+  it('gibt dasselbe Array zurück, wenn keine Serverzeile eine _id hat', () => {
+    const local = [{ _id: 'a', wert: 'alt', __localState: 'unchanged' }];
+    const server = [{ wert: 'ohne-id' }];
+
+    const result = healUnchangedRowsAgainstServer(local, server);
+
+    expect(result).toBe(local);
   });
 });

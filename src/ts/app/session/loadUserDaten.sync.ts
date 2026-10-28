@@ -3,7 +3,7 @@ import { default as Storage } from '@/shared/lib/storage/Storage';
 import dayjs from '@/shared/lib/date/configDayjs';
 import type { LoadedYearData } from '@/shared/api/apiService';
 import type { TStorageData } from '@/shared/lib/storage/Storage';
-import { countByMonth, normalizeRows, shouldRepairMissingIds } from './loadUserDaten.helpers';
+import { countByMonth, healUnchangedRowsAgainstServer, normalizeRows, shouldRepairMissingIds } from './loadUserDaten.helpers';
 import { hasPendingLocalChanges } from '@/shared/lib/ressource/metaFields';
 import { type ResourceKind, resourceByStorageKey, resourceDefs } from '@/shared/lib/ressource/resourceConfig';
 
@@ -76,11 +76,13 @@ export function syncLoadedYearResources({
     }
 
     const localTs = Storage.getTimestamp(storageName);
-    const localData = Storage.check(storageName)
+    let localData = Storage.check(storageName)
       ? Storage.get<unknown>(storageName, { default: serverData })
       : undefined;
 
-    if (localTs === 0 || serverTimestamp > localTs || shouldRepairMissingIds(storageName, localData, serverData)) {
+    const serverIsNewer = localTs === 0 || serverTimestamp > localTs;
+
+    if (serverIsNewer || shouldRepairMissingIds(storageName, localData, serverData)) {
       // Ungesyncte lokale Änderungen (__localState, __errorMessage) nicht überschreiben —
       // Conflict-Review greift über countByMonth, das pending-deleted Rows exkludiert.
       const localRows = localData !== undefined ? normalizeRows<unknown>(localData) : [];
@@ -88,6 +90,22 @@ export function syncLoadedYearResources({
         Storage.setWithTimestamp(storageName, serverData, serverTimestamp);
         return serverData;
       }
+    }
+
+    // Ab hier bleiben die lokalen Daten als Array bestehen (ungesynchte Änderungen irgendwo in der
+    // Ressource). Das betrifft aber nicht automatisch JEDE Zeile: Zeilen ohne eigene Änderung
+    // (__localState: 'unchanged') können trotzdem veraltet sein, wenn ein ANDERES Gerät sie
+    // inzwischen geändert hat, ohne die Zeilenanzahl zu verändern — das erkennt der reine
+    // Zeilenanzahl-Vergleich unten nicht. Die heilen wir hier risikofrei ohne Rückfrage: dieses
+    // Gerät hat an genau dieser Zeile nichts offen. Zeilen mit eigener Änderung bleiben unberührt
+    // und fallen ggf. unten in die Konflikterkennung.
+    if (serverIsNewer && localData !== undefined && resourceByStorageKey(storageName)) {
+      const healedRows = healUnchangedRowsAgainstServer(
+        normalizeRows<unknown>(localData),
+        normalizeRows<unknown>(serverData),
+      );
+      localData = healedRows as T;
+      Storage.set(storageName, healedRows);
     }
 
     if (localData !== undefined && resourceByStorageKey(storageName)) {
