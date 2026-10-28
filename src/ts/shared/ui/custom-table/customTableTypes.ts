@@ -239,13 +239,15 @@ export type TableAction<T extends CustomTableTypes> =
   | { type: 'DELETE_ALL' } // Rows.deleteAll()
   | {
       type: 'COMMIT_CHANGES'; // Rows.commitChanges()
-      createdIds?: Map<number, string>;
+      /** `getRowKey()` der neuen Zeile -> vom Backend vergebene `_id`. */
+      createdIds?: ReadonlyMap<string, string>;
       failedRowKeys: ReadonlySet<string>;
       includedRowKeys?: ReadonlySet<string>;
     }
   | {
       type: 'COMMIT_AUTO_SAVE'; // Rows.commitAutoSave()
-      createdIds?: Map<number, string>;
+      /** `getRowKey()` der neuen Zeile -> vom Backend vergebene `_id`. */
+      createdIds?: ReadonlyMap<string, string>;
       failedRowKeys: ReadonlySet<string>;
       includedRowKeys?: ReadonlySet<string>;
     }

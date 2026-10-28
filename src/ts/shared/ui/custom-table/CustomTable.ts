@@ -25,7 +25,7 @@ import type {
 import { Row } from './Row';
 import { Rows } from './Rows';
 import { getRowKey } from './customTableTypes';
-import { createRowRecord, tableReducer } from './tableReducer';
+import { restoreRowRecord, tableReducer } from './tableReducer';
 
 export { Column, Columns, Row, Rows, getRowKey };
 export type { CustomTableTypes, RowState, TableChanges };
@@ -102,7 +102,10 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 
     const initialColumns: ColumnRecord<T>[] = this.options.columns.map(column => ({ ...column }));
     this.tableState = {
-      rows: this.options.rows.map(row => createRowRecord(row, 'unchanged')),
+      // Startzeilen kommen bei den Feature-Tabs aus dem Storage: ihr lokaler Zustand
+      // (`__localState` etc.) muss erhalten bleiben, sonst gilt eine ungesendete Zeile nach dem
+      // Neuladen als gespeichert und wird nie mehr gesendet. Ohne Meta-Felder: `unchanged`.
+      rows: this.options.rows.map(row => restoreRowRecord(row, () => 'unchanged')),
       columns: initialColumns,
       rowFilter: null,
       editingEnabled: this.state.editing,
@@ -112,6 +115,9 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
     this.rows = new Rows<T>(this);
 
     if (this.$el) this.draw();
+
+    // Wie `Rows.load()`: offene Änderungen aus dem Storage an AutoSave melden.
+    if (this.tableState.rows.some(row => row._state === 'new' || row._state === 'modified')) this._notifyChange();
 
     return this;
 

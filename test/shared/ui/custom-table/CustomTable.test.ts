@@ -716,7 +716,7 @@ describe('CustomTable', () => {
       table.rows.add({ label: 'waehrenddessen' } as TableRow);
       expect(table.rows.array).toHaveLength(2);
 
-      const createdIds = new Map<number, string>([[0, 'server-id-1']]);
+      const createdIds = new Map<string, string>([[getRowKey(changeRows.create[0]), 'server-id-1']]);
       table.rows.commitAutoSave(createdIds, new Set(), includedRows);
 
       const [first, second] = table.rows.array;

@@ -22,7 +22,7 @@ Die Einstellungen-/Hauptseite rendert komplett aus localStorage — ein laufende
 
 ## Gotchas
 
-- Puppeteer-Skript mit `node` starten, nicht mit `bun`: unter Bun 1.4.4 bricht `puppeteer.launch()` mit "Timed out after 30000 ms while waiting for the WS endpoint URL" ab, obwohl Chrome selbst laeuft.
+- `puppeteer.launch({ ..., timeout: 120000 })` setzen: der erste Chrome-Start im Codespace dauert oft laenger als die Standard-30-s und bricht dann mit "Timed out after 30000 ms while waiting for the WS endpoint URL" ab, obwohl Chrome selbst laeuft.
 
 - `mount()` rendert per `flushSync` synchron; `useEffect` laeuft danach → nach Interaktionen ~150ms warten.
 - Ohne Backend startet der Auth-Lifecycle nicht, die Feature-Tabs mounten also nicht von selbst. Fuer

@@ -30,8 +30,7 @@ const DIRTY_ROW_STATES: readonly DirtyRowState[] = ['new', 'modified', 'deleted'
 /**
  * Baut den `RowRecord` einer Zeile: vergibt `uid`, übernimmt `_id` bzw. `clientRequestId` aus den
  * Zellen, erzeugt für `new` bei Bedarf eine `_clientRequestId` und sichert für `unchanged` die
- * `_originalCells`. Exportiert, weil `CustomTable.ts` damit den initialen Reducer-State baut
- * (ohne `LOAD`, das zusätzlich Meta-Felder aus `__localState`/`__errorMessage` restauriert).
+ * `_originalCells`. Gespeicherte Zeilen mit Meta-Feldern laufen über `restoreRowRecord()`.
  *
  * @typeParam T - Zeilentyp der Tabelle.
  * @param cells - Zellenwerte der Zeile.
@@ -54,24 +53,63 @@ export function createRowRecord<T extends CustomTableTypes>(cells: T, state: Row
 }
 
 /**
+ * Baut den `RowRecord` einer gespeicherten Zeile und stellt den lokalen Zustand aus den
+ * Meta-Feldern wieder her (`__localState`, bei Fehlern `__errorMessage`/`__errorState`). Die
+ * Meta-Felder werden aus den Zellen entfernt.
+ *
+ * @typeParam T - Zeilentyp der Tabelle.
+ * @param row - Zeile, ggf. mit Meta-Feldern aus dem Storage.
+ * @param fallbackState - Zustand, wenn `__localState` fehlt oder ungültig ist (erhält, ob die Zeile eine `_id` hat).
+ * @returns Neuer `RowRecord`.
+ */
+export function restoreRowRecord<T extends CustomTableTypes>(
+  row: T,
+  fallbackState: (hasId: boolean) => RowState,
+): RowRecord<T> {
+  const r = row as Record<string, unknown>;
+  const storedLocalState = r.__localState as string | undefined;
+  const storedErrorMsg = r.__errorMessage as string | undefined;
+  const storedErrorState = r.__errorState as string | undefined;
+  const cells = stripMetaFields({ ...row }) as T;
+  const hasId = typeof (cells as Record<string, unknown>)._id === 'string';
+
+  const baseState: RowState = NON_ERROR_ROW_STATES.includes(storedLocalState as RowState)
+    ? (storedLocalState as RowState)
+    : fallbackState(hasId);
+  const record = createRowRecord(cells, baseState);
+
+  if (storedErrorMsg) {
+    record._state = 'error';
+    record._errorState = DIRTY_ROW_STATES.includes(storedErrorState as DirtyRowState)
+      ? (storedErrorState as DirtyRowState)
+      : hasId
+        ? 'modified'
+        : 'new';
+    record._errorMessage = storedErrorMsg;
+  }
+  return record;
+}
+
+/**
  * Gemeinsamer Commit-Schritt für `COMMIT_CHANGES`/`COMMIT_AUTO_SAVE`: setzt `new`/`modified`
  * (und bei `deleted` nur die Fehlermarker) zurück, außer für fehlgeschlagene Zeilen und
- * Zeilen außerhalb des Snapshots. Vergibt neue `_id`s der Reihe nach an die `new`-Zeilen im Batch.
+ * Zeilen außerhalb des Snapshots. Neue Zeilen bekommen ihre `_id` über ihren eigenen
+ * `getRowKey()` -- nicht über die Position: `CustomTableView` sortiert `rows.array` in place, die
+ * Reihenfolge im State weicht dann von der des gesendeten Snapshots ab.
  *
  * @typeParam T - Zeilentyp der Tabelle.
  * @param rows - Aktuelle Zeilen.
- * @param createdIds - Index unter den neuen Zeilen im Batch -> vom Backend vergebene `_id`.
+ * @param createdIds - `getRowKey()` der neuen Zeile -> vom Backend vergebene `_id`.
  * @param failedRowKeys - `getRowKey()`-Schlüssel fehlgeschlagener Zeilen.
  * @param includedRowKeys - Snapshot der zu committenden Zeilen; `undefined` = alle.
  * @returns Neues Zeilen-Array.
  */
 function commitCreateAndUpdate<T extends CustomTableTypes>(
   rows: RowRecord<T>[],
-  createdIds: Map<number, string> | undefined,
+  createdIds: ReadonlyMap<string, string> | undefined,
   failedRowKeys: ReadonlySet<string>,
   includedRowKeys: ReadonlySet<string> | undefined,
 ): RowRecord<T>[] {
-  let createIdx = 0;
   return rows.map(row => {
     const effectiveState = getEffectiveRowState(row);
     const inBatch = includedRowKeys === undefined || includedRowKeys.has(getRowKey(row));
@@ -79,14 +117,16 @@ function commitCreateAndUpdate<T extends CustomTableTypes>(
     switch (effectiveState) {
       case 'new': {
         if (!inBatch) return row;
-        const isFailedRow = failedRowKeys.has(getRowKey(row));
-        const newId = createdIds?.get(createIdx);
-        createIdx++;
-        if (isFailedRow) return row;
-        const cells = newId ? ({ ...row.cells, _id: newId } as T) : row.cells;
+        const rowKey = getRowKey(row);
+        if (failedRowKeys.has(rowKey)) return row;
+        const newId = createdIds?.get(rowKey) ?? row._id;
+        // Ohne Server-`_id` gilt die Zeile nicht als gespeichert: bleibt `new` und geht beim
+        // nächsten Save erneut raus (Idempotenz über `clientRequestId` verhindert Duplikate).
+        if (!newId) return row;
+        const cells = { ...row.cells, _id: newId } as T;
         return {
           ...row,
-          _id: newId ?? row._id,
+          _id: newId,
           cells,
           _state: 'unchanged' as RowState,
           _errorState: undefined,
@@ -132,33 +172,7 @@ export function tableReducer<T extends CustomTableTypes>(
     }
 
     case 'LOAD': {
-      const loadedRows = action.rows.map(row => {
-        const r = row as Record<string, unknown>;
-        const storedLocalState = r.__localState as string | undefined;
-        const storedErrorMsg = r.__errorMessage as string | undefined;
-        const storedErrorState = r.__errorState as string | undefined;
-        const cells = stripMetaFields({ ...row }) as T;
-        const hasId =
-          '_id' in (cells as Record<string, unknown>) && typeof (cells as Record<string, unknown>)._id === 'string';
-
-        const baseState: RowState = NON_ERROR_ROW_STATES.includes(storedLocalState as RowState)
-          ? (storedLocalState as RowState)
-          : hasId
-            ? 'unchanged'
-            : 'new';
-        const record = createRowRecord(cells, baseState);
-
-        if (storedErrorMsg) {
-          record._state = 'error';
-          record._errorState = DIRTY_ROW_STATES.includes(storedErrorState as DirtyRowState)
-            ? (storedErrorState as DirtyRowState)
-            : hasId
-              ? 'modified'
-              : 'new';
-          record._errorMessage = storedErrorMsg;
-        }
-        return record;
-      });
+      const loadedRows = action.rows.map(row => restoreRowRecord(row, hasId => (hasId ? 'unchanged' : 'new')));
       return { ...state, rows: action.add ? [...state.rows, ...loadedRows] : loadedRows };
     }
 

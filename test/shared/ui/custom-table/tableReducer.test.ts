@@ -129,7 +129,7 @@ describe('tableReducer', () => {
     // Waehrend des "Requests" kommt eine zweite Zeile dazu -- nicht im Snapshot.
     const withSecondNew = tableReducer(withNew, { type: 'ADD', value: { label: 'B' } });
 
-    const createdIds = new Map<number, string>([[0, 'server-id-1']]);
+    const createdIds = new Map<string, string>([[getRowKey(withNew.rows[0]), 'server-id-1']]);
     const committed = tableReducer(withSecondNew, {
       type: 'COMMIT_AUTO_SAVE',
       createdIds,

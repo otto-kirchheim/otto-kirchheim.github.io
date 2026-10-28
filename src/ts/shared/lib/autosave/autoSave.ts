@@ -419,10 +419,14 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
     const result = await sendBulk(resource, table, changes, monat, jahr);
 
     const createdIdsByClient = mapCreatedIdsByClientRequestId(changeRows.create, result.createdReferences ?? []);
-    const createdIds =
+    const createdIdsByIndex =
       createdIdsByClient.size > 0
         ? createdIdsByClient
         : mapCreatedIdsByContent(resource, changeRows.create, result?.created ?? []);
+    // Index -> Zeilenschlüssel: der Commit darf nicht über die Position zuordnen (sortierte Anzeige).
+    const createdIds = new Map(
+      [...createdIdsByIndex].map(([idx, id]) => [getRowKey(changeRows.create[idx]), id] as const),
+    );
     const rowErrorMatches = collectRowErrorMatches(
       changeRows.create,
       changeRows.update,
