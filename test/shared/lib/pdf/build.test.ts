@@ -37,7 +37,7 @@ function macheCfg(): Version & { formular: string } {
               y: 60,
               size: 10,
               align: 'rechts',
-              format: 'waehrung',
+              format: '#.##0,00 €',
               berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' },
             },
           },
@@ -53,7 +53,7 @@ function macheCfg(): Version & { formular: string } {
         hoehe: 14,
         spalten: [
           { key: 'text', x: 50, size: 10 },
-          { key: 'betrag', x: 500, size: 10, align: 'rechts', format: 'waehrung' },
+          { key: 'betrag', x: 500, size: 10, align: 'rechts', format: '#.##0,00 €' },
         ],
       },
     },
@@ -215,7 +215,7 @@ describe('build', () => {
       x: 400,
       y: 80,
       size: 10,
-      format: 'datum',
+      format: 'DD.MM.YYYY',
       berechnet: { op: 'letztesDatum', ueber: '$alle', maxTage: 14 },
       nurBeiSignatur: true,
     };
@@ -239,7 +239,7 @@ describe('build', () => {
           y2: 714,
           size: 10,
           align: 'rechts',
-          format: 'waehrung',
+          format: '#.##0,00 €',
           berechnet: { op: 'summe', ueber: '$bisher', feld: 'betrag' },
         },
         seitenzahl: { x: 480, y: 30, x2: 545, y2: 42, size: 8, align: 'rechts', text: 'Seite {seite} von {seiten}' },
@@ -304,7 +304,7 @@ describe('build', () => {
       bereiche: [
         {
           tabelle: 'haupt',
-          spalten: [...cfg.tabellen.haupt!.spalten, { key: 'uebertrag', x: 300, size: 10, format: 'waehrung' }],
+          spalten: [...cfg.tabellen.haupt!.spalten, { key: 'uebertrag', x: 300, size: 10, format: '#.##0,00 €' }],
         },
       ],
       felder: {},
@@ -344,9 +344,9 @@ describe('build', () => {
         zellen: [
           { spaltenIndex: 2, art: 'summe' },
           { spaltenIndex: 2, art: 'bereinigt' },
-          { spaltenIndex: 2, art: 'summeGeld', format: 'waehrung' },
+          { spaltenIndex: 2, art: 'summeGeld', format: '#.##0,00 €' },
           { spaltenIndex: 3, art: 'summe' },
-          { spaltenIndex: 1, art: 'summe', format: 'waehrung' },
+          { spaltenIndex: 1, art: 'summe', format: '#.##0,00 €' },
         ],
       },
     };
@@ -389,7 +389,7 @@ describe('build', () => {
       felder: {},
     });
     cfg.tabellen.haupt!.sonderzeilen = {
-      summe: { ueber: '$seite', zellen: [{ spaltenIndex: 1, art: 'summe', format: 'waehrung' }] },
+      summe: { ueber: '$seite', zellen: [{ spaltenIndex: 1, art: 'summe', format: '#.##0,00 €' }] },
     };
     // Erste Seite: gleiche benannte Sonderzeile, aber Bezug per Platzierung auf $alle gehoben.
     cfg.layout.seiten[0]!.bereiche[0]!.sonderzeilen = [{ name: 'summe', y: 40, ueber: '$alle' }];

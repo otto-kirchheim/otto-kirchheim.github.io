@@ -12,7 +12,7 @@ function macheTabellen(): Version['tabellen'] {
       hoehe: 14,
       spalten: [
         { key: 'text', x: 50, size: 10 },
-        { key: 'betrag', x: 200, size: 10, format: 'waehrung' },
+        { key: 'betrag', x: 200, size: 10, format: '#.##0,00 €' },
       ],
     },
   };
@@ -26,7 +26,7 @@ function macheSeite(maxZeilen: number, wiederholt = false): SeitenDef {
     felder: {
       name: { x: 50, y: 800, size: 12, label: 'Name' },
       summe: { x: 500, y: 60, size: 10, berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' } },
-      datum: { x: 50, y: 20, size: 8, format: 'datum' },
+      datum: { x: 50, y: 20, size: 8, format: 'DD.MM.YYYY' },
     },
   };
 }

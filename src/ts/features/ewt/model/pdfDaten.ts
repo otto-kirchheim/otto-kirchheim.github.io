@@ -4,7 +4,8 @@ import dayjs from '@/shared/lib/date/configDayjs';
 import { isEwtInMonat } from '@/shared/lib/date/getMonatFromItem';
 import tableToArray from '@/shared/lib/ressource/tableToArray';
 import { tableIdOf } from '@/shared/lib/ressource/resourceConfig';
-import { alsMinuten, FORMAT, ZEILEN_OPS } from '@/shared/lib/pdf/aggregatoren';
+import { alsMinuten, ZEILEN_OPS } from '@/shared/lib/pdf/aggregatoren';
+import { formatiereWert } from '@/shared/lib/pdf/format';
 import type { IDatenEWT } from '@/types';
 
 export interface IPdfEWT {
@@ -94,8 +95,8 @@ export function ewtAbgeleiteteWerte(
   const dauerErsteTkgSt = dauerMinuten(zeile.an1E, zeile.ab1E);
 
   return {
-    DauerWohnung: FORMAT.stunden(dauerWohnung),
-    DauerErsteTkgSt: FORMAT.stunden(dauerErsteTkgSt),
+    DauerWohnung: formatiereWert(dauerWohnung, 'H:mm'),
+    DauerErsteTkgSt: formatiereWert(dauerErsteTkgSt, 'H:mm'),
     Wohnung8bis14: dauerWohnung > 8 * STUNDE && dauerWohnung <= 14 * STUNDE,
     Wohnung14bis24: dauerWohnung > 14 * STUNDE && dauerWohnung <= 24 * STUNDE,
     WohnungUeber24: dauerWohnung > 24 * STUNDE,

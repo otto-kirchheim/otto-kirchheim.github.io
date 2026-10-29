@@ -1,4 +1,4 @@
-import type { FormatName, ListenGruppe, ZulageCategory } from '@otto-kirchheim/nebengeld-shared';
+import type { Format, ListenGruppe, ZulageCategory } from '@otto-kirchheim/nebengeld-shared';
 
 /**
  * Typen und Helfer des Formular-Editor-Katalogs, geteilt zwischen `datenKatalog.ts` (Basis, Zusammenfuehrung) und den
@@ -21,7 +21,7 @@ export interface KatalogEintrag {
   label: string;
   gruppe: string;
   /** Format-Vorschlag, beim Anlegen/Umbenennen vorbelegt (nur ohne eigenes `format`). */
-  format?: FormatName;
+  format?: Format;
   /**
    * Beschränkt den Eintrag auf EINE Zeilenquelle (`ZEILEN_QUELLEN[formular][].pfad`, z.B. `'Daten.BZ'`),
    * wenn ein Feldname (`Beginn`) je Quelle Verschiedenes bedeutet. Ohne Angabe für alle Quellen.

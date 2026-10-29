@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 
-import type { Ausrichtung, Drehung, FormatName } from '@otto-kirchheim/nebengeld-shared';
-import { FORMATE } from './datenKatalog';
+import type { Ausrichtung, Drehung, Format } from '@otto-kirchheim/nebengeld-shared';
+import { FormatEingabe } from './FormatEingabe';
 import { DBButton, DBCheckbox, DBTooltip, DBStack } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 
@@ -225,7 +225,7 @@ export function DarstellungsFelder<
     autoGroesse?: boolean;
     umbruch?: boolean;
     align?: Ausrichtung;
-    format?: FormatName;
+    format?: Format;
     drehung?: Drehung;
     fett?: boolean;
     kursiv?: boolean;
@@ -307,23 +307,7 @@ export function DarstellungsFelder<
       {/* Format: eigene Zeile, unabhängig von Ausrichtung/Drehung. */}
       <div className="raster luft-oben-2xs abstand-1">
         <div>
-          <DbAuswahl
-            beschriftung="Format"
-            dicht
-            value={wert.format ?? ''}
-            onChange={e =>
-              onChange({
-                ...wert,
-                format: (e.target.value || undefined) as FormatName | undefined,
-              })
-            }
-          >
-            {FORMATE.map(f => (
-              <option key={f.wert} value={f.wert}>
-                {f.label}
-              </option>
-            ))}
-          </DbAuswahl>
+          <FormatEingabe wert={wert.format} onChange={format => onChange({ ...wert, format })} />
         </div>
       </div>
       {/* Verhalten: Auto-Verkleinerung und Umbruch steuern beide, wie der Text in die Zelle passt. */}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { tabellenZeilen } from '@/shared/lib/pdf/tabellenZeilen';
-import { FORMAT, OPS } from '@/shared/lib/pdf/aggregatoren';
+import { OPS } from '@/shared/lib/pdf/aggregatoren';
+import { formatiereWert } from '@/shared/lib/pdf/format';
 import type { Daten, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
 
 const daten: Daten = {
@@ -24,7 +25,7 @@ const mitDauer: TabellenDef = {
       key: 'Dauer',
       x: 200,
       size: 9,
-      format: 'stunden',
+      format: 'H:mm',
       berechnet: { op: 'zeitdifferenz', operanden: ['Ende', 'Beginn'] },
     },
   ],
@@ -44,7 +45,7 @@ describe('tabellenZeilen', () => {
 
   it('eine Summe ueber eine berechnete Spalte findet dadurch Werte statt 0', () => {
     const zeilen = tabellenZeilen(daten, mitDauer);
-    expect(FORMAT.stunden(OPS.summe(zeilen, 'Dauer'))).toBe('8:30');
+    expect(formatiereWert(OPS.summe(zeilen, 'Dauer'), 'H:mm')).toBe('8:30');
   });
 
   it('laesst die Nutzdaten unangetastet -- die Zeile wird kopiert', () => {

@@ -43,11 +43,11 @@ const LISTEN_VORLAGEN: ListenVorlage[] = [
 /** Katalog-Beitrag der Erschwerniszulagen (Formular `ez`): Rohfelder je Zeile plus die Zulagen-Listen-Vorlagen. */
 const katalog: FeatureKatalog = {
   zeilenFelder: [
-    { pfad: 'Tag', label: 'Tag', gruppe: 'Zeile', format: 'datum', beispiel: i => tag(i) },
+    { pfad: 'Tag', label: 'Tag', gruppe: 'Zeile', format: 'DD.MM.YYYY', beispiel: i => tag(i) },
     { pfad: 'Beginn', label: 'Beginn (HH:mm)', gruppe: 'Zeile', beispiel: '07:00' },
     { pfad: 'Ende', label: 'Ende (HH:mm)', gruppe: 'Zeile', beispiel: '15:45' },
     { pfad: 'Auftragsnummer', label: 'Auftragsnummer', gruppe: 'Zeile', beispiel: i => `1234567${23 + i}` },
-    { pfad: 'Zulagen', label: 'Zulagen (Liste)', gruppe: 'Zeile', format: 'liste', beispiel: ['NZ', 'SoZ'] },
+    { pfad: 'Zulagen', label: 'Zulagen (Liste)', gruppe: 'Zeile', format: '@liste', beispiel: ['NZ', 'SoZ'] },
     // Vorberechnet (`ezAbgeleiteteWerte`): `Spalte` kann Beginn/Ende nicht wie `Feld.quellen` verketten.
     { pfad: 'Arbeitszeit', label: 'Arbeitszeit (HH:mm-HH:mm)', gruppe: 'Berechnet', beispiel: '07:00-15:45' },
   ],

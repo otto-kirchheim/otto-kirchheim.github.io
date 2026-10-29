@@ -71,7 +71,7 @@ describe('parseRegistry', () => {
         key: 'Dauer',
         x: 50,
         size: 10,
-        format: 'stunden',
+        format: 'H:mm',
         berechnet: { op: 'summe', operanden: [{ op: 'zeitspanne', operanden: ['Ende', 'Beginn'] }, 'Pause'] },
       },
     ] as never;

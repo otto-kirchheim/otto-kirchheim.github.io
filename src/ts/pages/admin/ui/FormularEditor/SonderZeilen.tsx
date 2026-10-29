@@ -3,14 +3,13 @@ import { useState } from 'react';
 import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import type {
   Ausrichtung,
-  FormatName,
   SonderZeile,
   SonderZeileArt,
   SonderZeileZelle,
   TabellenDef,
 } from '@otto-kirchheim/nebengeld-shared';
 import { sonderZeileZelleWert, zeilenFuerUeber } from '@/shared/lib/pdf/wert';
-import { FORMATE } from './datenKatalog';
+import { FormatEingabe } from './FormatEingabe';
 import { WertVorschau } from './WertVorschau';
 import type { Vorschau } from './FeldPanel';
 import { DBButton, DBCheckbox, DBTooltip, DBStack } from '@db-ux/react-core-components';
@@ -206,24 +205,11 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
                   {zelle && (
                     <>
                       <div className="luft-oben-2xs">
-                        <DbAuswahl
-                          beschriftung="Format dieser Zelle -- ohne Auswahl gilt das Format der Spalte"
-                          dicht
-                          title="Format dieser Zelle -- ohne Auswahl gilt das Format der Spalte"
-                          value={zelle.format ?? ''}
-                          onChange={e =>
-                            setzeZelle(name, zeile, index, {
-                              ...zelle,
-                              format: ((e.target as HTMLSelectElement).value || undefined) as FormatName | undefined,
-                            })
-                          }
-                        >
-                          {FORMATE.map(f => (
-                            <option key={f.wert} value={f.wert}>
-                              {f.label}
-                            </option>
-                          ))}
-                        </DbAuswahl>
+                        <FormatEingabe
+                          beschriftung="Format dieser Zelle -- leer gilt das Format der Spalte"
+                          wert={zelle.format}
+                          onChange={format => setzeZelle(name, zeile, index, { ...zelle, format })}
+                        />
                       </div>
 
                       <div className="sp-3 luft-oben-2xs">

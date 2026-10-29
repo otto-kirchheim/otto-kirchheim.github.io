@@ -1,11 +1,4 @@
-import type {
-  Bedingung,
-  FormatName,
-  OpName,
-  Zeile,
-  ZeilenBerechnet,
-  ZeilenOpName,
-} from '@otto-kirchheim/nebengeld-shared';
+import type { Bedingung, OpName, Zeile, ZeilenBerechnet, ZeilenOpName } from '@otto-kirchheim/nebengeld-shared';
 import dayjs from '@/shared/lib/date/configDayjs';
 
 type Aggregator = (rows: Zeile[], feld?: string) => number;
@@ -88,7 +81,7 @@ export const OPS: Record<OpName, Aggregator> = {
   max: (rows, feld) => Math.max(0, ...rows.map(r => alsZahl(r[feld!]))),
   /**
    * Jüngster Datumswert in `feld` als Zeitstempel in ms, `0` ohne lesbare Werte. Eine Zahl statt
-   * Datums-String, damit jedes `FormatName`-Datumsformat greift; `max` taugt nicht (`Number("2026-03-15")`
+   * Datums-String, damit jedes Datumsmuster greift; `max` taugt nicht (`Number("2026-03-15")`
    * ist `NaN`).
    *
    * @param rows - Zeilen der Tabelle.
@@ -292,7 +285,7 @@ const DEUTSCHES_DATUM = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/;
  * @param value - Datum als `"DD.MM.YYYY"`, ISO-String, Zeitstempel (ms) oder leer.
  * @returns Das Datum, oder `null` bei Leerem/Ungültigem.
  */
-function alsDatum(value: unknown): Date | null {
+export function alsDatum(value: unknown): Date | null {
   // `new Date(null)` ergibt die Epoche statt Invalid Date -- Leerwerte vorher abfangen.
   if (value === null || value === undefined || value === '') return null;
   // Nur Strings aufs deutsche Format prüfen: `letztesDatum` reicht einen ms-Zeitstempel (Zahl) durch, und
@@ -307,224 +300,4 @@ function alsDatum(value: unknown): Date | null {
   }
   const d = new Date(value as string);
   return Number.isNaN(d.getTime()) ? null : d;
-}
-
-/**
- * Füllt eine Zahl auf zwei Stellen auf.
- *
- * @param n - Ganze Zahl.
- * @returns `n` mit führender Null auf zwei Stellen.
- */
-function zweistellig(n: number): string {
-  return String(n).padStart(2, '0');
-}
-
-const MONATSNAMEN = [
-  'Januar',
-  'Februar',
-  'März',
-  'April',
-  'Mai',
-  'Juni',
-  'Juli',
-  'August',
-  'September',
-  'Oktober',
-  'November',
-  'Dezember',
-];
-
-/**
- * Formatierer je `FormatName`: wandeln einen Rohwert in den Zellentext (`v` = Rohwert, Ergebnis = Text).
- */
-export const FORMAT: Record<FormatName, (value: unknown) => string> = {
-  /**
-   * Betrag als Euro mit zwei Nachkommastellen.
-   *
-   * @param value - Betrag als Zahl.
-   * @returns `1.234,50 €`.
-   */
-  waehrung: value =>
-    `${Number(value).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`,
-  /**
-   * Zahl mit deutschem Format.
-   *
-   * @param value - Zahl.
-   * @returns Deutsch formatiert, höchstens zwei Nachkommastellen.
-   */
-  zahl: value => Number(value).toLocaleString('de-DE', { maximumFractionDigits: 2 }),
-  /**
-   * Auf ganze Zahl gerundet.
-   *
-   * @param value - Zahl.
-   * @returns Auf ganze Zahl gerundet, deutsch formatiert.
-   */
-  ganzzahl: value => Math.round(Number(value) || 0).toLocaleString('de-DE'),
-
-  /**
-   * Datum als `TT.MM.JJJJ`.
-   *
-   * @param value - Datumswert (siehe `alsDatum`).
-   * @returns `TT.MM.JJJJ`; leer bei Unlesbarem.
-   */
-  datum: value => {
-    const d = alsDatum(value);
-    return d ? `${zweistellig(d.getDate())}.${zweistellig(d.getMonth() + 1)}.${d.getFullYear()}` : '';
-  },
-  /**
-   * Datum als `TT.MM.`.
-   *
-   * @param value - Datumswert (siehe `alsDatum`).
-   * @returns `TT.MM.`; leer bei Unlesbarem.
-   */
-  datumKurz: value => {
-    const d = alsDatum(value);
-    return d ? `${zweistellig(d.getDate())}.${zweistellig(d.getMonth() + 1)}.` : '';
-  },
-  /**
-   * Tag des Monats.
-   *
-   * @param value - Datumswert (siehe `alsDatum`).
-   * @returns Tag ohne führende Null; unlesbare Werte kommen unverändert durch.
-   */
-  tag: value => {
-    const d = alsDatum(value);
-    return d ? String(d.getDate()) : String(value ?? '');
-  },
-  /**
-   * Tag mit führender Null (`05`). Unlesbare Werte kommen wie bei `tag` durch; ein leerer Wert bleibt
-   * leer statt `00`.
-   *
-   * @param value - Datumswert (siehe `alsDatum`).
-   * @returns Zweistelliger Tag; unlesbare Werte kommen unverändert durch.
-   */
-  tagZweistellig: value => {
-    const d = alsDatum(value);
-    return d ? zweistellig(d.getDate()) : String(value ?? '');
-  },
-  /**
-   * Wochentag als Kürzel.
-   *
-   * @param value - Datumswert (siehe `alsDatum`).
-   * @returns `So`-`Sa`; leer bei Unlesbarem.
-   */
-  wochentag: value => {
-    const d = alsDatum(value);
-    return d ? ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][d.getDay()]! : '';
-  },
-  /**
-   * Monat und Jahr.
-   *
-   * @param value - Datumswert (siehe `alsDatum`).
-   * @returns `MM/JJJJ`; leer bei Unlesbarem.
-   */
-  monatJahr: value => {
-    const d = alsDatum(value);
-    return d ? `${zweistellig(d.getMonth() + 1)}/${d.getFullYear()}` : '';
-  },
-  /**
-   * Monatsname für den `Monat`-Datenpfad (1-12 als Zahl, kein Datum). Nicht über `alsDatum`: `new Date(3)`
-   * ergäbe ein Datum nahe der Epoche und damit "Januar" statt "März".
-   *
-   * @param value - Monat als Zahl 1-12.
-   * @returns Monatsname; leer außerhalb 1-12.
-   */
-  monatName: value => MONATSNAMEN[Number(value) - 1] ?? '',
-  /**
-   * Wie `monatName`, auf die ersten drei Buchstaben gekürzt (`Mär` für März bleibt korrekt).
-   *
-   * @param value - Monat als Zahl 1-12.
-   * @returns Erste drei Buchstaben des Monatsnamens.
-   */
-  monatNameKurz: value => MONATSNAMEN[Number(value) - 1]?.slice(0, 3) ?? '',
-
-  /**
-   * Uhrzeit als `HH:mm`.
-   *
-   * @param value - `"HH:mm"` oder Datumswert.
-   * @returns `HH:mm`; leer bei Unlesbarem.
-   */
-  uhrzeit: value => {
-    const treffer = NUR_UHRZEIT.exec(String(value ?? ''));
-    if (treffer) return `${zweistellig(Number(treffer[1]))}:${treffer[2]}`;
-    const d = alsDatum(value);
-    return d ? `${zweistellig(d.getHours())}:${zweistellig(d.getMinutes())}` : '';
-  },
-  /**
-   * Minuten-Zahl oder `"HH:mm"` als Zeitspanne `"H:mm"` (kann über 24h hinausgehen).
-   *
-   * @param value - Minuten oder `"HH:mm"`.
-   * @returns `H:mm`.
-   */
-  stunden: value => {
-    const treffer = NUR_UHRZEIT.exec(String(value ?? ''));
-    const minuten = treffer ? Number(treffer[1]) * 60 + Number(treffer[2]) : Math.round(Number(value) || 0);
-    return `${Math.floor(minuten / 60)}:${zweistellig(minuten % 60)}`;
-  },
-
-  /**
-   * Arrays zu einer Zelle zusammenfügen (Trenner ` / `). Nicht für `Pers.OE` -- siehe `oe`.
-   *
-   * @param value - Array oder Einzelwert.
-   * @returns Nichtleere Einträge, mit ` / ` verbunden.
-   */
-  liste: value =>
-    Array.isArray(value)
-      ? value.filter(t => t !== null && t !== undefined && t !== '').join(' / ')
-      : String(value ?? ''),
-  /**
-   * Text in Großbuchstaben.
-   *
-   * @param value - Beliebiger Wert.
-   * @returns Text in Großbuchstaben.
-   */
-  grossbuchstaben: value => String(value ?? '').toUpperCase(),
-  /**
-   * Boolean (echt oder als `"true"`/`"false"`-String) als deutsches Wort statt `true`/`false`.
-   *
-   * @param value - Boolean oder `"true"`/`"false"`.
-   * @returns `Ja` oder `Nein`.
-   */
-  jaNein: value => (value === true || value === 'true' ? 'Ja' : 'Nein'),
-  /**
-   * Hierarchie-Ebenen einer OE (`Pers.OE`) kanonisch zusammenfügen: erste zwei Ebenen mit `.`, weitere
-   * mit `-`, eine numerische letzte Ebene (Teamnummer) mit Leerzeichen, z.B. `V.IW-MI-N-KSL-IL 03`.
-   * Spiegelt `joinOeSegments` (Backend) und `joinOeLevels` (`shared/lib/ressource/oeLevels.ts`), bewusst
-   * dupliziert. `liste` würde die Schreibweise zerstören.
-   *
-   * @param value - Ebenen der OE (Array); Nicht-Arrays werden als Text durchgereicht.
-   * @returns Kanonische Schreibweise, leer ohne Ebenen.
-   */
-  oe: value => {
-    if (!Array.isArray(value)) return String(value ?? '');
-    const segmente = value.map(teil => String(teil ?? '').trim()).filter(Boolean);
-    if (segmente.length === 0) return '';
-    if (segmente.length === 1) return segmente[0]!;
-
-    const [ebene1, ebene2, ...rest] = segmente;
-    const basis = `${ebene1}.${ebene2}`;
-    if (rest.length === 0) return basis;
-
-    const letzte = rest[rest.length - 1]!;
-    const hatNumerischeTeamnummer = /^\d+$/.test(letzte) && rest.length >= 2;
-    if (!hatNumerischeTeamnummer) return `${basis}-${rest.join('-')}`;
-
-    const vorTeamnummer = rest.slice(0, -1).join('-');
-    return `${basis}-${vorTeamnummer} ${letzte}`;
-  },
-};
-
-/**
- * Stringifizierung für Werte ohne `format`. Nie roh `String()`: Arrays ergäben kommagetrennt ohne
- * Leerzeichen, Booleans englisches "true", Objekte (falscher Datenpfad) `"[object Object]"`.
- *
- * @param value - Beliebiger Wert.
- * @returns Anzeigetext; leer für `null`, `undefined` und Objekte.
- */
-export function standardText(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  if (Array.isArray(value)) return FORMAT.liste(value);
-  if (typeof value === 'boolean') return FORMAT.jaNein(value);
-  if (typeof value === 'object') return '';
-  return String(value);
 }

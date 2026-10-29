@@ -1,4 +1,5 @@
-import { lazy, Suspense, useCallback, useEffect, useState, type SubmitEvent } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type SubmitEvent } from 'react';
+import { sammleFormatFehler } from '@otto-kirchheim/nebengeld-shared';
 
 import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
 import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
@@ -22,7 +23,7 @@ import {
   type VersionNutzdaten,
   type VersionUebersicht,
 } from '../api/formularVersionenApi';
-import { DBButton, DBHeadingH5, DBHeadingH6, DBStack } from '@db-ux/react-core-components';
+import { DBButton, DBHeadingH5, DBHeadingH6, DBNotification, DBStack } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/shared/ui/form/DbFeld';
 import { useAdminFeatures } from '../adminFeatures';
 
@@ -80,6 +81,8 @@ export function FormularUpload() {
   const [gueltigBis, setGueltigBis] = useState('');
   const [datei, setDatei] = useState<File | null>(null);
   const [konfig, setKonfig] = useState<Konfig>(() => leereKonfig('ez'));
+  // Ungültige Formate sperren das Speichern schon im Editor; das Backend prüft dieselben Regeln.
+  const formatFehler = useMemo(() => sammleFormatFehler(konfig), [konfig]);
   const [speichert, setSpeichert] = useState(false);
 
   const [versionen, setVersionen] = useState<VersionUebersicht[]>([]);
@@ -236,6 +239,10 @@ export function FormularUpload() {
    */
   async function handleSubmit(e: SubmitEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
+    if (formatFehler.length > 0) {
+      createSnackBar({ message: 'Ungültige Formate korrigieren', status: 'error', timeout: 3000 });
+      return;
+    }
     if (!datei) {
       createSnackBar({ message: 'Die PDF-Vorlage ist erforderlich', status: 'error', timeout: 3000, fixed: true });
       return;
@@ -502,8 +509,23 @@ export function FormularUpload() {
         <p className="farbe-gedaempft zelle-klein">PDF-Vorlage zuerst auswählen, um Koordinaten setzen zu können.</p>
       )}
 
+      {formatFehler.length > 0 && (
+        <DBNotification
+          semantic="critical"
+          headline={`${formatFehler.length} ungültige${formatFehler.length === 1 ? 's Format' : ' Formate'}`}
+        >
+          <ul className="ohne-luft-unten">
+            {formatFehler.map(f => (
+              <li key={`${f.pfad}|${f.muster}`}>
+                <code>{f.pfad}</code> „{f.muster}": {f.fehler}
+              </li>
+            ))}
+          </ul>
+        </DBNotification>
+      )}
+
       <DBStack direction="row" gap="x-small">
-        <DBButton type="submit" variant="brand" disabled={speichert}>
+        <DBButton type="submit" variant="brand" disabled={speichert || formatFehler.length > 0}>
           {speichert ? 'Speichert…' : bearbeiteId ? 'Änderungen speichern' : 'Version anlegen'}
         </DBButton>
         {bearbeiteId && (

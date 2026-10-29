@@ -26,7 +26,7 @@ describe('wert', () => {
   });
 
   it('formatiert einen Direktwert, wenn format gesetzt ist', () => {
-    const f: Feld = { x: 0, y: 0, size: 10, format: 'waehrung' };
+    const f: Feld = { x: 0, y: 0, size: 10, format: '#.##0,00 €' };
     expect(wert(f, 'betrag', { betrag: 1234.5 }, kontext)).toBe('1.234,50 €');
   });
 
@@ -38,7 +38,7 @@ describe('wert', () => {
   });
 
   it('OE-Direktwert mit format: oe in kanonischer Schreibweise (User-Fund)', () => {
-    const f: Feld = { x: 0, y: 0, size: 10, format: 'oe' };
+    const f: Feld = { x: 0, y: 0, size: 10, format: '@oe' };
     expect(wert(f, 'oe', { oe: ['V', 'IW', 'MI', 'N', 'KSL', 'IL', '03'] }, kontext)).toBe('V.IW-MI-N-KSL-IL 03');
   });
 
@@ -102,23 +102,43 @@ describe('wert', () => {
 
     describe('optionales Format ({Pfad:Format})', () => {
       it('erzwingt liste statt roh gejointem Array', () => {
-        const f: Feld = { x: 0, y: 0, size: 10, text: 'Zulagen: {zulagen:liste}' };
+        const f: Feld = { x: 0, y: 0, size: 10, text: 'Zulagen: {zulagen:@liste}' };
         expect(wert(f, 'egal', { zulagen: ['NZ', 'SoZ', ''] }, kontext)).toBe('Zulagen: NZ / SoZ');
       });
 
       it('erzwingt oe für die kanonische Organisationseinheit-Schreibweise (User-Fund: liste zerstört sie)', () => {
-        const f: Feld = { x: 0, y: 0, size: 10, text: '{oe:oe}' };
+        const f: Feld = { x: 0, y: 0, size: 10, text: '{oe:@oe}' };
         expect(wert(f, 'egal', { oe: ['V', 'IW', 'MI', 'N', 'KSL', 'IL', '03'] }, kontext)).toBe('V.IW-MI-N-KSL-IL 03');
       });
 
       it('erzwingt ein Format, das vom Standard-Fallback abweicht (Zahl als Währung)', () => {
-        const f: Feld = { x: 0, y: 0, size: 10, text: '{betrag:waehrung}' };
+        const f: Feld = { x: 0, y: 0, size: 10, text: '{betrag:#.##0,00 €}' };
         expect(wert(f, 'egal', { betrag: 1234.5 }, kontext)).toBe('1.234,50 €');
       });
 
-      it('{heute:datumKurz} überschreibt das sonst feste FORMAT.datum', () => {
-        const f: Feld = { x: 0, y: 0, size: 10, text: 'Stand: {heute:datumKurz}' };
+      it('{heute:DD.MM.} überschreibt das sonst feste DD.MM.YYYY', () => {
+        const f: Feld = { x: 0, y: 0, size: 10, text: 'Stand: {heute:DD.MM.}' };
         expect(wert(f, 'egal', {}, kontext)).toBe('Stand: 16.08.');
+      });
+
+      it('{heute} ohne Format ist DD.MM.YYYY', () => {
+        const f: Feld = { x: 0, y: 0, size: 10, text: '{heute}' };
+        expect(wert(f, 'egal', {}, kontext)).toBe('16.08.2026');
+      });
+
+      it('Format mit Doppelpunkt: getrennt wird am ersten', () => {
+        const f: Feld = { x: 0, y: 0, size: 10, text: 'ab {Beginn:HH:mm} Uhr' };
+        expect(wert(f, 'egal', { Beginn: '2026-08-16T07:05:00' }, kontext)).toBe('ab 07:05 Uhr');
+      });
+
+      it('Text neben dem Platzhalter: {Tag:00}. Tag', () => {
+        const f: Feld = { x: 0, y: 0, size: 10, text: '{Tag:00}. Tag' };
+        expect(wert(f, 'egal', { Tag: 5 }, kontext)).toBe('05. Tag');
+      });
+
+      it('altes oder mehrdeutiges Format wird ignoriert (Altbestand)', () => {
+        const f: Feld = { x: 0, y: 0, size: 10, text: '{betrag:waehrung} {zeit:HH:00}' };
+        expect(wert(f, 'egal', { betrag: 5, zeit: '07:05' }, kontext)).toBe('5 07:05');
       });
 
       it('unbekannter Formatname wird ignoriert, Pfad bleibt über den Standard-Fallback nutzbar', () => {
@@ -135,7 +155,7 @@ describe('wert', () => {
 
   describe('datenPlatzhalter', () => {
     it('schneidet den :Format-Teil ab, damit die Testdaten-Vorschau den Pfad noch findet', () => {
-      expect(datenPlatzhalter('OE: {VorgabenU.Pers.OE:oe}, Stand {heute:datumKurz}')).toEqual(['VorgabenU.Pers.OE']);
+      expect(datenPlatzhalter('OE: {VorgabenU.Pers.OE:@oe}, Stand {heute:DD.MM.}')).toEqual(['VorgabenU.Pers.OE']);
     });
 
     it('liefert Pfade ohne Format unverändert', () => {
@@ -153,7 +173,7 @@ describe('wert', () => {
       x: 0,
       y: 0,
       size: 10,
-      format: 'datum',
+      format: 'DD.MM.YYYY',
       berechnet: { op: 'letztesDatum', ueber: '$alle', feld: 'Tag', maxTage: 14 },
     };
 
@@ -210,7 +230,7 @@ describe('wert', () => {
       x: 0,
       y: 0,
       size: 10,
-      format: 'waehrung',
+      format: '#.##0,00 €',
       berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' },
     };
     expect(wert(f, 'gesamt', {}, kontext)).toBe('165,00 €');
@@ -262,7 +282,7 @@ describe('wert', () => {
         x: 0,
         y: 0,
         size: 10,
-        format: 'waehrung',
+        format: '#.##0,00 €',
         berechnet: {
           op: 'summe',
           ueber: '$alle',
@@ -334,7 +354,7 @@ describe('wert', () => {
         x: 0,
         y: 0,
         size: 10,
-        format: 'waehrung',
+        format: '#.##0,00 €',
         berechnet: {
           op: 'summe',
           ueber: '$alle',
@@ -391,7 +411,7 @@ describe('wert', () => {
         x: 0,
         y: 0,
         size: 10,
-        format: 'waehrung',
+        format: '#.##0,00 €',
         berechnet: {
           op: 'summe',
           ueber: '$alle',
@@ -485,7 +505,7 @@ describe('wert', () => {
     });
 
     it('art summeGeld: Geldwert-Umrechnung wie Berechnet.liste.geldwert', () => {
-      const zelle: SonderZeileZelle = { spaltenIndex: 0, art: 'summeGeld', format: 'waehrung' };
+      const zelle: SonderZeileZelle = { spaltenIndex: 0, art: 'summeGeld', format: '#.##0,00 €' };
       // Summe 90 Minuten -> auf 2 Std. gerundet, mal Satz B (2) = 4,00 €.
       expect(sonderZeileZelleWert(zelle, spaltePlatz0, 'haupt', zeilen, daten, listenKontext)).toBe('4,00 €');
     });
@@ -503,8 +523,8 @@ describe('wert', () => {
     });
 
     it('Format-Override pro Zelle schlägt Spalte.format', () => {
-      const spalteMitFormat: Spalte = { ...spaltePlatz0, format: 'ganzzahl' };
-      const zelle: SonderZeileZelle = { spaltenIndex: 0, art: 'summeGeld', format: 'waehrung' };
+      const spalteMitFormat: Spalte = { ...spaltePlatz0, format: '#.##0' };
+      const zelle: SonderZeileZelle = { spaltenIndex: 0, art: 'summeGeld', format: '#.##0,00 €' };
       expect(sonderZeileZelleWert(zelle, spalteMitFormat, 'haupt', zeilen, daten, listenKontext)).toBe('4,00 €');
     });
   });
@@ -544,7 +564,7 @@ describe('wert', () => {
     });
 
     it('das Format gilt für jeden Teil einzeln (z.B. zwei Datumswerte als Zeitraum)', () => {
-      const f: Feld = { x: 0, y: 0, size: 10, quellen: ['von', 'bis'], trenner: ' - ', format: 'datum' };
+      const f: Feld = { x: 0, y: 0, size: 10, quellen: ['von', 'bis'], trenner: ' - ', format: 'DD.MM.YYYY' };
       expect(wert(f, 'egal', { von: '2026-03-01', bis: '2026-03-05' }, kontext)).toBe('01.03.2026 - 05.03.2026');
     });
 
@@ -599,7 +619,7 @@ describe('wert', () => {
       x: 0,
       y: 0,
       size: 10,
-      format: 'waehrung',
+      format: '#.##0,00 €',
       berechnet: { op: 'summe', ueber: '$seite', feld: 'betrag' },
     };
     expect(wert(f, 'zwischensumme', {}, kontext)).toBe('15,00 €');
@@ -618,7 +638,7 @@ describe('wert', () => {
       x: 0,
       y: 0,
       size: 10,
-      format: 'waehrung',
+      format: '#.##0,00 €',
       berechnet: { op: 'summe', ueber: '$laufend', feld: 'betrag' },
     };
     const gesamt: Feld = { ...f, berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' } };
@@ -633,7 +653,7 @@ describe('wert', () => {
       x: 0,
       y: 0,
       size: 10,
-      format: 'waehrung',
+      format: '#.##0,00 €',
       berechnet: { op: 'summe', ueber: '$bisher', feld: 'betrag' },
     };
     expect(wert(f, 'uebertrag', {}, kontext)).toBe('150,00 €');
@@ -655,7 +675,7 @@ describe('wert', () => {
       x: 0,
       y: 0,
       size: 10,
-      format: 'waehrung',
+      format: '#.##0,00 €',
       berechnet: { op: 'summe', ueber: '$bisher', feld: 'betrag' },
     };
     expect(wert(f, 'uebertrag', {}, leererKontext)).toBe('0,00 €');
@@ -666,7 +686,7 @@ describe('wert', () => {
       x: 0,
       y: 0,
       size: 10,
-      format: 'waehrung',
+      format: '#.##0,00 €',
       berechnet: { op: 'summe', ueber: 'zeilen', feld: 'betrag' },
     };
     const daten = { zeilen: [{ betrag: 7 }, { betrag: 3 }] };

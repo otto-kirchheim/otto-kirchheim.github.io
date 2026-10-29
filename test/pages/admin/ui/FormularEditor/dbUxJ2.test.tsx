@@ -72,7 +72,7 @@ const tabelle: TabellenDef = {
   startY: 700,
   maxZeilen: 10,
   hoehe: 14,
-  spalten: [{ key: 'Tag', x: 50, size: 10, format: 'datum' }],
+  spalten: [{ key: 'Tag', x: 50, size: 10, format: 'DD.MM.YYYY' }],
 };
 const seite: SeitenDef = { quelle: 0, bereiche: [{ tabelle: 'haupt', startY: 700, maxZeilen: 10 }], felder: {} };
 const vorschau = erzeugeVorschau({ haupt: tabelle }, [seite], 0, 'ez');
@@ -122,7 +122,7 @@ describe('TabellenBlock (DBButton/DBCheckbox)', () => {
 });
 
 describe('FeldListe (FeldZeile: Modus-Knopfgruppe + Loeschen)', () => {
-  const felder: Record<string, Feld> = { betrag: { x: 50, y: 60, size: 10, format: 'waehrung' } };
+  const felder: Record<string, Feld> = { betrag: { x: 50, y: 60, size: 10, format: '#.##0,00 €' } };
 
   it('zeigt Datenfeld-Modus als aktiven Knopf und wechselt auf Klick', () => {
     const onChange = mock(() => {});

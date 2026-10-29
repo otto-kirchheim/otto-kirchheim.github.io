@@ -1,13 +1,5 @@
-import {
-  FORMAT,
-  OPS,
-  alsVergleichswert,
-  datumMitFrist,
-  standardText,
-  summeGruppe,
-  summeUeberListe,
-  trifftBedingung,
-} from './aggregatoren';
+import { OPS, alsVergleichswert, datumMitFrist, summeGruppe, summeUeberListe, trifftBedingung } from './aggregatoren';
+import { formatiereWert } from './format';
 import { get } from './get';
 import { listenBeschriftung, schluesselAufPlatz } from './listen';
 import type { ListenAufloesung } from './listen';
@@ -17,12 +9,12 @@ import {
   summeBereinigtGruppe,
   summeGeldwertGruppe,
 } from './zulagenWerte';
+import { pruefeFormat } from '@otto-kirchheim/nebengeld-shared';
 import type {
   Berechnet,
   Daten,
   Feld,
   FeldBedingung,
-  FormatName,
   IVorgabeValue,
   Spalte,
   SonderZeileZelle,
@@ -80,19 +72,19 @@ const PLATZHALTER = /\{([^{}]+)\}/g;
 const SEITEN_PLATZHALTER = /^(seite|seiten)\s*([+-]\s*\d+)?$/;
 
 /**
- * Trennt `{Pfad}` von `{Pfad:Format}`. Ein unbekanntes `FormatName` wird ignoriert statt den Platzhalter
- * zu zerstören (Tippfehler).
+ * Trennt `{Pfad}` von `{Pfad:Format}` (am ersten `:`, damit `{Zeit:HH:mm}` geht). Ein ungültiges Format
+ * wird ignoriert statt den Platzhalter zu zerstören (Altbestand; der Editor lässt es nicht speichern).
  *
  * @param name - Inhalt zwischen den Klammern, z.B. `Pfad` oder `Pfad:Format`.
  * @returns Datenpfad und, falls bekannt, das gewünschte Format.
  */
-function zerlegePlatzhalter(name: string): { pfad: string; format?: FormatName } {
+function zerlegePlatzhalter(name: string): { pfad: string; format?: string } {
   const trimmed = name.trim();
   const doppelpunkt = trimmed.indexOf(':');
   if (doppelpunkt === -1) return { pfad: trimmed };
   const pfad = trimmed.slice(0, doppelpunkt).trim();
   const format = trimmed.slice(doppelpunkt + 1).trim();
-  return format in FORMAT ? { pfad, format: format as FormatName } : { pfad };
+  return pruefeFormat(format).fehler ? { pfad } : { pfad, format };
 }
 
 /**
@@ -117,13 +109,13 @@ export function datenPlatzhalter(text: string): string[] {
  */
 function formatiere(roh: unknown, f: Feld): string {
   if (roh === null || roh === undefined) return '';
-  return f.format ? FORMAT[f.format](roh) : standardText(roh);
+  return formatiereWert(roh, f.format);
 }
 
 /**
  * Ersetzt `{name}` in festen Texten: `{seite}`/`{seiten}` (Versatz siehe `SEITEN_PLATZHALTER`), `{heute}`,
  * sonst Datenpfad. Unbekannte Pfade werden leer, damit kein roher Platzhalter im PDF landet. Das Format
- * lässt sich erzwingen (`{heute:datumKurz}`), sonst greift der Fallback unformatierter Felder.
+ * lässt sich erzwingen (`{heute:DD.MM.}`), sonst greift der Fallback unformatierter Felder.
  *
  * @param text - Fester Text mit `{…}`-Platzhaltern.
  * @param daten - Nutzdaten für die Datenpfade.
@@ -140,10 +132,10 @@ function ersetzePlatzhalter(text: string, daten: Daten, kontext: Kontext): strin
       const versatz = seitenTreffer[2] ? Number(seitenTreffer[2].replace(/\s+/g, '')) : 0;
       return String(basis + versatz);
     }
-    if (pfad === 'heute') return FORMAT[format ?? 'datum'](kontext.heute);
+    if (pfad === 'heute') return formatiereWert(kontext.heute, format ?? 'DD.MM.YYYY');
     const roh = get(daten, pfad);
     if (roh === null || roh === undefined) return '';
-    return format ? FORMAT[format](roh) : standardText(roh);
+    return formatiereWert(roh, format);
   });
 }
 
@@ -246,7 +238,7 @@ export function sonderZeileZelleWert(
    * @param roh - Rohwert.
    * @returns Formatierter Text.
    */
-  const formatiere = (roh: unknown): string => (format ? FORMAT[format](roh) : standardText(roh));
+  const formatiere = (roh: unknown): string => formatiereWert(roh, format);
 
   if (zelle.art === 'kopf') {
     // Ohne dynamischen Platz ist das Spalten-Label die Überschrift.
