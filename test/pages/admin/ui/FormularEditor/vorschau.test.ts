@@ -10,8 +10,8 @@ const tabellen: Record<string, TabellenDef> = {
     maxZeilen: 10,
     hoehe: 14,
     spalten: [
-      { key: 'Tag', x: 50, size: 10, format: 'datum' },
-      { key: 'betrag', x: 300, size: 10, format: 'waehrung' },
+      { key: 'Tag', x: 50, size: 10, format: 'DD.MM.YYYY' },
+      { key: 'betrag', x: 300, size: 10, format: '#.##0,00 €' },
     ],
   },
 };
@@ -25,7 +25,7 @@ function ersteSeite(maxZeilen: number): SeitenDef {
         x: 50,
         y: 60,
         size: 10,
-        format: 'waehrung',
+        format: '#.##0,00 €',
         berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' },
       },
       seitenzahl: { x: 400, y: 30, size: 8, text: 'Seite {seite} von {seiten}' },
@@ -43,7 +43,7 @@ function weitereSeite(maxZeilen: number): SeitenDef {
         x: 50,
         y: 700,
         size: 10,
-        format: 'waehrung',
+        format: '#.##0,00 €',
         berechnet: { op: 'summe', ueber: '$bisher', feld: 'betrag' },
       },
       hinweis: { x: 50, y: 720, size: 10, text: 'Übertrag von Seite {seite-1}' },

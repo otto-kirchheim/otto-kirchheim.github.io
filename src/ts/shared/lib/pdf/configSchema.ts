@@ -1,29 +1,27 @@
 import { z } from 'zod';
+import { findeFormatPlatzhalter, pruefeFormat } from '@otto-kirchheim/nebengeld-shared';
 import type { Registry, Version, ZeilenBerechnet } from '@otto-kirchheim/nebengeld-shared';
 
 // Spiegelt das Typsystem aus @otto-kirchheim/nebengeld-shared (formular/types.ts) -- die vom Server
 // gelieferte Konfiguration ist zur Laufzeit `unknown` und muss vor der Verwendung validiert werden.
 
 const ausrichtungSchema = z.enum(['links', 'rechts', 'zentriert']);
-const formatNameSchema = z.enum([
-  'waehrung',
-  'zahl',
-  'ganzzahl',
-  'datum',
-  'datumKurz',
-  'tag',
-  'tagZweistellig',
-  'wochentag',
-  'monatJahr',
-  'monatName',
-  'monatNameKurz',
-  'uhrzeit',
-  'stunden',
-  'liste',
-  'grossbuchstaben',
-  'jaNein',
-  'oe',
-]);
+/** Format-Muster oder `@`-Schlüsselwort; Regeln und Meldungen kommen aus `pruefeFormat` (shared). */
+const formatSchema = z
+  .string()
+  .max(40)
+  .superRefine((muster, ctx) => {
+    const { fehler } = pruefeFormat(muster);
+    if (fehler) ctx.addIssue({ code: 'custom', message: fehler });
+  });
+
+/** Fester Text; jedes `{Pfad:Format}` muss ein gültiges Format tragen. */
+const feldTextSchema = z.string().superRefine((text, ctx) => {
+  for (const { format } of findeFormatPlatzhalter(text)) {
+    const { fehler } = pruefeFormat(format);
+    if (fehler) ctx.addIssue({ code: 'custom', message: `{…:${format}}: ${fehler}` });
+  }
+});
 const opNameSchema = z.enum(['summe', 'anzahl', 'max', 'letztesDatum']);
 const zeilenOpNameSchema = z.enum(['produkt', 'summe', 'differenz', 'quotient', 'zeitdifferenz', 'zeitspanne']);
 
@@ -102,7 +100,7 @@ const sonderZeileArtSchema = z.enum(['kopf', 'summe', 'bereinigt', 'summeGeld'])
 const sonderZeileZelleSchema = z.object({
   spaltenIndex: z.number().int().nonnegative(),
   art: sonderZeileArtSchema,
-  format: formatNameSchema.optional(),
+  format: formatSchema.optional(),
   // Ohne Angabe gelten jeweils die Werte der referenzierten Spalte.
   size: z.number().optional(),
   align: ausrichtungSchema.optional(),
@@ -129,9 +127,9 @@ const feldSchema = z.object({
   autoGroesse: z.boolean().optional(),
   umbruch: z.boolean().optional(),
   align: ausrichtungSchema.optional(),
-  format: formatNameSchema.optional(),
+  format: formatSchema.optional(),
   berechnet: berechnetSchema.optional(),
-  text: z.string().optional(),
+  text: feldTextSchema.optional(),
   quellen: z.array(z.string()).optional(),
   trenner: z.string().optional(),
   wenn: feldBedingungSchema.optional(),
@@ -152,7 +150,7 @@ const spalteSchema = z.object({
   autoGroesse: z.boolean().optional(),
   umbruch: z.boolean().optional(),
   align: ausrichtungSchema.optional(),
-  format: formatNameSchema.optional(),
+  format: formatSchema.optional(),
   maxBreite: z.number().optional(),
   berechnet: zeilenBerechnetSchema.optional(),
   wenn: bedingungSchema.optional(),

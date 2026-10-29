@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 
+import { sammleFormatFehler } from '@otto-kirchheim/nebengeld-shared';
 import type { Feld, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
 import { wert } from '@/shared/lib/pdf/wert';
 import { AggregationEditor } from './aggregationUndRechnung';
@@ -46,6 +47,9 @@ function FeldZeile({
   vorschau: Vorschau;
 }) {
   const festerText = feld.text !== undefined;
+  const textFehlerListe = festerText ? sammleFormatFehler({ text: feld.text }) : [];
+  const textFehler =
+    textFehlerListe.length > 0 ? textFehlerListe.map(f => `{…:${f.muster}}: ${f.fehler}`).join('; ') : undefined;
   const textRef = useRef<HTMLInputElement>(null);
   // Tabellen mit dynamischen Spalten -- nur dafür gibt es überhaupt Überschriften zu setzen.
   const mitListen = Object.entries(tabellen).filter(([, t]) => t.listen && Object.keys(t.listen).length > 0);
@@ -272,6 +276,8 @@ function FeldZeile({
             feldRef={textRef}
             placeholder="z.B. Übertrag  oder  Seite {seite} von {seiten}"
             value={feld.text}
+            ungueltig={textFehler !== undefined}
+            {...(textFehler ? { invalidMessage: textFehler } : {})}
             onChange={e => onChange({ ...feld, text: (e.target as HTMLInputElement).value })}
           />
           <div className="zelle-klein farbe-gedaempft">
@@ -279,7 +285,7 @@ function FeldZeile({
             <code>{'{heute}'}</code> oder jeder Datenpfad (z.B. <code>{'{Monat}'}</code>, oder oben aus der Liste
             einfügen) -- auch mehrere gemischt, z.B. <code>{'{Nachname}, {Vorname}'}</code>. Für Trennzeichen, die bei
             leeren/optionalen Werten automatisch wegfallen (z.B. Adress2), stattdessen den Modus „Mehrere" nutzen.
-            Format erzwingen mit <code>{'{Pfad:Format}'}</code>, z.B. <code>{'{heute:datumKurz}'}</code>.{' '}
+            Format erzwingen mit <code>{'{Pfad:Format}'}</code>, z.B. <code>{'{heute:DD.MM.}'}</code>.{' '}
             <DBButton
               type="button"
 
@@ -328,12 +334,19 @@ const VORLAGEN: { label: string; key: string; feld: Feld }[] = [
   {
     label: '+ Gesamtsumme',
     key: 'summe',
-    feld: { x: 50, y: 50, size: 10, align: 'rechts', format: 'waehrung', berechnet: { op: 'summe', ueber: '$alle' } },
+    feld: { x: 50, y: 50, size: 10, align: 'rechts', format: '#.##0,00 €', berechnet: { op: 'summe', ueber: '$alle' } },
   },
   {
     label: '+ Übertrag',
     key: 'uebertrag',
-    feld: { x: 50, y: 50, size: 10, align: 'rechts', format: 'waehrung', berechnet: { op: 'summe', ueber: '$bisher' } },
+    feld: {
+      x: 50,
+      y: 50,
+      size: 10,
+      align: 'rechts',
+      format: '#.##0,00 €',
+      berechnet: { op: 'summe', ueber: '$bisher' },
+    },
   },
   {
     label: '+ Seitenzahl',

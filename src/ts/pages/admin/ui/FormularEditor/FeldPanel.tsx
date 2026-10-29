@@ -23,7 +23,7 @@ const UNTERSCHRIFTSDATUM_FELD: Feld = {
   y: 50,
   size: 10,
   align: 'zentriert',
-  format: 'datum',
+  format: 'DD.MM.YYYY',
   berechnet: { op: 'letztesDatum', ueber: '$alle', maxTage: 14 },
   nurBeiSignatur: true,
 };

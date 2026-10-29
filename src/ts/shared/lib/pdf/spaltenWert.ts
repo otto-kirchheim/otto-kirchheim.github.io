@@ -1,4 +1,5 @@
-import { berechneZeile, FORMAT, standardText, trifftBedingung } from './aggregatoren';
+import { berechneZeile, trifftBedingung } from './aggregatoren';
+import { formatiereWert } from './format';
 import { listenWert, schluesselAufPlatz } from './listen';
 import type { ListenAufloesung } from './listen';
 import type { Spalte, Zeile } from '@otto-kirchheim/nebengeld-shared';
@@ -43,5 +44,5 @@ export function spaltenWert(sp: Spalte, zeile: Zeile, listen?: ListenAufloesung)
  */
 function formatiere(roh: unknown, sp: Spalte): string {
   if (roh === null || roh === undefined) return '';
-  return sp.format ? FORMAT[sp.format](roh) : standardText(roh);
+  return formatiereWert(roh, sp.format);
 }

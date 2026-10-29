@@ -1,6 +1,6 @@
 import { DB_ASSETS } from '@/shared/lib/dbAssets';
 import { ZULAGEN_CATALOG } from '@otto-kirchheim/nebengeld-shared';
-import type { FormatName, Schriftfamilie, ZulageCategory } from '@otto-kirchheim/nebengeld-shared';
+import type { Schriftfamilie, ZulageCategory } from '@otto-kirchheim/nebengeld-shared';
 import type { FeatureKatalog, FormularCode, KatalogEintrag, ListenVorlage } from './katalogTypen';
 import { getAdminFeaturesState } from '../../adminFeatures';
 
@@ -25,26 +25,36 @@ export const SCHRIFTARTEN: { wert: Schriftfamilie; label: string }[] = [
     : []),
 ];
 
-/** Format-Auswahl für Feld/Spalte/Sonderzeilen-Zelle -- `''` steht für "kein eigenes Format". */
-export const FORMATE: { wert: FormatName | ''; label: string }[] = [
-  { wert: '', label: 'unverändert' },
-  { wert: 'waehrung', label: 'Währung (1.234,50)' },
-  { wert: 'zahl', label: 'Zahl (1.234,57)' },
-  { wert: 'ganzzahl', label: 'Ganzzahl (1.235)' },
-  { wert: 'datum', label: 'Datum (15.03.2026)' },
-  { wert: 'datumKurz', label: 'Datum kurz (15.03.)' },
-  { wert: 'tag', label: 'Tag (15)' },
-  { wert: 'tagZweistellig', label: 'Tag zweistellig (05)' },
-  { wert: 'wochentag', label: 'Wochentag (So)' },
-  { wert: 'monatJahr', label: 'Monat/Jahr (03/2026)' },
-  { wert: 'monatName', label: 'Monatsname (März)' },
-  { wert: 'monatNameKurz', label: 'Monatsname kurz (Mär)' },
-  { wert: 'uhrzeit', label: 'Uhrzeit (07:05)' },
-  { wert: 'stunden', label: 'Zeitspanne (2:30)' },
-  { wert: 'liste', label: 'Liste zusammenfügen (I / IW)' },
-  { wert: 'grossbuchstaben', label: 'GROSSBUCHSTABEN' },
-  { wert: 'jaNein', label: 'Ja/Nein' },
-  { wert: 'oe', label: 'Organisationseinheit (V.IW-MI-N-KSL-IL 03)' },
+/**
+ * Vorschläge für das Format-Freitextfeld (Feld/Spalte/Sonderzeilen-Zelle) und die Hilfe -- keine
+ * abschließende Liste: jedes gültige Muster geht (`pruefeFormat` in shared).
+ */
+export const FORMAT_VORSCHLAEGE: { value: string; label: string }[] = [
+  { value: '#.##0,00 €', label: 'Währung (1.234,50 €)' },
+  { value: '#.##0 €', label: 'Währung ganze Euro (1.235 €)' },
+  { value: '#.##0,##', label: 'Zahl (1.234,57 / 5)' },
+  { value: '#.##0,0', label: 'Zahl, eine Nachkommastelle (1.234,6)' },
+  { value: '#.##0', label: 'Ganzzahl (1.235)' },
+  { value: '0', label: 'Ganzzahl ohne Tausenderpunkt (2026)' },
+  { value: '00', label: 'Zweistellig (05)' },
+  { value: '0,0 %', label: 'Prozent (12,5 % aus 0,125)' },
+  { value: 'DD.MM.YYYY', label: 'Datum (15.03.2026)' },
+  { value: 'DD.MM.', label: 'Datum kurz (15.03.)' },
+  { value: 'DD.MM.YY', label: 'Datum, Jahr zweistellig (15.03.26)' },
+  { value: 'D', label: 'Tag (5)' },
+  { value: 'DD', label: 'Tag zweistellig (05)' },
+  { value: 'dd', label: 'Wochentag (So)' },
+  { value: 'dddd', label: 'Wochentag lang (Sonntag)' },
+  { value: 'MM/YYYY', label: 'Monat/Jahr (03/2026)' },
+  { value: 'MM.YYYY', label: 'Monat.Jahr (03.2026)' },
+  { value: 'MMMM', label: 'Monatsname (März)' },
+  { value: 'MMM', label: 'Monatsname kurz (Jan., März)' },
+  { value: 'HH:mm', label: 'Uhrzeit (07:05)' },
+  { value: 'H:mm', label: 'Dauer (26:30)' },
+  { value: '@liste', label: 'Liste zusammenfügen (I / IW)' },
+  { value: '@grossbuchstaben', label: 'GROSSBUCHSTABEN' },
+  { value: '@jaNein', label: 'Ja/Nein' },
+  { value: '@oe', label: 'Organisationseinheit (V.IW-MI-N-KSL-IL 03)' },
 ];
 
 // Katalog-Beitrag je Formular-Feature; Felder/Quellen/Listen liegen bei den Features (`pages/admin/features/<key>/katalog.ts`,
@@ -119,7 +129,7 @@ const BASIS: KatalogEintrag[] = [
     pfad: 'VorgabenU.Pers.OE',
     label: 'Organisationseinheit',
     gruppe: 'Dienststelle',
-    format: 'oe',
+    format: '@oe',
     beispiel: ['I', 'IW', 'MI', 'N', 'MUS', 'IL'],
   },
   { pfad: 'VorgabenU.Pers.Gewerk', label: 'Gewerk', gruppe: 'Dienststelle', beispiel: 'LST' },

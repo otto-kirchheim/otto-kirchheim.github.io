@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'bun:test';
 import {
-  FORMAT,
   OPS,
   alsVergleichswert,
   alsZahl,
@@ -8,11 +7,11 @@ import {
   berechneZeile,
   datumMitFrist,
   operandenFelder,
-  standardText,
   summeGruppe,
   summeUeberListe,
   trifftBedingung,
 } from '@/shared/lib/pdf/aggregatoren';
+import { formatiereWert } from '@/shared/lib/pdf/format';
 import type { Zeile } from '@otto-kirchheim/nebengeld-shared';
 
 describe('OPS', () => {
@@ -30,150 +29,6 @@ describe('OPS', () => {
     expect(OPS.max(rows, 'betrag')).toBe(10);
     expect(OPS.max([], 'betrag')).toBe(0);
     expect(OPS.max([{ betrag: -5 }], 'betrag')).toBe(0);
-  });
-});
-
-describe('FORMAT', () => {
-  it('waehrung formatiert mit zwei Nachkommastellen und deutschem Komma', () => {
-    expect(FORMAT.waehrung(1234.5)).toBe('1.234,50 €');
-  });
-
-  it('zahl und ganzzahl runden bzw. kürzen deutsch formatiert', () => {
-    expect(FORMAT.zahl(1234.567)).toBe('1.234,57');
-    expect(FORMAT.ganzzahl(1234.6)).toBe('1.235');
-  });
-
-  it('datum formatiert zweistellig (Formularzellen erwarten 15.03., nicht 15.3.)', () => {
-    expect(FORMAT.datum('2026-03-15')).toBe('15.03.2026');
-    expect(FORMAT.datumKurz('2026-03-15')).toBe('15.03.');
-    expect(FORMAT.tag('2026-03-15')).toBe('15');
-    expect(FORMAT.wochentag('2026-03-15')).toBe('So');
-    expect(FORMAT.monatJahr('2026-03-15')).toBe('03/2026');
-  });
-
-  it('tagZweistellig füllt die führende Null auf (zweistelliges Kästchen im Formular)', () => {
-    expect(FORMAT.tagZweistellig('2026-03-05')).toBe('05');
-    expect(FORMAT.tagZweistellig('2026-03-15')).toBe('15');
-    // Leerwert bleibt leer -- ein aufgefülltes "00" stünde sonst in jeder ungenutzten Zeile.
-    expect(FORMAT.tagZweistellig('')).toBe('');
-    expect(FORMAT.tagZweistellig(null)).toBe('');
-  });
-
-  it('datum liefert leeren String statt "Invalid Date" bei unlesbarem Wert', () => {
-    expect(FORMAT.datum('kein datum')).toBe('');
-    expect(FORMAT.datum(null)).toBe('');
-  });
-
-  it('akzeptiert deutsches "DD.MM.YYYY" -- so speichern IDatenN/IDatenEA/IDatenBE ihr Tag-Feld, nicht ISO (User-Fund: EA-Kalendertag/Wochentag blieben im PDF leer)', () => {
-    expect(FORMAT.datum('14.08.2026')).toBe('14.08.2026');
-    expect(FORMAT.datumKurz('05.08.2026')).toBe('05.08.');
-    expect(FORMAT.tag('14.08.2026')).toBe('14');
-    expect(FORMAT.tagZweistellig('5.08.2026')).toBe('05');
-    expect(FORMAT.wochentag('14.08.2026')).toBe('Fr');
-    expect(FORMAT.monatJahr('14.08.2026')).toBe('08/2026');
-  });
-
-  it('monatName/monatNameKurz lesen die eigenständige Monat-Zahl (1-12), kein Datum', () => {
-    expect(FORMAT.monatName(3)).toBe('März');
-    expect(FORMAT.monatName('3')).toBe('März');
-    expect(FORMAT.monatName(1)).toBe('Januar');
-    expect(FORMAT.monatName(12)).toBe('Dezember');
-    expect(FORMAT.monatNameKurz(3)).toBe('Mär');
-    expect(FORMAT.monatNameKurz(1)).toBe('Jan');
-    expect(FORMAT.monatNameKurz(9)).toBe('Sep');
-  });
-
-  it('monatName: NICHT über alsDatum -- new Date(3) wäre sonst fälschlich Januar statt März', () => {
-    // Reproduziert genau den Fehler, den eine alsDatum-basierte Implementierung hätte: new Date(3)
-    // ist ein gültiger Zeitstempel nahe der Unix-Epoche (Januar 1970), nicht der Monat März.
-    expect(FORMAT.monatName(3)).not.toBe('Januar');
-  });
-
-  it('monatName/monatNameKurz: unlesbare oder außerhalb 1-12 liegende Werte bleiben leer', () => {
-    expect(FORMAT.monatName(0)).toBe('');
-    expect(FORMAT.monatName(13)).toBe('');
-    expect(FORMAT.monatName('kaputt')).toBe('');
-    expect(FORMAT.monatName(null)).toBe('');
-    expect(FORMAT.monatNameKurz(0)).toBe('');
-  });
-
-  it('uhrzeit akzeptiert reine HH:mm-Strings und ISO-Zeitstempel', () => {
-    expect(FORMAT.uhrzeit('7:05')).toBe('07:05');
-    expect(FORMAT.uhrzeit('2026-03-15T14:30:00')).toBe('14:30');
-  });
-
-  it('stunden rechnet Minuten und HH:mm zu einer Zeitspanne', () => {
-    expect(FORMAT.stunden(150)).toBe('2:30');
-    expect(FORMAT.stunden('26:15')).toBe('26:15');
-  });
-
-  it('liste fügt Arrays generisch zusammen und filtert Leerwerte', () => {
-    expect(FORMAT.liste(['NZ', '', 'SoZ'])).toBe('NZ / SoZ');
-    expect(FORMAT.liste('einzeln')).toBe('einzeln');
-  });
-
-  it('grossbuchstaben normalisiert Text', () => {
-    expect(FORMAT.grossbuchstaben('müller')).toBe('MÜLLER');
-  });
-
-  it('jaNein übersetzt Boolean (echt oder als String) statt englischem true/false', () => {
-    expect(FORMAT.jaNein(true)).toBe('Ja');
-    expect(FORMAT.jaNein(false)).toBe('Nein');
-    expect(FORMAT.jaNein('true')).toBe('Ja');
-    expect(FORMAT.jaNein('false')).toBe('Nein');
-    expect(FORMAT.jaNein(undefined)).toBe('Nein');
-  });
-
-  it('oe fügt Ebenen in kanonischer OE-Schreibweise zusammen (User-Fund: liste zerstört das Format)', () => {
-    // Exakter Reproduktionsfall: `liste` lieferte "V / IW / MI / N / KSL / IL / 03", erwartet war
-    // die kanonische Schreibweise wie in `backend/src/utils/oe-scope.ts::joinOeSegments`.
-    expect(FORMAT.oe(['V', 'IW', 'MI', 'N', 'KSL', 'IL', '03'])).toBe('V.IW-MI-N-KSL-IL 03');
-  });
-
-  it('oe: erste zwei Ebenen mit Punkt, weitere mit Bindestrich, ohne numerische letzte Ebene', () => {
-    expect(FORMAT.oe(['I', 'IW', 'MI', 'N', 'MUS', 'IL'])).toBe('I.IW-MI-N-MUS-IL');
-  });
-
-  it('oe: Randfälle -- leer, ein Element, zwei Elemente, Leerwerte gefiltert', () => {
-    expect(FORMAT.oe([])).toBe('');
-    expect(FORMAT.oe(['V'])).toBe('V');
-    expect(FORMAT.oe(['V', 'IW'])).toBe('V.IW');
-    expect(FORMAT.oe(['V', 'IW', '', 'MI'])).toBe('V.IW-MI');
-  });
-
-  it('oe: eine rein numerische letzte Ebene zählt nur ab zwei Restebenen als Teamnummer', () => {
-    // Nur EINE Restebene und die ist numerisch: kein Sonderfall, ganz normal mit "." verbunden.
-    expect(FORMAT.oe(['V', '03'])).toBe('V.03');
-  });
-
-  it('oe: Nicht-Array fällt auf String zurück wie die anderen Formate', () => {
-    expect(FORMAT.oe('V.IW-MI')).toBe('V.IW-MI');
-    expect(FORMAT.oe(undefined)).toBe('');
-  });
-});
-
-describe('standardText', () => {
-  it('leerer String für null/undefined', () => {
-    expect(standardText(null)).toBe('');
-    expect(standardText(undefined)).toBe('');
-  });
-
-  it('Arrays über FORMAT.liste statt kommagetrennt ohne Leerzeichen (OE-Bug)', () => {
-    expect(standardText(['I', 'IW', 'MI', 'N', 'MUS', 'IL', ''])).toBe('I / IW / MI / N / MUS / IL');
-  });
-
-  it('Booleans als Ja/Nein statt englischem true/false', () => {
-    expect(standardText(true)).toBe('Ja');
-    expect(standardText(false)).toBe('Nein');
-  });
-
-  it('verschachtelte Objekte (falsch gewählter Datenpfad) werden leer statt "[object Object]"', () => {
-    expect(standardText({ Vorname: 'Max' })).toBe('');
-  });
-
-  it('Zahl und Text unverändert', () => {
-    expect(standardText(42)).toBe('42');
-    expect(standardText('Max')).toBe('Max');
   });
 });
 
@@ -323,12 +178,12 @@ describe('alsZahl (Zeitwerte in Aggregationen)', () => {
   it('summe ueber eine Dauer-Spalte ergibt die Gesamtzeit, nicht 0 (EA-Stundensumme)', () => {
     const rows: Zeile[] = Array.from({ length: 12 }, () => ({ Dauer: '02:30' }));
     expect(OPS.summe(rows, 'Dauer')).toBe(1800);
-    expect(FORMAT.stunden(OPS.summe(rows, 'Dauer'))).toBe('30:00');
+    expect(formatiereWert(OPS.summe(rows, 'Dauer'), 'H:mm')).toBe('30:00');
   });
 
   it('max ueber eine Dauer-Spalte vergleicht die Zeiten, nicht deren NaN', () => {
     const rows: Zeile[] = [{ Dauer: '02:30' }, { Dauer: '07:15' }, { Dauer: '01:00' }];
-    expect(FORMAT.stunden(OPS.max(rows, 'Dauer'))).toBe('7:15');
+    expect(formatiereWert(OPS.max(rows, 'Dauer'), 'H:mm')).toBe('7:15');
   });
 
   it('auch eine Zeilenrechnung rechnet mit gespeicherten Dauern', () => {

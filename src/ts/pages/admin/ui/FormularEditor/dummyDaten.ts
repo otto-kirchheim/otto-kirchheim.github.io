@@ -3,6 +3,7 @@ import { loeseListenAuf } from '@/shared/lib/pdf/listen';
 import type { ListenAufloesung } from '@/shared/lib/pdf/listen';
 import { maxZeilenFuer } from '@/shared/lib/pdf/spaltenFuer';
 import { tabellenZeilen } from '@/shared/lib/pdf/tabellenZeilen';
+import { datumTokens, pruefeFormat } from '@otto-kirchheim/nebengeld-shared';
 import type {
   Daten,
   Feld,
@@ -34,9 +35,6 @@ function setzePfad(ziel: Daten, pfad: string, wert: unknown): void {
   knoten[teile.at(-1)!] = wert;
 }
 
-const DATUMS_FORMATE = ['datum', 'datumKurz', 'tag', 'wochentag', 'monatJahr'];
-const ZAHL_FORMATE = ['waehrung', 'zahl', 'ganzzahl'];
-
 /**
  * Woher die Werte kommen. `platzhalter`: generische Füllwerte ("Testwert 1"), die zeigen, WELCHE Zelle
  * welcher Konfiguration entspricht. `beispiel`: fachlich passende Werte aus dem Datenkatalog, die
@@ -55,12 +53,15 @@ export type Werteart = 'platzhalter' | 'beispiel';
 function platzhalter(feld: Feld | Spalte, index: number, name?: string): string | number | boolean {
   // Feld-Bedingung: die Vorschau soll `wenn.dann` zeigen.
   if ('wenn' in feld && feld.wenn?.werte?.length) return feld.wenn.werte[0]!;
-  if (feld.format && ZAHL_FORMATE.includes(feld.format)) return 12.3 + index;
-  if (feld.format && DATUMS_FORMATE.includes(feld.format)) return new Date(2026, 0, index + 1).toISOString();
-  if (feld.format === 'uhrzeit' || feld.format === 'stunden') return `${8 + (index % 10)}:15`;
-  // `monatName`/`monatNameKurz` erwarten die `Monat`-Zahl (1-12), kein Datum, sonst bliebe der Name leer
-  // (siehe `FORMAT.monatName`).
-  if (feld.format === 'monatName' || feld.format === 'monatNameKurz') return (index % 12) + 1;
+  const art = feld.format ? pruefeFormat(feld.format).art : undefined;
+  if (art === 'zahl') return 12.3 + index;
+  if (art === 'datum') {
+    const tokens = datumTokens(feld.format!);
+    // Reine Zeit-/Monatsmuster lesen `"HH:mm"` bzw. die `Monat`-Zahl (1-12), kein Datum (siehe `format.ts`).
+    if (tokens.every(t => /^[Hms]{1,2}$/.test(t))) return `${8 + (index % 10)}:15`;
+    if (tokens.every(t => /^M{1,4}$/.test(t))) return (index % 12) + 1;
+    return new Date(2026, 0, index + 1).toISOString();
+  }
   // Bei zusammengesetzten Feldern (Text-Platzhalter) steht `name` für den Teil, sonst für das Feld.
   const bezeichnung = name?.split('.').at(-1) ?? feld.label;
   return bezeichnung ? `${bezeichnung} (Test)` : `Testwert ${index + 1}`;

@@ -10,7 +10,7 @@ const katalog: FeatureKatalog = {
       pfad: 'BuchungstagDatum',
       label: 'Buchungstag (Datum)',
       gruppe: 'Zeile',
-      format: 'datum',
+      format: 'DD.MM.YYYY',
       beispiel: i => tag(i, 2),
     },
     { pfad: 'Einsatzort', label: 'Einsatzort', gruppe: 'Zeile', beispiel: 'Nürnberg Rbf' },

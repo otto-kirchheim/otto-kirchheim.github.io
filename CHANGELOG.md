@@ -2,6 +2,28 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-29 (248)
+
+### feat (PDF-Formate als Muster statt fester Namen)
+
+- Formate sind jetzt Muster-Strings: Datum/Uhrzeit mit dayjs-Tokens (`DD.MM.YYYY`, `dd`, `MMMM`,
+  `HH:mm`, `H:mm` fuer Dauern ueber 24 h), Zahlen mit eigenem deutschem Muster auf
+  `Intl.NumberFormat` (`#.##0,00 €`, `#.##0,##`, `00`, `0,0 %`, Text davor/dahinter wie
+  `0 Tage`, Tausendertrenner `.` oder Leerzeichen mit Gruppengroesse aus dem Muster: `000 000 000`). Die vier Werttransformationen heissen jetzt `@liste`, `@grossbuchstaben`,
+  `@jaNein`, `@oe`.
+- Neue Engine `shared/lib/pdf/format.ts` (`formatiereWert`, `standardText`); `FORMAT` und
+  `standardText` aus `aggregatoren.ts` entfernt. Pruefung und Zerlegung kommen aus shared
+  (`pruefeFormat`, `sammleFormatFehler`).
+- Editor: Format als Freitext mit Vorschlagsliste (`FormatEingabe.tsx`, `FORMAT_VORSCHLAEGE`
+  statt `FORMATE`), Fehler erscheinen live am Feld und am Text mit `{Pfad:Format}`.
+  `FormularUpload` listet ungueltige Formate und sperrt das Speichern.
+- Hilfe-Dialog: Token-Tabellen fuer Datum, Zahl und Schluesselwoerter plus Beispiele.
+- Sichtbare Aenderungen: `MMM` (frueher `monatNameKurz`) liefert die dayjs-Kurzform (`Jan.`,
+  `März`, `Sept.`) statt drei Buchstaben; unlesbare Werte bei `D` werden leer (frueher Rohwert).
+  Zahlenmuster reichen Text, der keine Zahl ist, unveraendert durch (Feld mit Text ODER Nummer,
+  z. B. `### ### ###`); `NaN` wird leer statt `NaN €`.
+- Bestehende Vorlagen migriert das Backend-Skript `migrate:format-muster`.
+
 ## 2026-10-29 (247)
 
 ### fix (EWT-PDF: Unterschriftsdatum fiel immer auf heute)
