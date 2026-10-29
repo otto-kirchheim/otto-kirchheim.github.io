@@ -149,10 +149,14 @@ describe('Admin API', () => {
   describe('updateUserScopes', () => {
     it('sendet PUT-Request mit Scope-Daten', async () => {
       mockSuccess({ _id: 'u1', userName: 'max', role: 'member' });
-      await updateUserScopes('u1', { adminForTeamOes: ['OE1'], adminForOrganizationOes: [] });
+      await updateUserScopes('u1', {
+        adminForTeamOes: ['OE1'],
+        adminForOrganizationOes: [],
+        adminForStuetzpunkte: [],
+      });
       expect(mockFetchRetry).toHaveBeenCalledWith(
         'users/u1',
-        { adminForTeamOes: ['OE1'], adminForOrganizationOes: [] },
+        { adminForTeamOes: ['OE1'], adminForOrganizationOes: [], adminForStuetzpunkte: [] },
         'PUT',
       );
     });
@@ -229,6 +233,18 @@ describe('Admin API', () => {
       const result = await fetchCurrentAdminCapabilities();
       expect(result.canEditVorgabenGeld).toBe(true);
       expect(result.canEditProfileTemplates).toBe(true);
+      expect(result.canEditOwnTeamTemplatesOnly).toBe(true);
+    });
+
+    it('team-admin mit Templates ist immer scope-begrenzt, auch ohne Flag', async () => {
+      mockSuccess({
+        _id: 'u1',
+        userName: 'ta',
+        role: 'team-admin',
+        canEditProfileTemplates: true,
+        canEditOwnTeamTemplatesOnly: false,
+      });
+      const result = await fetchCurrentAdminCapabilities();
       expect(result.canEditOwnTeamTemplatesOnly).toBe(true);
     });
 

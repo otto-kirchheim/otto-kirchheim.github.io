@@ -8,7 +8,13 @@ import { alsMinuten, FORMAT, ZEILEN_OPS } from '@/shared/lib/pdf/aggregatoren';
 import type { IDatenEWT } from '@/types';
 
 export interface IPdfEWT {
+  /** Nur der Tag des Monats (`"05"`), für die Tag-Spalte. */
   Buchungstag: string;
+  /**
+   * Volles Datum des Buchungstags (`TT.MM.JJJJ`). `Buchungstag` allein ist als Datum unlesbar -- ein
+   * `letztesDatum` darüber (Unterschriftsdatum) fiele immer auf heute zurück.
+   */
+  BuchungstagDatum: string;
   Einsatzort: string;
   Schicht: string;
   abWE?: string;
@@ -151,8 +157,10 @@ export function baueEwtPdfDaten({ monat, vorgabenU }: FeaturePdfContext): { Date
     Daten: {
       EWT: ewtRaw
         .map(e => {
+          const buchungstag = dayjs(e.Buchungstag || calculateBuchungstagEwt(e));
           const basis = {
-            Buchungstag: dayjs(e.Buchungstag || calculateBuchungstagEwt(e)).format('DD'),
+            Buchungstag: buchungstag.format('DD'),
+            BuchungstagDatum: buchungstag.format('DD.MM.YYYY'),
             Einsatzort: [e.Einsatzort, einsatzortBeschreibung.get(e.Einsatzort)].filter(Boolean).join(' | '),
             Schicht: normalizeEwtSchichtForDownload(e.Schicht),
             abWE: e.abWE ? dayjs(e.abWE, 'HH:mm').format('HH:mm') : undefined,

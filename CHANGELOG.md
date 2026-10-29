@@ -2,6 +2,55 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-29 (247)
+
+### fix (EWT-PDF: Unterschriftsdatum fiel immer auf heute)
+
+- Die EWT-PDF-Zeilen hatten nur `Buchungstag` als Tageszahl (`"30"`). Ein `letztesDatum` darueber
+  (Unterschriftsdatum) konnte das nicht als Datum lesen und nahm deshalb immer heute -- auch wenn
+  der letzte Buchungstag noch in der Zukunft lag.
+- Neues Feld `BuchungstagDatum` (`TT.MM.JJJJ`) in `features/ewt/model/pdfDaten.ts` und im
+  EWT-Katalog (`pages/admin/features/ewt/katalog.ts`). In der EWT-Formularvorlage muss das
+  Unterschriftsdatum auf dieses Feld umgestellt werden.
+
+## 2026-10-28 (246)
+
+### feat (Team-Admin: zusaetzliche Stuetzpunkt-Einschraenkung)
+
+- `AdminUserCard.tsx` zeigt und bearbeitet jetzt neben den Team-/Org-Admin-OEs auch
+  `adminForStuetzpunkte` (neue `StuetzpunktTagInput.tsx`, ein flaches Tag-Input ohne
+  OE-Ebenen-Boxen, da Stuetzpunkt kein Hierarchie-Feld ist). Wirkt serverseitig als
+  zusaetzliche UND-Bedingung zur OE-Einschraenkung eines Team-Admins.
+- Filter "OE / Stuetzpunkt" der Benutzerliste durchsucht auch `adminForStuetzpunkte`.
+
+### feat (Benutzerkarte: Bearbeiten-Dialog, Staffelung nach Rolle)
+
+- Rolle, eigene OE und Team-/Stuetzpunkt-/Org-Zustaendigkeiten werden jetzt im Dialog
+  "Rolle & Zustaendigkeiten" (`AdminUserScopeModal.tsx`) geaendert; die Karte zeigt sie nur noch
+  an. Zustaendigkeits-Tags lassen sich weiter direkt in der Karte per x entfernen
+  (`EntfernbareTagListe.tsx`). Der Dialog arbeitet auf einem lokalen Entwurf, "Uebernehmen"
+  schreibt in den Bearbeitungsstand der Karte -- gespeichert wird weiterhin dort mit "Speichern".
+- Sichtbarkeit nach (ggf. ungespeicherter) Rolle (`sichtbareBloecke()`): Mitglied und Super-Admin
+  ohne Zusatzbloecke, Team-Admin Team-OE + Stuetzpunkt + Berechtigungen, Org-Admin zusaetzlich
+  Org-OE.
+- Berechtigungen gestaffelt: "nur im eigenen OE-Scope" erst sichtbar mit "Profile-Templates
+  bearbeiten", "Formular-Vorlagen erstellen" erst mit "bearbeiten"; Abwaehlen setzt das abhaengige
+  Flag zurueck. Fuer Team-Admin steht statt der Scope-Checkbox ein Hinweis -- er ist bei Vorlagen
+  serverseitig immer auf eigene Team-OE (+ Stuetzpunkte) begrenzt; `fetchCurrentAdminCapabilities`
+  liefert fuer ihn entsprechend `canEditOwnTeamTemplatesOnly: true`.
+- Summary-Zeile: Team/Stuetzpunkt/Org je eigene Zeile (Label brach vorher getrennt von seinen Tags
+  um), Stuetzpunkt-Tags blau wie Team.
+
+- Benutzerkarte nur fuer niedriger eingestufte Benutzer bearbeitbar (Bearbeiten, Passwort, Links,
+  Loeschen) -- wie das Backend, das gleich- oder hoeherrangige Benutzer jetzt ablehnt.
+
+### fix (OE-Ebenen-Felder waren zu breit)
+
+- `useSofortigeHuelleStyle` (`dbFeldHelfer.ts`) setzte Styles per `Object.assign` -- CSS-Variablen
+  (`--…`) kamen so nie im Inline-Style an. Jetzt `setProperty()`; damit greift das Absenken von
+  `--db-form-component-min-inline-size` in `OeLevelInputs.tsx`, die Felder sind nur so breit wie
+  ihr Inhalt (2--3 Zeichen) statt der DB-UX-Mindestbreite.
+
 ## 2026-10-28 (245)
 
 ### fix (ungesendete Zeilen gingen nach dem Neuladen verloren)

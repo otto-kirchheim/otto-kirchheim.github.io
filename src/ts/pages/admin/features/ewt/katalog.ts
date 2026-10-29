@@ -1,9 +1,18 @@
 import type { FeatureKatalog } from '../../ui/FormularEditor/katalogTypen';
+import { tag } from '../../ui/FormularEditor/katalogTypen';
 
 /** Katalog-Beitrag der EWT (Formular `ewt`): Rohfelder der Anwesenheit plus vorberechnete Werte (`ewtAbgeleiteteWerte`). */
 const katalog: FeatureKatalog = {
   zeilenFelder: [
     { pfad: 'Buchungstag', label: 'Buchungstag', gruppe: 'Zeile', beispiel: i => String(2 + i).padStart(2, '0') },
+    // Volles Datum, z.B. für das Unterschriftsdatum (`letztesDatum`) -- `Buchungstag` ist nur der Tag.
+    {
+      pfad: 'BuchungstagDatum',
+      label: 'Buchungstag (Datum)',
+      gruppe: 'Zeile',
+      format: 'datum',
+      beispiel: i => tag(i, 2),
+    },
     { pfad: 'Einsatzort', label: 'Einsatzort', gruppe: 'Zeile', beispiel: 'Nürnberg Rbf' },
     { pfad: 'Schicht', label: 'Schicht', gruppe: 'Zeile', beispiel: 'F' },
     { pfad: 'abWE', label: 'Abfahrt Wohnung', gruppe: 'Zeile', beispiel: '05:15' },

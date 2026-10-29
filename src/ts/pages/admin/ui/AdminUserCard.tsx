@@ -1,11 +1,11 @@
-import type { TUserRole } from '@/types';
-import { joinOeLevels, splitOeInput } from '@/shared/lib/ressource/oeLevels';
+import { Role } from '@otto-kirchheim/nebengeld-shared';
+import { joinOeLevels } from '@/shared/lib/ressource/oeLevels';
 import type { AdminUserRow } from '../api/api';
 import createAdminUserLinksModal from './createAdminUserLinksModal';
 import createAdminUserPasswordModal from './createAdminUserPasswordModal';
-import { OeLevelBoxes } from './OeLevelBoxes';
-import { OeTagInput } from './OeTagInput';
-import { ROLE_LABELS, type UserEditState } from './adminUserListTypen';
+import createAdminUserScopeModal from './createAdminUserScopeModal';
+import { EntfernbareTagListe } from './EntfernbareTagListe';
+import { ROLE_LABELS, sichtbareBloecke, type UserEditState } from './adminUserListTypen';
 import {
   DBButton,
   DBCheckbox,
@@ -16,7 +16,6 @@ import {
   DBTooltip,
 } from '@db-ux/react-core-components';
 import { Gruppe } from '@/shared/ui/gruppe/Gruppe';
-import { DbAuswahl } from '@/shared/ui/form/DbFeld';
 
 type Props = {
   currentUser: AdminUserRow;
@@ -65,6 +64,23 @@ export function AdminUserCard({
   onDelete,
 }: Props) {
   const roleInfo = ROLE_LABELS[currentUser.role];
+  const editRoleInfo = ROLE_LABELS[edit.role];
+  const zeige = sichtbareBloecke(edit.role);
+
+  function oeffneScopeDialog(): void {
+    createAdminUserScopeModal(
+      currentUser.fullName || currentUser.userName,
+      {
+        role: edit.role,
+        oe: edit.oe,
+        adminForTeamOes: edit.adminForTeamOes,
+        adminForStuetzpunkte: edit.adminForStuetzpunkte,
+        adminForOrganizationOes: edit.adminForOrganizationOes,
+      },
+      roleEditable && !isSelfRow,
+      updateEdit,
+    );
+  }
 
   return (
     <div className="admin-user-card-col">
@@ -115,158 +131,200 @@ export function AdminUserCard({
         </div>
 
         <div className="admin-user-card__zeile">
-          <DBStack direction="row" wrap gap="x-small" alignment="center" className="zelle-klein">
-            <DBInfotext showIcon={false}>OE:</DBInfotext>
-            <strong className="admin-user-card__wert">{joinOeLevels(currentUser.oe) || '–'}</strong>
+          <DBStack gap="2x-small" className="zelle-klein">
+            <DBStack direction="row" wrap gap="x-small" alignment="center">
+              <DBInfotext showIcon={false}>OE:</DBInfotext>
+              <strong className="admin-user-card__wert">{joinOeLevels(currentUser.oe) || '–'}</strong>
 
-            <DBTag
-              semantic={currentUser.emailVerified ? 'successful' : 'critical'}
-              title={currentUser.email || undefined}
-            >
-              {currentUser.emailVerified ? 'E-Mail verifiziert' : 'E-Mail nicht verifiziert'}
-            </DBTag>
+              <DBTag
+                semantic={currentUser.emailVerified ? 'successful' : 'critical'}
+                title={currentUser.email || undefined}
+              >
+                {currentUser.emailVerified ? 'E-Mail verifiziert' : 'E-Mail nicht verifiziert'}
+              </DBTag>
+            </DBStack>
 
             {currentUser.adminForTeamOes.length > 0 && (
-              <>
-                <DBInfotext showIcon={false} className="admin-user-card__abschnitt">
-                  Team:
-                </DBInfotext>
+              <DBStack direction="row" wrap gap="x-small" alignment="center">
+                <DBInfotext showIcon={false}>Team:</DBInfotext>
                 {currentUser.adminForTeamOes.map(oe => (
                   <DBTag key={oe} semantic="informational">
                     {oe}
                   </DBTag>
                 ))}
-              </>
+              </DBStack>
+            )}
+            {currentUser.adminForStuetzpunkte.length > 0 && (
+              <DBStack direction="row" wrap gap="x-small" alignment="center">
+                <DBInfotext showIcon={false}>Stützpunkt:</DBInfotext>
+                {currentUser.adminForStuetzpunkte.map(stuetzpunkt => (
+                  <DBTag key={stuetzpunkt} semantic="informational">
+                    {stuetzpunkt}
+                  </DBTag>
+                ))}
+              </DBStack>
             )}
             {currentUser.adminForOrganizationOes.length > 0 && (
-              <>
-                <DBInfotext showIcon={false} className="admin-user-card__abschnitt">
-                  Org:
-                </DBInfotext>
+              <DBStack direction="row" wrap gap="x-small" alignment="center">
+                <DBInfotext showIcon={false}>Org:</DBInfotext>
                 {currentUser.adminForOrganizationOes.map(oe => (
                   <DBTag key={oe} semantic="warning">
                     {oe}
                   </DBTag>
                 ))}
-              </>
+              </DBStack>
             )}
           </DBStack>
         </div>
 
         {isExpanded && (
           <DBStack gap="small" className="admin-user-card__detail">
-            <div>
-              <DbAuswahl
-                beschriftung="Rolle"
-                beschriftungZeigen
-                dicht
-                value={edit.role}
-                onChange={e => updateEdit({ role: (e.target as HTMLSelectElement).value as TUserRole })}
-                disabled={!roleEditable || isSelfRow}
-              >
-                <option value="member">Mitglied</option>
-                <option value="team-admin">Team-Admin</option>
-                <option value="org-admin">Org-Admin</option>
-                <option value="super-admin">Super-Admin</option>
-              </DbAuswahl>
-            </div>
+            <DBStack direction="row" wrap gap="x-small" alignment="center" className="zelle-klein">
+              <DBInfotext showIcon={false}>Rolle:</DBInfotext>
+              <DBTag semantic={editRoleInfo.semantic} emphasis="strong">
+                {editRoleInfo.label}
+              </DBTag>
+              <DBInfotext showIcon={false}>OE:</DBInfotext>
+              <strong className="admin-user-card__wert">{edit.oe || '–'}</strong>
+              {editable && (
+                <DBButton
+                  type="button"
+                  variant="outlined"
+                  size="small"
+                  icon="pen"
+                  onClick={oeffneScopeDialog}
+                  disabled={isSaving}
+                  data-disabler
+                >
+                  Bearbeiten
+                </DBButton>
+              )}
+            </DBStack>
 
-            <div>
-              <label className="admin-label">OE</label>
-              <OeLevelBoxes value={edit.oe} onChange={value => updateEdit({ oe: value })} disabled={!editable} />
-            </div>
+            {zeige.team && (
+              <EntfernbareTagListe
+                label="Team-Admin OEs"
+                values={edit.adminForTeamOes}
+                onChange={values => updateEdit({ adminForTeamOes: values })}
+                disabled={!editable}
+              />
+            )}
 
-            <OeTagInput
-              label="Team-Admin OEs"
-              values={edit.adminForTeamOes}
-              onChange={values => updateEdit({ adminForTeamOes: values })}
-              disabled={!editable}
-              placeholder="Team-OE hinzufügen…"
-              defaultLevelCount={splitOeInput(edit.oe).length}
-            />
+            {zeige.team && (
+              <EntfernbareTagListe
+                label="Team-Admin Stützpunkte"
+                values={edit.adminForStuetzpunkte}
+                onChange={values => updateEdit({ adminForStuetzpunkte: values })}
+                disabled={!editable}
+              />
+            )}
 
-            <OeTagInput
-              label="Org-Admin OEs"
-              values={edit.adminForOrganizationOes}
-              onChange={values => updateEdit({ adminForOrganizationOes: values })}
-              disabled={!editable}
-              placeholder="Org-OE hinzufügen…"
-              defaultLevelCount={splitOeInput(edit.oe).length}
-            />
+            {zeige.org && (
+              <EntfernbareTagListe
+                label="Org-Admin OEs"
+                values={edit.adminForOrganizationOes}
+                onChange={values => updateEdit({ adminForOrganizationOes: values })}
+                disabled={!editable}
+                semantic="warning"
+              />
+            )}
 
-            <Gruppe titel="Spezielle Admin-Berechtigungen">
-              <DBStack gap="2x-small">
-                <div>
-                  <DBCheckbox
-                    size="small"
-                    id={`perm-vorgaben-${currentUser._id}`}
-                    label="Darf VorgabenGeld bearbeiten"
-                    checked={edit.canEditVorgabenGeld}
-                    onChange={e => updateEdit({ canEditVorgabenGeld: (e.target as HTMLInputElement).checked })}
-                    disabled={!permissionEditable}
-                  />
-                </div>
+            {zeige.berechtigungen && (
+              <Gruppe titel="Spezielle Admin-Berechtigungen">
+                <DBStack gap="2x-small">
+                  <div>
+                    <DBCheckbox
+                      size="small"
+                      id={`perm-vorgaben-${currentUser._id}`}
+                      label="Darf VorgabenGeld bearbeiten"
+                      checked={edit.canEditVorgabenGeld}
+                      onChange={e => updateEdit({ canEditVorgabenGeld: (e.target as HTMLInputElement).checked })}
+                      disabled={!permissionEditable}
+                    />
+                  </div>
 
-                <div>
-                  <DBCheckbox
-                    size="small"
-                    id={`perm-templates-${currentUser._id}`}
-                    label="Darf Profile-Templates bearbeiten"
-                    checked={edit.canEditProfileTemplates}
-                    onChange={e => {
-                      const checked = (e.target as HTMLInputElement).checked;
-                      updateEdit({
-                        canEditProfileTemplates: checked,
-                        canEditOwnTeamTemplatesOnly: checked ? edit.canEditOwnTeamTemplatesOnly : false,
-                      });
-                    }}
-                    disabled={!permissionEditable}
-                  />
-                </div>
+                  <div>
+                    <DBCheckbox
+                      size="small"
+                      id={`perm-templates-${currentUser._id}`}
+                      label="Darf Profile-Templates bearbeiten"
+                      checked={edit.canEditProfileTemplates}
+                      onChange={e => {
+                        const checked = (e.target as HTMLInputElement).checked;
+                        updateEdit({
+                          canEditProfileTemplates: checked,
+                          canEditOwnTeamTemplatesOnly: checked ? edit.canEditOwnTeamTemplatesOnly : false,
+                        });
+                      }}
+                      disabled={!permissionEditable}
+                    />
+                  </div>
 
-                <div>
-                  <DBCheckbox
-                    size="small"
-                    id={`perm-teamonly-${currentUser._id}`}
-                    label="Profile-Templates nur im eigenen Team/OE-Scope"
-                    checked={edit.canEditOwnTeamTemplatesOnly}
-                    onChange={e => updateEdit({ canEditOwnTeamTemplatesOnly: (e.target as HTMLInputElement).checked })}
-                    disabled={!permissionEditable || !edit.canEditProfileTemplates}
-                  />
-                </div>
+                  {edit.canEditProfileTemplates && edit.role === Role.TEAM_ADMIN && (
+                    <DBInfotext showIcon={false} className="infotext-block">
+                      Team-Admin bearbeitet nur Vorlagen der eigenen Team-OE (und ggf. Stützpunkte); das Muster ist
+                      immer lesbar.
+                    </DBInfotext>
+                  )}
 
-                <div>
-                  <DBCheckbox
-                    size="small"
-                    id={`perm-formulare-erstellen-${currentUser._id}`}
-                    label="Darf Formular-Vorlagen erstellen"
-                    checked={edit.canCreateFormularVorlagen}
-                    onChange={e => updateEdit({ canCreateFormularVorlagen: (e.target as HTMLInputElement).checked })}
-                    disabled={!permissionEditable}
-                  />
-                  <DBInfotext showIcon={false} className="infotext-block">
-                    Erstellen beinhaltet automatisch Bearbeiten.
-                  </DBInfotext>
-                </div>
+                  {edit.canEditProfileTemplates && edit.role !== Role.TEAM_ADMIN && (
+                    <div>
+                      <DBCheckbox
+                        size="small"
+                        id={`perm-teamonly-${currentUser._id}`}
+                        label="Profile-Templates nur im eigenen OE-Scope"
+                        checked={edit.canEditOwnTeamTemplatesOnly}
+                        onChange={e =>
+                          updateEdit({ canEditOwnTeamTemplatesOnly: (e.target as HTMLInputElement).checked })
+                        }
+                        disabled={!permissionEditable}
+                      />
+                    </div>
+                  )}
 
-                <div>
-                  <DBCheckbox
-                    size="small"
-                    id={`perm-formulare-bearbeiten-${currentUser._id}`}
-                    label="Darf Formular-Vorlagen bearbeiten"
-                    checked={edit.canEditFormularVorlagen}
-                    onChange={e => updateEdit({ canEditFormularVorlagen: (e.target as HTMLInputElement).checked })}
-                    disabled={!permissionEditable}
-                  />
-                </div>
+                  <div>
+                    <DBCheckbox
+                      size="small"
+                      id={`perm-formulare-bearbeiten-${currentUser._id}`}
+                      label="Darf Formular-Vorlagen bearbeiten"
+                      checked={edit.canEditFormularVorlagen}
+                      onChange={e => {
+                        const checked = (e.target as HTMLInputElement).checked;
+                        updateEdit({
+                          canEditFormularVorlagen: checked,
+                          canCreateFormularVorlagen: checked ? edit.canCreateFormularVorlagen : false,
+                        });
+                      }}
+                      disabled={!permissionEditable}
+                    />
+                  </div>
 
-                {!permissionEditable && (
-                  <DBInfotext showIcon={false} className="infotext-block">
-                    Nur Super-Admin kann diese Flags ändern.
-                  </DBInfotext>
-                )}
-              </DBStack>
-            </Gruppe>
+                  {edit.canEditFormularVorlagen && (
+                    <div>
+                      <DBCheckbox
+                        size="small"
+                        id={`perm-formulare-erstellen-${currentUser._id}`}
+                        label="Darf Formular-Vorlagen erstellen"
+                        checked={edit.canCreateFormularVorlagen}
+                        onChange={e =>
+                          updateEdit({ canCreateFormularVorlagen: (e.target as HTMLInputElement).checked })
+                        }
+                        disabled={!permissionEditable}
+                      />
+                      <DBInfotext showIcon={false} className="infotext-block">
+                        Erstellen beinhaltet automatisch Bearbeiten.
+                      </DBInfotext>
+                    </div>
+                  )}
+
+                  {!permissionEditable && (
+                    <DBInfotext showIcon={false} className="infotext-block">
+                      Nur Super-Admin kann diese Flags ändern.
+                    </DBInfotext>
+                  )}
+                </DBStack>
+              </Gruppe>
+            )}
 
             <DBStack direction="row" wrap gap="x-small" className="admin-user-card__aktionen">
               {editable && (
