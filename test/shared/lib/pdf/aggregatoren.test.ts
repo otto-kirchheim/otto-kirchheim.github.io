@@ -264,6 +264,13 @@ describe('OPS.letztesDatum', () => {
     expect(OPS.letztesDatum([], 'Tag')).toBe(0);
   });
 
+  it('liest deutsche Datumswerte (EWT `BuchungstagDatum`), reine Tageszahlen nicht', () => {
+    const rows: Zeile[] = [{ Tag: '29.10.2026' }, { Tag: '30.10.2026' }];
+    expect(OPS.letztesDatum(rows, 'Tag')).toBe(new Date(2026, 9, 30).getTime());
+    // Nur `"DD"` (EWT `Buchungstag`) ist kein Datum: "30" unlesbar, "05" wird zu Mai 2001.
+    expect(OPS.letztesDatum([{ Tag: '30' }], 'Tag')).toBe(0);
+  });
+
   it('max taugt fuer Datumswerte nicht -- genau deshalb gibt es letztesDatum', () => {
     // `Number("2026-03-20")` ist NaN, `|| 0` macht daraus 0.
     expect(OPS.max([{ Tag: '2026-03-20' }], 'Tag')).toBe(0);

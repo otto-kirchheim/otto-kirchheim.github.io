@@ -2,6 +2,17 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-10-29 (247)
+
+### fix (EWT-PDF: Unterschriftsdatum fiel immer auf heute)
+
+- Die EWT-PDF-Zeilen hatten nur `Buchungstag` als Tageszahl (`"30"`). Ein `letztesDatum` darueber
+  (Unterschriftsdatum) konnte das nicht als Datum lesen und nahm deshalb immer heute -- auch wenn
+  der letzte Buchungstag noch in der Zukunft lag.
+- Neues Feld `BuchungstagDatum` (`TT.MM.JJJJ`) in `features/ewt/model/pdfDaten.ts` und im
+  EWT-Katalog (`pages/admin/features/ewt/katalog.ts`). In der EWT-Formularvorlage muss das
+  Unterschriftsdatum auf dieses Feld umgestellt werden.
+
 ## 2026-10-28 (246)
 
 ### feat (Team-Admin: zusaetzliche Stuetzpunkt-Einschraenkung)
