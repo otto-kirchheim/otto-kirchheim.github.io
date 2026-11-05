@@ -2,6 +2,17 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-11-05 (250)
+
+### fix (doppelte Zeile nach inhaltsgleichem Create auf demselben Geraet)
+
+- Zwei `new`-Zeilen mit identischem Inhalt (z. B. versehentlich doppelt angelegt) konnten vom
+  Backend beim Speichern auf dasselbe Dokument dedupliziert werden (`findExactDuplicate`) und
+  dieselbe `_id` zurueckbekommen. Lokal blieben dann zwei Zeilen mit gleicher `_id` sichtbar,
+  obwohl der Server nur ein Dokument angelegt hatte.
+- `commitCreateAndUpdate` (`tableReducer.ts`) verwirft jetzt die zweite Zeile, sobald ihr eine
+  bereits vergebene `_id` zugeordnet wird.
+
 ## 2026-10-25 (249)
 
 ### chore (Chunk-Size-Warnung fuer lazy PDF-Font-Toolchain stummgeschaltet)

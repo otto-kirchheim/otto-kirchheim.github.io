@@ -146,6 +146,26 @@ describe('tableReducer', () => {
     expect(rowB._id).toBeUndefined();
   });
 
+  it('COMMIT_AUTO_SAVE verwirft doppelte new-Zeile, wenn Backend beiden dieselbe _id zuordnet', () => {
+    const withFirstNew = tableReducer(emptyState(), { type: 'ADD', value: { label: 'A' } });
+    const withBothNew = tableReducer(withFirstNew, { type: 'ADD', value: { label: 'A' } });
+    const includedRowKeys = new Set(withBothNew.rows.map(getRowKey));
+
+    // Inhaltsgleiche Zeilen (z. B. versehentlich doppelt angelegt): Backend dedupliziert
+    // (`findExactDuplicate`) und liefert fuer beide dieselbe `_id`.
+    const createdIds = new Map<string, string>(withBothNew.rows.map(row => [getRowKey(row), 'server-id-1']));
+    const committed = tableReducer(withBothNew, {
+      type: 'COMMIT_AUTO_SAVE',
+      createdIds,
+      failedRowKeys: new Set(),
+      includedRowKeys,
+    });
+
+    expect(committed.rows).toHaveLength(1);
+    expect(committed.rows[0]._state).toBe('unchanged');
+    expect(committed.rows[0]._id).toBe('server-id-1');
+  });
+
   it('COMMIT_CHANGES entfernt erfolgreich geloeschte Zeilen aus dem Snapshot, laesst neue Loeschungen unangetastet', () => {
     const loaded = tableReducer(emptyState(), {
       type: 'LOAD',

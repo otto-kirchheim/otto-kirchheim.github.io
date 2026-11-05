@@ -110,47 +110,62 @@ function commitCreateAndUpdate<T extends CustomTableTypes>(
   failedRowKeys: ReadonlySet<string>,
   includedRowKeys: ReadonlySet<string> | undefined,
 ): RowRecord<T>[] {
-  return rows.map(row => {
-    const effectiveState = getEffectiveRowState(row);
-    const inBatch = includedRowKeys === undefined || includedRowKeys.has(getRowKey(row));
+  // Inhaltsgleiche `new`-Zeilen (z. B. versehentlich doppelt angelegt) kann das Backend auf
+  // dasselbe Dokument deduplizieren (`findExactDuplicate`) und beiden dieselbe `_id` zurückgeben.
+  // Ohne diese Prüfung blieben dann zwei lokale Zeilen mit identischer `_id` stehen (Duplikat-
+  // Anzeige, obwohl der Server nur ein Dokument hat); die zweite wird hier verworfen.
+  const usedIds = new Set(
+    rows
+      .filter(row => getEffectiveRowState(row) !== 'new')
+      .map(row => row._id)
+      .filter((id): id is string => Boolean(id)),
+  );
 
-    switch (effectiveState) {
-      case 'new': {
-        if (!inBatch) return row;
-        const rowKey = getRowKey(row);
-        if (failedRowKeys.has(rowKey)) return row;
-        const newId = createdIds?.get(rowKey) ?? row._id;
-        // Ohne Server-`_id` gilt die Zeile nicht als gespeichert: bleibt `new` und geht beim
-        // nächsten Save erneut raus (Idempotenz über `clientRequestId` verhindert Duplikate).
-        if (!newId) return row;
-        const cells = { ...row.cells, _id: newId } as T;
-        return {
-          ...row,
-          _id: newId,
-          cells,
-          _state: 'unchanged' as RowState,
-          _errorState: undefined,
-          _errorMessage: null,
-          _clientRequestId: undefined,
-          _originalCells: { ...cells },
-        };
+  return rows
+    .map(row => {
+      const effectiveState = getEffectiveRowState(row);
+      const inBatch = includedRowKeys === undefined || includedRowKeys.has(getRowKey(row));
+
+      switch (effectiveState) {
+        case 'new': {
+          if (!inBatch) return row;
+          const rowKey = getRowKey(row);
+          if (failedRowKeys.has(rowKey)) return row;
+          const newId = createdIds?.get(rowKey) ?? row._id;
+          // Ohne Server-`_id` gilt die Zeile nicht als gespeichert: bleibt `new` und geht beim
+          // nächsten Save erneut raus (Idempotenz über `clientRequestId` verhindert Duplikate).
+          if (!newId) return row;
+          if (usedIds.has(newId)) return null;
+          usedIds.add(newId);
+          const cells = { ...row.cells, _id: newId } as T;
+          return {
+            ...row,
+            _id: newId,
+            cells,
+            _state: 'unchanged' as RowState,
+            _errorState: undefined,
+            _errorMessage: null,
+            _clientRequestId: undefined,
+            _originalCells: { ...cells },
+          };
+        }
+        case 'modified':
+          if (!inBatch || failedRowKeys.has(getRowKey(row))) return row;
+          return {
+            ...row,
+            _state: 'unchanged' as RowState,
+            _errorState: undefined,
+            _errorMessage: null,
+            _originalCells: { ...row.cells },
+          };
+        case 'deleted':
+          if (!inBatch || failedRowKeys.has(getRowKey(row))) return row;
+          return { ...row, _errorState: undefined, _errorMessage: null };
+        default:
+          return row;
       }
-      case 'modified':
-        if (!inBatch || failedRowKeys.has(getRowKey(row))) return row;
-        return {
-          ...row,
-          _state: 'unchanged' as RowState,
-          _errorState: undefined,
-          _errorMessage: null,
-          _originalCells: { ...row.cells },
-        };
-      case 'deleted':
-        if (!inBatch || failedRowKeys.has(getRowKey(row))) return row;
-        return { ...row, _errorState: undefined, _errorMessage: null };
-      default:
-        return row;
-    }
-  });
+    })
+    .filter((row): row is RowRecord<T> => row !== null);
 }
 
 /**
