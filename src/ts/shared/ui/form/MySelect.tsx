@@ -55,8 +55,6 @@ const MySelect: FC<TMySelect> = ({
 
   return (
     <div className={className}>
-      {/* Die Optionen kommen aus `options.map(...)`; das sieht die statische Regel nicht. */}
-      {/* eslint-disable-next-line db-ux/select-requires-options */}
       <DBSelect
         ref={refZusammenfuehren(eigeneRef, myRef)}
         id={id}

@@ -2,6 +2,19 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-11-20 (251)
+
+### chore (@db-ux/* Update 6.0.1 → 6.4.1, db-theme 7.2.0 → 7.3.1)
+
+- `eslint-plugin-db-ux` erkennt `options.map(...)`/Kinder-basierte `DBSelect`-Optionen inzwischen
+  korrekt; die drei `eslint-disable`-Kommentare fuer `db-ux/select-requires-options`
+  (`PersoenlicheDatenPanel.tsx`, `DbFeld.tsx`, `MySelect.tsx`) waren dadurch ungenutzt und sind
+  entfernt.
+- Keine Breaking Changes fuer unseren Code: `DBTable` wird nicht verwendet (eigene `CustomTable`),
+  `DBHeader`-Breakpoint-Aenderung betrifft nur die deprecated Variante (unveraendert), Button-
+  Spinner jetzt 24px statt 20px (rein optisch, Sichttoleranz). Typecheck/Lint/Stylelint/Build/Tests
+  gruen.
+
 ## 2026-11-05 (250)
 
 ### fix (doppelte Zeile nach inhaltsgleichem Create auf demselben Geraet)

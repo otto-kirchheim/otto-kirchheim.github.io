@@ -68,8 +68,6 @@ function Auswahl({
   Omit<ComponentProps<typeof DBSelect>, 'id' | 'label' | 'icon'>
 >) {
   return (
-    // Die Optionen kommen als Kinder der Aufrufstelle; das sieht die statische Regel nicht.
-    // eslint-disable-next-line db-ux/select-requires-options
     <DBSelect
       id={id}
       label={label}
