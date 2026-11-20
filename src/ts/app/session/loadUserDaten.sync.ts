@@ -3,7 +3,12 @@ import { default as Storage } from '@/shared/lib/storage/Storage';
 import dayjs from '@/shared/lib/date/configDayjs';
 import type { LoadedYearData } from '@/shared/api/apiService';
 import type { TStorageData } from '@/shared/lib/storage/Storage';
-import { countByMonth, healUnchangedRowsAgainstServer, normalizeRows, shouldRepairMissingIds } from './loadUserDaten.helpers';
+import {
+  countByMonth,
+  healUnchangedRowsAgainstServer,
+  normalizeRows,
+  shouldRepairMissingIds,
+} from './loadUserDaten.helpers';
 import { hasPendingLocalChanges } from '@/shared/lib/ressource/metaFields';
 import { type ResourceKind, resourceByStorageKey, resourceDefs } from '@/shared/lib/ressource/resourceConfig';
 
@@ -76,9 +81,7 @@ export function syncLoadedYearResources({
     }
 
     const localTs = Storage.getTimestamp(storageName);
-    let localData = Storage.check(storageName)
-      ? Storage.get<unknown>(storageName, { default: serverData })
-      : undefined;
+    let localData = Storage.check(storageName) ? Storage.get<unknown>(storageName, { default: serverData }) : undefined;
 
     const serverIsNewer = localTs === 0 || serverTimestamp > localTs;
 

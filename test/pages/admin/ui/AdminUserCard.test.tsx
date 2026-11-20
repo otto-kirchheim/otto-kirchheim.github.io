@@ -195,18 +195,21 @@ describe('AdminUserCard – Bearbeiten-Dialog und Löschen per Tag', () => {
 
 describe('AdminUserCard – Staffelung der Berechtigungs-Checkboxen', () => {
   it('Org-Admin: "nur im eigenen OE-Scope" erst sichtbar, wenn "Profile-Templates bearbeiten" an ist', () => {
-    const { container: ohne } = zeichne({ role: Role.ORG_ADMIN }, { role: Role.ORG_ADMIN, canEditProfileTemplates: false });
+    const { container: ohne } = zeichne(
+      { role: Role.ORG_ADMIN },
+      { role: Role.ORG_ADMIN, canEditProfileTemplates: false },
+    );
     expect(ohne.textContent).not.toContain('Profile-Templates nur im eigenen OE-Scope');
 
-    const { container: mit } = zeichne({ role: Role.ORG_ADMIN }, { role: Role.ORG_ADMIN, canEditProfileTemplates: true });
+    const { container: mit } = zeichne(
+      { role: Role.ORG_ADMIN },
+      { role: Role.ORG_ADMIN, canEditProfileTemplates: true },
+    );
     expect(mit.textContent).toContain('Profile-Templates nur im eigenen OE-Scope');
   });
 
   it('Team-Admin: statt Checkbox ein Hinweis, dass Vorlagen immer auf den eigenen Scope begrenzt sind', () => {
-    const { container } = zeichne(
-      { role: Role.TEAM_ADMIN },
-      { role: Role.TEAM_ADMIN, canEditProfileTemplates: true },
-    );
+    const { container } = zeichne({ role: Role.TEAM_ADMIN }, { role: Role.TEAM_ADMIN, canEditProfileTemplates: true });
     expect(container.textContent).not.toContain('Profile-Templates nur im eigenen OE-Scope');
     expect(container.textContent).toContain('Team-Admin bearbeitet nur Vorlagen der eigenen Team-OE');
   });

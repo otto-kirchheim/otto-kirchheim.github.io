@@ -419,8 +419,8 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
               onChange={e => setFilter(f => ({ ...f, oe: (e.target as HTMLInputElement).value }))}
             />
             <DBInfotext size="small" semantic="informational">
-              IL03 und IL 03 finden dasselbe; mehrere Begriffe mit Komma trennen. Durchsucht auch
-              die Team-/Org-/Stützpunkt-Zuständigkeiten der Admins.
+              IL03 und IL 03 finden dasselbe; mehrere Begriffe mit Komma trennen. Durchsucht auch die
+              Team-/Org-/Stützpunkt-Zuständigkeiten der Admins.
             </DBInfotext>
           </div>
         </div>

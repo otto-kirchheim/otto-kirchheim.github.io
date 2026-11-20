@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-11-20 (252)
+
+### chore (Prettier-Formatierung nachgezogen)
+
+- `loadUserDaten.sync.ts`, `AdminUserList.tsx`, `AdminUserCard.test.tsx`,
+  `commitReihenfolge.test.ts`: reine Formatierung (`bun run format`), keine Logikaenderung.
+
 ## 2026-11-20 (251)
 
 ### chore (@db-ux/* Update 6.0.1 → 6.4.1, db-theme 7.2.0 → 7.3.1)

@@ -33,22 +33,24 @@ function sortierteTabelle(tage: string[]) {
 
 /** Antwortet wie das Backend: `_id` enthält den Tag; Creates für Tage in `ablehnen` scheitern. */
 function backendAntwort(ablehnen: string[] = []) {
-  mockEwtBulk.mockImplementation(async (bulk: { create: (Record<string, unknown> & { clientRequestId: string })[] }) => {
-    const created: Record<string, unknown>[] = [];
-    const createdReferences: { _id: string; clientRequestId: string }[] = [];
-    const errors: { operation: 'create'; clientRequestId: string; message: string }[] = [];
-    for (const item of bulk.create) {
-      const tag = dayjs(String(item.Tag)).format('YYYY-MM-DD');
-      if (ablehnen.includes(tag)) {
-        errors.push({ operation: 'create', clientRequestId: item.clientRequestId, message: 'abgelehnt' });
-        continue;
+  mockEwtBulk.mockImplementation(
+    async (bulk: { create: (Record<string, unknown> & { clientRequestId: string })[] }) => {
+      const created: Record<string, unknown>[] = [];
+      const createdReferences: { _id: string; clientRequestId: string }[] = [];
+      const errors: { operation: 'create'; clientRequestId: string; message: string }[] = [];
+      for (const item of bulk.create) {
+        const tag = dayjs(String(item.Tag)).format('YYYY-MM-DD');
+        if (ablehnen.includes(tag)) {
+          errors.push({ operation: 'create', clientRequestId: item.clientRequestId, message: 'abgelehnt' });
+          continue;
+        }
+        const _id = `id-${tag}`;
+        created.push({ ...item, _id, User: 'u' });
+        createdReferences.push({ _id, clientRequestId: item.clientRequestId });
       }
-      const _id = `id-${tag}`;
-      created.push({ ...item, _id, User: 'u' });
-      createdReferences.push({ _id, clientRequestId: item.clientRequestId });
-    }
-    return { created, updated: [], deleted: [], createdReferences, errors };
-  });
+      return { created, updated: [], deleted: [], createdReferences, errors };
+    },
+  );
 }
 
 describe('Commit nach Bulk-Save bei sortierter Tabelle', () => {
